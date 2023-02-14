@@ -12,26 +12,27 @@ import authConfig from 'src/configs/auth' // this has the auth endpoint and the 
 
 // ** Defaults provides default values to context if not provided init value also for type safety, can draw from default with dot notation
 const defaultProvider = {
-  user: null,
+  organisation: null,
   loading: true,
-  setUser: () => null,
+  setOrganisation: () => null,
   setLoading: () => Boolean,
   login: () => Promise.resolve(),
   logout: () => Promise.resolve(),
   register: () => Promise.resolve()
 }
-const AuthContext = createContext(defaultProvider) // pass default object to AuthContext provider
 
-const AuthProvider = ({ children }) => {
+const OrgAuthContext = createContext(defaultProvider) // pass default object to AuthContext provider
+
+const AuthOrgProvider = ({ children }) => {
   // define auth provider that will be used to pass value down component tree
   // ** States
-  const [user, setUser] = useState(defaultProvider.user)
+  const [organisation, setOrganisation] = useState(defaultProvider.organisation)
   const [loading, setLoading] = useState(defaultProvider.loading)
 
   // ** Hooks
   const router = useRouter()
   useEffect(() => {
-    // this runs automatically without to login users who have already logged in
+    // this runs automatically without to login organisation who have already logged in
     const initAuth = async () => {
       // defines fetch function from async if it has token, then search jwt end points for login info based on stored Token
       const storedToken = window.localStorage.getItem(authConfig.storageTokenKeyName)
@@ -45,13 +46,13 @@ const AuthProvider = ({ children }) => {
           })
           .then(async response => {
             setLoading(false)
-            setUser({ ...response.data.userData })
+            setOrganisation({ ...response.data.user })
           })
           .catch(() => {
-            localStorage.removeItem('userData') // if there is an error fetching data based on stored token, then remove all data store in local storage
+            localStorage.removeItem('organisationData') // if there is an error fetching data based on stored token, then remove all data store in local storage
             localStorage.removeItem('refreshToken')
             localStorage.removeItem('accessToken')
-            setUser(null)
+            setOrganisation(null)
             setLoading(false)
             if (authConfig.onTokenExpiration === 'logout' && !router.pathname.includes('login')) {
               router.replace('/login') // if the instructions are to logout on expired token and they are not on login page, then go to login page. "replace" blocks history stack
@@ -66,7 +67,8 @@ const AuthProvider = ({ children }) => {
   }, [])
 
   const handleLogin = (params, errorCallback) => {
-    //function is fired when user tries pressed login button after submitting login in info
+    //function is fired when organisation tries pressed login button after submitting login in info
+    console.log('called')
     axios
       .post(authConfig.loginEndpoint, params) // req sent to login end point with params
       .then(async response => {
@@ -74,9 +76,10 @@ const AuthProvider = ({ children }) => {
           ? window.localStorage.setItem(authConfig.storageTokenKeyName, response.data.accessToken)
           : null
         const returnUrl = router.query.returnUrl
-        console.log(returnUrl)
-        setUser({ ...response.data.userData })
-        params.rememberMe ? window.localStorage.setItem('userData', JSON.stringify(response.data.userData)) : null
+        setOrganisation({ ...response.data.userData })
+        params.rememberMe
+          ? window.localStorage.setItem('organisationData', JSON.stringify(response.data.userData))
+          : null
         const redirectURL = returnUrl && returnUrl !== '/' ? returnUrl : '/' //return to the return url or go to the homepage
         router.replace(redirectURL)
       })
@@ -86,15 +89,15 @@ const AuthProvider = ({ children }) => {
   }
 
   const handleLogout = () => {
-    // function just removes user info from local state - need to refactor to access params and also use supabse kill session
-    setUser(null)
-    window.localStorage.removeItem('userData')
+    // function just removes organisation info from local state - need to refactor to access params and also use supabse kill session
+    setOrganisation(null)
+    window.localStorage.removeItem('organisationData')
     window.localStorage.removeItem(authConfig.storageTokenKeyName)
     router.push('/login')
   }
 
   const handleRegister = (params, errorCallback) => {
-    //create a user and log them in immediately based on given values if no errors
+    //create a organisation and log them in immediately based on given values if no errors
     axios
       .post(authConfig.registerEndpoint, params)
       .then(res => {
@@ -108,17 +111,17 @@ const AuthProvider = ({ children }) => {
   }
 
   const values = {
-    // update the values with user and loading from state and update the default functions with newly defined functions above
-    user,
+    // update the values with organisation and loading from state and update the default functions with newly defined functions above
+    organisation: 'Humble Pharmacy',
     loading,
-    setUser,
+    setOrganisation,
     setLoading,
     login: handleLogin,
     logout: handleLogout,
     register: handleRegister
   }
 
-  return <AuthContext.Provider value={values}>{children}</AuthContext.Provider>
+  return <OrgAuthContext.Provider value={values}>{children}</OrgAuthContext.Provider>
 }
 
-export { AuthContext, AuthProvider }
+export { OrgAuthContext, AuthOrgProvider }

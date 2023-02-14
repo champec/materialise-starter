@@ -1,50 +1,48 @@
 // ** React Imports
 import { useState } from 'react'
 
-import Link from 'next/link'
-
 // ** MUI Components
 import Box from '@mui/material/Box'
+import Grid from '@mui/material/Grid'
 import Button from '@mui/material/Button'
-import Divider from '@mui/material/Divider'
-import useMediaQuery from '@mui/material/useMediaQuery'
-import { styled, useTheme } from '@mui/material/styles'
-import authillustration from '../../../public/images/pages/auth/auth-v2-register-multi-steps-illustration.png'
-import Typography from '@mui/material/Typography'
 import TextField from '@mui/material/TextField'
-import FormControl from '@mui/material/FormControl'
+import Typography from '@mui/material/Typography'
 import InputLabel from '@mui/material/InputLabel'
+import IconButton from '@mui/material/IconButton'
+import FormControl from '@mui/material/FormControl'
 import OutlinedInput from '@mui/material/OutlinedInput'
 import InputAdornment from '@mui/material/InputAdornment'
-import IconButton from '@mui/material/IconButton'
-import MuiFormControlLabel from '@mui/material/FormControlLabel'
-import Checkbox from '@mui/material/Checkbox'
-
-// ** Layout Import
-import BlankLayout from 'src/@core/layouts/BlankLayout'
-import themeConfig from 'src/configs/themeConfig'
 
 // ** Icon Imports
 import Icon from 'src/@core/components/icon'
 
+// ** Next Import
+import Link from 'next/link'
+
+// ** MUI Components
+import Divider from '@mui/material/Divider'
+import Checkbox from '@mui/material/Checkbox'
+import useMediaQuery from '@mui/material/useMediaQuery'
+import { styled, useTheme } from '@mui/material/styles'
+import MuiFormControlLabel from '@mui/material/FormControlLabel'
+
+// ** Configs
+import themeConfig from 'src/configs/themeConfig'
+
+// ** Layout Import
+import BlankLayout from 'src/@core/layouts/BlankLayout'
+
 // ** Hooks
 import { useSettings } from 'src/@core/hooks/useSettings'
 
-// ** Demo Components Imports
-import RegisterMultiStepsWizard from 'src/views/pages/auth/register-multi-steps'
+// ** Demo Imports
 import FooterIllustrationsV2 from 'src/views/pages/auth/FooterIllustrationsV2'
 
-// ** Styled Components
-const RegisterMultiStepsIllustration = styled('img')({
-  maxWidth: 200,
-  height: 'auto',
-  maxHeight: '100%'
-})
-
-const BoxWrapper = styled(Box)(({ theme }) => ({
-  width: '100%',
-  [theme.breakpoints.down('md')]: {
-    maxWidth: 400
+const LoginIllustrationWrapper = styled(Box)(({ theme }) => ({
+  padding: theme.spacing(20),
+  paddingRight: '0 !important',
+  [theme.breakpoints.down('lg')]: {
+    padding: theme.spacing(10)
   }
 }))
 
@@ -58,6 +56,23 @@ const LoginIllustration = styled('img')(({ theme }) => ({
   }
 }))
 
+const RightWrapper = styled(Box)(({ theme }) => ({
+  width: '100%',
+  [theme.breakpoints.up('md')]: {
+    maxWidth: 400
+  },
+  [theme.breakpoints.up('lg')]: {
+    maxWidth: 450
+  }
+}))
+
+const BoxWrapper = styled(Box)(({ theme }) => ({
+  width: '100%',
+  [theme.breakpoints.down('md')]: {
+    maxWidth: 400
+  }
+}))
+
 const TypographyStyled = styled(Typography)(({ theme }) => ({
   fontWeight: 600,
   letterSpacing: '0.18px',
@@ -65,87 +80,52 @@ const TypographyStyled = styled(Typography)(({ theme }) => ({
   [theme.breakpoints.down('md')]: { marginTop: theme.spacing(8) }
 }))
 
-const LoginIllustrationWrapper = styled(Box)(({ theme }) => ({
-  padding: theme.spacing(20),
-  paddingRight: '0 !important',
-  [theme.breakpoints.down('lg')]: {
-    padding: theme.spacing(10)
+const FormControlLabel = styled(MuiFormControlLabel)(({ theme }) => ({
+  '& .MuiFormControlLabel-label': {
+    fontSize: '0.875rem',
+    color: theme.palette.text.secondary
   }
 }))
 
-const LeftWrapper = styled(Box)(({ theme }) => ({
-  width: '100%',
-  display: 'flex',
-  alignItems: 'center',
-  justifyContent: 'center',
-  padding: theme.spacing(12),
-  [theme.breakpoints.up('lg')]: {
-    maxWidth: 480
-  },
-  [theme.breakpoints.down(1285)]: {
-    maxWidth: 400
-  },
-  [theme.breakpoints.up('xl')]: {
-    maxWidth: 635
-  }
-}))
-
-const RightWrapper = styled(Box)(({ theme }) => ({
-  flex: 1,
-  display: 'flex',
-  alignItems: 'center',
-  justifyContent: 'center',
-  padding: theme.spacing(6),
-  backgroundColor: theme.palette.background.paper,
-  [theme.breakpoints.up('sm')]: {
-    padding: theme.spacing(12)
-  }
-}))
-
-const WizardWrapper = styled(Box)(({ theme }) => ({
-  maxWidth: 700,
-  margin: theme.spacing(0, 'auto'),
-  [theme.breakpoints.up('md')]: {
-    width: 700
-  }
-}))
-
-const handleChange = prop => event => {
-  setValues({ ...values, [prop]: event.target.value })
-}
-
-const handleClickShowPassword = () => {
-  setValues({ ...values, showPassword: !values.showPassword })
-}
-
-const handleMouseDownPassword = event => {
-  event.preventDefault()
-}
-
-const LoginPage = () => {
-  // ** Hooks
+const StepOrganisationDetails = ({ handleNext }) => {
+  // ** Hook
   const theme = useTheme()
   const { settings } = useSettings()
-  const hidden = useMediaQuery(theme.breakpoints.down('lg'))
+
+  // ** Vars
+  const { skin } = settings
+  const hidden = useMediaQuery(theme.breakpoints.down('md'))
+
+  const handleChange = prop => event => {
+    setValues({ ...values, [prop]: event.target.value })
+  }
+
+  const imageSource = skin === 'bordered' ? 'auth-v2-login-illustration-bordered' : 'auth-v2-login-illustration'
+  // ** States
   const [values, setValues] = useState({
-    password: '',
-    showPassword: false
+    showPassword: false,
+    showConfirmPassword: false
   })
 
-  const FormControlLabel = styled(MuiFormControlLabel)(({ theme }) => ({
-    '& .MuiFormControlLabel-label': {
-      fontSize: '0.875rem',
-      color: theme.palette.text.secondary
-    }
-  }))
+  const handleClickShowPassword = () => {
+    setValues({ ...values, showPassword: !values.showPassword })
+  }
 
-  // ** Var
-  const { skin } = settings
-  const imageSource = skin === 'bordered' ? 'auth-v2-login-illustration-bordered' : 'auth-v2-login-illustration'
+  const handleMouseDownPassword = event => {
+    event.preventDefault()
+  }
 
-  const v2form = () => {
-    return (
-      <Box className='content-right'>
+  const handleClickShowConfirmPassword = () => {
+    setValues({ ...values, showConfirmPassword: !values.showConfirmPassword })
+  }
+
+  const handleMouseDownConfirmPassword = event => {
+    event.preventDefault()
+  }
+
+  return (
+    <>
+      {/*<Box className='content-right'>
         <RightWrapper sx={skin === 'bordered' && !hidden ? { borderLeft: `1px solid ${theme.palette.divider}` } : {}}>
           <Box
             sx={{
@@ -157,7 +137,7 @@ const LoginPage = () => {
               backgroundColor: 'background.paper'
             }}
           >
-            <BoxWrapper>
+           <BoxWrapper>
               <Box
                 sx={{
                   top: 30,
@@ -264,27 +244,50 @@ const LoginPage = () => {
             </BoxWrapper>
           </Box>
         </RightWrapper>
-      </Box>
-    )
-  }
+      </Box>*/}
 
-  return (
-    <Box className='content-right'>
-      {!hidden ? (
-        <LeftWrapper>
-          <RegisterMultiStepsIllustration alt='register-multi-steps-illustration' src={authillustration} />
-        </LeftWrapper>
-      ) : null}
-      <RightWrapper sx={skin === 'bordered' && !hidden ? { borderLeft: `1px solid ${theme.palette.divider}` } : {}}>
-        <WizardWrapper>
-          <RegisterMultiStepsWizard form={v2form} />
-        </WizardWrapper>
-      </RightWrapper>
-    </Box>
+      <Grid container spacing={5}>
+        <Grid item xs={12} sm={6}>
+          <FormControl fullWidth>
+            <TextField label='Username' placeholder='johndoe' />
+          </FormControl>
+        </Grid>
+
+        <Grid item xs={12} sm={6}>
+          <FormControl fullWidth>
+            <InputLabel htmlFor='input-password'>Password</InputLabel>
+            <OutlinedInput
+              label='Password'
+              id='input-password'
+              type={values.showPassword ? 'text' : 'password'}
+              endAdornment={
+                <InputAdornment position='end'>
+                  <IconButton edge='end' onClick={handleClickShowPassword} onMouseDown={handleMouseDownPassword}>
+                    <Icon icon={values.showPassword ? 'mdi:eye-outline' : 'mdi:eye-off-outline'} />
+                  </IconButton>
+                </InputAdornment>
+              }
+            />
+          </FormControl>
+        </Grid>
+
+        <Grid item xs={12}>
+          <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
+            <Button disabled variant='contained' startIcon={<Icon icon='mdi:chevron-left' fontSize={20} />}>
+              Logout
+            </Button>
+            <Button
+              variant='contained'
+              onClick={() => handleNext({ data: { email: 'john', password: 'password' } })}
+              endIcon={<Icon icon='mdi:chevron-right' fontSize={20} />}
+            >
+              Login
+            </Button>
+          </Box>
+        </Grid>
+      </Grid>
+    </>
   )
 }
 
-LoginPage.getLayout = page => <BlankLayout>{page}</BlankLayout>
-LoginPage.authGuard = false
-
-export default LoginPage
+export default StepOrganisationDetails

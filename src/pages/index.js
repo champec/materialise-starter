@@ -11,13 +11,14 @@ import Spinner from 'src/@core/components/spinner'
 import { useAuth } from 'src/hooks/useAuth'
 
 export const getHomeRoute = role => {
+  // function accepts role of user argument and return link to home or acl
   if (role === 'client') return '/acl'
   else return '/home'
 }
 
 const Home = () => {
   // ** Hooks
-  const auth = useAuth()
+  const auth = useAuth() // return context values from AuthContext - file is just a useContext hook
   const router = useRouter()
 
   useEffect(() => {
@@ -26,6 +27,7 @@ const Home = () => {
     }
 
     if (auth.user && auth.user.role) {
+      //check if the properties of user are available, might remove or replace role
       const homeRoute = getHomeRoute(auth.user.role)
 
       // Redirect user to Home URL
