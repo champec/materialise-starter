@@ -32,7 +32,7 @@ import WindowWrapper from 'src/@core/components/window-wrapper'
 import Spinner from 'src/@core/components/spinner'
 
 // ** Contexts
-import { AuthProvider } from 'src/context/AuthContext'
+import { AuthUserProvider } from 'src/context/UserAuthContext'
 import { AuthOrgProvider } from 'src/context/OrgAuthContext'
 import { SettingsConsumer, SettingsProvider } from 'src/@core/context/settingsContext'
 
@@ -119,7 +119,7 @@ const App = props => {
       </Head>
 
       <AuthOrgProvider>
-        <AuthProvider>
+        <AuthUserProvider>
           <SettingsProvider {...(setConfig ? { pageSettings: setConfig() } : {})}>
             <SettingsConsumer>
               {({ settings }) => {
@@ -147,7 +147,7 @@ const App = props => {
               }}
             </SettingsConsumer>
           </SettingsProvider>
-        </AuthProvider>
+        </AuthUserProvider>
       </AuthOrgProvider>
     </CacheProvider>
   )

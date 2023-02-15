@@ -9,7 +9,7 @@ import Button from '@mui/material/Button'
 import Divider from '@mui/material/Divider'
 import useMediaQuery from '@mui/material/useMediaQuery'
 import { styled, useTheme } from '@mui/material/styles'
-import authillustration from '../../../public/images/pages/auth/auth-v2-register-multi-steps-illustration.png'
+// import authillustration from 'src/public/images/pages/auth/auth-v2-register-multi-steps-illustration.png'
 import Typography from '@mui/material/Typography'
 import TextField from '@mui/material/TextField'
 import FormControl from '@mui/material/FormControl'
@@ -272,12 +272,15 @@ const LoginPage = () => {
     <Box className='content-right'>
       {!hidden ? (
         <LeftWrapper>
-          <RegisterMultiStepsIllustration alt='register-multi-steps-illustration' src={authillustration} />
+          <RegisterMultiStepsIllustration
+            alt='register-multi-steps-illustration'
+            src={'src/public/images/pages/auth/auth-v2-register-multi-steps-illustration.png'}
+          />
         </LeftWrapper>
       ) : null}
       <RightWrapper sx={skin === 'bordered' && !hidden ? { borderLeft: `1px solid ${theme.palette.divider}` } : {}}>
         <WizardWrapper>
-          <RegisterMultiStepsWizard form={v2form} />
+          <RegisterMultiStepsWizard />
         </WizardWrapper>
       </RightWrapper>
     </Box>
@@ -286,5 +289,7 @@ const LoginPage = () => {
 
 LoginPage.getLayout = page => <BlankLayout>{page}</BlankLayout>
 LoginPage.authGuard = false
+LoginPage.authGuard = false
+LoginPage.orgGuard = false
 
 export default LoginPage

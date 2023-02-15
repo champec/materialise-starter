@@ -14,12 +14,14 @@ import StepBillingDetails from 'src/views/pages/auth/register-multi-steps/StepBi
 import StepOrganisationDetails from './StepOrganisationDetails'
 import StepPersonalDetails from 'src/views/pages/auth/register-multi-steps/StepPersonalInfo'
 import { useOrgAuth } from 'src/hooks/useOrgAuth'
+import { useAuth } from 'src/hooks/useAuth'
 
 // ** Custom Component Import
 import StepperCustomDot from 'src/views/forms/form-wizard/StepperCustomDot'
 
 // ** Styled Components
 import StepperWrapper from 'src/@core/styles/mui/stepper'
+import { useEffect } from 'react'
 
 const steps = [
   {
@@ -36,25 +38,28 @@ const steps = [
   // }
 ]
 
-const RegisterMultiSteps = ({ form }) => {
+const RegisterMultiSteps = () => {
+  const authOrg = useOrgAuth()
+  const authUser = useAuth()
   // ** States
-  const [activeStep, setActiveStep] = useState(0)
-  const auth = useOrgAuth()
+  const [activeStep, setActiveStep] = useState(authOrg.organisation ? 1 : 0)
   const [loading, setIsLoading] = useState(false)
-  const form2 = form()
-  console.log(form2)
+  console.log('ORG', authOrg, 'USER', authUser)
 
   // Handle Stepper
   const handleNext = async data => {
     setIsLoading(true)
-    const email = 'admin@materialize.com'
-    const password = 'admin'
-    const rememberMe = false
-    const error = await auth.login({ email, password, rememberMe })
-    console.log(error)
     setActiveStep(activeStep + 1)
     setIsLoading(false)
   }
+
+  useEffect(() => {
+    if (authOrg.organisation) {
+      setActiveStep(1)
+    } else if (!authOrg.organisation) {
+      setActiveStep(0)
+    }
+  }, [authOrg.organisation])
 
   const handlePrev = () => {
     if (activeStep !== 0) {
@@ -65,9 +70,15 @@ const RegisterMultiSteps = ({ form }) => {
   const getStepContent = step => {
     switch (step) {
       case 0:
-        return <StepOrganisationDetails handleNext={handleNext} />
+        return <StepOrganisationDetails handleNext={handleNext} authOrg={authOrg} authUser={authUser} />
       case 1:
-        return <StepPersonalDetails /*handleNext={handleNext}*/ handlePrev={handlePrev} />
+        return (
+          <StepAccountDetails
+            /*handleNext={handleNext}*/ handlePrev={handlePrev}
+            authUser={authUser}
+            authOrg={authOrg}
+          />
+        )
       // case 2:
       //   return <StepBillingDetails handlePrev={handlePrev} />
       default:
