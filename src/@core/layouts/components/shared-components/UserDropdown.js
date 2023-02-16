@@ -18,7 +18,7 @@ import Typography from '@mui/material/Typography'
 import Icon from 'src/@core/components/icon'
 
 // ** Context
-import { useAuth } from 'src/hooks/useAuth'
+import { useUserAuth } from 'src/hooks/useAuth'
 
 // ** Styled Components
 const BadgeContentSpan = styled('span')(({ theme }) => ({
@@ -38,7 +38,7 @@ const UserDropdown = props => {
 
   // ** Hooks
   const router = useRouter()
-  const { logout } = useAuth()
+  const { logout } = useUserAuth()
 
   // ** Vars
   const { direction } = settings
@@ -67,6 +67,11 @@ const UserDropdown = props => {
       fontSize: '1.375rem',
       color: 'text.primary'
     }
+  }
+
+  const handleSwtich = () => {
+    router.push('/login')
+    handleDropdownClose()
   }
 
   const handleLogout = () => {
@@ -158,6 +163,14 @@ const UserDropdown = props => {
             <Icon icon='mdi:help-circle-outline' />
             FAQ
           </Box>
+        </MenuItem>
+        <Divider />
+        <MenuItem
+          onClick={handleSwtich}
+          sx={{ py: 2, '& svg': { mr: 2, fontSize: '1.375rem', color: 'text.primary' } }}
+        >
+          <Icon icon='mdi:account-convert' />
+          Switch Users
         </MenuItem>
         <Divider />
         <MenuItem

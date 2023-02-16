@@ -11,6 +11,7 @@ import axios from 'axios' //wont be using axios to fetch data will use supabase
 import authConfig from 'src/configs/auth' // this has the auth endpoint and the storage keys for tokens
 
 // ** Defaults provides default values to context if not provided init value also for type safety, can draw from default with dot notation
+let usersArray = []
 const defaultProvider = {
   user: null,
   loading: true,
@@ -20,14 +21,18 @@ const defaultProvider = {
   logout: () => Promise.resolve(),
   register: () => Promise.resolve()
 }
-const AuthContext = createContext(defaultProvider) // pass default object to AuthContext provider
+
+usersArray[0] = defaultProvider
+const AuthContext = createContext(usersArray[0]) // pass default object to AuthContext provider
 
 const AuthProvider = ({ children }) => {
   // define auth provider that will be used to pass value down component tree
   // ** States
+  const [usersArray, setUsersArray] = useState(usersArray)
   const [user, setUser] = useState(defaultProvider.user)
   const [loading, setLoading] = useState(defaultProvider.loading)
 
+  console.log(usersArray)
   // ** Hooks
   const router = useRouter()
   useEffect(() => {
@@ -74,7 +79,6 @@ const AuthProvider = ({ children }) => {
           ? window.localStorage.setItem(authConfig.storageTokenKeyName, response.data.accessToken)
           : null
         const returnUrl = router.query.returnUrl
-        console.log(returnUrl)
         setUser({ ...response.data.userData })
         params.rememberMe ? window.localStorage.setItem('userData', JSON.stringify(response.data.userData)) : null
         const redirectURL = returnUrl && returnUrl !== '/' ? returnUrl : '/' //return to the return url or go to the homepage

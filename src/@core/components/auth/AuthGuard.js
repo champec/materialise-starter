@@ -5,16 +5,15 @@ import { useEffect } from 'react'
 import { useRouter } from 'next/router'
 
 // ** Hooks Import
-import { useAuth } from 'src/hooks/useAuth'
+import { useUserAuth } from 'src/hooks/useAuth'
 
 const AuthGuard = props => {
   const { children, fallback } = props //destructure received props, children (content in between), also provided a fallback
-  const auth = useAuth() //get auth values
+  const auth = useUserAuth() //get auth values
   const router = useRouter() // get router methods
   useEffect(
     //this use effect only runs when you change routes, so check if router is ready if not, don't run the code underneath
     () => {
-      console.log(auth)
       if (!router.isReady) {
         return
       }

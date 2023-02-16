@@ -8,7 +8,8 @@ import { useRouter } from 'next/router'
 import Spinner from 'src/@core/components/spinner'
 
 // ** Hook Imports
-import { useAuth } from 'src/hooks/useAuth'
+// import { useAuth } from 'src/hooks/useAuth'
+import { useUserAuth } from 'src/hooks/useAuth'
 
 export const getHomeRoute = role => {
   // function accepts role of user argument and return link to home or acl
@@ -18,7 +19,7 @@ export const getHomeRoute = role => {
 
 const Home = () => {
   // ** Hooks
-  const auth = useAuth() // return context values from AuthContext - file is just a useContext hook
+  const auth = useUserAuth() // return context values from AuthContext - file is just a useContext hook
   const router = useRouter()
 
   useEffect(() => {

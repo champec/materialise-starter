@@ -1,5 +1,5 @@
 // ** React Imports
-import { useState, SyntheticEvent } from 'react'
+import { useState, SyntheticEvent, useEffect } from 'react'
 
 // ** MUI Components
 import Box from '@mui/material/Box'
@@ -47,6 +47,7 @@ import { useSettings } from 'src/@core/hooks/useSettings'
 
 // ** Demo Imports
 import FooterIllustrationsV2 from 'src/views/pages/auth/FooterIllustrationsV2'
+import CardCongratulationsDaisy from 'src/views/ui/gamification/CardCongratulationsDaisy'
 
 // this library validates form entries to match as follows
 const schema = yup.object().shape({
@@ -113,6 +114,7 @@ const FormControlLabel = styled(MuiFormControlLabel)(({ theme }) => ({
 const StepAccountDetails = ({ handleNext, authOrg, authUser }) => {
   // ** Hooks
   const theme = useTheme()
+  const { switchU } = authUser
   const name = authOrg?.organisation?.organisation_name
   const { settings } = useSettings()
   //the following hook handles the form data and also received the validation library schema set above
@@ -133,10 +135,13 @@ const StepAccountDetails = ({ handleNext, authOrg, authUser }) => {
   const hidden = useMediaQuery(theme.breakpoints.down('md'))
 
   const imageSource = skin === 'bordered' ? 'auth-v2-login-illustration-bordered' : 'auth-v2-login-illustration'
+  const loggedInUsers = JSON.parse(window.localStorage.getItem('localUsers'))
+  const objectMap = (obj, fn) => Object.fromEntries(Object.entries(obj).map(([k, v], i) => [k, fn(v, k, i)]))
 
   // ** States
   const [rememberMe, setRememberMe] = useState(true)
   const [showPassword, setShowPassword] = useState(false)
+  const [users, setUsers] = useState([])
   const [tabValue, setTabValue] = useState('1')
   const [values, setValues] = useState({
     showPassword: false,
@@ -146,6 +151,14 @@ const StepAccountDetails = ({ handleNext, authOrg, authUser }) => {
   const handleTabChange = (event, newValue) => {
     setTabValue(newValue)
   }
+
+  useEffect(() => {
+    if (loggedInUsers) {
+      objectMap(loggedInUsers, v => {
+        setUsers(prev => [...prev, v])
+      })
+    }
+  }, [])
 
   return (
     <>
@@ -196,10 +209,11 @@ const StepAccountDetails = ({ handleNext, authOrg, authUser }) => {
                 />
               </TabPanel>
               <TabPanel value='2'>
-                <Typography>
-                  Chocolate bar carrot cake candy canes sesame snaps. Cupcake pie gummi bears jujubes candy canes. Chupa
-                  chups sesame snaps halvah.
-                </Typography>
+                {users
+                  ? users.map(user => {
+                      return <CardCongratulationsDaisy user={user} switchU={switchU} />
+                    })
+                  : 'nothing to see here'}
               </TabPanel>
             </TabContext>
           </BoxWrapper>

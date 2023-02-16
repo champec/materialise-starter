@@ -14,7 +14,7 @@ import StepBillingDetails from 'src/views/pages/auth/register-multi-steps/StepBi
 import StepOrganisationDetails from './StepOrganisationDetails'
 import StepPersonalDetails from 'src/views/pages/auth/register-multi-steps/StepPersonalInfo'
 import { useOrgAuth } from 'src/hooks/useOrgAuth'
-import { useAuth } from 'src/hooks/useAuth'
+import { useUserAuth } from 'src/hooks/useAuth'
 
 // ** Custom Component Import
 import StepperCustomDot from 'src/views/forms/form-wizard/StepperCustomDot'
@@ -40,7 +40,7 @@ const steps = [
 
 const RegisterMultiSteps = () => {
   const authOrg = useOrgAuth()
-  const authUser = useAuth()
+  const authUser = useUserAuth()
   // ** States
   const [activeStep, setActiveStep] = useState(authOrg.organisation ? 1 : 0)
   const [loading, setIsLoading] = useState(false)

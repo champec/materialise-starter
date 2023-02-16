@@ -106,7 +106,7 @@ const FormControlLabel = styled(MuiFormControlLabel)(({ theme }) => ({
 }))
 
 //function definition and import function to change steps called handleNext
-const StepOrganisationDetails = ({ handleNext, authOrg }) => {
+const StepOrganisationDetails = ({ handleNext, authOrg, authUser }) => {
   // ** Hooks
   const theme = useTheme()
   const { settings } = useSettings()

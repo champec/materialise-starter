@@ -15,7 +15,7 @@ import NotAuthorized from 'src/pages/401'
 import BlankLayout from 'src/@core/layouts/BlankLayout'
 
 // ** Hooks
-import { useAuth } from 'src/hooks/useAuth'
+import { useUserAuth } from 'src/hooks/useAuth'
 
 const AclGuard = props => {
   // ** Props
@@ -23,7 +23,7 @@ const AclGuard = props => {
   const [ability, setAbility] = useState(undefined)
 
   // ** Hooks
-  const auth = useAuth()
+  const auth = useUserAuth()
   const router = useRouter()
 
   // If guestGuard is true and user is not logged in or its an error page, render the page without checking access
