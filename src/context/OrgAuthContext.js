@@ -5,7 +5,7 @@ import { createContext, useEffect, useState } from 'react'
 import { useRouter } from 'next/router'
 
 // ** SupaBase
-import { supabaseOrg } from '../configs/supabase'
+import { supabaseOrg, supabaseUser } from '../configs/supabase'
 
 // ** Config - to remove
 import authConfig from 'src/configs/auth'
@@ -26,49 +26,46 @@ const OrgAuthContext = createContext(defaultProvider) // pass default object to 
 const AuthOrgProvider = ({ children }) => {
   // define auth provider that will be used to pass value down component tree
   // ** States
-  const [organisation, setOrganisation] = useState(defaultProvider.organisation)
-  const [loading, setLoading] = useState(defaultProvider.loading)
+  const [organisation, setOrganisation] = useState(defaultProvider)
+  const [loading2, setLoading2] = useState(defaultProvider.loading)
+  const [error, setError] = useState(null)
 
   // ** Hooks
   const router = useRouter()
   useEffect(() => {
-    // this runs automatically without to login organisation who have already logged in
-    const initAuth = async () => {
-      // check if a current session exists and fetch the data - store in context object (supabaseOrg.auth.user)
-      const storedToken = window.localStorage.getItem(authConfig.storageTokenKeyName)
-      if (storedToken) {
-        setLoading(true)
-        await axios
-          .get(authConfig.meEndpoint, {
-            headers: {
-              Authorization: storedToken
-            }
-          })
-          .then(async response => {
-            setLoading(false)
-            setOrganisation({ ...response.data.user })
-          })
-          .catch(() => {
-            localStorage.removeItem('organisationData') // if there is an error fetching data based on stored token, then remove all data store in local storage
-            localStorage.removeItem('refreshToken')
-            localStorage.removeItem('accessToken')
-            setOrganisation(null)
-            setLoading(false)
-            if (authConfig.onTokenExpiration === 'logout' && !router.pathname.includes('login')) {
-              router.replace('/login') // if the instructions are to logout on expired token and they are not on login page, then go to login page. "replace" blocks history stack
-            }
-          })
+    setLoading2(true)
+    const getProfileData = async () => {
+      const { data, error } = await supabaseOrg.auth.getSession()
+
+      if (data.session) {
+        let { data: profiles, error } = await supabaseOrg
+          .from('profiles')
+          .select('*')
+          .eq('id', data.session.user.id)
+          .single()
+        setOrganisation({ ...profiles })
+        error ? setError(error) : null
+        setLoading2(false)
       } else {
-        setLoading(false)
+        setLoading2(false)
+      }
+
+      if (error) {
+        setError(error)
+        setLoading2(false)
       }
     }
-    initAuth()
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+
+    getProfileData()
+
+    supabaseOrg.auth.onAuthStateChange(() => {
+      getProfileData()
+    })
   }, [])
 
   const handleLogin = async (params, errorCallback) => {
     //function is fired when organisation tries pressed login button after submitting login in info
-    setLoading(true)
+    setLoading2(true)
     const { data, error } = await supabaseOrg.auth.signInWithPassword({
       email: params.email,
       password: params.password
@@ -82,23 +79,24 @@ const AuthOrgProvider = ({ children }) => {
       // const redirectURL = returnUrl && returnUrl !== '/' ? returnUrl : '/' //return to the return url or go to the homepage
       // router.replace(redirectURL)
       let { data: profiles, error } = await supabaseOrg.from('profiles').select('*').eq('id', data.user.id).single()
-      setOrganisation({ ...profiles })
+      setOrganisation({ ...data, ...profiles })
 
-      setLoading(false)
+      setLoading2(false)
     } else if (error) errorCallback(error)
-    setLoading(false) //return an error to a call back function provide by parent component
+    setLoading2(false) //return an error to a call back function provide by parent component
   }
 
   const handleLogout = async () => {
     // function just removes organisation info from local state - need to refactor to access params and also use supabse kill session
-    setLoading(true)
+    setLoading2(true)
     setOrganisation(null)
     window.localStorage.removeItem('organisationData')
 
-    setLoading(true)
     const { error } = await supabaseOrg.auth.signOut()
+    setLoading2(true)
     if (error) errorCallback(error)
-    setLoading(false) //return an error to a call back function provide by parent component
+    window.localStorage.removeItem('localUsers')
+    setLoading2(false) //return an error to a call back function provide by parent component
 
     router.push('/login')
   }
@@ -115,14 +113,25 @@ const AuthOrgProvider = ({ children }) => {
         }
       })
       .catch(err => (errorCallback ? errorCallback(err) : null))
+
+    supabaseUser.signOut
+      .signOut()
+      .then(res => {
+        if (res.data.error) {
+          if (errorCallback) errorCallback(res.data.error)
+        } else {
+          handleLogin({ email: params.email, password: params.password })
+        }
+      })
+      .catch(err => (errorCallback ? errorCallback(err) : null))
   }
 
   const values = {
     // update the values with organisation and loading from state and update the default functions with newly defined functions above
     organisation: organisation,
-    loading,
+    loading2,
     setOrganisation,
-    setLoading,
+    setLoading2,
     login: handleLogin,
     logout: handleLogout,
     register: handleRegister

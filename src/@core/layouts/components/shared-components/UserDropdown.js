@@ -35,10 +35,11 @@ const UserDropdown = props => {
 
   // ** States
   const [anchorEl, setAnchorEl] = useState(null)
+  const [error, setError] = useState(null)
 
   // ** Hooks
   const router = useRouter()
-  const { logout } = useUserAuth()
+  const { logout, user } = useUserAuth()
 
   // ** Vars
   const { direction } = settings
@@ -75,7 +76,11 @@ const UserDropdown = props => {
   }
 
   const handleLogout = () => {
-    logout()
+    const email = user.email
+    logout(email, error => {
+      setError(error)
+      alert(error.message)
+    })
     handleDropdownClose()
   }
 
@@ -119,7 +124,7 @@ const UserDropdown = props => {
               <Avatar alt='John Doe' src='/images/avatars/1.png' sx={{ width: '2.5rem', height: '2.5rem' }} />
             </Badge>
             <Box sx={{ display: 'flex', ml: 3, alignItems: 'flex-start', flexDirection: 'column' }}>
-              <Typography sx={{ fontWeight: 600 }}>John Doe</Typography>
+              <Typography sx={{ fontWeight: 600 }}>{user.username}</Typography>
               <Typography variant='body2' sx={{ fontSize: '0.8rem', color: 'text.disabled' }}>
                 Admin
               </Typography>

@@ -1,3 +1,4 @@
+import { useState } from 'react'
 // ** MUI Imports
 import Box from '@mui/material/Box'
 import Card from '@mui/material/Card'
@@ -39,9 +40,14 @@ const Img = styled('img')(({ theme }) => ({
 const CardCongratulationsDaisy = ({ user, switchU }) => {
   // ** Hook
   const theme = useTheme()
+  //** State
+  const [error, setError] = useState(null)
 
   const handleSwitch = () => {
-    switchU(user)
+    switchU(user, err => {
+      console.log(err)
+      setError(err.message)
+    })
   }
 
   return (
@@ -49,24 +55,24 @@ const CardCongratulationsDaisy = ({ user, switchU }) => {
       <CardContent sx={{ p: theme => `${theme.spacing(7, 7.5)} !important` }}>
         <Grid container spacing={6}>
           <Grid item xs={12} sm={6}>
-            <Typography>{user.username}</Typography>
-            {/* <Typography variant='h5' sx={{ mb: 4.5 }}>
-              Congratulations{' '}
+            <Typography variant='h5' sx={{ mb: 4.5 }}>
+              Sign in as{' '}
               <Box component='span' sx={{ fontWeight: 'bold' }}>
-                Daisy
+                {user?.username}
               </Box>
               ! 🎉
-            </Typography> */}
+            </Typography>
+            {error && <Typography sx={{ color: 'error.main' }}>{error}</Typography>}
             {/* <Typography variant='body2'>You have done 84% 😍 more task today.</Typography>
             <Typography sx={{ mb: 4.5 }} variant='body2'>
               Check your new badge in your profile.
             </Typography> */}
             <Button variant='contained' onClick={handleSwitch}>
-              Login
+              Re-Login
             </Button>
           </Grid>
           <StyledGrid item xs={12} sm={6}>
-            <Img alt='Congratulations Daisy' src={'public/images/cards/illustration-daisy-light.png'} />
+            <Img alt='Congratulations Daisy' src={'/images/cards/illustration-daisy-light.png'} />
           </StyledGrid>
         </Grid>
       </CardContent>

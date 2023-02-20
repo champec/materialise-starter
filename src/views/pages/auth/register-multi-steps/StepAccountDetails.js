@@ -114,7 +114,7 @@ const FormControlLabel = styled(MuiFormControlLabel)(({ theme }) => ({
 const StepAccountDetails = ({ handleNext, authOrg, authUser }) => {
   // ** Hooks
   const theme = useTheme()
-  const { switchU } = authUser
+  const { switchU, user } = authUser
   const name = authOrg?.organisation?.organisation_name
   const { settings } = useSettings()
   //the following hook handles the form data and also received the validation library schema set above
@@ -142,7 +142,11 @@ const StepAccountDetails = ({ handleNext, authOrg, authUser }) => {
   const [rememberMe, setRememberMe] = useState(true)
   const [showPassword, setShowPassword] = useState(false)
   const [users, setUsers] = useState([])
-  const [tabValue, setTabValue] = useState('1')
+  //this conplex state is only checcking calue parsed from local storage, which is an object, which it is empty or not to decide which tab to open by defualt
+  //Object.keys() expects an objec as its argument, but because when application first loads, the object doesnt exist, and is null, therefore I added a check
+  // when loggedinUsers object doesnt exist or is null, then use an empty objec {}, else use the value in logged in users
+  const [tabValue, setTabValue] = useState(Object.keys(loggedInUsers ? loggedInUsers : {}).length === 0 ? '1' : '2')
+  const [showUsers, setShowUsers] = useState(false)
   const [values, setValues] = useState({
     showPassword: false,
     showConfirmPassword: false
@@ -153,7 +157,10 @@ const StepAccountDetails = ({ handleNext, authOrg, authUser }) => {
   }
 
   useEffect(() => {
+    //I had to reset the users arrray to zero each time the useEffect runs because it maintained state and just duplicated user on refresh, this way state is not maintained
+    setUsers([])
     if (loggedInUsers) {
+      setShowUsers(true)
       objectMap(loggedInUsers, v => {
         setUsers(prev => [...prev, v])
       })
@@ -162,7 +169,7 @@ const StepAccountDetails = ({ handleNext, authOrg, authUser }) => {
 
   return (
     <>
-      <Box /*className='content-right'*/>
+      <Box /*  className='content-right'*/>
         <Box
           sx={{
             p: 7,
@@ -188,10 +195,10 @@ const StepAccountDetails = ({ handleNext, authOrg, authUser }) => {
               <TypographyStyled variant='h5'>{`Welcome to ${name}! 👋🏻`}</TypographyStyled>
               <Typography variant='body2'>Please sign-in to your account and start the adventure</Typography>
             </Box>
-            <TabContext value={tabValue}>
+            <TabContext value={tabValue} initialSelectedIndex={1}>
               <TabList variant='fullWidth' onChange={handleTabChange} aria-label='full width tabs example'>
                 <Tab value='1' label='Login' />
-                <Tab value='2' label='Already Signed In?' />
+                <Tab value='2' label='Already Signed In?' disabled={users.length ? false : true} />
               </TabList>
               <TabPanel value='1'>
                 {/* <div style={(marginTop = '20px')}></div> */}
@@ -211,7 +218,7 @@ const StepAccountDetails = ({ handleNext, authOrg, authUser }) => {
               <TabPanel value='2'>
                 {users
                   ? users.map(user => {
-                      return <CardCongratulationsDaisy user={user} switchU={switchU} />
+                      return <CardCongratulationsDaisy key={user.email} user={user} switchU={switchU} />
                     })
                   : 'nothing to see here'}
               </TabPanel>
@@ -402,7 +409,7 @@ function Form({
       Login
     </Button> */}
       <Box sx={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap', justifyContent: 'center' }}>
-        <Typography sx={{ mr: 2, color: 'text.secondary' }}>New on our platform?</Typography>
+        <Typography sx={{ mr: 2, color: 'text.secondary' }}>Don't have an account?</Typography>
         <Typography href='/register' component={Link} sx={{ color: 'primary.main', textDecoration: 'none' }}>
           Create an account
         </Typography>

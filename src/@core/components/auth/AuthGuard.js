@@ -14,12 +14,14 @@ const AuthGuard = props => {
   useEffect(
     //this use effect only runs when you change routes, so check if router is ready if not, don't run the code underneath
     () => {
-      if (!router.isReady) {
+      if (!router.isReady || auth.loading) {
         return
       }
       if (auth.user === null && !window.localStorage.getItem('userData')) {
+        console.log('BOUNCED FROM AUTHGUARD', auth)
         // if there is no user or any data in local storage
         if (router.asPath !== '/') {
+          console.log('BOUNCED FROM AUTHGUARD')
           //router as path is the route without the base-path, take them back to the homepage unless they were trying to access the login page already
           router.replace({
             pathname: '/login',
@@ -34,7 +36,7 @@ const AuthGuard = props => {
     [router.route]
   )
   if (auth.loading || auth.user === null) {
-    return 'login screen loading' //fallback
+    return fallback
   }
 
   return <>{children}</>

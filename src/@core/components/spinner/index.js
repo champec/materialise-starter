@@ -1,11 +1,20 @@
 // ** MUI Import
-import { useTheme } from '@mui/material/styles'
+import { useTheme, styled } from '@mui/material/styles'
 import Box from '@mui/material/Box'
 import CircularProgress from '@mui/material/CircularProgress'
+import Logo from '../logo/Logo'
+import { Typography } from '@mui/material'
+import themeConfig from 'src/configs/themeConfig'
 
 const FallbackSpinner = ({ sx }) => {
   // ** Hook
   const theme = useTheme()
+
+  const HeaderTitle = styled(Typography)({
+    fontWeight: 700,
+    lineHeight: 1.2,
+    transition: 'opacity .25s ease-in-out, margin .25s ease-in-out'
+  })
 
   return (
     <Box
@@ -18,7 +27,11 @@ const FallbackSpinner = ({ sx }) => {
         ...sx
       }}
     >
-      <svg width={80} fill='none' height={44} viewBox='0 0 268 150' xmlns='http://www.w3.org/2000/svg'>
+      <Logo width={160} height={88} />
+      <HeaderTitle variant='h6' sx={{ ml: 2 }}>
+        {themeConfig.templateName}
+      </HeaderTitle>
+      {/* <svg width={80} fill='none' height={44} viewBox='0 0 268 150' xmlns='http://www.w3.org/2000/svg'>
         <rect
           rx='25.1443'
           width='50.2886'
@@ -87,7 +100,7 @@ const FallbackSpinner = ({ sx }) => {
             <stop offset='1' stopOpacity='0' />
           </linearGradient>
         </defs>
-      </svg>
+      </svg> */}
       <CircularProgress disableShrink sx={{ mt: 6 }} />
     </Box>
   )

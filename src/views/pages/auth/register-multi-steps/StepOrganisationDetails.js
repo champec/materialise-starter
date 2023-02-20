@@ -278,9 +278,9 @@ const StepOrganisationDetails = ({ handleNext, authOrg, authUser }) => {
                 Login
               </Button>
               <Box sx={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap', justifyContent: 'center' }}>
-                <Typography sx={{ mr: 2, color: 'text.secondary' }}>New on our platform?</Typography>
+                <Typography sx={{ mr: 2, color: 'text.secondary' }}>Is Your Pharmacy Not Using PharmEx?</Typography>
                 <Typography href='/register' component={Link} sx={{ color: 'primary.main', textDecoration: 'none' }}>
-                  Create an account
+                  Get In Touch Today
                 </Typography>
               </Box>
               <Divider
@@ -290,75 +290,12 @@ const StepOrganisationDetails = ({ handleNext, authOrg, authUser }) => {
                   mb: theme => `${theme.spacing(7.5)} !important`
                 }}
               >
-                or
+                Px
               </Divider>
-              <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                <IconButton href='/' component={Link} sx={{ color: '#497ce2' }} onClick={e => e.preventDefault()}>
-                  <Icon icon='mdi:facebook' />
-                </IconButton>
-                <IconButton href='/' component={Link} sx={{ color: '#1da1f2' }} onClick={e => e.preventDefault()}>
-                  <Icon icon='mdi:twitter' />
-                </IconButton>
-                <IconButton
-                  href='/'
-                  component={Link}
-                  onClick={e => e.preventDefault()}
-                  sx={{ color: theme => (theme.palette.mode === 'light' ? '#272727' : 'grey.300') }}
-                >
-                  <Icon icon='mdi:github' />
-                </IconButton>
-                <IconButton href='/' component={Link} sx={{ color: '#db4437' }} onClick={e => e.preventDefault()}>
-                  <Icon icon='mdi:google' />
-                </IconButton>
-              </Box>
             </form>
           </BoxWrapper>
         </Box>
-        {/* <RightWrapper
-          sx={skin === 'bordered' && !hidden ? { borderLeft: `1px solid ${theme.palette.divider}` } : {}}
-        ></RightWrapper> */}
       </Box>
-      {/* form below */}
-      <Grid container spacing={5}>
-        <Grid item xs={12} sm={6}>
-          <FormControl fullWidth>
-            <TextField label='Username' placeholder='johndoe' />
-          </FormControl>
-        </Grid>
-
-        <Grid item xs={12} sm={6}>
-          <FormControl fullWidth>
-            <InputLabel htmlFor='input-password'>Password</InputLabel>
-            <OutlinedInput
-              label='Password'
-              id='input-password'
-              type={values.showPassword ? 'text' : 'password'}
-              endAdornment={
-                <InputAdornment position='end'>
-                  <IconButton edge='end' onClick={handleClickShowPassword} onMouseDown={handleMouseDownPassword}>
-                    <Icon icon={values.showPassword ? 'mdi:eye-outline' : 'mdi:eye-off-outline'} />
-                  </IconButton>
-                </InputAdornment>
-              }
-            />
-          </FormControl>
-        </Grid>
-
-        <Grid item xs={12}>
-          <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
-            <Button disabled variant='contained' startIcon={<Icon icon='mdi:chevron-left' fontSize={20} />}>
-              Logout
-            </Button>
-            <Button
-              variant='contained'
-              onClick={() => handleNext({ data: { email: 'john', password: 'password' } })}
-              endIcon={<Icon icon='mdi:chevron-right' fontSize={20} />}
-            >
-              Login
-            </Button>
-          </Box>
-        </Grid>
-      </Grid>
     </>
   )
 }

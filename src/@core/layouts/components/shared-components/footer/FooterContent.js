@@ -11,13 +11,13 @@ const FooterContent = () => {
   return (
     <Box sx={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between' }}>
       <Typography sx={{ mr: 2 }}>
-        {`© ${new Date().getFullYear()}, Made with `}
-        <Box component='span' sx={{ color: 'error.main' }}>
+        {`© ${new Date().getFullYear()}, Made  `}
+        {/* <Box component='span' sx={{ color: 'error.main' }}>
           ❤️
-        </Box>
+        </Box> */}
         {` by `}
-        <Link target='_blank' href='https://pixinvent.com/'>
-          Pixinvent
+        <Link target='_blank' href='http://lufya.net//'>
+          Lufya Corp
         </Link>
       </Typography>
       {hidden ? null : (

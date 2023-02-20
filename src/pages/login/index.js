@@ -19,6 +19,7 @@ import InputAdornment from '@mui/material/InputAdornment'
 import IconButton from '@mui/material/IconButton'
 import MuiFormControlLabel from '@mui/material/FormControlLabel'
 import Checkbox from '@mui/material/Checkbox'
+import Logo from 'src/@core/components/logo/Logo'
 
 // ** Layout Import
 import BlankLayout from 'src/@core/layouts/BlankLayout'
@@ -158,16 +159,6 @@ const LoginPage = () => {
             }}
           >
             <BoxWrapper>
-              <Box
-                sx={{
-                  top: 30,
-                  left: 40,
-                  display: 'flex',
-                  position: 'absolute',
-                  alignItems: 'center',
-                  justifyContent: 'center'
-                }}
-              ></Box>
               <Box sx={{ mb: 6 }}>
                 <TypographyStyled variant='h5'>{`Welcome to ${themeConfig.templateName}! 👋🏻`}</TypographyStyled>
                 <Typography variant='body2'>Please sign-in to your account and start the adventure</Typography>
@@ -274,11 +265,26 @@ const LoginPage = () => {
         <LeftWrapper>
           <RegisterMultiStepsIllustration
             alt='register-multi-steps-illustration'
-            src={'src/public/images/pages/auth/auth-v2-register-multi-steps-illustration.png'}
+            src={'/images/pages/auth/auth-v2-register-multi-steps-illustration.png'}
           />
         </LeftWrapper>
       ) : null}
       <RightWrapper sx={skin === 'bordered' && !hidden ? { borderLeft: `1px solid ${theme.palette.divider}` } : {}}>
+        <Box
+          sx={{
+            top: 30,
+            left: 40,
+            display: 'flex',
+            position: 'absolute',
+            alignItems: 'center',
+            justifyContent: 'center'
+          }}
+        >
+          <Logo />
+          <Typography variant='h6' sx={{ ml: 2, lineHeight: 1, fontWeight: 700, fontSize: '1.5rem !important' }}>
+            {themeConfig.templateName}
+          </Typography>
+        </Box>
         <WizardWrapper>
           <RegisterMultiStepsWizard />
         </WizardWrapper>

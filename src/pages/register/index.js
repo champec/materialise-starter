@@ -36,7 +36,7 @@ import themeConfig from 'src/configs/themeConfig'
 import BlankLayout from 'src/@core/layouts/BlankLayout'
 
 // ** Hooks
-import { useAuth } from 'src/hooks/useAuth'
+import { useUserAuth } from 'src/hooks/useAuth'
 import { useSettings } from 'src/@core/hooks/useSettings'
 
 // ** Demo Imports
@@ -106,7 +106,7 @@ const Register = () => {
 
   // ** Hooks
   const theme = useTheme()
-  const { register } = useAuth()
+  const { register } = useUserAuth()
   const { settings } = useSettings()
   const hidden = useMediaQuery(theme.breakpoints.down('md'))
 

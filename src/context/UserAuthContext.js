@@ -1,6 +1,5 @@
 // ** React Imports
 import { createContext, useEffect, useState } from 'react'
-import { createClient } from '@supabase/supabase-js'
 
 // ** Next Import
 import { useRouter } from 'next/router'
@@ -8,11 +7,8 @@ import { useRouter } from 'next/router'
 // ** SupaBase
 import { supabaseUser } from '../configs/supabase'
 
-// ** Config - to remove
-import authConfig from 'src/configs/auth'
-
 // ** Defaults provides default values to context if not provided init value also for type safety, can draw from default with dot notation
-let usersArraydefault = []
+
 const defaultProvider = {
   user: null,
   loading: true,
@@ -24,89 +20,75 @@ const defaultProvider = {
   register: () => Promise.resolve()
 }
 
-usersArraydefault[0] = defaultProvider
-const UserAuthContext = createContext(usersArraydefault[0]) // pass default object to AuthContext provider
+const UserAuthContext = createContext(defaultProvider) // pass default object to AuthContext provider
 
 const AuthUserProvider = ({ children }) => {
-  // define auth provider that will be used to pass value down component tree
-  // ** States
-  const [usersArray, setUsersArray] = useState(usersArraydefault)
+  // ** States - loading state is false by defualt and true when fetching, user state will contian the profiles table data in supabase
   const [user, setUser] = useState(defaultProvider.user)
   const [loading, setLoading] = useState(defaultProvider.loading)
+  const [error, setError] = useState()
   const [activeUser, setActiveUser] = useState(false)
-  const [logoutMethod, setLogoutMethod] = useState()
-  const [getsessionMethod, setGetSessionMethod] = useState()
 
   // ** Hooks
   const router = useRouter()
   useEffect(() => {
-    // this runs automatically without to login use who have already logged in
-
-    //   const accessToken =
-    //   'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhdWQiOiJhdXRoZW50aWNhdGVkIiwiZXhwIjoxNjc2NTQzNjg5LCJzdWIiOiIxMGNiYjEzNS02NzRiLTQyNTctYTAwMy1jMTA1YjYzYTI5NWQiLCJlbWFpbCI6ImNocm9uaWMyMTU3QGdtYWlsLmNvbSIsInBob25lIjoiIiwiYXBwX21ldGFkYXRhIjp7InByb3ZpZGVyIjoiZW1haWwiLCJwcm92aWRlcnMiOlsiZW1haWwiXX0sInVzZXJfbWV0YWRhdGEiOnt9LCJyb2xlIjoiYXV0aGVudGljYXRlZCIsImFhbCI6ImFhbDEiLCJhbXIiOlt7Im1ldGhvZCI6InBhc3N3b3JkIiwidGltZXN0YW1wIjoxNjc2NTQwMDg5fV0sInNlc3Npb25faWQiOiI4YmE2MDI4Ny1kOTc5LTQxMzYtYTQ1OS1kYzBlZjIwZjdhNzcifQ.CQcTs5N8zEulp8SdMuLcx95Y2PDZGP-Kgs-FAMJCI2U'
-    // const refreshToken = 'rAVKKK281zd9zBe8RfxTQQ'
-
-    // await supabaseUser.auth.setSession({
-    //   refresh_token: refreshToken,
-    //   access_token: accessToken
-    // })
-    // const { data, error } = await supabaseUser.auth.getSession()
-    // console.log(data)
-    // const storedToken = window.localStorage.getItem(authConfig.storageTokenKeyName)
-
-    const initAuth = async () => {
-      // check if a current session exists and fetch the data - store in context object (supabaseUser.auth.user)
-      //   const storedToken = window.localStorage.getItem(authConfig.storageTokenKeyName)
-      //   if (storedToken) {
-      //     setLoading(true)
-      //     await axios
-      //       .get(authConfig.meEndpoint, {
-      //         headers: {
-      //           Authorization: storedToken
-      //         }
-      //       })
-      //       .then(async response => {
-      //         setLoading(false)
-      //         setUser({ ...response.data.user })
-      //       })
-      //       .catch(() => {
-      //         localStorage.removeItem('useData') // if there is an error fetching data based on stored token, then remove all data store in local storage
-      //         localStorage.removeItem('refreshToken')
-      //         localStorage.removeItem('accessToken')
-      //         setUser(null)
-      //         setLoading(false)
-      //         if (authConfig.onTokenExpiration === 'logout' && !router.pathname.includes('login')) {
-      //           router.replace('/login') // if the instructions are to logout on expired token and they are not on login page, then go to login page. "replace" blocks history stack
-      //         }
-      //       })
-      //   } else {
-      //     setLoading(false)
-      //   }
+    setLoading(true)
+    //this methods gets session data if any and is called when auth statechanges and when component first mounts hence why is if fired in two seperate locations bellow
+    const getProfileData = async () => {
+      //await the data frin supabase
+      const { data, error } = await supabaseUser.auth.getSession()
+      //if a session is available then get the data froom the profiles tabale and spread it into user state, if an error then present in error state
+      if (data.session) {
+        let { data: profiles, error } = await supabaseUser
+          .from('profiles')
+          .select('*')
+          .eq('id', data.session.user.id)
+          .single()
+        setUser({ ...profiles })
+        error ? setError(error) : null
+        setLoading(false)
+      } else {
+        // if a session doesnt exists then just the loadingstate to false and allow the page to load
+        //! edge case to be tested
+        setLoading(false)
+      }
+      // this is if there is an error from the initial getsession from supabase
+      if (error) {
+        setError(error)
+        setLoading(false)
+      }
     }
-    initAuth()
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+
+    // call the getprofileData funciton when component first mounts, auth state might have not changed
+    getProfileData()
+
+    // call it again when the authstate changes, component may have not remounted
+    //! to be tested. quite unlikely this is necessary because all auth related methods are called from this file
+    supabaseUser.auth.onAuthStateChange(() => {
+      getProfileData()
+    })
   }, [])
 
-  const handleSwitch = async info => {
+  const handleSwitch = async (info, errorCallback) => {
+    // info contains local storage refreshToken and Access token required to fetch a session - only if remember was ticked on sign in
+    setLoading(true)
     const { data, error } = await supabaseUser.auth.setSession({
       refresh_token: info.refreshToken,
       access_token: info.accessToken
     })
-    // const { data, error } = await supabaseUser.auth.getSession()
 
+    // if a session exists, the fetch data and upload it to the userState, set the loading false
     if (data.user) {
       const returnUrl = router.query.returnUrl
-      setUser({ ...data })
-      console.log('switch', data)
-      // 6.fetch the profile data and add using spread operator to user data
       let { data: profiles, error } = await supabaseUser.from('profiles').select('*').eq('id', data.user.id).single()
       setUser({ ...data, ...profiles })
 
       setLoading(false)
       const redirectURL = returnUrl && returnUrl !== '/' ? returnUrl : '/'
       router.replace(redirectURL)
+      //! this may not work becuase errorCallback is undefined, set the error to error state or send a function through params from executing compnent, see login method below
     } else if (error) errorCallback(error)
-    setLoading(false) //return an error to a call back function provide by parent component
+    setLoading(false)
   }
 
   const handleLogin = async (params, errorCallback) => {
@@ -118,13 +100,11 @@ const AuthUserProvider = ({ children }) => {
 
     if (data.user) {
       const returnUrl = router.query.returnUrl
-      setUser({ ...data })
-
-      // 6.fetch the profile data and add using spread operator to user data
       let { data: profiles, error } = await supabaseUser.from('profiles').select('*').eq('id', data.user.id).single()
       setUser({ ...data, ...profiles })
 
       //** 1. create a storage object with authkeys and username as key if remember me selected, then store else return null */
+      //keystore is the email which will be the key:(to the object) i.e some@aol.com:{pros:values}
       const keyStore = profiles.email
       const storageObject = {
         username: profiles?.username,
@@ -132,36 +112,47 @@ const AuthUserProvider = ({ children }) => {
         refreshToken: data.session.refresh_token,
         accessToken: data.session.access_token
       }
+      //fetch local storeage object if one exists
       let storedObject = JSON.parse(window.localStorage.getItem('localUsers'))
       if (storedObject && params.rememberMe) {
+        // if it does then add new key:object at the end and spread previous data infront
         const newObject = { ...storedObject, [keyStore]: storageObject }
         window.localStorage.setItem('localUsers', JSON.stringify(newObject))
       } else if (!storedObject && params.rememberMe) {
+        //if no new object exists then create one
+        //!might have been easier to just use an array of objects, possible refactor in future - would prevent advanced conversion into array in component
         const newObject = { [keyStore]: storageObject }
         window.localStorage.setItem('localUsers', JSON.stringify(newObject))
       }
 
       setLoading(false)
+
       const redirectURL = returnUrl && returnUrl !== '/' ? returnUrl : '/'
       router.replace(redirectURL)
     } else if (error) errorCallback(error)
     setLoading(false) //return an error to a call back function provide by parent component
   }
 
-  const handleLogout = async () => {
-    // function just removes use info from local state - need to refactor to access params and also use supabse kill session
-    setUser(null)
-    window.localStorage.removeItem('useData')
-
+  const handleLogout = async (email, errorCallback) => {
     setLoading(true)
-    const { error } = await supabaseUser.auth.signOut()
-    if (error) errorCallback(error)
-    setLoading(false) //return an error to a call back function provide by parent component
+    // function deleted user from local storage then signout of supabase session - then pushed to login screen
+    const store = JSON.parse(window.localStorage.getItem('localUsers'))
+    store
+    delete store[email]
+    window.localStorage.setItem('localUsers', JSON.stringify(store))
+    await supabaseUser.auth
+      .signOut()
+      .then(() => {
+        router.push('/login')
+        setLoading(false)
+      })
+      .catch(error => errorCallback(error))
 
-    router.push('/login')
+    //return an error to a call back function provide by parent component
   }
 
   const handleRegister = (params, errorCallback) => {
+    //! TO BE DONE! junk code below
     //create a use and log them in immediately based on given values if no errors
     supabaseUser.auth
       .signOut()
@@ -180,6 +171,7 @@ const AuthUserProvider = ({ children }) => {
     user: user,
     loading,
     activeUser: activeUser,
+    error: error,
     setUser,
     setLoading,
     login: handleLogin,
@@ -187,14 +179,6 @@ const AuthUserProvider = ({ children }) => {
     register: handleRegister,
     switchU: handleSwitch
   }
-  // const oldValues = JSON.parse(window.localStorage.getItem('userData'))
-  // if (oldValues) {
-  //   const values = [...oldValues, newvalues]
-  //   params.rememberMe ? window.localStorage.setItem('userData', JSON.stringify(values)) : null
-  // } else {
-  //   const values = [newvalues]
-  //   params.rememberMe ? window.localStorage.setItem('userData', JSON.stringify(values)) : null
-  // }
 
   return <UserAuthContext.Provider value={values}>{children}</UserAuthContext.Provider>
 }
