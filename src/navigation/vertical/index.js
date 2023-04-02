@@ -19,7 +19,7 @@ const navigation = () => {
       icon: 'logos:google-maps'
     },
     {
-      path: '/acl',
+      path: '/chat',
       action: 'read',
       subject: 'acl-page',
       title: 'Chat',

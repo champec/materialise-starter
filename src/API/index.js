@@ -27,7 +27,8 @@ const getPlacesData = async coordinates => {
   var raw = JSON.stringify({
     filter: "OrganisationTypeID eq 'PHA'",
     orderby: `geo.distance(Geocode, geography'POINT(${coordinates?.lng} ${coordinates?.lat})')`,
-    select: 'OrganisationName, NACSCode, OpeningTimes, Latitude,Longitude',
+    select:
+      'OrganisationName, NACSCode, OpeningTimes, Latitude,Longitude, Contacts, Address1, City, County, Postcode, ServicesProvided ',
     top: 5,
     skip: 0,
     count: true
@@ -40,12 +41,13 @@ const getPlacesData = async coordinates => {
     redirect: 'follow'
   }
 
-  const { value } = await fetch('https://api.nhs.uk/service-search/search?api-version=1', requestOptions)
-    .then(response => response.text())
-    .then(result => {
-      return JSON.parse(result)
-    })
-    .catch(error => console.log('error', error))
+  const { value } =
+    (await fetch('https://api.nhs.uk/service-search/search?api-version=1', requestOptions)
+      .then(response => response.text())
+      .then(result => {
+        return JSON.parse(result)
+      })
+      .catch(error => console.log('error', error))) || {}
 
   return value
 }

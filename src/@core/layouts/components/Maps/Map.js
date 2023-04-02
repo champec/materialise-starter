@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react'
 import GoogleMapReact from 'google-map-react'
+import Marker from 'src/@core/components/Map/Marker'
 
 //** MUI imports
 import { useMediaQuery } from '@mui/material'
@@ -16,7 +17,7 @@ import CardCongratulationsDaisy from 'src/views/ui/gamification/CardCongratulati
 function Map({ setCoordinates, coordinates, places, setChildClicked }) {
   const [geoPermission, setGeoPermission] = useState()
   const [location, setLocation] = useState({ latitude: 0, longtitude: 0 })
-  const [loading, setLoading] = useState(true)
+  const [loading, setLoading] = useState(false)
   const coords = { lat: location.latitude, lng: location.longitude }
 
   const locationOptions = {
@@ -73,18 +74,15 @@ function Map({ setCoordinates, coordinates, places, setChildClicked }) {
               style={{
                 width: '200px',
                 height: 'auto',
-                backgroundColor: 'white',
-                textOverflow: 'ellipsis'
+                textOverflow: 'ellipsis',
+                marginTop: '-40px',
+                marginLeft: '-40px'
               }}
               lat={place.Latitude}
               lng={place.Longitude}
               key={i}
             >
-              <Card sx={{ border: 0, boxShadow: 0, color: 'common.white', backgroundColor: '#16B1FF' }}>
-                <CardContent sx={{ p: theme => `${theme.spacing(3.25, 5, 4.5)} !important` }}>
-                  <Typography> {place.OrganisationName}</Typography>
-                </CardContent>
-              </Card>
+              <Marker place={place} key={i} />
             </div>
           )
         })}

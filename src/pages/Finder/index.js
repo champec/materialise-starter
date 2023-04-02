@@ -21,10 +21,13 @@ const Finder = () => {
   const [places, setPlaces] = useState([])
   const [coordinates, setCoordinates] = useState({ lat: -2.24, lng: 53.47 })
   const [childClicked, setChildClicked] = useState()
+  const [loading, setLoading] = useState(false)
 
   useEffect(() => {
+    setLoading(true)
     getPlacesData(coordinates).then(res => {
       setPlaces(res)
+      setLoading(false)
     })
   }, [coordinates])
 
@@ -50,7 +53,7 @@ const Finder = () => {
         <Grid item xs={12} md={4}>
           <Card>
             <CardContent>
-              <List places={places} childClicked={childClicked} />
+              <List places={places} childClicked={childClicked} loading={loading} />
             </CardContent>
           </Card>
         </Grid>

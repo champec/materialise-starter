@@ -5,6 +5,10 @@ import { Router } from 'next/router'
 // ** Loader Import
 import NProgress from 'nprogress'
 
+//** Reduct
+import { Provider } from 'react-redux'
+import { store } from 'src/store'
+
 // ** Emotion Imports
 import { CacheProvider } from '@emotion/react'
 
@@ -120,33 +124,35 @@ const App = props => {
 
       <AuthOrgProvider>
         <AuthUserProvider>
-          <SettingsProvider {...(setConfig ? { pageSettings: setConfig() } : {})}>
-            <SettingsConsumer>
-              {({ settings }) => {
-                return (
-                  <ThemeComponent settings={settings}>
-                    <WindowWrapper>
-                      {/*/ this passes down rules for page views depending on user state */}
-                      <Guard authGuard={authGuard} orgGuard={orgGuard} guestGuard={guestGuard}>
-                        {/*/this is a CRUD guard but can be replaced for RLS in supabase*/}
-                        <AclGuard
-                          aclAbilities={aclAbilities}
-                          guestGuard={guestGuard}
-                          orgGuard={orgGuard}
-                          authGuard={authGuard}
-                        >
-                          {getLayout(<Component {...pageProps} />)}
-                        </AclGuard>
-                      </Guard>
-                    </WindowWrapper>
-                    <ReactHotToast>
-                      <Toaster position={settings.toastPosition} toastOptions={{ className: 'react-hot-toast' }} />
-                    </ReactHotToast>
-                  </ThemeComponent>
-                )
-              }}
-            </SettingsConsumer>
-          </SettingsProvider>
+          <Provider store={store}>
+            <SettingsProvider {...(setConfig ? { pageSettings: setConfig() } : {})}>
+              <SettingsConsumer>
+                {({ settings }) => {
+                  return (
+                    <ThemeComponent settings={settings}>
+                      <WindowWrapper>
+                        {/*/ this passes down rules for page views depending on user state */}
+                        <Guard authGuard={authGuard} orgGuard={orgGuard} guestGuard={guestGuard}>
+                          {/*/this is a CRUD guard but can be replaced for RLS in supabase*/}
+                          <AclGuard
+                            aclAbilities={aclAbilities}
+                            guestGuard={guestGuard}
+                            orgGuard={orgGuard}
+                            authGuard={authGuard}
+                          >
+                            {getLayout(<Component {...pageProps} />)}
+                          </AclGuard>
+                        </Guard>
+                      </WindowWrapper>
+                      <ReactHotToast>
+                        <Toaster position={settings.toastPosition} toastOptions={{ className: 'react-hot-toast' }} />
+                      </ReactHotToast>
+                    </ThemeComponent>
+                  )
+                }}
+              </SettingsConsumer>
+            </SettingsProvider>
+          </Provider>
         </AuthUserProvider>
       </AuthOrgProvider>
     </CacheProvider>
