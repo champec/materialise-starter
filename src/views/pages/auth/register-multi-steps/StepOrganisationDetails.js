@@ -106,7 +106,7 @@ const FormControlLabel = styled(MuiFormControlLabel)(({ theme }) => ({
 }))
 
 //function definition and import function to change steps called handleNext
-const StepOrganisationDetails = ({ handleNext, authOrg, authUser }) => {
+const StepOrganisationDetails = ({ handleNext, authOrg, authUser, auth }) => {
   // ** Hooks
   const theme = useTheme()
   const { settings } = useSettings()
@@ -129,7 +129,7 @@ const StepOrganisationDetails = ({ handleNext, authOrg, authUser }) => {
     const { email, password } = data
 
     //change to use auth from supabase
-    authOrg.login({ email, password, rememberMe }, err => {
+    auth.login({ email, password, rememberMe }, err => {
       console.log(err.message)
       setError('email', {
         type: 'manual',

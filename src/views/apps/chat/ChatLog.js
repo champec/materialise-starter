@@ -1,5 +1,5 @@
 // ** React Imports
-import { useRef, useEffect, useState } from 'react'
+import { useRef, useEffect } from 'react'
 
 // ** MUI Imports
 import Box from '@mui/material/Box'
@@ -17,55 +17,18 @@ import CustomAvatar from 'src/@core/components/mui/avatar'
 
 // ** Utils Imports
 import { getInitials } from 'src/@core/utils/get-initials'
-import { useOrgAuth } from 'src/hooks/useOrgAuth'
-import { supabaseOrg } from 'src/configs/supabase'
-import { useUserAuth } from 'src/hooks/useAuth'
 
 const PerfectScrollbar = styled(PerfectScrollbarComponent)(({ theme }) => ({
   padding: theme.spacing(5)
 }))
 
 const ChatLog = props => {
-  const [messages, setMessages] = useState(props.data[0]?.chatMessages)
-
   // ** Props
-
-  const { data, hidden, id } = props
-
-  //** realtime Chat Messages
-  useEffect(() => {
-    const fetchMessages = async () => {
-      const { data, error } = await supabaseOrg
-        .from('chatMessages')
-        .select('*')
-        .eq('chat_id', props.data[2])
-        .order('created_at', { ascending: true })
-
-      setMessages(data)
-    }
-
-    fetchMessages()
-
-    // const channel = supabaseOrg
-    //   .channel('*')
-    //   .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'chatMessages' }, payload => {
-    //     const newMessage = payload.new
-    //     if (!messages.find(message => message.id == newMessage.id)) {
-    //       setMessages([...messages, newMessage])
-    //     } else {
-    //       console.log({ newMessage })
-    //     }
-    //   })
-    //   .subscribe()
-    // return () => {
-    //   supabaseOrg.removeChannel(channel)
-    // }
-  }, [data])
+  const { data, hidden, selectedChat } = props
+  const userContact = data.userContact
 
   // ** Ref
   const chatArea = useRef(null)
-  //! DONt need to useOrg - the information is contained in the props.data - username and organisation name // auth.uid() sb function with check user_id = auth.uid()
-  const { organisation } = useOrgAuth()
 
   // ** Scroll to chat bottom
   const scrollToBottom = () => {
@@ -83,23 +46,26 @@ const ChatLog = props => {
   // ** Formats chat data based on sender
   const formattedChatData = () => {
     let chatLog = []
-    if (messages) {
-      chatLog = messages
+    if (selectedChat.chatMessages) {
+      chatLog = selectedChat.chatMessages
     }
     const formattedChatLog = []
-    let chatMessageSenderId = organisation.id //chatLog[0] ? chatLog[0].senderId : 11
+    let chatMessageSenderId = chatLog[0] ? chatLog[0].sender_id : 11
 
     let msgGroup = {
       senderId: chatMessageSenderId,
       messages: []
     }
     chatLog.forEach((msg, index) => {
-      const feedback = { isSent: msg.isSent, isSeen: msg.isSeen, isDelivered: msg.isDelivered }
       if (chatMessageSenderId === msg.sender_id) {
         msgGroup.messages.push({
           time: msg.created_at,
           msg: msg.message,
-          feedback: feedback
+          feedback: {
+            isSent: msg.isSent,
+            isDelivered: msg.isDelivered,
+            isSeen: msg.isSeen
+          }
         })
       } else {
         chatMessageSenderId = msg.sender_id
@@ -110,7 +76,11 @@ const ChatLog = props => {
             {
               time: msg.created_at,
               msg: msg.message,
-              feedback: msg?.feedback
+              feedback: {
+                isSent: msg.isSent,
+                isDelivered: msg.isDelivered,
+                isSeen: msg.isSeen
+              }
             }
           ]
         }
@@ -121,9 +91,8 @@ const ChatLog = props => {
     return formattedChatLog
   }
 
-  const renderMsgFeedback = (isSender, chat) => {
+  const renderMsgFeedback = (isSender, feedback) => {
     if (isSender) {
-      const feedback = { isSent: chat.isSent, isSeen: chat.isSeen, isDelivered: chat.isDelivered }
       if (feedback.isSent && !feedback.isDelivered) {
         return (
           <Box component='span' sx={{ display: 'inline-flex', '& svg': { mr: 2, color: 'text.secondary' } }}>
@@ -148,16 +117,21 @@ const ChatLog = props => {
     }
   }
   useEffect(() => {
-    if (messages && messages.length) {
+    if (selectedChat && selectedChat.chatMessages && selectedChat.chatMessages.length) {
       scrollToBottom()
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [messages])
+  }, [selectedChat, selectedChat.chatMessages])
 
   // ** Renders user chat
   const renderChats = () => {
+    // const userContact = selectedChat.chatParticipants.find(
+    //   participant => participant.user_id === selectedChat.participants[0]
+    // )
+    const contact = selectedChat.chatParticipants.find(participant => participant.user_id !== userContact.id)
+
     return formattedChatData().map((item, index) => {
-      const isSender = item.senderId !== organisation.id
+      const isSender = item.senderId === userContact.id
 
       return (
         <Box
@@ -171,7 +145,7 @@ const ChatLog = props => {
           <div>
             <CustomAvatar
               skin='light'
-              color={data?.contact?.avatarColor ? data?.contact?.avatarColor : undefined}
+              color={data.contact?.avatarColor ? data.contact?.avatarColor : undefined}
               sx={{
                 width: '2rem',
                 height: '2rem',
@@ -179,25 +153,27 @@ const ChatLog = props => {
                 ml: isSender ? 4 : undefined,
                 mr: !isSender ? 4 : undefined
               }}
-              {...(data?.contact?.avatar && !isSender
+              {...(contact.profile.avatar_url && !isSender
                 ? {
-                    src: data?.contact?.avatar,
-                    alt: data.contact.fullName
+                    src: contact.profile?.avatar_url,
+                    alt: contact.profile?.full_name
                   }
                 : {})}
               {...(isSender
                 ? {
-                    src: data?.userContact?.avatar,
-                    alt: data?.userContact?.fullName
+                    src: userContact.profile?.avatar_url,
+                    alt: userContact.profile?.full_name
                   }
                 : {})}
             >
-              {isSender ? getInitials(organisation.organisation_name) : getInitials(data[1].name)}
+              {contact.profile.full_name ? getInitials(contact.profile.full_name) : null}
             </CustomAvatar>
           </div>
 
           <Box className='chat-body' sx={{ maxWidth: ['calc(100% - 5.75rem)', '75%', '65%'] }}>
             {item.messages.map((chat, index, { length }) => {
+              const time = new Date(chat.time)
+
               return (
                 <Box key={index} sx={{ '&:not(:last-of-type)': { mb: 3.5 } }}>
                   <div>
@@ -227,14 +203,10 @@ const ChatLog = props => {
                         justifyContent: isSender ? 'flex-end' : 'flex-start'
                       }}
                     >
-                      {renderMsgFeedback(isSender, chat)}
+                      {renderMsgFeedback(isSender, chat.feedback)}
                       <Typography variant='caption' sx={{ color: 'text.disabled' }}>
-                        {chat.time
-                          ? new Date(chat.time).toLocaleString('en-US', {
-                              hour: 'numeric',
-                              minute: 'numeric',
-                              hour12: true
-                            })
+                        {time
+                          ? new Date(time).toLocaleString('en-US', { hour: 'numeric', minute: 'numeric', hour12: true })
                           : null}
                       </Typography>
                     </Box>

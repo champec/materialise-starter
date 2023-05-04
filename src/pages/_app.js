@@ -38,6 +38,7 @@ import Spinner from 'src/@core/components/spinner'
 // ** Contexts
 import { AuthUserProvider } from 'src/context/UserAuthContext'
 import { AuthOrgProvider } from 'src/context/OrgAuthContext'
+import { AuthProvider } from 'src/context/supabaseContext'
 import { SettingsConsumer, SettingsProvider } from 'src/@core/context/settingsContext'
 
 // ** Styled Components
@@ -122,39 +123,41 @@ const App = props => {
         <meta name='viewport' content='initial-scale=1, width=device-width' />
       </Head>
 
-      <AuthOrgProvider>
-        <AuthUserProvider>
-          <Provider store={store}>
-            <SettingsProvider {...(setConfig ? { pageSettings: setConfig() } : {})}>
-              <SettingsConsumer>
-                {({ settings }) => {
-                  return (
-                    <ThemeComponent settings={settings}>
-                      <WindowWrapper>
-                        {/*/ this passes down rules for page views depending on user state */}
-                        <Guard authGuard={authGuard} orgGuard={orgGuard} guestGuard={guestGuard}>
-                          {/*/this is a CRUD guard but can be replaced for RLS in supabase*/}
-                          <AclGuard
-                            aclAbilities={aclAbilities}
-                            guestGuard={guestGuard}
-                            orgGuard={orgGuard}
-                            authGuard={authGuard}
-                          >
-                            {getLayout(<Component {...pageProps} />)}
-                          </AclGuard>
-                        </Guard>
-                      </WindowWrapper>
-                      <ReactHotToast>
-                        <Toaster position={settings.toastPosition} toastOptions={{ className: 'react-hot-toast' }} />
-                      </ReactHotToast>
-                    </ThemeComponent>
-                  )
-                }}
-              </SettingsConsumer>
-            </SettingsProvider>
-          </Provider>
-        </AuthUserProvider>
-      </AuthOrgProvider>
+      <AuthProvider>
+        <AuthOrgProvider>
+          <AuthUserProvider>
+            <Provider store={store}>
+              <SettingsProvider {...(setConfig ? { pageSettings: setConfig() } : {})}>
+                <SettingsConsumer>
+                  {({ settings }) => {
+                    return (
+                      <ThemeComponent settings={settings}>
+                        <WindowWrapper>
+                          {/*/ this passes down rules for page views depending on user state */}
+                          <Guard authGuard={authGuard} orgGuard={orgGuard} guestGuard={guestGuard}>
+                            {/*/this is a CRUD guard but can be replaced for RLS in supabase*/}
+                            <AclGuard
+                              aclAbilities={aclAbilities}
+                              guestGuard={guestGuard}
+                              orgGuard={orgGuard}
+                              authGuard={authGuard}
+                            >
+                              {getLayout(<Component {...pageProps} />)}
+                            </AclGuard>
+                          </Guard>
+                        </WindowWrapper>
+                        <ReactHotToast>
+                          <Toaster position={settings.toastPosition} toastOptions={{ className: 'react-hot-toast' }} />
+                        </ReactHotToast>
+                      </ThemeComponent>
+                    )
+                  }}
+                </SettingsConsumer>
+              </SettingsProvider>
+            </Provider>
+          </AuthUserProvider>
+        </AuthOrgProvider>
+      </AuthProvider>
     </CacheProvider>
   )
 }

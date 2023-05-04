@@ -1,0 +1,4 @@
+Introducing the app
+
+We are trying to build an app that allows pharmacies to communicate between each other and trade stock amongst each other. It has several features including, local pharmacy finder,
+chatbox, and a stock trading system. The app is built with React and supabase as a backend. 

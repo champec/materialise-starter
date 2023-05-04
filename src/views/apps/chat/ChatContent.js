@@ -1,5 +1,5 @@
 // ** React Imports
-import { Fragment } from 'react'
+import { Fragment, useMemo } from 'react'
 
 // ** MUI Imports
 import Badge from '@mui/material/Badge'
@@ -53,9 +53,21 @@ const ChatContent = props => {
     }
   }
 
+  const memoizedChatLog = useMemo(() => {
+    return store.selectedChat && store.userProfile ? (
+      <ChatLog
+        hidden={hidden}
+        data={{ ...store.selectedChat, userContact: store.userProfile }}
+        selectedChat={store.selectedChat}
+      />
+    ) : null
+  }, [store.selectedChat, store.userProfile, hidden])
+
   const renderContent = () => {
     if (store) {
       const selectedChat = store.selectedChat
+      const contact = selectedChat?.chatParticipants.find(participant => participant.user_id !== store.userProfile.id)
+
       if (!selectedChat) {
         return (
           <ChatWrapperStartChat
@@ -137,33 +149,33 @@ const ChatContent = props => {
                           width: 8,
                           height: 8,
                           borderRadius: '50%',
-                          color: `${statusObj[selectedChat[1]?.status]}.main`,
+                          color: `${statusObj[selectedChat.contact?.status]}.main`,
                           boxShadow: theme => `0 0 0 2px ${theme.palette.background.paper}`,
-                          backgroundColor: `${statusObj[selectedChat[1]?.status]}.main`
+                          backgroundColor: `${statusObj[selectedChat.contact?.status]}.main`
                         }}
                       />
                     }
                   >
-                    {selectedChat?.contact?.avatar ? (
+                    {contact?.profile?.avatar_url ? (
                       <MuiAvatar
-                        src={selectedChat?.contact?.avatar}
-                        alt={selectedChat?.contact?.fullName}
+                        src={selectedChat.contact?.avatar}
+                        alt={selectedChat.contact?.fullName}
                         sx={{ width: 40, height: 40 }}
                       />
                     ) : (
                       <CustomAvatar
                         skin='light'
-                        color={selectedChat?.contact?.avatarColor}
+                        color={selectedChat.contact?.avatarColor}
                         sx={{ width: 40, height: 40, fontSize: '1rem' }}
                       >
-                        {/* {getInitials(selectedChat[1].name)} */}
+                        {contact?.profile?.organisation_name && getInitials(contact?.profile?.organisation_name)}
                       </CustomAvatar>
                     )}
                   </Badge>
                   <Box sx={{ display: 'flex', flexDirection: 'column' }}>
-                    <Typography sx={{ color: 'text.secondary' }}>{selectedChat[1]?.name}</Typography>
+                    <Typography sx={{ color: 'text.secondary' }}>{contact?.profile?.organisation_name}</Typography>
                     <Typography variant='body2' sx={{ color: 'text.disabled' }}>
-                      {selectedChat?.contact?.role}
+                      {selectedChat.contact?.role}
                     </Typography>
                   </Box>
                 </Box>
@@ -193,13 +205,10 @@ const ChatContent = props => {
               </Box>
             </Box>
 
-            {selectedChat && store.userProfile ? (
-              <ChatLog hidden={hidden} id={selectedChat} data={{ ...selectedChat }} />
-            ) : null}
-
+            {memoizedChatLog}
             <SendMsgForm store={store} dispatch={dispatch} sendMsg={sendMsg} />
 
-            <UserProfileRight
+            {/* <UserProfileRight
               store={store}
               hidden={hidden}
               statusObj={statusObj}
@@ -207,7 +216,7 @@ const ChatContent = props => {
               sidebarWidth={sidebarWidth}
               userProfileRightOpen={userProfileRightOpen}
               handleUserProfileRightSidebarToggle={handleUserProfileRightSidebarToggle}
-            />
+            /> */}
           </Box>
         )
       }

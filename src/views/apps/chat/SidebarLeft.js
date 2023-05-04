@@ -1,5 +1,6 @@
 // ** React Imports
 import { useState, useEffect } from 'react'
+import { useOrgAuth } from 'src/hooks/useOrgAuth'
 
 // ** Next Import
 import { useRouter } from 'next/router'
@@ -31,7 +32,6 @@ import CustomAvatar from 'src/@core/components/mui/avatar'
 
 // ** Chat App Components Imports
 import UserProfileLeft from 'src/views/apps/chat/UserProfileLeft'
-import { useOrgAuth } from 'src/hooks/useOrgAuth'
 
 const ScrollWrapper = ({ children, hidden }) => {
   if (hidden) {
@@ -43,8 +43,6 @@ const ScrollWrapper = ({ children, hidden }) => {
 
 const SidebarLeft = props => {
   // ** Props
-  // store contains, contacts and chats, hidden referes to mediaquery of screen size lg, md above is medium, dispatch calls actions, stausObj, selectchats fro redux
-  // getinitials, sidebarWidth value, setUserStates online etc, leftsidebar, removeselectedchat upon exit or return, userprofile, datformat, toggle the left bar,
   const {
     store,
     hidden,
@@ -54,7 +52,6 @@ const SidebarLeft = props => {
     userStatus,
     selectChat,
     getInitials,
-    newMessage,
     sidebarWidth,
     setUserStatus,
     leftSidebarOpen,
@@ -63,69 +60,52 @@ const SidebarLeft = props => {
     formatDateToMonthShort,
     handleLeftSidebarToggle,
     handleUserProfileLeftSidebarToggle,
-    mapChatID,
-    setTriggerRender
+    active,
+    setActive
   } = props
 
+  console.log(store)
+
+  const userId = useOrgAuth().organisation.id
+
   // ** States
-  // the words used in search
   const [query, setQuery] = useState('')
-  // the resultant array of contatcs chats
   const [filteredChat, setFilteredChat] = useState([])
   const [filteredContacts, setFilteredContacts] = useState([])
-  const [updateMessage, setUpdateMessage] = useState()
-  // making a chat active and writing to message table
-
-  const [active, setActive] = useState(null)
 
   // ** Hooks
   const router = useRouter()
-  const { organisation } = useOrgAuth()
 
-  //when you click on select chat - you receive its type(chat or contact) and fetch the messages based on its ID, selectChat is a async function, also set the current active chat
-  //in state - if left side toggle is open then close
-
-  // setActive({ type: 'chat', id: 'bfef0f4d-72a1-401e-ad27-bd1d2647de61' })
-
-  const handleChatClick = (type, id, chat, guest) => {
-    const send = [chat, guest, id]
-    const state = { type, id }
-    setActive(prev => state)
-    dispatch(selectChat(send))
+  const handleChatClick = (type, chat) => {
+    dispatch(selectChat(chat))
+    setActive({ type, id: chat.id })
     if (!mdAbove) {
       handleLeftSidebarToggle()
     }
   }
 
   useEffect(() => {
-    if (newMessage) {
-      setUpdateMessage(newMessage)
-    }
-  }, [newMessage])
-
-  useEffect(() => {
     if (store && store.chats) {
       if (active !== null) {
-        if (active.type === 'contact' && active.id === store.chats[0].id) {
-          setActive({ type: 'chat', id: active.id })
+        if (active.type === 'contact' && active.chat.id === store.chats[0].id) {
+          setActive({ type: 'chat', chat: active.chat })
         }
       }
     }
-  }, [store, active])
+  }, [store.chats, active])
 
-  // cleans the active chat and removes selected chats
-  // useEffect(() => {
-  //   router.events.on('routeChangeComplete', () => {
-  //     setActive(null)
-  //     dispatch(removeSelectedChat())
-  //   })
+  useEffect(() => {
+    router.events.on('routeChangeComplete', () => {
+      setActive(null)
+      dispatch(removeSelectedChat())
+    })
 
-  //   return () => {
-  //     setActive(null)
-  //     dispatch(removeSelectedChat())
-  //   }
-  //   // eslint-disable-next-line react-hooks/exhaustive-deps
-  // }, [])
+    return () => {
+      setActive(null)
+      dispatch(removeSelectedChat())
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   const hasActiveId = id => {
     if (store.chats !== null) {
@@ -135,21 +115,8 @@ const SidebarLeft = props => {
     }
   }
 
-  useEffect(() => {
-    if (mapChatID) {
-      const arrayToMap = store.chats.filter(x => x.id == mapChatID)
-      const guest = arrayToMap[0]?.chatParticipants[0]
-      const type = 'chat'
-      const chat = arrayToMap[0]?.chatMessages[0]
-      const send = [chat, guest, mapChatID]
-      handleChatClick(type, mapChatID, chat, guest)
-      setTriggerRender(state => !state)
-    }
-  }, [])
-
   const renderChats = () => {
     if (store && store.chats && store.chats.length) {
-      // if you search but the search doesnt return any results
       if (query.length && !filteredChat.length) {
         return (
           <ListItem>
@@ -157,23 +124,18 @@ const SidebarLeft = props => {
           </ListItem>
         )
       } else {
-        // if there is search and it has results, the bring those chats, otherwise just bring all the chats in the redux store
         const arrToMap = query.length && filteredChat.length ? filteredChat : store.chats
 
-        // array to map over is dynamic basic on if search or not, lastest message is previewed by length -1, active condition if the active state matches current looping chat for css
         return arrToMap.map((chat, index) => {
-          const currentUserId = organisation.id
-          const guestArray = chat.chatParticipants.filter(user => user.user_id !== currentUserId)
-          const guest = guestArray[0]
-          const lastMessage = chat.chatMessages[chat.chatMessages.length - 1]
+          const lastMessage = chat.chatMessages.slice(-1)[0]
           const activeCondition = active !== null && active.id === chat.id && active.type === 'chat'
+          const chatParticipant = chat.chatParticipants.find(participant => participant.user_id !== userId)
 
-          // in return everything is wrapped in a listitem button, show details from chat, creates initials based avatar if non exists
           return (
             <ListItem key={index} disablePadding sx={{ '&:not(:last-child)': { mb: 1.5 } }}>
               <ListItemButton
                 disableRipple
-                onClick={() => handleChatClick('chat', chat.id, chat, guest)}
+                onClick={() => handleChatClick('chat', chat)}
                 sx={{
                   px: 2.5,
                   py: 2.5,
@@ -197,8 +159,8 @@ const SidebarLeft = props => {
                           width: 8,
                           height: 8,
                           borderRadius: '50%',
-                          color: `${statusObj[chat.status]}.main`,
-                          backgroundColor: `${statusObj[chat.status]}.main`,
+                          color: 'success.main', // You can change this to the desired status color
+                          backgroundColor: 'success.main', // You can change this to the desired status color
                           boxShadow: theme =>
                             `0 0 0 2px ${
                               !activeCondition ? theme.palette.background.paper : theme.palette.common.white
@@ -207,10 +169,10 @@ const SidebarLeft = props => {
                       />
                     }
                   >
-                    {chat.avatar ? (
+                    {chatParticipant?.profile.avatar_url ? (
                       <MuiAvatar
-                        src={chat.avatar}
-                        alt={chat.fullName ?? 'sample test'}
+                        src={chatParticipant?.profile.avatar_url}
+                        alt={chatParticipant?.profile.username}
                         sx={{
                           width: 40,
                           height: 40,
@@ -219,7 +181,7 @@ const SidebarLeft = props => {
                       />
                     ) : (
                       <CustomAvatar
-                        color={chat.avatarColor}
+                        color={null} // You can set a specific color if needed
                         skin={activeCondition ? 'light-static' : 'light'}
                         sx={{
                           width: 40,
@@ -228,7 +190,8 @@ const SidebarLeft = props => {
                           outline: theme => `2px solid ${activeCondition ? theme.palette.common.white : 'transparent'}`
                         }}
                       >
-                        {getInitials(guest?.name ?? 'Van Winkle')}
+                        {chatParticipant?.profile?.username && getInitials(chatParticipant?.profile?.username)} //Change
+                        this to get the desired initials
                       </CustomAvatar>
                     )}
                   </Badge>
@@ -242,16 +205,12 @@ const SidebarLeft = props => {
                   }}
                   primary={
                     <Typography noWrap sx={{ ...(!activeCondition ? { color: 'text.secondary' } : {}) }}>
-                      {guest?.name ? guest?.name : 'name dosnt exists'}
+                      {chatParticipant?.profile.organisation_name}
                     </Typography>
                   }
                   secondary={
                     <Typography noWrap variant='body2' sx={{ ...(!activeCondition && { color: 'text.disabled' }) }}>
-                      {lastMessage
-                        ? updateMessage && updateMessage.chat_id == chat.id
-                          ? updateMessage.message
-                          : lastMessage?.message
-                        : 'no messages'}
+                      {lastMessage ? lastMessage.message : null}
                     </Typography>
                   }
                 />
@@ -266,14 +225,15 @@ const SidebarLeft = props => {
                   <Typography sx={{ whiteSpace: 'nowrap', color: activeCondition ? 'common.white' : 'text.disabled' }}>
                     <>
                       {lastMessage
-                        ? formatDateToMonthShort(lastMessage.created_at, true)
-                        : formatDateToMonthShort(new Date(), true)}
+                        ? formatDateToMonthShort(new Date(lastMessage.created_at), true)
+                        : new Date().toDateString()}
                     </>
                   </Typography>
-                  {chat?.chat?.unseenMsgs && chat?.chat?.unseenMsgs > 0 ? (
+                  {/* You can implement an "unseenMsgs" counter and use it here, similar to the original code */}
+                  {chat.unseenMsgs && chat.unseenMsgs > 0 ? (
                     <Chip
                       color='error'
-                      label={chat.chat.unseenMsgs}
+                      label={chat.unseenMsgs}
                       sx={{
                         mt: 0.5,
                         height: 18,
@@ -324,8 +284,8 @@ const SidebarLeft = props => {
                     <ListItemAvatar sx={{ m: 0 }}>
                       {contact.avatar ? (
                         <MuiAvatar
-                          alt={contact.username ?? 'sample test'}
-                          src={contact.avatar_url ?? 'sample test'}
+                          alt={contact.fullName}
+                          src={contact.avatar}
                           sx={{
                             width: 40,
                             height: 40,
@@ -335,7 +295,7 @@ const SidebarLeft = props => {
                         />
                       ) : (
                         <CustomAvatar
-                          color={contact?.avatarColor}
+                          color={contact.avatarColor}
                           skin={activeCondition ? 'light-static' : 'light'}
                           sx={{
                             width: 40,
@@ -345,7 +305,7 @@ const SidebarLeft = props => {
                               `2px solid ${activeCondition ? theme.palette.common.white : 'transparent'}`
                           }}
                         >
-                          {getInitials(contact.fullName ?? 'John Doe')}
+                          {getInitials(contact.fullName)}
                         </CustomAvatar>
                       )}
                     </ListItemAvatar>
@@ -357,12 +317,12 @@ const SidebarLeft = props => {
                       }}
                       primary={
                         <Typography sx={{ ...(!activeCondition ? { color: 'text.secondary' } : {}) }}>
-                          {contact.organisation_name ? 'organisation exists' : 'organisation doesnt exist'}
+                          {contact.fullName}
                         </Typography>
                       }
                       secondary={
                         <Typography noWrap variant='body2' sx={{ ...(!activeCondition && { color: 'text.disabled' }) }}>
-                          {contact.about ? 'about exists' : 'about doesnt exists'}
+                          {contact.about}
                         </Typography>
                       }
                     />
@@ -377,15 +337,12 @@ const SidebarLeft = props => {
 
   const handleFilter = e => {
     setQuery(e.target.value)
-    if (store.chats !== null /*&& store.contacts !== null*/) {
-      const searchFilterFunction = contact => console.log(contact, store.chats)
-      // contact?.chatParticipants[0].name.toLowerCase().includes(e.target.value.toLowerCase())
-      const filteredChatsArr = store.chats?.filter(contact =>
-        contact?.chatParticipants[0]?.name.toLowerCase().includes(e.target.value.toLowerCase())
-      )
-      // const filteredContactsArr = store.contacts.filter(searchFilterFunction) when contact are available need to activate
+    if (store.chats !== null && store.contacts !== null) {
+      const searchFilterFunction = contact => contact.fullName.toLowerCase().includes(e.target.value.toLowerCase())
+      const filteredChatsArr = store.chats.filter(searchFilterFunction)
+      const filteredContactsArr = store.contacts.filter(searchFilterFunction)
       setFilteredChat(filteredChatsArr)
-      // setFilteredContacts(filteredContactsArr)
+      setFilteredContacts(filteredContactsArr)
     }
   }
 

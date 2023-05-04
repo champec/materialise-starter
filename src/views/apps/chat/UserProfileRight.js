@@ -91,35 +91,35 @@ const UserProfileRight = props => {
                         width: 10,
                         height: 10,
                         borderRadius: '50%',
-                        color: `${statusObj[store.selectedChat?.contact?.status]}.main`,
+                        color: `${statusObj[store.selectedChat.contact.status]}.main`,
                         boxShadow: theme => `0 0 0 2px ${theme.palette.background.paper}`,
-                        backgroundColor: `${statusObj[store?.selectedChat?.contact?.status]}.main`
+                        backgroundColor: `${statusObj[store.selectedChat.contact.status]}.main`
                       }}
                     />
                   }
                 >
-                  {store.selectedChat?.contact?.avatar ? (
+                  {store.selectedChat.contact.avatar ? (
                     <MuiAvatar
                       sx={{ width: '5rem', height: '5rem' }}
-                      src={store?.selectedChat?.contact?.avatar}
-                      alt={store?.selectedChat?.contact?.fullName}
+                      src={store.selectedChat.contact.avatar}
+                      alt={store.selectedChat.contact.fullName}
                     />
                   ) : (
                     <CustomAvatar
                       skin='light'
-                      color={store?.selectedChat?.contact?.avatarColor}
+                      color={store.selectedChat.contact.avatarColor}
                       sx={{ width: '5rem', height: '5rem', fontWeight: 500, fontSize: '2rem' }}
                     >
-                      {/* {getInitials(store.selectedChat[1].name)} */}
+                      {getInitials(store.selectedChat.contact.fullName)}
                     </CustomAvatar>
                   )}
                 </Badge>
               </Box>
               <Typography sx={{ mb: 0.75, fontWeight: 600, textAlign: 'center' }}>
-                {store.selectedChat[1]?.name}
+                {store.selectedChat.contact.fullName}
               </Typography>
               <Typography variant='body2' sx={{ textAlign: 'center' }}>
-                {store.selectedChat[1]?.name}
+                {store.selectedChat.contact.role}
               </Typography>
             </Box>
           </Box>
@@ -132,7 +132,7 @@ const UserProfileRight = props => {
                     About
                   </Typography>
                   <Typography variant='body2' sx={{ fontSize: '0.875rem' }}>
-                    {store.selectedChat?.contact?.about}
+                    {store.selectedChat.contact.about}
                   </Typography>
                 </FormGroup>
 
@@ -147,7 +147,7 @@ const UserProfileRight = props => {
                       </ListItemIcon>
                       <ListItemText
                         sx={{ textTransform: 'lowercase' }}
-                        secondary={`${store.selectedChat[[1]?.name]?.replace(/\s/g, '_')}@email.com`}
+                        secondary={`${store.selectedChat.contact.fullName.replace(/\s/g, '_')}@email.com`}
                       />
                     </ListItem>
                     <ListItem sx={{ px: 2 }}>

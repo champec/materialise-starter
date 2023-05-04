@@ -8,6 +8,7 @@ const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_KEY_ORG
 //create the supabse client for Organisation
 const supabaseOrg = createClient(supabaseUrl, supabaseKey, { auth: { storageKey: 's1' } })
 const supabaseUser = createClient(supabaseUrl, supabaseKey, { auth: { storageKey: 's2' } })
+const supabase = createClient(supabaseUrl, supabaseKey)
 
 //named export for the client
-export { supabaseOrg, supabaseUser }
+export { supabaseOrg, supabaseUser, supabase }

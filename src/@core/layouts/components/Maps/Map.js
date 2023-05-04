@@ -1,94 +1,104 @@
-import React, { useEffect, useState } from 'react'
-import GoogleMapReact from 'google-map-react'
-import Marker from 'src/@core/components/Map/Marker'
+import React, { useState, useEffect } from 'react'
+import Head from 'next/head'
+import Map, { Marker } from 'react-map-gl'
+import 'mapbox-gl/dist/mapbox-gl.css'
+import { distanceInMiles } from 'src/@core/utils/distanceInMiles'
+import Marker2 from 'src/@core/components/Map/Marker'
 
-//** MUI imports
-import { useMediaQuery } from '@mui/material'
-import Icon from 'src/@core/components/icon'
-import Logo from 'src/@core/components/logo/Logo'
-import Box from '@mui/material/Box'
-import Card from '@mui/material/Card'
-import Avatar from '@mui/material/Avatar'
-import Typography from '@mui/material/Typography'
-import CardContent from '@mui/material/CardContent'
+const MAPBOX_TOKEN = process.env.NEXT_PUBLIC_MAPBOX_TOKEN // Set your mapbox token here
 
-import CardCongratulationsDaisy from 'src/views/ui/gamification/CardCongratulationsDaisy'
+export default function MapComponent({ places, setCoordinates, coordinates, setChildClicked }) {
+  const [viewport, setViewport] = useState({
+    latitude: null,
+    longitude: null,
+    zoom: 14
+  })
 
-function Map({ setCoordinates, coordinates, places, setChildClicked }) {
-  const [geoPermission, setGeoPermission] = useState()
-  const [location, setLocation] = useState({ latitude: 0, longtitude: 0 })
-  const [loading, setLoading] = useState(false)
-  const coords = { lat: location.latitude, lng: location.longitude }
-
-  const locationOptions = {
-    enableHighAccuracy: true,
-    timeout: 5000,
-    maximumAge: 0
-  }
-
-  const locationSuccess = pos => {
-    const location = pos.coords
-    console.log(location.longitude)
-    setLocation(location)
-  }
-
-  const locationErrors = err => {
-    console.log(err)
-  }
+  const [userLocation, setUserLocation] = useState({ latitude: null, longitude: null })
 
   useEffect(() => {
+    const location = userLocation
+    if (!location.latitude || !location.longitude) return
+    setViewport({
+      latitude: location.latitude,
+      longitude: location.longitude,
+      zoom: 14
+    })
+    setCoordinates({
+      lat: location.latitude,
+      lng: location.longitude
+    })
+  }, [userLocation.latitude, userLocation.longitude])
+
+  useEffect(() => {
+    const locationOptions = {
+      enableHighAccuracy: true,
+      timeout: 5000,
+      maximumAge: 0
+    }
+    // if successful, user the users location
+    const locationSuccess = pos => {
+      const location = pos.coords
+      setUserLocation({
+        latitude: location.latitude,
+        longitude: location.longitude
+      })
+      console.log({ location })
+    }
+
+    const locationErrors = err => {
+      console.log(err)
+    }
+    // check the browser navigator if available for users locaiton and then fire off 3 fucntion depending on out come
     if (navigator.geolocation) {
       navigator.permissions.query({ name: 'geolocation' }).then(result => {
-        setGeoPermission(result.state)
-        const pos = navigator.geolocation.getCurrentPosition(locationSuccess, locationErrors, locationOptions)
-
-        result.onchange = function () {
-          console.log(result.state)
-          setLoading(false)
+        if (result.state === 'granted' || result.state === 'prompt') {
+          navigator.geolocation.getCurrentPosition(locationSuccess, locationErrors, locationOptions)
         }
       })
     } else {
-      alert('Sorry Not available!')
-      setLoading(false)
+      alert('Sorry, geolocation is not available!')
     }
   }, [])
-  if (!geoPermission) {
-    return <Typography>Location Permission is required to use this app</Typography>
+
+  const handleMoveEnd = evt => {
+    const newCoordinates = { lat: evt.viewState.latitude, lng: evt.viewState.longitude }
+    const movedDistance = distanceInMiles(coordinates.lat, coordinates.lng, newCoordinates.lat, newCoordinates.lng)
+
+    if (movedDistance > 0.5) {
+      setCoordinates(newCoordinates)
+    }
   }
+
+  if (!viewport.latitude || !viewport.longitude) {
+    return <div>Loading...</div>
+  }
+
   return (
-    <Box style={{ height: '100vh', width: '100%' }}>
-      <GoogleMapReact
-        bootstrapURLKeys={{ key: 'AIzaSyCZMa6ce0vMD7mZghlcfeFHr7m6PwDQKKQ' }}
-        defaultCenter={{ lat: 52.49272537231445, lng: -2.033581256866455 }}
-        center={coords}
-        onChange={e => {
-          setCoordinates({ lat: e.center.lat, lng: e.center.lng })
-        }}
-        defaultZoom={18}
-        // options={''}
-        onChildClick={child => setChildClicked(child)}
-      >
-        {places?.map((place, i) => {
-          return (
-            <div
-              style={{
-                width: '200px',
-                height: 'auto',
-                textOverflow: 'ellipsis',
-                marginTop: '-40px',
-                marginLeft: '-40px'
-              }}
-              lat={place.Latitude}
-              lng={place.Longitude}
-              key={i}
-            >
-              <Marker place={place} key={i} />
-            </div>
-          )
+    <Map
+      {...viewport}
+      onMove={evt => setViewport(evt.viewState)}
+      onMoveEnd={handleMoveEnd}
+      style={{ width: 800, height: 600 }}
+      mapStyle='mapbox://styles/mapbox/streets-v11'
+      mapboxAccessToken={MAPBOX_TOKEN}
+    >
+      {userLocation.latitude && userLocation.longitude && (
+        <Marker longitude={userLocation.longitude} latitude={userLocation.latitude} color='red' />
+      )}
+      {places &&
+        places.length > 0 &&
+        places.map((place, index) => {
+          console.log({ place })
+          if (place.Longitude && place.Latitude) {
+            return (
+              <Marker key={index} longitude={place.Longitude} latitude={place.Latitude} color='blue'>
+                <Marker2 place={place} setChildClicked={() => setChildClicked(index)} />
+              </Marker>
+            )
+          }
+          return null
         })}
-      </GoogleMapReact>
-    </Box>
+    </Map>
   )
 }
-
-export default Map

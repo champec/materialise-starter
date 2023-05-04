@@ -15,6 +15,7 @@ import StepOrganisationDetails from './StepOrganisationDetails'
 import StepPersonalDetails from 'src/views/pages/auth/register-multi-steps/StepPersonalInfo'
 import { useOrgAuth } from 'src/hooks/useOrgAuth'
 import { useUserAuth } from 'src/hooks/useAuth'
+import { useAuth } from 'src/hooks/useAuth'
 
 // ** Custom Component Import
 import StepperCustomDot from 'src/views/forms/form-wizard/StepperCustomDot'
@@ -41,10 +42,11 @@ const steps = [
 const RegisterMultiSteps = () => {
   const authOrg = useOrgAuth()
   const authUser = useUserAuth()
+  const auth = useAuth()
   // ** States
-  const [activeStep, setActiveStep] = useState(authOrg.organisation ? 1 : 0)
+  const [activeStep, setActiveStep] = useState(auth.organisation ? 1 : 0)
   const [loading, setIsLoading] = useState(false)
-  console.log('ORG', authOrg, 'USER', authUser)
+  console.log('ORG', authOrg, 'USER', authUser, 'AUTH', auth)
 
   // Handle Stepper
   const handleNext = async data => {
@@ -54,9 +56,9 @@ const RegisterMultiSteps = () => {
   }
 
   useEffect(() => {
-    if (authOrg.organisation) {
+    if (auth.organisation) {
       setActiveStep(1)
-    } else if (!authOrg.organisation) {
+    } else if (!auth.organisation) {
       setActiveStep(0)
     }
   }, [authOrg.organisation])
@@ -70,13 +72,14 @@ const RegisterMultiSteps = () => {
   const getStepContent = step => {
     switch (step) {
       case 0:
-        return <StepOrganisationDetails handleNext={handleNext} authOrg={authOrg} authUser={authUser} />
+        return <StepOrganisationDetails handleNext={handleNext} authOrg={authOrg} authUser={authUser} auth={auth} />
       case 1:
         return (
           <StepAccountDetails
             /*handleNext={handleNext}*/ handlePrev={handlePrev}
             authUser={authUser}
             authOrg={authOrg}
+            auth={auth}
           />
         )
       // case 2:

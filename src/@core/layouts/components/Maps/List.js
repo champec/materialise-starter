@@ -7,7 +7,7 @@ function List({ places, childClicked, loading }) {
   const [type, setType] = useState('Pharmacies')
   const [elRefs, setElRefs] = useState([])
 
-  console.log({ childClicked })
+  // console.log({ childClicked })
   useEffect(() => {
     const refs = Array(places?.length)
       .fill()
@@ -40,11 +40,11 @@ function List({ places, childClicked, loading }) {
               <MenuItem value='Surgeries'>Surgeries</MenuItem>
             </Select>
           </FormControl>
-          <Grid container style={{ height: '100vh', overflow: 'scroll' }}>
+          <Grid container style={{ height: 600, overflow: 'scroll' }} className='scroll-container'>
             {places?.map((place, i) => {
               return (
-                <div ref={elRefs[i]}>
-                  <PlaceDetails key={i} place={place} selected={Number(childClicked) == i} refProp={elRefs[i]} />
+                <div ref={elRefs[i]} key={i}>
+                  <PlaceDetails place={place} selected={Number(childClicked) == i} refProp={elRefs[i]} />
                 </div>
               )
             })}

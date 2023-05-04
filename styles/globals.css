@@ -22,3 +22,29 @@ code:not([class*='language-']):after {
 code[class*='language-'] {
   padding: 0;
 }
+
+.scroll-container::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+.scroll-container::-webkit-scrollbar-track {
+  background: #787fff3f;
+}
+
+.scroll-container::-webkit-scrollbar-thumb {
+  background: #282a426e;
+  border-radius: 4px;
+}
+
+.scroll-container::-webkit-scrollbar-thumb:hover {
+  background: #5555551e;
+}
+
+.scroll-container::-webkit-scrollbar-corner {
+  background: #787fff3f;
+}
+
+.mapboxgl-marker {
+  position: absolute;
+}

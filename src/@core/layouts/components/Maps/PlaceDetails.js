@@ -9,6 +9,7 @@ import Button from '@mui/material/Button'
 import TabContext from '@mui/lab/TabContext'
 import Typography from '@mui/material/Typography'
 import CardContent from '@mui/material/CardContent'
+import Box from '@mui/material/Box'
 
 //** Next Imports
 import { useRouter } from 'next/router'
@@ -27,72 +28,124 @@ function PlaceDetails({ place, selected, refProp }) {
     setValue(newValue)
   }
 
-  async function handleContactButton(place) {
-    //Extract organisation code from NHS digital
-    const ODS = place.NACSCode
-    //search and see if there exists a profile with ODS code
+  const findOrCreateProfile = async (ODS, orgName, role) => {
+    // Check if a profile with the given ODS code already exists
     const { data, error } = await supabaseOrg
       .from('profiles')
       .select('ODS, id, chatParticipants(chat_id)')
       .eq('ODS', ODS)
       .single()
+    if (error) {
+      console.log(error, 'find or create profile error')
+    }
     if (data) {
-      //It exist now search and see if a chat between the two already exists
-      const targetId = data.id
-      const userId = user.organisation.id
-      const props = await supabaseOrg.from('chats').select('id').contains(`participants`, [userId, targetId])
-      if (props.data) {
-        //conversation already exists so navigate to the required conversation
-        const chatID = props.data[0].id
-        navigateToChat(ODS, chatID)
-      } else {
-        //conversation doesn't exists, now create a chat between the two parties and navigate to it
-        console.log('ODS EXISTS BUT CHAT WITH USER DOESNT EXISTS')
-        //ODS exists but there is no chat - so its time to create one between the two parties
-        let chatID = 'bfef0f4d-72a1-401e-ad27-bd1d2647de61'
-        navigateToChat(ODS, chatID)
-      }
+      // If the profile exists, return it
+      return data
     } else {
-      //ODS doesn't exists - create a profile from the information, then create a chat from the information, then navigate to the chat
-      console.log('ODS DOESNT EXIST')
-      console.log(place)
-      const orgName = place.OrganisationName
-      const ODS = place.NACSCode
-      const role = 'admin'
-      const unfilteredContacts = JSON.parse(place.Contacts)
-      let contacts = []
-      unfilteredContacts.map(type =>
-        contacts.push({ [type.OrganisationContactMethodType]: type.OrganisationContactValue })
-      )
-
-      // create a profile - required fields = email, org name, role, ODS
-      supabaseOrg
+      // If the profile does not exist, create and return it
+      const { data: createdProfile, error: createError } = await supabaseOrg
         .from('profiles')
         .insert({ ODS: ODS, email: `${orgName}.pharmex.com`, organisation_name: orgName, role: role })
+        .single()
+
+      if (createError) {
+        console.log(createError.message, 'find or create profile error')
+        throw new Error(createError.message, 'find or create profile error')
+      }
+
+      return createdProfile
+    }
+  }
+
+  const findOrCreateChat = async (userId, targetId) => {
+    // Fetch all chats where the userId is a participant
+    const { data: userChats, error } = await supabaseOrg
+      .from('chatParticipants')
+      .select('chat_id')
+      .eq('user_id', userId)
+
+    if (error) {
+      console.log(error.message, 'find user chats error')
+      throw new Error(error.message)
+    }
+
+    // Fetch all chats where the targetId is a participant
+    const { data: targetChats, error: targetError } = await supabaseOrg
+      .from('chatParticipants')
+      .select('chat_id')
+      .eq('user_id', targetId)
+
+    if (targetError) {
+      console.log(targetError.message, 'find target chats error')
+      throw new Error(targetError.message)
+    }
+    console.log({ userChats, targetChats }, 'user and target chats')
+    // Find the common chat_id between the userChats and targetChats
+    const commonChat = userChats.find(userChat =>
+      targetChats.some(targetChat => targetChat.chat_id === userChat.chat_id)
+    )
+
+    if (commonChat) {
+      // If a chat exists, return it along with a flag indicating it was not newly created
+      const { data: chat, error: chatError } = await supabaseOrg
+        .from('chats')
+        .select('*')
+        .eq('id', commonChat.chat_id)
+        .single()
+
+      if (chatError) {
+        console.log(chatError.message, 'find chat error')
+        throw new Error(chatError.message)
+      }
+
+      return { chat, isNew: false }
+    } else {
+      // If a chat does not exist, create and return it along with a flag indicating it was newly created
+      const { data: createdChat, error: createError } = await supabaseOrg
+        .from('chats')
+        .insert({ type: 'b2b' })
         .select()
         .single()
-        .then(async ({ data }) => {
-          console.log(data)
-          // profile created successful with organisaiton - now create a chat with no participants and extract its ID
-          const result = await supabaseOrg.from('chats').insert({ type: 'b2b' }).select('id').single()
 
-          return { ...result, ...data }
-        })
-        .then(async res => {
-          console.log('CHATID and new userInfo', res)
-          // chat ID made now create participants
-          // console.log('USEEER ID', user)
-          const result = await supabaseOrg.from('chatParticipants').insert([
-            { chat_id: res.data.id, user_id: res.id, name: res.organisation_name },
-            { chat_id: res.data.id, user_id: user.organisation.id, name: user.organisation.organisation_name }
-          ])
-          // console.log('ERROR IN PARTICIPANS', result)
-          return res.id
-        })
-        .then(res => {
-          console.log('Now navgate to chat with', res)
-          navigateToChat('ODS', res)
-        })
+      if (createError) {
+        console.log(createError.message, 'create chat error')
+        throw new Error(createError.message)
+      }
+
+      return { chat: createdChat, isNew: true }
+    }
+  }
+
+  const createParticipantsAndNavigate = async (chatId, userProfile, targetProfile, isNew) => {
+    if (isNew) {
+      // Create participants for the chat only if it's a new chat
+      await supabaseOrg.from('chatParticipants').insert([
+        { chat_id: chatId, user_id: userProfile.id, name: userProfile.organisation_name },
+        { chat_id: chatId, user_id: targetProfile.id, name: targetProfile.organisation_name }
+      ])
+    }
+
+    // Navigate to the chat
+    router.push(
+      {
+        pathname: '/chat',
+        query: { ODS: targetProfile.ODS, mapChatID: chatId }
+      },
+      '/chat'
+    )
+  }
+
+  const handleContactButton = async place => {
+    // Extract organization code from NHS digital
+    const ODS = place.NACSCode
+
+    try {
+      const targetProfile = await findOrCreateProfile(ODS, place.OrganisationName, 'admin')
+      const { chat, isNew } = await findOrCreateChat(user.organisation.id, targetProfile.id)
+      console.log(chat, isNew, 'chat and is new')
+      await createParticipantsAndNavigate(chat.id, user.organisation, targetProfile, isNew)
+    } catch (error) {
+      console.error('Error handling contact button:', error)
     }
   }
 
@@ -109,11 +162,13 @@ function PlaceDetails({ place, selected, refProp }) {
   return (
     <Card style={{ marginTop: '10px' }}>
       <TabContext value={value}>
-        <TabList onChange={handleChange} aria-label='card navigation example'>
-          <Tab value='1' label='Info' />
-          <Tab value='2' label='Item Two' />
-          <Tab value='3' label='Item Three' />
-        </TabList>
+        <Box sx={{ display: 'flex', flexWrap: { xs: 'wrap', sm: 'nowrap' } }}>
+          <TabList onChange={handleChange} aria-label='card navigation example'>
+            <Tab value='1' label='Info' />
+            <Tab value='2' label='Item Two' />
+            <Tab value='3' label='Item Three' />
+          </TabList>
+        </Box>
         <CardContent>
           <TabPanel value='1' sx={{ p: 0 }}>
             <Typography variant='p' sx={{ mb: 2 }}>
