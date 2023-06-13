@@ -1,0 +1,139 @@
+Mission Statement:
+PharmEx aims to create a connected network of independent pharmacies in the UK, facilitating the trade of medical stock amongst them. 
+This platform will enable pharmacies to manage stock shortages, reduce waste, and improve patient outcomes by ensuring the availability 
+of essential medications. By offering a streamlined process for exchanging medicines or money for medicines, PharmEx will foster collaboration 
+between pharmacies, helping them save resources while providing better service to their patients.
+
+Primary Purpose:
+
+The primary purpose of PharmEx is to establish a dynamic, user-friendly website that allows pharmacies to trade stock, 
+arrange deliveries and pickups, track the delivery process, and manage invoices related to exchanges. This platform will 
+empower pharmacies to make informed decisions and support their communities more effectively by addressing stock shortage issues and keeping stock in circulation.
+
+The Team management aspect
+
+PharmEx offers its users (pharmacies) additional features to help them manage their teams. This will give the pharmacies more reasons to be on the applicaiton and therefore
+increase likelyhood of them interacrtion with pager notificaitons from other pharmacies. The teammanagement aspect of the application will give pharmacies tool to manage their
+teams. this included managing workshifts, managing holidays, managing sick days, managing team members. In additiona it will allow smoother communication between pharmacy team 
+members and help them organise their tasks. In a pharmacy you may have different people workin different days, including locum pharmacists and managers. These tool will allow 
+team to have continuety and help them manage their work better. ultimately this will help them provide better service to their patients. The feature specifically include:
+
+- Calender - to manage work shifts, holidays, sick days, meetings, etc.
+- Canband borad - to manage tasks and assign them to team members
+- Chat - to communicate with team members
+- To do list - allow senior team members to manage tasks through out the day and for team to have goals to reach forward and see those goals being achieved visually 
+- sticky notes - to allow team members to leave notes for each other digitally on  digital wall in the applicaiton 
+
+- What I want you to do now is help me build the sticky notes feature.
+
+- Application detials - We are building with Next Js and react and using a supabase backend. The applicaiton has different pharmacies as users and different individuals as user as well
+- a logged user is one who logs into a pharmacy account and a personal account. We create 2 session tokens, one for the organisation and the other for the user. This allows us to 
+identify which pharmacy someone is logged into and which user is logged in. 
+
+- Each pharmacy has a single digital wall and any user that has the credentials for the pharmacy can leave a sticky note on the wall. The note will have their message, date added and the 
+user information of who added as well as priority level.  Any user can remove a sticky note from the wall. and any user can edit a sticky notes. In future this will be made more secure 
+and new features will be added. But for now I want just a basic digital sticky note app. 
+
+The most importatn thing is that the sticky notes are saved to the database and are displayed on the digital wall. The visual aspect of this component are what matter the most 
+need to look good, feel good and be easy to use. 
+
+Start by giving my a high level overview of how we can achieve this, what tools we can use and what the process will be.
+
+To create the sticky note board with a "click and create" functionality and give the notes a realistic look, you can consider the following steps:
+
+1. **Clickable Board**: You'll create a full-page `StickyNoteBoard` component. Using an onClick event handler on this component, you can create a new sticky note at the clicked location. The event object that you receive in the onClick callback function will include the coordinates of the cursor at the moment of the click event (event.clientX and event.clientY). These can be used to position the new sticky note.
+
+2. **Sticky Note Position**: When creating a new sticky note, you can pass the cursor coordinates to the new `StickyNote` component as props, and use these values to absolutely position the note using CSS. The position CSS property could be set to 'absolute', and the top and left properties can be set to the cursor coordinates. This will position the new note at the exact location of the click.
+
+3. **Sticky Note Appearance**: To create a realistic sticky note appearance, you can use CSS. You can give the note a solid background color, perhaps with a slight gradient for a paper-like effect. A box-shadow can make the note appear to be lifting off the page. To create the folded corner effect, you might use a CSS pseudo-element such as `::before` or `::after` with a rotated rectangle. The pin effect can be created with a circle positioned at the center-top of the sticky note, potentially with a drop shadow for a 3D effect.
+
+4. **Draggable Notes**: To let users drag and move the sticky notes, you can use the HTML5 Drag and Drop API, or a library like `react-draggable`.
+
+5. **Z-Index**: To ensure the latest sticky note appears on top, you can dynamically assign a higher z-index to the most recently created or selected note.
+
+6. **Responsiveness**: For a consistent user experience across different device sizes, you can use responsive units (like vw, vh, %) for the size and position of the sticky notes, or alternatively, consider using a library like `react-measure` to get the dimensions of the parent and calculate the positions based on that.
+
+7. **Persistence**: Whenever a sticky note is created, moved, or deleted, make sure to save its state (content, position, etc.) in the Supabase database. This ensures the sticky notes persist their locations across different sessions.
+
+This way, you can create a sticky note feature that mimics the look and feel of an actual sticky note board, enhancing the user experience of your application.
+
+
+
+Adding these features to your sticky note application will certainly enhance its usability. Here are some suggestions for how to implement each:
+
+1. Adding a message to the sticky note:
+
+   A common design for this would be to make the note look like a small text editor. You can achieve this by initially showing the note with a `TextField` (or `TextareaAutosize` for multi-line input) from Material-UI that takes up most of the note. When the user clicks outside the note, you can save the text and show it as a `Typography` instead.
+
+2. Editing and deleting a note:
+
+   You can add two small icons at the top of each note, one for editing and one for deleting. When the user clicks the edit icon, you would switch the `Typography` back to a `TextField` so the user can modify the text. When the user clicks the delete icon, you would remove the note from the state in `StickyNoteBoard`.
+
+   Material-UI provides `IconButton` and icon components (such as `EditIcon` and `DeleteIcon`) that would work well for this.
+
+3. Preventing new notes from being added when dragging:
+
+   Currently, clicking anywhere on the board, including on a note, creates a new note. To prevent a new note from being created when a user is trying to drag a note, you can stop the click event from propagating up to the board when it happens on a note.
+
+   You can do this by adding an `onClick` handler to the `StyledNote` component that calls `event.stopPropagation()`. This will prevent the event from bubbling up to the board and triggering the board's `onClick` handler.
+
+4. Adding a new note with a double click:
+
+   Instead of creating a new note whenever the board is clicked, you can change the board's event handler to only create a note on a double click. You would change `onClick` to `onDoubleClick` in the board's props.
+
+Using a combination of single and double clicks, as well as dialogues, can certainly work. A good design might be to use single clicks for most actions (like editing and deleting notes), double clicks for adding new notes, and dialogues for confirming actions that can't be undone (like deleting a note).
+
+Here's a rough example of how you might add these features:
+
+```jsx
+// Inside the StickyNote component
+const StickyNote = ({ id, message, date, user, priority, position, onDelete, onEdit }) => {
+  const [editing, setEditing] = useState(false);
+  const [text, setText] = useState(message);
+
+  const handleDeleteClick = e => {
+    e.stopPropagation();
+    onDelete(id);
+  };
+
+  const handleEditClick = e => {
+    e.stopPropagation();
+    setEditing(true);
+  };
+
+  const handleTextChange = e => {
+    setText(e.target.value);
+  };
+
+  const handleBlur = () => {
+    setEditing(false);
+    onEdit(id, text);
+  };
+
+  return (
+    <Draggable defaultPosition={position} onStop={(e) => e.stopPropagation()}>
+      <StyledNote onClick={e => e.stopPropagation()}>
+        {editing ? (
+          <TextField value={text} onChange={handleTextChange} onBlur={handleBlur} autoFocus />
+        ) : (
+          <Typography>{message}</Typography>
+        )}
+        <IconButton onClick={handleDeleteClick}>
+          <DeleteIcon />
+        </IconButton>
+        <IconButton onClick={handleEditClick}>
+          <EditIcon />
+        </IconButton>
+        <Footer>
+          {/* ... */}
+        </Footer>
+      </StyledNote>
+    </Draggable>
+  );
+};
+
+// Inside the StickyNoteBoard component
+const StickyNoteBoard = () => {
+  // ...
+
+  const handleDelete

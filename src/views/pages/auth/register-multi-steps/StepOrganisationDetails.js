@@ -129,7 +129,7 @@ const StepOrganisationDetails = ({ handleNext, authOrg, authUser, auth }) => {
     const { email, password } = data
 
     //change to use auth from supabase
-    auth.login({ email, password, rememberMe }, err => {
+    authOrg.login({ email, password, rememberMe }, err => {
       console.log(err.message)
       setError('email', {
         type: 'manual',

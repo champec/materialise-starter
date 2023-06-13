@@ -28,6 +28,7 @@ const AuthUserProvider = ({ children }) => {
   const [loading, setLoading] = useState(defaultProvider.loading)
   const [error, setError] = useState()
   const [activeUser, setActiveUser] = useState(false)
+  const [isLoggingOut, setIsLoggingOut] = useState(false)
 
   // ** Hooks
   const router = useRouter()
@@ -133,22 +134,25 @@ const AuthUserProvider = ({ children }) => {
     setLoading(false) //return an error to a call back function provide by parent component
   }
 
-  const handleLogout = async (email, errorCallback) => {
+  const handleLogout = async email => {
+    setIsLoggingOut(true) // set isLoggingOut to true at the start of logout process
     setLoading(true)
-    // function deleted user from local storage then signout of supabase session - then pushed to login screen
+
     const store = JSON.parse(window.localStorage.getItem('localUsers'))
-    store
     delete store[email]
     window.localStorage.setItem('localUsers', JSON.stringify(store))
-    await supabaseUser.auth
-      .signOut()
-      .then(() => {
-        router.push('/login')
-        setLoading(false)
-      })
-      .catch(error => errorCallback(error))
 
-    //return an error to a call back function provide by parent component
+    const { error } = await supabaseUser.auth.signOut()
+    if (error) {
+      // Handle the error here
+      console.error('Error logging out:', error)
+      // setLoading(false)
+    } else {
+      setUser(null)
+      // await router.push('/login')
+      // setLoading(false)
+    }
+    setIsLoggingOut(false) // set isLoggingOut to false after logout process has finished
   }
 
   const handleRegister = (params, errorCallback) => {
@@ -172,6 +176,7 @@ const AuthUserProvider = ({ children }) => {
     loading,
     activeUser: activeUser,
     error: error,
+    isLoggingOut: isLoggingOut,
     setUser,
     setLoading,
     login: handleLogin,

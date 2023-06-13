@@ -1,0 +1,29 @@
+Mission Statement:
+PharmEx aims to create a connected network of independent pharmacies in the UK, facilitating the trade of medical stock amongst them. 
+This platform will enable pharmacies to manage stock shortages, reduce waste, and improve patient outcomes by ensuring the availability 
+of essential medications. By offering a streamlined process for exchanging medicines or money for medicines, PharmEx will foster collaboration 
+between pharmacies, helping them save resources while providing better service to their patients.
+
+Primary Purpose:
+
+The primary purpose of PharmEx is to establish a dynamic, user-friendly website that allows pharmacies to trade stock, 
+arrange deliveries and pickups, track the delivery process, and manage invoices related to exchanges. This platform will 
+empower pharmacies to make informed decisions and support their communities more effectively by addressing stock shortage issues and keeping stock in circulation.
+
+The Team management aspect
+
+PharmEx offers its users (pharmacies) additional features to help them manage their teams. This will give the pharmacies more reasons to be on the applicaiton and therefore
+increase likelyhood of them interacrtion with pager notificaitons from other pharmacies. The teammanagement aspect of the application will give pharmacies tool to manage their
+teams. this included managing workshifts, managing holidays, managing sick days, managing team members. In additiona it will allow smoother communication between pharmacy team 
+members and help them organise their tasks. In a pharmacy you may have different people workin different days, including locum pharmacists and managers. These tool will allow 
+team to have continuety and help them manage their work better. ultimately this will help them provide better service to their patients. The feature specifically include:
+
+- Calender - to manage work shifts, holidays, sick days, meetings, etc.
+- Canband borad - to manage tasks and assign them to team members
+- Chat - to communicate with team members
+- To do list - allow senior team members to manage tasks through out the day and for team to have goals to reach forward and see those goals being achieved visually 
+- sticky notes - to allow team members to leave notes for each other digitally on  digital wall in the applicaiton 
+
+- What I want you to do now is help me build the kanbanboard. I have one from a react template that I will need to repurpose for my app and get everything working. 
+I can show you the code and you cna help refactor it. Its in a few part, index.js, kanbanboard.js, kanban-style.scss cardbox.js and cardHeader.js cant show you all four component
+in one go, but if you say next I will show you all the template component one at a time untill you have seen them all

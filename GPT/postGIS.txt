@@ -1,0 +1,83 @@
+That's great to hear! Supabase supporting PostGIS simplifies the process a lot. With PostGIS enabled, you can use geospatial functions to filter, sort, and manage your data based on location, directly in your SQL queries.
+
+To sort pharmacies based on proximity, you can create a similar function to the one provided in the Supabase documentation:
+
+sql
+Copy code
+CREATE OR REPLACE FUNCTION nearby_pharmacies(lat float, long float)
+RETURNS SETOF record
+LANGUAGE sql
+AS $$
+  SELECT id, name, ST_AsText(location) AS location, ST_Distance(location, ST_Point(long, lat)::geography) AS dist_meters
+  FROM public.pharmacies
+  ORDER BY location <-> ST_Point(long, lat)::geography;
+$$;
+You can then call this function using Supabase's rpc method:
+
+javascript
+Copy code
+const { data, error } = await supabase.rpc('nearby_pharmacies', {
+  lat: yourLatitude,
+  long: yourLongitude,
+});
+For the "Bounding Box" query, it's used when you want to find all points that exist within a certain rectangle or a "bounding box". This is useful when you want to restrict your view to a certain area on a map. Here's how you could create a function for that:
+
+sql
+Copy code
+CREATE OR REPLACE FUNCTION pharmacies_in_bbox(lat1 float, long1 float, lat2 float, long2 float)
+RETURNS SETOF record
+LANGUAGE sql
+AS $$
+  SELECT id, name, ST_AsText(location) AS location
+  FROM public.pharmacies
+  WHERE ST_Within(location, ST_MakeEnvelope(long1, lat1, long2, lat2, 4326));
+$$;
+And here's how you'd call it:
+
+javascript
+Copy code
+const { data, error } = await supabase.rpc('pharmacies_in_bbox', {
+  lat1: topLeftLatitude,
+  long1: topLeftLongitude,
+  lat2: bottomRightLatitude,
+  long2: bottomRightLongitude,
+});
+Just remember to replace yourLatitude, yourLongitude, and the other variables with the actual coordinates you want to use.
+
+Also, always ensure that location data is handled securely and with the user's knowledge and consent, as this type of data can be sensitive.
+
+
+
+
+
+User
+ideally i would like to do something like, for my store, i fetch items, and use foreign key profiles id, to pull profiles associated with each item, maybe through a join. The show first the items that belong to pharmacies closes to the pharmacy searching. Would this be possible, then allow the user to expand the distance if they want to
+ChatGPT
+Yes, it is possible to perform the operations as you described. You can fetch items and join them with profiles table using the foreign key profile_id. The joined result can be sorted based on the distance of each item's associated pharmacy to the current pharmacy. This requires some complex SQL operations with joins and geospatial functions of PostGIS. Here's an example function:
+
+sql
+Copy code
+CREATE OR REPLACE FUNCTION nearby_items(current_lat float, current_long float, distance_limit_meters float DEFAULT 10000)
+RETURNS TABLE(id int, item_name text, pharmacy_name text, location geography(POINT), dist_meters float)
+LANGUAGE sql
+AS $$
+  SELECT items.id, items.name AS item_name, profiles.name AS pharmacy_name, profiles.location, ST_Distance(profiles.location, ST_Point(current_long, current_lat)::geography) AS dist_meters
+  FROM public.items
+  INNER JOIN public.profiles ON items.profile_id = profiles.id
+  WHERE ST_DWithin(profiles.location, ST_Point(current_long, current_lat)::geography, distance_limit_meters)
+  ORDER BY dist_meters;
+$$;
+This function will return items that are within a certain distance (default to 10,000 meters) from the current location, sorted by the distance from near to far. It assumes that items table has a foreign key profile_id linking to profiles table, and profiles table has a location column storing geographic location of each pharmacy.
+
+You can then call this function from your Supabase client:
+
+javascript
+Copy code
+const { data, error } = await supabase.rpc('nearby_items', {
+  current_lat: yourLatitude,
+  current_long: yourLongitude,
+  distance_limit_meters: yourDistanceLimit,  // Optional
+});
+The user can choose to expand the distance by calling the function again with a larger distance_limit_meters.
+
+Again, remember to replace yourLatitude, yourLongitude, and yourDistanceLimit with the actual values you want to use.

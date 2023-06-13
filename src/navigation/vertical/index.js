@@ -8,7 +8,13 @@ const navigation = () => {
     {
       title: 'Pharmacy Management',
       path: '/second-page',
-      icon: 'ph:briefcase-light'
+      icon: 'ph:briefcase-light',
+      children: [
+        {
+          title: 'CD Register',
+          path: '/pharmacy/cdr'
+        }
+      ]
     },
     {
       sectionTitle: 'Communication'
@@ -26,7 +32,7 @@ const navigation = () => {
       icon: 'ic:outline-mark-unread-chat-alt'
     },
     {
-      path: '/acl',
+      path: '/broadcast',
       action: 'read',
       subject: 'acl-page',
       title: 'Broadcast',
@@ -36,28 +42,28 @@ const navigation = () => {
       sectionTitle: 'Buy, Sell & trade'
     },
     {
-      path: '/acl',
+      path: '/store/inventory',
       action: 'read',
       subject: 'acl-page',
       title: 'Inventory',
       icon: 'arcticons:inventory'
     },
     {
-      path: '/acl',
+      path: '/store/shop',
       action: 'read',
       subject: 'acl-page',
       title: 'Shop',
       icon: 'mdi:drugs'
     },
     {
-      path: '/acl',
+      path: '/store/track',
       action: 'read',
       subject: 'acl-page',
       title: 'Track',
       icon: 'mdi:map-marker-distance'
     },
     {
-      path: '/acl',
+      path: '/store/business',
       action: 'read',
       subject: 'acl-page',
       title: 'Business',
@@ -67,28 +73,28 @@ const navigation = () => {
       sectionTitle: 'Team Management'
     },
     {
-      path: '/acl',
+      path: '/teams/kanban',
       action: 'read',
       subject: 'acl-page',
       title: 'Kanban',
       icon: 'bi:kanban-fill'
     },
     {
-      path: '/acl',
+      path: '/teams/calendar',
       action: 'read',
       subject: 'acl-page',
-      title: 'Calender',
+      title: 'Calendar',
       icon: 'uim:calender'
     },
     {
-      path: '/acl',
+      path: '/teams/sticky-notes',
       action: 'read',
       subject: 'acl-page',
       title: 'Sticky Notes',
       icon: 'mdi:sticky-note-alert'
     },
     {
-      path: '/acl',
+      path: '/teams/todo',
       action: 'read',
       subject: 'acl-page',
       title: 'To do list',

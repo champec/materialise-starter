@@ -134,12 +134,7 @@ const AuthProvider = ({ children }) => {
       console.log(error.message, 'from initial login error')
     }
 
-    if (!data.organisation) {
-      alert('Please select an organisation first')
-      console.log(data)
-      return
-    }
-    if (data.user) {
+    if (data) {
       // Fetch the corresponding record from the public.users table
       const { data: authUser, error } = await supabase.from('users').select('*').eq('id', data.user.id).single()
 
@@ -238,17 +233,21 @@ const AuthProvider = ({ children }) => {
   }
 
   const handleLogout = async () => {
+    console.log('1 logout pressed')
     setLoading(true)
     const { error } = await supabase.auth.signOut()
     setUser(null)
     setOrganisation(null)
-    setLoading(false)
-
+    console.log('use info is nullified and session ended')
     if (error) {
       errorCallback(error)
+      setLoading(false)
+      console.log('sometype of error')
     }
-
+    console.log('push loggout')
     router.push('/login')
+    console.log('end loading')
+    setLoading(false)
   }
 
   const handleRegister = async (params, errorCallback) => {

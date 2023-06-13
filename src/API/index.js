@@ -1,4 +1,5 @@
 import axios from 'axios'
+import { supabaseOrg } from 'src/configs/supabase'
 
 // const getPlacesData = async () => {
 //   var config = {
@@ -15,6 +16,8 @@ import axios from 'axios'
 //       console.log(error)
 //     })
 // }
+
+const supabase = supabaseOrg
 
 const getPlacesData = async coordinates => {
   var myHeaders = new Headers()
@@ -52,4 +55,29 @@ const getPlacesData = async coordinates => {
   return value
 }
 
-export { getPlacesData }
+const getNHSServiceData = async (coordinates, radius = 1500) => {
+  const { data, error } = await supabase.rpc('get_nearby_pharmacies', {
+    lat: coordinates.lat,
+    lon: coordinates.lng,
+    radius: radius // adjust the radius according to your needs
+  })
+
+  if (error) {
+    console.error('Error fetching nearby pharmacies:', error)
+    return []
+  }
+
+  return data
+  // console.log(data)
+  // Transform the data to match the format expected by your application
+  // return data.map(pharmacy => ({
+  //   name: pharmacy.name,
+  //   location: {
+  //     lat: pharmacy.location.y, // PostGIS returns the coordinates as (x, y), where x is longitude and y is latitude
+  //     lng: pharmacy.location.x
+  //   }
+  //   // add other fields as needed
+  // }))
+}
+
+export { getPlacesData, getNHSServiceData }

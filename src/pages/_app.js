@@ -14,7 +14,6 @@ import { CacheProvider } from '@emotion/react'
 
 // ** Config Imports
 
-import { defaultACLObj } from 'src/configs/acl'
 import themeConfig from 'src/configs/themeConfig'
 
 // ** Fake-DB Import
@@ -25,7 +24,7 @@ import { Toaster } from 'react-hot-toast'
 
 // ** Component Imports
 import UserLayout from 'src/layouts/UserLayout'
-import AclGuard from 'src/@core/components/auth/AclGuard'
+
 import ThemeComponent from 'src/@core/theme/ThemeComponent'
 import AuthGuard from 'src/@core/components/auth/AuthGuard'
 import GuestGuard from 'src/@core/components/auth/GuestGuard'
@@ -40,6 +39,7 @@ import { AuthUserProvider } from 'src/context/UserAuthContext'
 import { AuthOrgProvider } from 'src/context/OrgAuthContext'
 import { AuthProvider } from 'src/context/supabaseContext'
 import { SettingsConsumer, SettingsProvider } from 'src/@core/context/settingsContext'
+import { LoadingProvider } from 'src/context/loadingContext'
 
 // ** Styled Components
 import ReactHotToast from 'src/@core/styles/libs/react-hot-toast'
@@ -76,8 +76,7 @@ if (themeConfig.routingLoader) {
 }
 
 const Guard = ({ children, authGuard, guestGuard, orgGuard }) => {
-  //pseudo component that return guard providers depending on the setting is manually receives
-  // by default organisation and user guards are on to protect sites, guards are turned off by logging in
+  // display a page depending on which guard is turned on. gustGuard on, guest only, orgGuard on, org only, authGuard on, users only, all off, show to everyone
   if (guestGuard) {
     console.log('GUEST GUARD')
     // default always off, but if on only show to guests
@@ -91,8 +90,12 @@ const Guard = ({ children, authGuard, guestGuard, orgGuard }) => {
     // show to everyone including if logged into organisation
     return <>{children}</>
   } else {
-    console.log('AUTH GUARD')
-    return <AuthGuard fallback={<Spinner />}>{children}</AuthGuard>
+    // by default all pages are user logged in protected
+    return (
+      <OrgGuard>
+        <AuthGuard fallback={<Spinner />}>{children}</AuthGuard>
+      </OrgGuard>
+    )
   }
 }
 
@@ -109,7 +112,7 @@ const App = props => {
   const authGuard = Component.authGuard ?? true // all pages are automatically auth protected unless turned off - only auth user can see content
   const guestGuard = Component.guestGuard ?? false // automatically all users can see all content unless turned on then only guests can see - i.e login, etc
   const orgGuard = Component.orgGuard ?? true // if the component doesn't have a orgGuard prop then the orGuard is false otherwise whatever the component defines it as
-  const aclAbilities = Component.acl ?? defaultACLObj
+  // const aclAbilities = Component.acl ?? defaultACLObj
 
   return (
     <CacheProvider value={emotionCache}>
@@ -136,14 +139,7 @@ const App = props => {
                           {/*/ this passes down rules for page views depending on user state */}
                           <Guard authGuard={authGuard} orgGuard={orgGuard} guestGuard={guestGuard}>
                             {/*/this is a CRUD guard but can be replaced for RLS in supabase*/}
-                            <AclGuard
-                              aclAbilities={aclAbilities}
-                              guestGuard={guestGuard}
-                              orgGuard={orgGuard}
-                              authGuard={authGuard}
-                            >
-                              {getLayout(<Component {...pageProps} />)}
-                            </AclGuard>
+                            <LoadingProvider>{getLayout(<Component {...pageProps} />)}</LoadingProvider>
                           </Guard>
                         </WindowWrapper>
                         <ReactHotToast>

@@ -1,22 +1,79 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useRef } from 'react'
 import Head from 'next/head'
 import Map, { Marker } from 'react-map-gl'
 import 'mapbox-gl/dist/mapbox-gl.css'
 import { distanceInMiles } from 'src/@core/utils/distanceInMiles'
 import Marker2 from 'src/@core/components/Map/Marker'
+import { useOrgAuth } from 'src/hooks/useOrgAuth'
+import { supabaseOrg } from 'src/configs/supabase'
 
 const MAPBOX_TOKEN = process.env.NEXT_PUBLIC_MAPBOX_TOKEN // Set your mapbox token here
 
-export default function MapComponent({ places, setCoordinates, coordinates, setChildClicked }) {
-  const [viewport, setViewport] = useState({
-    latitude: null,
-    longitude: null,
-    zoom: 14
-  })
+export default function MapComponent({
+  places,
+  setCoordinates,
+  coordinates,
+  setChildClicked,
+  viewport,
+  setViewport,
+  userLocation,
+  setUserLocation,
+  locationSource
+}) {
+  //this is a custom hook to prevent the locaiton object, from rerendering everytime. object are shallow copies, so they will always rerender even if values are the same
+  function useStableCoordinates(initialCoordinates) {
+    const coordinatesRef = useRef(initialCoordinates)
 
-  const [userLocation, setUserLocation] = useState({ latitude: null, longitude: null })
+    const setCoordinates = newCoordinates => {
+      if (newCoordinates.lat !== coordinatesRef.current.lat || newCoordinates.lng !== coordinatesRef.current.lng) {
+        coordinatesRef.current = newCoordinates
+      }
+    }
+
+    return [coordinatesRef.current, setCoordinates]
+  }
+
+  const supabase = supabaseOrg
+  const ODS = useOrgAuth().organisation?.ODS
+
+  // supabase location
 
   useEffect(() => {
+    if (locationSource !== 'supabase') return
+    console.log('running fetch useEffect')
+    // Fetch location from Supabase
+    const fetchLocation = async () => {
+      const { data, error } = await supabase.from('pharmacies').select('latitude, longitude').eq('ods_code', ODS)
+      console.log(data, error, ODS)
+      if (error) {
+        console.error('Error fetching location:', error)
+      } else if (data && data.length > 0) {
+        const location = data[0]
+        console.log({ location })
+        setViewport({
+          latitude: location.latitude,
+          longitude: location.longitude,
+          zoom: 14
+        })
+        setCoordinates({
+          lat: location.latitude,
+          lng: location.longitude
+        })
+        setUserLocation({
+          latitude: location.latitude,
+          longitude: location.longitude
+        })
+      }
+    }
+    fetchLocation()
+  }, [ODS, locationSource])
+
+  // end of supabase location
+
+  // real time location
+
+  useEffect(() => {
+    if (locationSource !== 'browser') return
     const location = userLocation
     if (!location.latitude || !location.longitude) return
     setViewport({
@@ -31,6 +88,7 @@ export default function MapComponent({ places, setCoordinates, coordinates, setC
   }, [userLocation.latitude, userLocation.longitude])
 
   useEffect(() => {
+    if (locationSource !== 'browser') return
     const locationOptions = {
       enableHighAccuracy: true,
       timeout: 5000,
@@ -59,7 +117,7 @@ export default function MapComponent({ places, setCoordinates, coordinates, setC
     } else {
       alert('Sorry, geolocation is not available!')
     }
-  }, [])
+  }, [locationSource])
 
   const handleMoveEnd = evt => {
     const newCoordinates = { lat: evt.viewState.latitude, lng: evt.viewState.longitude }
@@ -90,9 +148,9 @@ export default function MapComponent({ places, setCoordinates, coordinates, setC
         places.length > 0 &&
         places.map((place, index) => {
           console.log({ place })
-          if (place.Longitude && place.Latitude) {
+          if (place.longitude && place.latitude) {
             return (
-              <Marker key={index} longitude={place.Longitude} latitude={place.Latitude} color='blue'>
+              <Marker key={index} longitude={place.longitude} latitude={place.latitude} color='blue'>
                 <Marker2 place={place} setChildClicked={() => setChildClicked(index)} />
               </Marker>
             )

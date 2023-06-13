@@ -1,0 +1,327 @@
+https://demos.pixinvent.com/materialize-nextjs-admin-template/demo-1/ui/cards/basic/
+ apple watch card component - for cards 
+ https://demos.pixinvent.com/materialize-nextjs-admin-template/demo-1/tables/data-grid/
+ quick filter table 
+
+ shop is a multitable grid - with an add to cart button 
+  - shop page is a grid of products
+  - cart page - check out and send orders with order confirmation
+  - inventory will be a multi data grid with categories at the top and edit button - select checkbox with select all added - use the server side grid for this
+  - edit item page - will be a form with a submit button
+
+Mission Statement:
+PharmEx aims to create a connected network of independent pharmacies in the UK, facilitating the trade of medical stock amongst them. 
+This platform will enable pharmacies to manage stock shortages, reduce waste, and improve patient outcomes by ensuring the availability 
+of essential medications. By offering a streamlined process for exchanging medicines or money for medicines, PharmEx will foster collaboration 
+between pharmacies, helping them save resources while providing better service to their patients.
+
+Primary Purpose:
+
+The primary purpose of PharmEx is to establish a dynamic, user-friendly website that allows pharmacies to trade stock, 
+arrange deliveries and pickups, track the delivery process, and manage invoices related to exchanges. This platform will 
+empower pharmacies to make informed decisions and support their communities more effectively by addressing stock shortage issues and keeping stock in circulation.
+
+Build:
+
+PharmEx is poised to become a multiplatform application. Currently, it's a web application developed using React and Next.js, with Supabase serving as the backend. 
+It employs styled components and utilizes MUI for the user interface components, which include a theme along with light and dark modes. A range of components are 
+pre-styled from a purchased template. The app features a persistent vertical and horizontal menu, while the content area adjusts based on the selected menu item. 
+The vertical menu, which can either remain open or closed, displays only the icons when closed. The application includes a custom loader that activates between page 
+loads and on mount. The horizontal menu hosts the logo on the far left, light and dark mode buttons, vertical toggle button, and a dropdown profile menu on the far right.
+
+Remebering this is a UK based company and deals with UK companies
+
+A Controlled Drugs register must be used to record details of any Schedule 1 and Schedule 2 CDs received or supplied by a pharmacy.
+
+Pharmacists are also required to keep records of Sativex (which is a Schedule 4 Part 1 CD). The Home Office strongly recommends the use of a CD register for making records relating to Sativex.
+
+
+The register must:
+
+be either a computerised system or a bound book (which does not include any form of loose leaf register or card index)
+be separated into each class of drug
+have a separate page for each strength and form of that drug, with this recorded at the top of each page
+have the entries in chronological order and made on the day of the transaction or, if not reasonably practical, the next day
+have the entries made in ink or in a computerised form in which every entry can be audited
+not have cancellations or alterations
+ensure any corrections are made by a signed and dated entry in the margin or at the bottom of the page
+be kept at the premises to which it relates (for example separate registers for each set of premises) and be available for inspection at any time
+not be used for any other purpose
+be kept for a minimum of two years after the date of the last entry
+The following must be recorded in the register when Schedule 2 CDs are purchased:
+
+date supply received
+name and address of supplier, for example, wholesaler, pharmacy
+quantity received
+The following must be recorded in the register when Schedule 2 CDs are supplied (which includes by way of administration):
+
+date supplied
+name and address of person or company supplied
+details of the authority to possess (prescriber or licence holder’s details)
+quantity supplied
+person collecting a Schedule 2 CD (animal owner or animal owner’s representative, or healthcare professional) and if a healthcare professional, their name and address
+whether proof of identity was requested of animal owner or animal owner’s representative (yes or no)
+whether proof of identity of person collecting was provided (yes or no)
+In addition to the above, we recommend keeping a running balance of stock in the register.
+
+The aim of maintaining a running balance in the register is to ensure irregularities are identified as quickly as possible. The running balance of drugs remaining should be calculated and recorded after each transaction and balances should be checked with the physical amount of stock at regular intervals.
+
+Pharmaceutical companies try to ensure that every bottle of medicine is precisely filled but some small variability may occur. This may result in discrepancies regarding the amount of CD used when taking into consideration the volume remaining in the container.
+
+You should consider recording the total use of the product, even if the reconciliation of the quantity used exceeds the nominal volume on the product stated on the label. This will help to ensure accurate record keeping of the use of the CD.
+
+
+Based on the detailed requirements you've provided, here's a high-level overview plan for building your Controlled Drugs (CD) register:
+
+1. Design the Database Structure:
+
+Design your database to capture all required information such as the details of the Schedule 1 and Schedule 2 CDs, Sativex, transaction history etc. Your database structure should also accommodate future changes.
+
+2. Update the Inventory Page:
+
+Implement a grid to display all the drugs in the inventory. Each row in the grid should represent a single drug, with columns for its name, quantity in stock, type (Schedule 1, Schedule 2, or Sativex), etc. This page should also feature filters and sorting capabilities. You can use a library like Material-UI's Data Grid for this.
+
+3. Create a CD Register Page:
+
+This page would serve as the core of your Controlled Drugs register. It should allow pharmacists to record all necessary details when Schedule 2 CDs are purchased or supplied. These details include the date of the transaction, the names and addresses of the supplier or recipient, the quantity of drugs involved, etc.
+
+The page should be implemented using a form, with separate fields for each piece of data. Remember, it must be made in a way that ensures all entries are auditable.
+
+4. Implement a Running Balance:
+
+This feature will enable pharmacists to easily track the amount of each drug they have in stock. It should be updated automatically each time a purchase or supply is recorded.
+
+Consider setting up alerts to notify pharmacists when the stock of any drug is running low, or when there is a discrepancy between the running balance and the actual stock.
+
+5. Edit Item Page:
+
+Create a page that allows the pharmacist to edit the details of each drug. This page should also include a submit button that saves the changes to the database.
+
+6. Order and Checkout Process:
+
+Ensure the smooth functioning of the order and checkout process. The order confirmation should include a detailed summary of the order, and upon confirmation, reduce the inventory accordingly.
+
+7. Reporting and Analytics:
+
+Develop reporting capabilities that allow the generation of reports based on the recorded transactions. This feature is particularly useful for audits and inventory management.
+
+8. Security:
+
+Ensure the system is secure and all data are encrypted. Given the sensitive nature of the data, you should implement strict access controls and keep a log of all access to the system.
+
+9. Compliance:
+
+Ensure that the system is compliant with all relevant UK laws and regulations. This includes making sure that the CD register is kept for a minimum of two years after the date of the last entry, and that it is available for inspection at any time.
+
+10. Testing:
+
+Conduct thorough testing of the entire system. This includes functional testing, security testing, and performance testing.
+
+11. Training:
+
+Provide training for the end-users to familiarize themselves with the new system and its features.
+
+This plan is quite extensive and should provide a good starting point for building your CD register. Keep in mind that while the steps are laid out in a particular order here, many of them will likely overlap or occur concurrently during the actual development process.
+
+
+
+CREATE TABLE cdr_drugs (
+    id SERIAL PRIMARY KEY,
+    drug_name TEXT NOT NULL,
+    drug_type TEXT NOT NULL,
+    drug_form TEXT NOT NULL,
+    drug_strength TEXT NOT NULL,
+    drug_class TEXT NOT NULL
+);
+
+CREATE TABLE cdr_drug_usage (
+    id SERIAL PRIMARY KEY,
+    drug_id INTEGER NOT NULL,
+    organisation_id INTEGER NOT NULL,
+    FOREIGN KEY (drug_id) REFERENCES cdr_drugs (id),
+    FOREIGN KEY (organisation_id) REFERENCES profiles (id)
+);
+
+CREATE TABLE cdr_suppliers (
+    id SERIAL PRIMARY KEY,
+    name TEXT NOT NULL,
+    organisation_id INTEGER NOT NULL,
+    FOREIGN KEY (organisation_id) REFERENCES profiles (id)
+);
+
+CREATE TABLE cdr_entries (
+    id SERIAL PRIMARY KEY,
+    date TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    type TEXT NOT NULL,
+    drug_id INTEGER NOT NULL,
+    supplier_id INTEGER,
+    patient_id INTEGER,
+    quantity INTEGER NOT NULL,
+    document_ref TEXT NOT NULL,
+    prescriber TEXT NOT NULL,
+    id_requested BOOLEAN NOT NULL,
+    id_provided BOOLEAN NOT NULL,
+    entrymadeby TEXT NOT NULL,
+    running_total INTEGER NOT NULL,
+    organisation_id INTEGER NOT NULL,
+    FOREIGN KEY (drug_id) REFERENCES cdr_drugs (id),
+    FOREIGN KEY (supplier_id) REFERENCES cdr_suppliers (id),
+    FOREIGN KEY (organisation_id) REFERENCES profiles (id),
+    FOREIGN KEY (patient_id) REFERENCES cdr_patients (id)
+);
+
+CREATE TABLE cdr_patients (
+    id SERIAL PRIMARY KEY,
+    patient_name TEXT NOT NULL,
+    organisation_id INTEGER NOT NULL,
+    FOREIGN KEY (organisation_id) REFERENCES profiles (id)
+);
+
+CREATE TABLE cdr_error_log (
+    id SERIAL PRIMARY KEY,
+    table_name TEXT NOT NULL,
+    row_id INTEGER NOT NULL,
+    error_message TEXT NOT NULL,
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    organisation_id INTEGER NOT NULL,
+    FOREIGN KEY (organisation_id) REFERENCES profiles (id)
+);
+
+CREATE OR REPLACE FUNCTION calculate_running_total_and_log_error() RETURNS TRIGGER AS $$
+DECLARE 
+    previous_total INTEGER;
+    computed_total INTEGER;
+    actual_total INTEGER;
+BEGIN
+    -- Get the previous total
+    SELECT running_total INTO previous_total
+    FROM cdr_entries
+    WHERE drug_id = NEW.drug_id AND organisation_id = NEW.organisation_id
+    ORDER BY date DESC
+    LIMIT 1;
+
+    -- Compute the expected new total
+    computed_total := previous_total + NEW.quantity;
+
+    -- Get the total from the new row
+    actual_total := NEW.running_total;
+
+    -- If they match, proceed as normal. If not, log the error.
+    IF computed_total != actual_total THEN
+        INSERT INTO cdr_error_log (table_name, row_id, error_message, organisation_id)
+        VALUES ('cdr_entries', NEW.id, 'Computed total does not match actual total', NEW.organisation_id);
+    END IF;
+
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER calculate_running_total_and_log_error_after
+AFTER INSERT OR UPDATE ON cdr_entries
+FOR EACH ROW EXECUTE PROCEDURE calculate_running_total_and_log_error();
+
+This PostgreSQL function `calculate_running_total_and_log_error()` works as a database trigger that gets called automatically after every `INSERT` or `UPDATE` operation on the `cdr_entries` table. 
+
+Here's the breakdown of how it works:
+
+1. **Declaration of variables:** 
+   Three variables are declared `previous_total`, `computed_total`, and `actual_total`, all of type `INTEGER`. These variables will be used to store the previous running total, the newly computed total, and the total in the newly inserted or updated row.
+
+2. **Getting the previous total:**
+   The function retrieves the most recent `running_total` from the `cdr_entries` table for the same drug_id and organisation_id as the new row. This value is stored in the `previous_total` variable.
+
+3. **Computing the new total:**
+   The `computed_total` is calculated by adding the `quantity` of the new entry to the `previous_total`. 
+
+4. **Getting the total from the new row:**
+   The `running_total` from the new or updated row is stored in `actual_total`.
+
+5. **Checking for discrepancies:**
+   The function checks whether the `computed_total` matches the `actual_total`. If they do not match, it inserts a new row into the `cdr_error_log` table with the name of the table, the id of the row, an error message indicating the discrepancy, and the organisation id.
+
+6. **Returning NEW:**
+   It returns `NEW`, which is a special PostgreSQL variable holding the new database row for `INSERT`/`UPDATE` operations in a row-level trigger. This means the insert or update operation will proceed as usual.
+
+Finally, a trigger `calculate_running_total_and_log_error_after` is created that calls this function each time an `INSERT` or `UPDATE` operation occurs on the `cdr_entries` table.
+
+The whole idea behind this trigger function is to ensure data consistency and correctness. It checks if the running totals in the entries are correct. If not, it logs an error. This automatic checking and logging make it easier to track and fix any issues that might occur with the running totals.
+
+
+[
+    {
+drug_name : Zomorph,
+    drug_type CD2,
+    drug_form : Modified Release Capsules,
+    drug_strength : 30,
+    drug_class : Morphine,
+    units : mg,
+    },
+    {
+drug_name : Zomorph,
+    drug_type CD2,
+    drug_form : Modified Release Capsules,
+    drug_strength : 60,
+    drug_class : Morphine,
+    units : mg,
+    },
+    {
+drug_name : Zomorph,
+    drug_type CD2,
+    drug_form : Modified Release Capsules,
+    drug_strength : 100,
+    drug_class : Morphine,
+    units : mg,
+    },
+    {
+drug_name : Oxycodone,
+    drug_type CD2,
+    drug_form : Modified Release Tablets,
+    drug_strength : 5,
+    drug_class : Oxycodone,
+    units : mg,
+    },
+    {
+drug_name : Oxycodone,
+    drug_type CD2,
+    drug_form : Modified Release Tablets,
+    drug_strength : 10,
+    drug_class : Oxycodone,
+    units : mg,
+    },
+    {
+drug_name : Oxycodone,
+    drug_type CD2,
+    drug_form : Modified Release Tablets,
+    drug_strength : 20,
+    drug_class : Oxycodone,
+    units : mg,
+    },
+    {
+drug_name : Matrifen,
+drug_type CD2,
+drug_form : Transdermal Patches,
+drug_strength : 12,
+drug_class : Fentanyl,
+units : micrograms/hour,
+},
+{
+drug_name : Matrifen,
+drug_type CD2,
+drug_form : Transdermal Patches,
+drug_strength : 25,
+drug_class : Fentanyl,
+units : micrograms/hour,
+},
+{
+drug_name : Mezolar Matrix,
+drug_type CD2,
+drug_form : Transdermal Patches,
+drug_strength : 12,
+drug_class : Fentanyl,
+units : micrograms/hour,
+},
+]
+
+When it comes to supplier, patient, and prescriber - the information can be in a database, a good user exp would have suggestion pop up underneath 
+as you begin to type the patients name - if patient is not found,  it should warn patient not found, ask if they want to add the patient to the 
+database - a pop window opens            

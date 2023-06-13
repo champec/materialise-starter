@@ -1,0 +1,176 @@
+broadcast system - allows pharmacies to broadcast a message to all pharmacies in the area. Pharmacies can also filter the broadcast by distance, or pharmacies they have 
+added as friends in their network. A broadcast message can be a request for stock, or a message to say they have stock available or any other message that they want to reach 
+a large number of pharmacies. 
+
+The website is all built with a side bar and main conent area, I want you want you to help me design and come up with ideas on how I can accomplish a smooth, user friendly and 
+easy to understand and work with system for my end users. The broadcast syste needs to accomplish the following
+
+1. Allow pharmacies to send a broadcast message and choose who will receive them message 
+2. Allow pharmacies to receive broadcasts from other pharmacies and be notified, as this will work like a pager, it needs to grab their attentiation and solicit a responce. 
+3. Broadcast messages will need a life cycle and be viewable by all receipients, when they are have been repsonded and no longer need attention, if retracted, list view of 
+broadcasts, view details, responding system. 
+
+Additional features to consider:
+a. Priority tagging: Allow pharmacies to set priority levels for their broadcast messages (e.g., High, Medium, Low) 
+to help recipients understand the urgency of the request or announcement.
+
+b. Category tagging: Implement predefined categories for broadcast messages (e.g., Stock Requests, Stock Availability, 
+Emergency Alerts) to help recipients filter and sort messages more efficiently.
+
+c. Response tracking: Allow the sender to track responses to their broadcast message and receive a summary of the replies.
+
+d. Auto-renewal of broadcasts: If a broadcast message hasn't received the desired number of responses or actions, allow 
+pharmacies to set a time interval for auto-renewal, so the broadcast is re-sent to the recipients after a certain period.
+
+e. Analytics dashboard: Provide an analytics dashboard to help pharmacies track the effectiveness of their broadcasts, 
+such as response rates and trends over time.
+
+High-level design overview:
+a. Create a Broadcast component, where pharmacies can compose their message, set priority, choose 
+recipients (all, specific distance, or friends), and add category tags.
+
+b. Integrate real-time notifications using Supabase, to immediately alert recipient pharmacies when a new 
+broadcast message arrives.
+
+c. Implement a Broadcast Inbox component, where pharmacies can view, filter, and sort received broadcasts 
+based on categories, priorities, or sender.
+
+d. Develop a Broadcast Detail component to display the full message, sender information, response 
+options, and any replies received.
+
+e. Integrate lifecycle management for broadcasts, allowing senders to mark messages as resolved, 
+retracted, or renew them as needed.
+
+Component breakdown:
+a. BroadcastComposer: This component will handle composing the broadcast message, setting priority, 
+choosing recipients, and adding category tags. It will interact with the Supabase backend to send the broadcast.
+
+b. BroadcastNotification: This component will handle real-time notifications and display them to the 
+recipient pharmacies. Utilize Supabase's real-time capabilities to subscribe to broadcast events.
+
+c. BroadcastInbox: This component will list all received broadcasts, allow for filtering and sorting, and 
+display a summary of each message. When a pharmacy selects a message, it will navigate to the BroadcastDetail component.
+
+d. BroadcastDetail: This component will display the full message, sender information, and provide response 
+options. It will also show any replies received for the broadcast.
+
+e. BroadcastAnalytics: This component will provide an analytics dashboard for pharmacies to track the 
+effectiveness of their broadcasts.
+
+To integrate these components with your existing setup, you can create separate pages or routes for the 
+Broadcast Composer, Broadcast Inbox, and Broadcast Analytics components. The Broadcast Notification component 
+can be included in the layout used throughout your application to ensure it is always visible when a new broadcast arrives.
+
+More DETAILS
+
+
+
+BroadcastComposer:
+
+Create a form with input fields for the message, a dropdown for priority, and options for selecting recipients (all, specific distance, or friends). 
+You may also include a dropdown or checkbox group for category tags.
+When the form is submitted, create a new broadcast object containing the relevant data, including the pharmacy's unique identifier.
+Use Supabase to insert the broadcast object into the "broadcasts" table in your database.
+You may use Redux Toolkit to manage the local state for the form data.
+
+BroadcastNotification:
+
+Use Supabase's real-time capabilities to subscribe to the "broadcasts" table for changes (new rows).
+When a new broadcast is received, update the state using Redux Toolkit to store the incoming broadcast.
+In the UI, display a horizontal scroll bar with the number of notifications.
+When a new broadcast is received, display a red notification bar or alert bar that stays on the screen for at least 1 minute. Include "Ignore" and "Read" buttons.
+The "Ignore" button will dismiss the alert, while the "Read" button will navigate to the BroadcastDetail component and mark the notification as read.
+
+BroadcastInbox:
+
+Retrieve the list of broadcasts for the current pharmacy from the "broadcasts" table in Supabase.
+Use Redux Toolkit to manage the state for the list of broadcasts.
+Display the broadcasts in a list or table, allowing users to filter and sort based on categories, priorities, or sender.
+On selection, navigate to the BroadcastDetail component for the chosen broadcast.
+
+BroadcastDetail:
+
+Display the full message, sender information, and provide response options.
+Use Supabase to fetch the sender's pharmacy profile based on their unique identifier.
+If a pharmacy responds to a broadcast, insert the response into a "responses" table in Supabase, which will store the broadcast ID, responder's pharmacy ID, 
+and the response message.
+Use Supabase's real-time capabilities to subscribe to the "responses" table, so that the sender can receive updates on any new responses.
+
+State Management and Supabase Integration:
+
+Use Redux Toolkit to manage the state for the BroadcastComposer, BroadcastNotification, and BroadcastInbox components. Create separate slices for each 
+component and combine them using the configureStore function.
+Integrate Supabase in your application by creating a Supabase client instance with your API key and endpoint. Use this client instance to interact with your 
+database for inserting, fetching, and subscribing to data.
+
+
+final table and column design for Supabase:
+
+broadcasts: 
+This table stores the broadcast messages sent by pharmacies.
+id (serial): Unique identifier for the broadcast
+sender_id (integer): Foreign key referencing the pharmacy that sent the broadcast
+message (text): The content of the broadcast message
+priority (varchar): The priority level of the broadcast (High, Medium, Low)
+category (varchar): The category of the broadcast (e.g., Stock Requests, Stock Availability, Emergency Alerts)
+recipient_type (varchar): The type of recipients (all, specific distance, friends, map selection)
+radius (integer, nullable): The radius in miles for recipient selection (null for non-distance-based recipient types)
+created_at (timestamp): The timestamp when the broadcast was created
+status (varchar): The current status of the broadcast (active, resolved, retracted)
+
+broadcast_recipients: 
+This table stores the relationship between broadcasts and recipient pharmacies.
+id (serial): Unique identifier for the broadcast recipient
+broadcast_id (integer): Foreign key referencing the associated broadcast
+pharmacy_id (integer): Foreign key referencing the recipient pharmacy
+status (varchar): The status of the broadcast for the recipient (unread, read, responded, ignored)
+read_at (timestamp, nullable): The timestamp when the pharmacy reads the broadcast (null if unread)
+
+responses: 
+This table stores the responses to broadcasts.
+id (serial): Unique identifier for the response
+broadcast_id (integer): Foreign key referencing the associated broadcast
+responder_id (integer): Foreign key referencing the pharmacy that sent the response
+message (text): The content of the response message
+created_at (timestamp): The timestamp when the response was created
+
+drugs: 
+This table stores the drugs available in the database.
+id (serial): Unique identifier for the drug
+name (varchar): The name of the drug
+available_pharmacy_id (integer, nullable): Foreign key referencing the pharmacy advertising the drug (null if not advertised)
+
+
+Broadcast Composer
+
+It's a good idea to have an option for a "Select all" or "Deselect all" button when choosing the recipients, 
+especially when dealing with a large number of pharmacies. This can be toggled on and off depending on the user's need.
+The Composer could also include a preview feature, allowing users to see what their broadcast will look like before sending it out.
+
+BroadcastNotification
+
+The alert bar with "Ignore" and "Read" buttons is a great idea. However, consider making the alert bar slightly 
+transparent so it doesn't fully block the content behind it. You might also want to consider allowing users to 
+customize their notification settings. For instance, some pharmacies might want to be notified of only high-priority broadcasts.
+
+BroadcastInbox
+
+To enhance the user experience, it might be useful to provide a "Mark as Read" or "Archive" option for each broadcast. An 
+"Unread" tab can also be included so users can easily toggle between read and unread broadcasts.
+
+BroadcastDetail
+
+Consider having an option for pharmacies to leave a "quick reply" to a broadcast without having to navigate away from the inbox.
+To keep track of a broadcast's life cycle, you can provide a status update feature that includes stages such as "New", "In Progress", "Resolved", and "Retracted".
+
+Database Schema
+
+You might want to consider adding a response_count field to the broadcasts table which can increment each time a response is given. 
+This will allow for faster lookup times when gathering metrics for the Analytics Dashboard. If you plan on having a history of edits 
+for a broadcast message, consider having a separate broadcast_edits table where you would store all versions of the broadcast message, 
+with a timestamp and the ID of the user who made the change.
+
+Analytics Dashboard
+
+This component can include visual graphs to illustrate metrics such as response rates over time, most common broadcast categories, 
+broadcast frequency, etc. You can also provide export options, so pharmacies can export their broadcast data for external analysis.

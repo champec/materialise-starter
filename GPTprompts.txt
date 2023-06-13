@@ -1,4 +1,105 @@
 Introducing the app
 
+context
+
 We are trying to build an app that allows pharmacies to communicate between each other and trade stock amongst each other. It has several features including, local pharmacy finder,
-chatbox, and a stock trading system. The app is built with React and supabase as a backend. 
+chatbox, and a stock trading system. The app is built with React and supabase as a backend. we are also using varius libraries like reduxtoolkit and Next JS. 
+
+so far 
+
+So far we have built a finder using mapbox and pharmacy coordinates from NHS API, we have also implimented a chat feature, pharacies can click on a pharmacy on the map and be
+redirected to a chatbox where they can communicate with a pharmacy. We have also implimented auth with supabase.
+
+Features 
+- Chatbox
+- Pharmacy finder
+- Stock trading system
+- Auth
+- broadcast system - allows pharmacies to broadcast a message to all pharmacies in the area. Pharmacies can also filter the broadcast by distance, or pharmacies they have 
+added as friends in their network. A broadcast message can be a request for stock, or a message to say they have stock available or any other message that they want to reach 
+a large number of pharmacies. 
+
+
+
+Add new row to profiles
+id
+uuid
+Default: uuid_generate_v4()
+email text NULL
+settings jsonb
+'{"isNotificationsOn": BOOLEON, "isTwoStepAuthVerificationEnabled": BOOLEON}'::jsonb
+JSON
+Optional Fields
+These are columns that do not need any value
+
+updated_at
+timestamptz dd/mm/yyyy --:--:-- Your local timezone will be automatically applied (+0100)
+
+
+username text NULL
+
+full_name text NULL
+
+
+avatar_url text NULL
+
+
+website text NULL
+
+
+type text NULL
+
+
+role text NULL
+
+
+organisation_name text NULL
+
+
+active_session _jsonb NULL
+
+about text NULL
+
+Network _text Default: '{}'::text[]
+
+ODS text NULL
+
+
+Your requirements can be summarized as follows:
+
+Broadcasts: Users can send a broadcast message to multiple pharmacies. These broadcasts have a lifespan of 24 hours, after which they are archived.
+
+Inbox: Each recipient of a broadcast will receive a message in their inbox. They can interact with the sender through this message. Users can also 
+remove broadcasts from their inbox by marking them as "unable to help", or they can respond with an offer to help.
+
+My Broadcasts: The sender can view all responses to their broadcast in a separate page. They can see who has responded, who is unable to help, and who has 
+made an offer. The sender can also close a broadcast, marking it as either resolved or unresolved.
+
+To simplify this experience, you could consider the following:
+
+Notifications: Notify users when they receive a new broadcast or when there's a new response to their broadcast. This can help users stay updated without 
+having to constantly check their inbox or "My Broadcasts" page.
+
+Filtering and Sorting: Allow users to filter and sort their inbox and "My Broadcasts" page. For example, they could filter broadcasts by status 
+(open, closed, resolved, unresolved) or sort them by date, number of responses, etc.
+
+Quick Actions: Provide quick actions for common tasks. For example, users could mark a broadcast as "unable to help" directly from their inbox, 
+without having to open the broadcast.
+
+Detailed View: When a user opens a broadcast, show a detailed view with all the information and interactions related to that broadcast. This could 
+include the original message, all responses, and a form for the user to send their own response.
+
+Archived Broadcasts: Consider providing a way for users to view archived broadcasts. This could be useful if a user wants to refer back to a 
+broadcast after it has expired.
+
+As for additional features, here are a few suggestions:
+
+Search: Allow users to search their inbox and "My Broadcasts" page. This could be useful if a user is looking for a specific broadcast or response.
+
+Statistics: Show some statistics about a user's broadcasts. For example, how many broadcasts they have sent, how many responses they have received, 
+how many broadcasts they have resolved, etc.
+
+Templates: Allow users to save and reuse message templates. This could save time if a user often sends similar broadcasts.
+
+Scheduled Broadcasts: Allow users to schedule broadcasts to be sent at a specific time. This could be useful if a user wants to send a broadcast 
+when they know the recipients will be most active.

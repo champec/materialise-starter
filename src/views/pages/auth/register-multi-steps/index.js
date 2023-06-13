@@ -8,11 +8,9 @@ import StepLabel from '@mui/material/StepLabel'
 import Typography from '@mui/material/Typography'
 
 // ** Step Components
-import StepPersonalInfo from 'src/views/pages/auth/register-multi-steps/StepPersonalInfo'
+
 import StepAccountDetails from 'src/views/pages/auth/register-multi-steps/StepAccountDetails'
-import StepBillingDetails from 'src/views/pages/auth/register-multi-steps/StepBillingDetails'
 import StepOrganisationDetails from './StepOrganisationDetails'
-import StepPersonalDetails from 'src/views/pages/auth/register-multi-steps/StepPersonalInfo'
 import { useOrgAuth } from 'src/hooks/useOrgAuth'
 import { useUserAuth } from 'src/hooks/useAuth'
 import { useAuth } from 'src/hooks/useAuth'
@@ -46,7 +44,7 @@ const RegisterMultiSteps = () => {
   // ** States
   const [activeStep, setActiveStep] = useState(auth.organisation ? 1 : 0)
   const [loading, setIsLoading] = useState(false)
-  console.log('ORG', authOrg, 'USER', authUser, 'AUTH', auth)
+  // console.log('ORG', authOrg, 'USER', authUser, 'AUTH', auth)
 
   // Handle Stepper
   const handleNext = async data => {
@@ -54,14 +52,15 @@ const RegisterMultiSteps = () => {
     setActiveStep(activeStep + 1)
     setIsLoading(false)
   }
+  console.log(authOrg.organisation?.id)
 
   useEffect(() => {
-    if (auth.organisation) {
+    if (authOrg.isAuthenticated) {
       setActiveStep(1)
-    } else if (!auth.organisation) {
+    } else if (!authOrg.isAuthenticated) {
       setActiveStep(0)
     }
-  }, [authOrg.organisation])
+  }, [authOrg.isAuthenticated])
 
   const handlePrev = () => {
     if (activeStep !== 0) {

@@ -34,7 +34,7 @@ function PlaceDetails({ place, selected, refProp }) {
       .from('profiles')
       .select('ODS, id, chatParticipants(chat_id)')
       .eq('ODS', ODS)
-      .single()
+      .maybeSingle()
     if (error) {
       console.log(error, 'find or create profile error')
     }
@@ -45,7 +45,7 @@ function PlaceDetails({ place, selected, refProp }) {
       // If the profile does not exist, create and return it
       const { data: createdProfile, error: createError } = await supabaseOrg
         .from('profiles')
-        .insert({ ODS: ODS, email: `${orgName}.pharmex.com`, organisation_name: orgName, role: role })
+        .insert({ ODS: ODS, email: `${orgName + ODS}.pharmex.com`, organisation_name: orgName, role: role })
         .single()
 
       if (createError) {
@@ -65,7 +65,7 @@ function PlaceDetails({ place, selected, refProp }) {
       .eq('user_id', userId)
 
     if (error) {
-      console.log(error.message, 'find user chats error')
+      console.log(error.message, 'find user chats error', user)
       throw new Error(error.message)
     }
 
@@ -137,10 +137,10 @@ function PlaceDetails({ place, selected, refProp }) {
 
   const handleContactButton = async place => {
     // Extract organization code from NHS digital
-    const ODS = place.NACSCode
+    const ODS = place.ods_code
 
     try {
-      const targetProfile = await findOrCreateProfile(ODS, place.OrganisationName, 'admin')
+      const targetProfile = await findOrCreateProfile(ODS, place.organisation_name, 'admin')
       const { chat, isNew } = await findOrCreateChat(user.organisation.id, targetProfile.id)
       console.log(chat, isNew, 'chat and is new')
       await createParticipantsAndNavigate(chat.id, user.organisation, targetProfile, isNew)
@@ -172,11 +172,12 @@ function PlaceDetails({ place, selected, refProp }) {
         <CardContent>
           <TabPanel value='1' sx={{ p: 0 }}>
             <Typography variant='p' sx={{ mb: 2 }}>
-              {place.OrganisationName}
+              {place.organisation_name}
             </Typography>
             <Typography variant='body2' sx={{ mb: 4 }}>
-              {place.NACSCode} Pudding tiramisu caramels. Gingerbread gummies danish chocolate bar toffee marzipan.
-              Wafer wafer cake powder danish oat cake.
+              {place?.address1}
+              <br />
+              {place?.ods_code}
             </Typography>
             <Button variant='contained' onClick={() => handleContactButton(place)}>
               Contact

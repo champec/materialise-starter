@@ -1,0 +1,112 @@
+V2 API
+
+    @search.score
+    SearchKey
+    ODSCode
+    OrganisationName
+    OrganisationTypeId
+    OrganisationType
+    OrganisationStatus
+    SummaryText
+    URL
+    Address1
+    Address2
+    Address3
+    City
+    County
+    Latitude
+    Longitude
+    Postcode
+    Geocode
+        type
+        coordinates
+        crs
+            type
+            properties
+                name
+    OrganisationSubType
+    OrganisationAliases
+    ParentOrganisation
+        ODSCode
+        OrganisationName
+    Services
+        ServiceName
+        ServiceCode
+        ServiceDescription
+        Contacts
+        ServiceProvider
+        Treatments
+        OpeningTimes
+        AgeRange
+        Metrics
+    OpeningTimes
+        Weekday
+        OpeningTime
+        ClosingTime
+        Times
+        OffsetOpeningTime
+        OffsetClosingTime
+        OpeningTimeType
+        AdditionalOpeningDate
+        IsOpen
+    Contacts
+        ContactType
+        ContactAvailabilityType
+        ContactMethodType
+        ContactValue
+    Facilities
+        Id
+        Name
+        Value
+        FacilityGroupName
+    Staff
+    GSD
+    LastUpdatedDates
+    OpeningTimes
+    BankHolidayOpeningTimes
+    Facilities
+    Services
+    ContactDetails
+    AcceptingPatients
+        GP
+        Dentist
+    GPRegistration
+    CCG
+    RelatedIAPTCCGs
+    CCGLocalAuthority
+    Trusts
+    Metrics
+        MetricID
+        MetricName
+        DisplayName
+        Description
+        Value
+        Value2
+        Value3
+        Text
+        LinkUrl
+        LinkText
+        MetricDisplayTypeID
+        MetricDisplayTypeName
+        HospitalSectorType
+        MetricText
+        DefaultText
+        IsMetaMetric
+        BandingClassification
+        BandingName
+
+moving on
+
+The most essential fields for identifying pharmacies and determining their location are:
+
+1. `ODSCode`: This is a unique identifier for each pharmacy.
+2. `OrganisationName`: The name of the pharmacy.
+3. `OrganisationTypeId` and `OrganisationType`: These fields identify the type of organization, which should be 'PHA' for pharmacies.
+4. `OrganisationStatus`: This field indicates whether the pharmacy is currently active or not.
+5. `Address1`, `Address2`, `Address3`, `City`, `County`, `Postcode`: These fields provide the full address of the pharmacy.
+6. `Latitude` and `Longitude`: These fields provide the geographic coordinates of the pharmacy, which can be used to calculate its location relative to other points of interest.
+7. `OpeningTimes`: This field provides information about when the pharmacy is open.
+8. `Contacts`: This field provides contact information for the pharmacy, such as phone number and email address.
+9. `Services`: This field provides information about the services offered by the pharmacy.
+
+These fields should be kept up to date to ensure accurate information about each pharmacy's identity, location, and services.

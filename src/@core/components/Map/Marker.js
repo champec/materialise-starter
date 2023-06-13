@@ -1,7 +1,7 @@
 import React from 'react'
 
 function Marker({ place, setChildClicked }) {
-  const nameWords = place.OrganisationName.split(' ')
+  const nameWords = place?.organisation_name.split(' ')
   const firstName = nameWords[0]
 
   const handleClick = () => {

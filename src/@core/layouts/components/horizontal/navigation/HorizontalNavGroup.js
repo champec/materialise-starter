@@ -30,7 +30,6 @@ import themeConfig from 'src/configs/themeConfig'
 import HorizontalNavItems from './HorizontalNavItems'
 import UserIcon from 'src/layouts/components/UserIcon'
 import Translations from 'src/layouts/components/Translations'
-import CanViewNavGroup from 'src/layouts/components/acl/CanViewNavGroup'
 
 // ** Utils
 import { hexToRGBA } from 'src/@core/utils/hex-to-rgba'
@@ -162,99 +161,97 @@ const HorizontalNavGroup = props => {
   }
 
   return (
-    <CanViewNavGroup navGroup={item}>
-      <MainWrapper {...(WrapperCondition ? { onClickAway: handleGroupClose } : { onMouseLeave: handleGroupClose })}>
-        <ChildWrapper>
-          <List component='div' sx={{ py: skin === 'bordered' ? 2.625 : 2.75 }}>
-            <ListItem
-              aria-haspopup='true'
-              {...(WrapperCondition ? {} : { onMouseEnter: handleGroupOpen })}
-              className={clsx('menu-group', { 'Mui-selected': hasActiveChild(item, currentURL) })}
-              {...(horizontalMenuToggle === 'click' ? { onClick: handleMenuToggleOnClick } : {})}
-              sx={{
-                ...(menuOpen ? { backgroundColor: 'action.hover' } : {}),
-                ...(!hasParent
-                  ? {
-                      borderRadius: '8px',
-                      '&.Mui-selected': {
-                        backgroundColor: 'primary.main',
-                        '& .MuiTypography-root, & .MuiListItemIcon-root, & svg': {
-                          color: 'common.white'
-                        }
+    <MainWrapper {...(WrapperCondition ? { onClickAway: handleGroupClose } : { onMouseLeave: handleGroupClose })}>
+      <ChildWrapper>
+        <List component='div' sx={{ py: skin === 'bordered' ? 2.625 : 2.75 }}>
+          <ListItem
+            aria-haspopup='true'
+            {...(WrapperCondition ? {} : { onMouseEnter: handleGroupOpen })}
+            className={clsx('menu-group', { 'Mui-selected': hasActiveChild(item, currentURL) })}
+            {...(horizontalMenuToggle === 'click' ? { onClick: handleMenuToggleOnClick } : {})}
+            sx={{
+              ...(menuOpen ? { backgroundColor: 'action.hover' } : {}),
+              ...(!hasParent
+                ? {
+                    borderRadius: '8px',
+                    '&.Mui-selected': {
+                      backgroundColor: 'primary.main',
+                      '& .MuiTypography-root, & .MuiListItemIcon-root, & svg': {
+                        color: 'common.white'
                       }
                     }
-                  : {})
+                  }
+                : {})
+            }}
+          >
+            <Box
+              sx={{
+                width: '100%',
+                display: 'flex',
+                flexDirection: 'row',
+                alignItems: 'center',
+                justifyContent: 'space-between'
               }}
+              ref={setReferenceElement}
             >
               <Box
                 sx={{
-                  width: '100%',
                   display: 'flex',
-                  flexDirection: 'row',
                   alignItems: 'center',
-                  justifyContent: 'space-between'
+                  flexDirection: 'row',
+                  ...(menuTextTruncate && { overflow: 'hidden' })
                 }}
-                ref={setReferenceElement}
               >
-                <Box
-                  sx={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    flexDirection: 'row',
-                    ...(menuTextTruncate && { overflow: 'hidden' })
-                  }}
-                >
-                  <ListItemIcon sx={{ mr: hasParent ? 3 : 2.5, color: 'text.primary' }}>
-                    <UserIcon icon={icon} fontSize={icon === navSubItemIcon ? '0.5rem' : '1.5rem'} />
-                  </ListItemIcon>
-                  <Typography {...(menuTextTruncate && { noWrap: true })}>
-                    <Translations text={item.title} />
-                  </Typography>
-                </Box>
-                <Box sx={{ ml: 1.5, display: 'flex', alignItems: 'center', color: 'text.secondary' }}>
-                  {item.badgeContent ? (
-                    <Chip
-                      size='small'
-                      label={item.badgeContent}
-                      color={item.badgeColor || 'primary'}
-                      sx={{ mr: 0.75, '& .MuiChip-label': { px: 2.5, lineHeight: 1.385, textTransform: 'capitalize' } }}
-                    />
-                  ) : null}
-                  <Icon icon={hasParent ? toggleIcon : 'mdi:chevron-down'} />
-                </Box>
+                <ListItemIcon sx={{ mr: hasParent ? 3 : 2.5, color: 'text.primary' }}>
+                  <UserIcon icon={icon} fontSize={icon === navSubItemIcon ? '0.5rem' : '1.5rem'} />
+                </ListItemIcon>
+                <Typography {...(menuTextTruncate && { noWrap: true })}>
+                  <Translations text={item.title} />
+                </Typography>
               </Box>
-            </ListItem>
-            <AnimationWrapper {...(horizontalMenuAnimation && { in: menuOpen, timeout: { exit: 300, enter: 400 } })}>
-              <Box
-                style={styles.popper}
-                ref={setPopperElement}
-                {...attributes.popper}
+              <Box sx={{ ml: 1.5, display: 'flex', alignItems: 'center', color: 'text.secondary' }}>
+                {item.badgeContent ? (
+                  <Chip
+                    size='small'
+                    label={item.badgeContent}
+                    color={item.badgeColor || 'primary'}
+                    sx={{ mr: 0.75, '& .MuiChip-label': { px: 2.5, lineHeight: 1.385, textTransform: 'capitalize' } }}
+                  />
+                ) : null}
+                <Icon icon={hasParent ? toggleIcon : 'mdi:chevron-down'} />
+              </Box>
+            </Box>
+          </ListItem>
+          <AnimationWrapper {...(horizontalMenuAnimation && { in: menuOpen, timeout: { exit: 300, enter: 400 } })}>
+            <Box
+              style={styles.popper}
+              ref={setPopperElement}
+              {...attributes.popper}
+              sx={{
+                zIndex: theme.zIndex.appBar,
+                ...(!horizontalMenuAnimation && { display: menuOpen ? 'block' : 'none' }),
+                pl: childMenuGroupStyles() === 'left' ? (skin === 'bordered' ? 1.5 : 1.25) : 0,
+                pr: childMenuGroupStyles() === 'right' ? (skin === 'bordered' ? 1.5 : 1.25) : 0,
+                ...(hasParent ? { position: 'fixed !important' } : { pt: skin === 'bordered' ? 5.25 : 5.5 })
+              }}
+            >
+              <NavigationMenu
                 sx={{
-                  zIndex: theme.zIndex.appBar,
-                  ...(!horizontalMenuAnimation && { display: menuOpen ? 'block' : 'none' }),
-                  pl: childMenuGroupStyles() === 'left' ? (skin === 'bordered' ? 1.5 : 1.25) : 0,
-                  pr: childMenuGroupStyles() === 'right' ? (skin === 'bordered' ? 1.5 : 1.25) : 0,
-                  ...(hasParent ? { position: 'fixed !important' } : { pt: skin === 'bordered' ? 5.25 : 5.5 })
+                  ...(hasParent
+                    ? { overflowX: 'visible', maxHeight: 'calc(100vh - 21rem)' }
+                    : { maxHeight: 'calc(100vh - 13rem)' }),
+                  ...(skin === 'bordered'
+                    ? { boxShadow: 0, border: `1px solid ${theme.palette.divider}` }
+                    : { boxShadow: 4 })
                 }}
               >
-                <NavigationMenu
-                  sx={{
-                    ...(hasParent
-                      ? { overflowX: 'visible', maxHeight: 'calc(100vh - 21rem)' }
-                      : { maxHeight: 'calc(100vh - 13rem)' }),
-                    ...(skin === 'bordered'
-                      ? { boxShadow: 0, border: `1px solid ${theme.palette.divider}` }
-                      : { boxShadow: 4 })
-                  }}
-                >
-                  <HorizontalNavItems {...props} hasParent horizontalNavItems={item.children} />
-                </NavigationMenu>
-              </Box>
-            </AnimationWrapper>
-          </List>
-        </ChildWrapper>
-      </MainWrapper>
-    </CanViewNavGroup>
+                <HorizontalNavItems {...props} hasParent horizontalNavItems={item.children} />
+              </NavigationMenu>
+            </Box>
+          </AnimationWrapper>
+        </List>
+      </ChildWrapper>
+    </MainWrapper>
   )
 }
 
