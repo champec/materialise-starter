@@ -33,7 +33,7 @@ const AuthOrgProvider = ({ children }) => {
 
   // ** authentication status
   useEffect(() => {
-    if (organisation.id) {
+    if (organisation?.id) {
       setIsAuthenticated(true)
     } else {
       setIsAuthenticated(false)

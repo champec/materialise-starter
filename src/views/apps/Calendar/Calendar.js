@@ -29,10 +29,12 @@ const Calendar = props => {
   // ** Props
   const {
     store,
+    orgId,
     dispatch,
     direction,
     updateEvent,
     calendarApi,
+    updateViewDates,
     calendarsColor,
     setCalendarApi,
     handleSelectEvent,
@@ -50,8 +52,11 @@ const Calendar = props => {
   }, [calendarApi, setCalendarApi])
   if (store) {
     // ** calendarOptions(Props)
+    const selectedCalendars = store.selectedCalendars
+
     const calendarOptions = {
-      events: store.events.length ? store.events : [],
+      events: store.events.length ? store.events.filter(event => selectedCalendars.includes(event.calendarType)) : [],
+
       plugins: [interactionPlugin, dayGridPlugin, timeGridPlugin, listPlugin],
       initialView: 'dayGridMonth',
       headerToolbar: {
@@ -95,7 +100,9 @@ const Calendar = props => {
       navLinks: true,
       eventClassNames({ event: calendarEvent }) {
         // @ts-ignore
-        const colorName = calendarsColor[calendarEvent._def.extendedProps.calendar]
+        // const colorName = calendarsColor[calendarEvent._def.extendedProps.calendar]
+
+        const colorName = calendarEvent._def.extendedProps.color
 
         return [
           // Background Color
@@ -136,7 +143,7 @@ const Calendar = props => {
             ? We can use `eventDragStop` but it doesn't return updated event so we have to use `eventDrop` which returns updated event
           */
       eventDrop({ event: droppedEvent }) {
-        dispatch(updateEvent(droppedEvent))
+        dispatch(updateEvent({ event: droppedEvent, orgId: orgId }))
       },
 
       /*
@@ -144,7 +151,7 @@ const Calendar = props => {
             ? Docs: https://fullcalendar.io/docs/eventResize
           */
       eventResize({ event: resizedEvent }) {
-        dispatch(updateEvent(resizedEvent))
+        dispatch(updateEvent({ event: resizedEvent, orgId: orgId }))
       },
       ref: calendarRef,
 
@@ -153,7 +160,14 @@ const Calendar = props => {
     }
 
     // @ts-ignore
-    return <FullCalendar {...calendarOptions} />
+    return (
+      <FullCalendar
+        {...calendarOptions}
+        datesSet={({ start, end }) => {
+          dispatch(updateViewDates({ viewStart: start, viewEnd: end }))
+        }}
+      />
+    )
   } else {
     return null
   }

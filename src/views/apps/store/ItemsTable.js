@@ -140,7 +140,7 @@ function getColumns(setShow, setSelectedRow) {
   ]
 }
 
-function InventoryTable() {
+function InventoryTable({ initialData, initialTotal }) {
   const [page, setPage] = useState(0)
   const [total, setTotal] = useState(0)
   const [sort, setSort] = useState('asc')
@@ -151,66 +151,45 @@ function InventoryTable() {
   const [show, setShow] = useState(false)
   const [selectedRow, setSelectedRow] = useState([])
   const [loading, setLoading] = useState(false)
+  const [sortModel, setSortModel] = useState([])
   function loadServerRows(currentPage, data) {
     return data.slice(currentPage * pageSize, (currentPage + 1) * pageSize)
   }
   const supabase = supabaseOrg
 
-  const fetchTableData = useCallback(
-    async (sort, q, column) => {
-      setLoading(true)
-
-      let query
-
-      // Add a condition for numeric columns
-      if (column === 'date') {
-        query = supabase
-          .from('items')
-          .select('*', { count: 'exact' })
-          .order(column, { ascending: sort === 'asc' })
-      } else if (column === 'price' || column === 'quantity') {
-        // Change this condition based on your requirement.
-        query = supabase
-          .from('items')
-          .select('*', { count: 'exact' })
-          .order(column, { ascending: sort === 'asc' })
-      } else {
-        query = supabase
-          .from('items')
-          .select('*', { count: 'exact' })
-          .ilike(column, `%${q}%`)
-          .order(column, { ascending: sort === 'asc' })
-      }
-
-      const { data, error, count } = await query.range(page * pageSize, (page + 1) * pageSize - 1)
-      console.log(count)
-      if (error) {
-        setLoading(false)
-        console.error('Error fetching data: ', error)
-      } else {
-        setLoading(false)
-        console.log('Data fetched successfully!', data)
-        setRows(data)
-        setTotal(count)
-      }
-    },
-    [page, pageSize]
-  )
-
   useEffect(() => {
-    fetchTableData(sort, searchValue, sortColumn)
-  }, [fetchTableData, searchValue, sort, sortColumn])
+    setRows(initialData)
+    setTotal(initialTotal)
+  }, [])
 
-  const handleSortModel = newModel => {
-    if (newModel.length) {
-      setSort(newModel[0].sort)
-      setSortColumn(newModel[0].field)
-      fetchTableData(newModel[0].sort, searchValue, newModel[0].field)
-    } else {
-      setSort('asc')
-      setSortColumn('name')
+  const handleSortModelChange = useCallback(newModel => {
+    setSortModel(newModel)
+    fetchTableData(newModel, searchValue, sortColumn)
+  }, [])
+
+  const fetchTableData = useCallback(async (sortModel, searchValue, sortColumn) => {
+    try {
+      // Construct your query based on the sort model, search value, and sort column
+      const query = supabase
+        .from('items')
+        .select('*', { count: 'exact' })
+        .ilike(sortColumn, `%${searchValue}%`)
+        .order(sortColumn, { ascending: sortModel[0]?.sort === 'asc' })
+
+      // Execute the query to fetch the data
+      const { data, count, error } = await query.range(page * pageSize, (page + 1) * pageSize - 1)
+      if (error) {
+        console.log(error)
+        return
+      }
+
+      // Update the rows and total state with the fetched data
+      setRows(data)
+      setTotal(count)
+    } catch (error) {
+      console.log(error)
     }
-  }
+  }, [])
 
   const handleSearch = value => {
     setSearchValue(value)
@@ -256,7 +235,8 @@ function InventoryTable() {
           pageSize={pageSize}
           sortingMode='server'
           paginationMode='server'
-          onSortModelChange={handleSortModel}
+          onSortModelChange={handleSortModelChange}
+          sortModel={sortModel}
           rowsPerPageOptions={[7, 10, 25, 50]}
           onPageChange={newPage => setPage(newPage)}
           components={{ Toolbar: ServerSideToolbar }}
@@ -275,7 +255,7 @@ function InventoryTable() {
               setShow: setShow,
               setSelectedRow: setSelectedRow,
               selectedRow: selectedRow,
-              fetchTableData: fetchTableData,
+
               sort: sort,
               searchValue: searchValue,
               sortColumn: sortColumn,

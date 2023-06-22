@@ -1,5 +1,7 @@
 // ** React Imports
 import { useState, useEffect, forwardRef, useCallback, Fragment } from 'react'
+import { useUserAuth } from 'src/hooks/useAuth'
+import { useOrgAuth } from 'src/hooks/useOrgAuth'
 
 // ** MUI Imports
 import Box from '@mui/material/Box'
@@ -35,8 +37,10 @@ const defaultState = {
   allDay: true,
   description: '',
   endDate: new Date(),
-  calendar: 'Business',
-  startDate: new Date()
+  calendar: '',
+  startDate: new Date(),
+  recurrenceFrequency: '', // Added recurrenceFrequency to state
+  recurrenceEndDate: null // Added recurrenceEndDate to state
 }
 
 const AddEventSidebar = props => {
@@ -56,6 +60,10 @@ const AddEventSidebar = props => {
 
   // ** States
   const [values, setValues] = useState(defaultState)
+  const [isRecurring, setIsRecurring] = useState(false)
+  const [editAllInstances, setEditAllInstances] = useState(false)
+  const orgId = useOrgAuth()?.organisation?.id
+  const userId = useUserAuth()?.user?.id
 
   const {
     control,
@@ -72,24 +80,30 @@ const AddEventSidebar = props => {
     handleAddEventSidebarToggle()
   }
 
-  const onSubmit = data => {
+  const onSubmit = (data, isRecurring) => {
     const modifiedEvent = {
       url: values.url,
       display: 'block',
       title: data.title,
-      end: values.endDate,
+      end: isRecurring ? values.startDate : values.endDate,
       allDay: values.allDay,
       start: values.startDate,
+      created_by: userId,
+      company_id: orgId,
+      calendarType: values.calendar,
+      recurrenceFrequency: isRecurring ? values.recurrenceFrequency : null,
+      recurrenceEndDate: isRecurring ? values.endDate : values.startDate,
       extendedProps: {
-        calendar: capitalize(values.calendar),
+        calendar: values.calendar,
         guests: values.guests && values.guests.length ? values.guests : undefined,
         description: values.description.length ? values.description : undefined
       }
     }
+
     if (store.selectedEvent === null || (store.selectedEvent !== null && !store.selectedEvent.title.length)) {
-      dispatch(addEvent(modifiedEvent))
+      dispatch(addEvent({ modifiedEvent, orgId }, 'ADD EVENT!!!'))
     } else {
-      dispatch(updateEvent({ id: store.selectedEvent.id, ...modifiedEvent }))
+      dispatch(updateEvent({ event: { id: store.selectedEvent.id, ...modifiedEvent }, orgId: orgId }))
     }
     calendarApi.refetchEvents()
     handleSidebarClose()
@@ -97,7 +111,7 @@ const AddEventSidebar = props => {
 
   const handleDeleteEvent = () => {
     if (store.selectedEvent) {
-      dispatch(deleteEvent(store.selectedEvent.id))
+      dispatch(deleteEvent({ id: store.selectedEvent.id, orgId }))
     }
 
     // calendarApi.getEventById(store.selectedEvent.id).remove()
@@ -113,6 +127,7 @@ const AddEventSidebar = props => {
   const resetToStoredValues = useCallback(() => {
     if (store.selectedEvent !== null) {
       const event = store.selectedEvent
+      console.log(event, 'EVENTTT')
       setValue('title', event.title || '')
       setValues({
         url: event.url || '',
@@ -120,12 +135,16 @@ const AddEventSidebar = props => {
         allDay: event.allDay,
         guests: event.extendedProps.guests || [],
         description: event.extendedProps.description || '',
-        calendar: event.extendedProps.calendar || 'Business',
+        calendar: event.extendedProps.calendarType || '',
         endDate: event.end !== null ? event.end : event.start,
-        startDate: event.start !== null ? event.start : new Date()
+        startDate: event.start !== null ? event.start : new Date(),
+        recurrenceFrequency: event.recurrenceFrequency || '', // Added recurrenceFrequency to state
+        recurrenceEndDate: event.end !== null ? event.end : event.start // Added recurrenceEndDate to state
       })
     }
   }, [setValue, store.selectedEvent])
+
+  console.log(store.selectedEvent?.extendedProps?.recurrencefrequency, 'check is true or false')
 
   const resetToEmptyValues = useCallback(() => {
     setValue('title', '')
@@ -215,7 +234,7 @@ const AddEventSidebar = props => {
       </Box>
       <Box className='sidebar-body' sx={{ p: theme => theme.spacing(5, 6) }}>
         <DatePickerWrapper>
-          <form onSubmit={handleSubmit(onSubmit)} autoComplete='off'>
+          <form onSubmit={handleSubmit(data => onSubmit(data, isRecurring))} autoComplete='off'>
             <FormControl fullWidth sx={{ mb: 6 }}>
               <Controller
                 name='title'
@@ -239,11 +258,11 @@ const AddEventSidebar = props => {
                 labelId='event-calendar'
                 onChange={e => setValues({ ...values, calendar: e.target.value })}
               >
-                <MenuItem value='Personal'>Personal</MenuItem>
-                <MenuItem value='Business'>Business</MenuItem>
-                <MenuItem value='Family'>Family</MenuItem>
-                <MenuItem value='Holiday'>Holiday</MenuItem>
-                <MenuItem value='ETC'>ETC</MenuItem>
+                {store.calendarTypes.map(type => (
+                  <MenuItem key={type.id} value={type.id}>
+                    {type.title}
+                  </MenuItem>
+                ))}
               </Select>
             </FormControl>
             <Box sx={{ mb: 6 }}>
@@ -252,6 +271,7 @@ const AddEventSidebar = props => {
                 id='event-start-date'
                 endDate={values.endDate}
                 selected={values.startDate}
+                minDate={new Date()}
                 startDate={values.startDate}
                 showTimeSelect={!values.allDay}
                 dateFormat={!values.allDay ? 'yyyy-MM-dd hh:mm' : 'yyyy-MM-dd'}
@@ -260,6 +280,7 @@ const AddEventSidebar = props => {
                 onSelect={handleStartDate}
               />
             </Box>
+
             <Box sx={{ mb: 6 }}>
               <DatePicker
                 selectsEnd
@@ -274,14 +295,35 @@ const AddEventSidebar = props => {
                 onChange={date => setValues({ ...values, endDate: new Date(date) })}
               />
             </Box>
-            <FormControl sx={{ mb: 6 }}>
-              <FormControlLabel
-                label='All Day'
-                control={
-                  <Switch checked={values.allDay} onChange={e => setValues({ ...values, allDay: e.target.checked })} />
-                }
-              />
-            </FormControl>
+            <Box sx={{ mb: 6 }}>
+              <FormControl>
+                <FormControlLabel
+                  label='All Day'
+                  control={
+                    <Switch
+                      checked={values.allDay}
+                      onChange={e => setValues({ ...values, allDay: e.target.checked })}
+                    />
+                  }
+                />
+              </FormControl>
+              <FormControl>
+                <FormControlLabel
+                  label='Recurring'
+                  control={
+                    <Switch
+                      checked={
+                        isRecurring || (store.selectedEvent && store.selectedEvent?.extendedProps?.recurrencefrequency)
+                      }
+                      onChange={e => {
+                        setIsRecurring(e.target.checked)
+                      }}
+                      disabled={store.selectedEvent && store.selectedEvent?.extendedProps?.recurrencefrequency}
+                    />
+                  }
+                />
+              </FormControl>
+            </Box>
             <TextField
               fullWidth
               type='url'
@@ -308,6 +350,26 @@ const AddEventSidebar = props => {
                 <MenuItem value='barry'>Barry</MenuItem>
               </Select>
             </FormControl>
+            {isRecurring && (
+              <FormControl fullWidth sx={{ mb: 6 }}>
+                <InputLabel id='event-frequency'>Recurring Frequency</InputLabel>
+                <Select
+                  label='Recurring Frequency'
+                  value={values.recurrenceFrequency}
+                  labelId='event-frequency'
+                  onChange={e => setValues({ ...values, recurrenceFrequency: e.target.value })}
+                >
+                  <MenuItem value=''>
+                    <em>None</em>
+                  </MenuItem>
+                  <MenuItem value='daily'>Daily</MenuItem>
+                  <MenuItem value='weekly'>Weekly</MenuItem>
+                  <MenuItem value='monthly'>Monthly</MenuItem>
+                  <MenuItem value='yearly'>Yearly</MenuItem>
+                </Select>
+              </FormControl>
+            )}
+
             <TextField
               rows={4}
               multiline
@@ -318,6 +380,24 @@ const AddEventSidebar = props => {
               value={values.description}
               onChange={e => setValues({ ...values, description: e.target.value })}
             />
+            {(isRecurring && store.selectedEvent) ||
+              (store.selectedEvent?.extendedProps?.recurrencefrequency && (
+                <FormControl>
+                  <FormControlLabel
+                    label='Apply to all instances'
+                    isrecurring
+                    control={
+                      <Switch
+                        checked={editAllInstances}
+                        onChange={e => {
+                          setEditAllInstances(e.target.checked)
+                        }}
+                      />
+                    }
+                  />
+                </FormControl>
+              ))}
+
             <Box sx={{ display: 'flex', alignItems: 'center' }}>
               <RenderSidebarFooter />
             </Box>

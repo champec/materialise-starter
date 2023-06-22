@@ -1,0 +1,156 @@
+Here's a clearer description of what you would like to implement on your web app:
+
+1. Orders Page Transformation: The orders page should display a list of all orders and their corresponding numbers by default. Above this list, include a 
+large filter button and two status cards: 'Pending Receipt' and 'Pending Action'. Both status cards should be grey when no orders are pending, and display 
+the number of pending orders. Clicking on a card should filter the list of orders accordingly. Clicking on an order in the list should take you to the order details page.
+
+2. Order Details: The order details page should provide a summary of the order, tracking information, and an option to view the invoice. The order table should contain 
+columns for status, tracking, invoice, order type, role (buyer or seller), and order details. Each order should also have an associated set of actions that can be used to 
+progress the order through the job pipeline.
+
+3. Smart Todo List: Every new order or job should automatically appear on a todo list, with the next action in the job pipeline. If the next action involves another business, 
+it shouldn't appear on the list. However, updates from the other end should prompt the order to reappear on the relevant todo list. Actions performed elsewhere should also update 
+the todo list.
+
+4. Remove the Tracking Page: Tracking can be incorporated into the order details page, so a separate tracking page is unnecessary.
+
+5. Job Pipeline: The lifecycle of an order should be as follows:
+   - Order Made (Buyer)
+   - Order Confirmed (Seller)
+   - Invoice Generated (PharmEx)
+   - Order Sent (Seller)
+   - Order Received (Buyer)
+   - Invoice Paid (Buyer)
+   - Invoice Received (Seller)
+   - Order Complete (PharmEx)
+
+6. Order Types: The platform should support four types of transactions: 
+   - Buy/Sell: Follows the job pipeline exactly.
+   - Exchange: Companies agree to exchange items. Requires a custom pipeline.
+   - Replace: An item is borrowed and replaced at a specified date. Requires a custom pipeline.
+   - Refund: An item is returned and refunded. Requires a custom pipeline.
+
+7. Order Lifecycle: An order starts in the 'Pending' state. Once confirmed, it moves to 'Pending Shipment'. After shipping, it becomes 'Pending Receipt'. 
+When received, it's in the 'Pending Payment' stage. After payment, it moves to the 'Waiting for Confirmation' stage and finally to the 'Complete' stage after 
+confirmation. An order can be cancelled if rejected. If it gets stuck, it enters the 'Adjudication' stage where an admin can mediate a resolution. If a dispute can't be resolved, 
+there should be an option to move the order into the adjudication stage from the order confirmation page.
+
+8. Practical Implementation: The MUI grid represents the orders, and clicking an order leads to the order details page. The order details page contains a summary 
+and an order status, along with action buttons. Users can only perform the next stage in the pipeline from the todo list. The todo list shows all tasks for the company, 
+updating responsively based on the current stage in the pipeline.
+
+
+Certainly, let's create job pipelines for the different transaction types: 
+
+1. Exchange Pipeline:
+   - Agreement Reached: Both companies agree to exchange certain items.
+   - Exchange Confirmation: Each company confirms the agreement.
+   - Exchange Sent: Each company sends their items.
+   - Exchange Received: Each company acknowledges receiving the items.
+   - Confirmation of Receipt: Each company confirms the received items match the agreement.
+   - Exchange Complete: Both companies confirm the exchange is complete.
+
+2. Replacement Pipeline:
+   - Request for Item: A company requests to borrow an item.
+   - Request Confirmation: The lending company confirms the request.
+   - Item Sent: The lending company sends the item.
+   - Item Received and Acknowledged: The borrowing company acknowledges receipt of the item.
+   - Replacement Sent: The borrowing company sends a replacement item at the agreed-upon date.
+   - Replacement Received: The lending company acknowledges receipt of the replacement.
+   - Confirmation of Replacement: The lending company confirms the replacement matches the borrowed item.
+   - Replacement Complete: Both companies confirm the replacement process is complete.
+
+3. Refund Pipeline:
+   - Request for Refund: A customer requests a refund and initiates the return of an item.
+   - Refund Request Acknowledged: The seller acknowledges the request for a refund.
+   - Item Returned: The customer sends the item back.
+   - Return Received: The seller confirms receipt of the returned item.
+   - Inspection of Return: The seller inspects the returned item to ensure it is in satisfactory condition.
+   - Refund Issued: The seller issues a refund to the customer.
+   - Refund Received: The customer confirms receipt of the refund.
+   - Refund Complete: Both parties confirm the refund process is complete.
+
+In each pipeline, just like the Order pipeline, if there is a dispute at any stage, the transaction can enter the Adjudication stage where an admin can mediate between the parties.
+
+life cycles 
+
+Buy/Sell Lifecycle:
+
+Order Made (Buyer): Action - "Create Order" | Status - "Creating Order" | Next Action - "Confirm Order"
+Order Confirmed (Seller): Action - "Confirm Order" | Status - "Awaiting Confirmation" | Next Action - "Generate Invoice"
+Invoice Generated (PharmEx): Action - "Generate Invoice" | Status - "Generating Invoice" | Next Action - "Ship Order"
+Order Sent (Seller): Action - "Ship Order" | Status - "Shipping Order" | Next Action - "Receive Order"
+Order Received (Buyer): Action - "Receive Order" | Status - "Receiving Order" | Next Action - "Pay Invoice"
+Invoice Paid (Buyer): Action - "Pay Invoice" | Status - "Paying Invoice" | Next Action - "Receive Payment Confirmation"
+Invoice Received (Seller): Action - "Receive Payment Confirmation" | Status - "Receiving Payment Confirmation" | Next Action - "Complete Order"
+Order Complete (PharmEx): Action - "Complete Order" | Status - "Order Completed"
+Exchange Lifecycle:
+
+Agreement Reached (Both companies): Action - "Create Agreement" | Status - "Creating Agreement" | Next Action - "Confirm Agreement"
+Exchange Confirmation (Both companies): Action - "Confirm Agreement" | Status - "Awaiting Confirmation" | Next Action - "Ship Exchange Items"
+Exchange Sent (Both companies): Action - "Ship Exchange Items" | Status - "Shipping Items" | Next Action - "Receive Exchange Items"
+Exchange Received (Both companies): Action - "Receive Exchange Items" | Status - "Receiving Items" | Next Action - "Confirm Receipt"
+Confirmation of Receipt (Both companies): Action - "Confirm Receipt" | Status - "Confirming Receipt" | Next Action - "Complete Exchange"
+Exchange Complete (Both companies): Action - "Complete Exchange" | Status - "Exchange Completed"
+Replacement Lifecycle:
+
+Request for Item (Borrowing company): Action - "Create Request" | Status - "Creating Request" | Next Action - "Confirm Request"
+Request Confirmation (Lending company): Action - "Confirm Request" | Status - "Awaiting Confirmation" | Next Action - "Ship Item"
+Item Sent (Lending company): Action - "Ship Item" | Status - "Shipping Item" | Next Action - "Receive and Acknowledge Item"
+Item Received and Acknowledged (Borrowing company): Action - "Receive and Acknowledge Item" | Status - "Receiving and Acknowledging Item" | Next Action - "Send Replacement"
+Replacement Sent (Borrowing company): Action - "Send Replacement" | Status - "Sending Replacement" | Next Action - "Receive Replacement"
+Replacement Received (Lending company): Action - "Receive Replacement" | Status - "Receiving Replacement" | Next Action - "Confirm Replacement"
+Confirmation of Replacement (Lending company): Action - "Confirm Replacement" | Status - "Confirming Replacement" | Next Action - "Complete Replacement"
+Replacement Complete (Both companies): Action - "Complete Replacement" | Status - "Replacement Completed"
+Refund Lifecycle:
+
+Request for Refund (Customer): Action - "Request Refund" | Status - "Requesting Refund" | Next Action - "Acknowledge Refund Request"
+Refund Request Acknowledged (Seller): Action - "Acknowledge Refund Request" | Status - "Acknowledging Refund Request" | Next Action - "Issue Refund"
+Refund Issued (Seller): Action - "Issue Refund" | Status - "Issuing Refund" | Next Action - "Confirm Refund Receipt"
+Refund Receipt Confirmed (Customer): Action - "Confirm Refund Receipt" | Status - "Confirming Refund Receipt" | Next Action - "Complete Refund"
+Refund Complete (Both parties): Action - "Complete Refund" | Status - "Refund Completed"
+
+
+DROP TRIGGER IF EXISTS update_task_and_order_after_task_update ON tasks;
+
+CREATE OR REPLACE FUNCTION update_task_and_order() 
+RETURNS TRIGGER AS $$
+DECLARE
+    next_pipeline_id UUID;
+    num_steps INT;
+BEGIN
+    -- Mark the current task as complete
+    UPDATE tasks SET task_status = 'Complete', updated_at = NOW() WHERE id = NEW.id;
+
+    -- Determine the next pipeline ID
+    SELECT id, steps INTO next_pipeline_id, num_steps
+    FROM job_pipeline
+    WHERE transaction_type_id = (SELECT transaction_type_id FROM job_pipeline WHERE id = NEW.job_pipeline_id)
+    AND steps = (SELECT steps FROM job_pipeline WHERE id = NEW.job_pipeline_id) + 1;
+    
+    -- If there is a next pipeline step
+    IF next_pipeline_id IS NOT NULL THEN
+        -- Create a new task
+        INSERT INTO tasks (entity_type, entity_id, job_pipeline_id, role, task_status) 
+        VALUES (
+            NEW.entity_type,
+            NEW.entity_id,
+            next_pipeline_id,
+            NEW.role,
+            'In Progress'
+        );
+        
+        -- Update the corresponding entity's job_pipeline
+        EXECUTE FORMAT('UPDATE %I SET job_pipeline = %L WHERE id = %L', 
+                        NEW.entity_type, next_pipeline_id, NEW.entity_id);
+    END IF;
+
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER update_task_and_order_after_task_update
+AFTER UPDATE ON tasks
+FOR EACH ROW 
+WHEN (OLD.completed IS DISTINCT FROM NEW.completed AND NEW.completed = TRUE)
+EXECUTE PROCEDURE update_task_and_order();

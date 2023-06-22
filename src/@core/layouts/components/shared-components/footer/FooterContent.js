@@ -22,19 +22,16 @@ const FooterContent = () => {
       </Typography>
       {hidden ? null : (
         <Box sx={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', '& :not(:last-child)': { mr: 4 } }}>
-          <Link target='_blank' href='https://themeforest.net/licenses/standard'>
+          <Link target='_blank' href='#'>
             License
           </Link>
-          <Link target='_blank' href='https://1.envato.market/pixinvent_portfolio'>
-            More Themes
+          <Link target='_blank' href='#'>
+            More by Lufya Ltd
           </Link>
-          <Link
-            target='_blank'
-            href='https://pixinvent.com/demo/materialize-mui-react-nextjs-admin-template/documentation'
-          >
+          <Link target='_blank' href='#'>
             Documentation
           </Link>
-          <Link target='_blank' href='https://pixinvent.ticksy.com/'>
+          <Link target='_blank' href='#'>
             Support
           </Link>
         </Box>

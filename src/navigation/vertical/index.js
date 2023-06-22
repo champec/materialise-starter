@@ -56,17 +56,17 @@ const navigation = () => {
       icon: 'mdi:drugs'
     },
     {
-      path: '/store/track',
+      path: '/store/invoice',
       action: 'read',
       subject: 'acl-page',
-      title: 'Track',
-      icon: 'mdi:map-marker-distance'
+      title: 'Invoice',
+      icon: 'mingcute:paper-line'
     },
     {
-      path: '/store/business',
+      path: '/store/orders',
       action: 'read',
       subject: 'acl-page',
-      title: 'Business',
+      title: 'Orders',
       icon: 'ic:twotone-add-business'
     },
     {

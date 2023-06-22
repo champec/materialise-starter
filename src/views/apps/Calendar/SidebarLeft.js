@@ -4,6 +4,10 @@ import Drawer from '@mui/material/Drawer'
 import Checkbox from '@mui/material/Checkbox'
 import Typography from '@mui/material/Typography'
 import FormControlLabel from '@mui/material/FormControlLabel'
+import Box from '@mui/material/Box'
+import IconButton from '@mui/material/IconButton'
+import Icon from 'src/@core/components/icon'
+import { useState } from 'react'
 
 const SidebarLeft = props => {
   const {
@@ -15,35 +19,77 @@ const SidebarLeft = props => {
     leftSidebarWidth,
     handleSelectEvent,
     handleAllCalendars,
+    handleSelectCalendar,
     handleCalendarsUpdate,
     handleLeftSidebarToggle,
-    handleAddEventSidebarToggle
+    handleAddEventSidebarToggle,
+    handleAddCalendarSidebarToggle
   } = props
   const colorsArr = calendarsColor ? Object.entries(calendarsColor) : []
 
-  const renderFilters = colorsArr.length
-    ? colorsArr.map(([key, value]) => {
-        return (
-          <FormControlLabel
-            key={key}
-            label={key}
-            sx={{ mb: 0.5 }}
-            control={
-              <Checkbox
-                color={value}
-                checked={store.selectedCalendars.includes(key)}
-                onChange={() => dispatch(handleCalendarsUpdate(key))}
-              />
-            }
+  const [isEditing, setIsEditing] = useState(false)
+
+  const handleAddCalendarSidebarToggleSidebar = () => {
+    handleAddCalendarSidebarToggle()
+    setIsEditing(!isEditing)
+    dispatch(handleSelectEvent(null))
+  }
+
+  const renderFilters = store.calendarTypes ? (
+    <>
+      <FormControlLabel
+        label='View All'
+        sx={{ mr: 0, mb: 0.5 }}
+        control={
+          <Checkbox
+            color='secondary'
+            checked={store.selectedCalendars.length === store.calendarTypes.length}
+            onChange={e => dispatch(handleAllCalendars(e.target.checked))}
           />
-        )
-      })
-    : null
+        }
+      />
+      {store.calendarTypes.map(calendarType => (
+        <FormControlLabel
+          key={calendarType.id}
+          label={calendarType.title}
+          sx={{ mb: 0.5 }}
+          control={
+            isEditing ? (
+              <IconButton onClick={() => handleEditCalendarItem(calendarType)}>
+                <Icon icon='bx:edit' color='grey' fontSize={18} />
+              </IconButton>
+            ) : (
+              <Checkbox
+                color={calendarType.color}
+                checked={store.selectedCalendars.includes(calendarType.id)}
+                onChange={() => dispatch(handleCalendarsUpdate(calendarType.id))}
+              />
+            )
+          }
+        />
+      ))}
+      {isEditing && (
+        <Box>
+          <Button onClick={handleAddCalendarSidebarToggleSidebar}>Add New</Button>
+        </Box>
+      )}
+    </>
+  ) : null
 
   const handleSidebarToggleSidebar = () => {
     handleAddEventSidebarToggle()
     dispatch(handleSelectEvent(null))
   }
+
+  const handleEditCalendarItem = calendarType => {
+    dispatch(handleSelectCalendar(calendarType))
+    handleAddCalendarSidebarToggleSidebar()
+  }
+
+  const handleEventTypeEdit = () => {
+    setIsEditing(!isEditing)
+  }
+
   if (renderFilters) {
     return (
       <Drawer
@@ -81,20 +127,15 @@ const SidebarLeft = props => {
           Add Event
         </Button>
 
-        <Typography variant='body2' sx={{ mt: 7, mb: 2.5, textTransform: 'uppercase' }}>
-          Calendars
-        </Typography>
-        <FormControlLabel
-          label='View All'
-          sx={{ mr: 0, mb: 0.5 }}
-          control={
-            <Checkbox
-              color='secondary'
-              checked={store.selectedCalendars.length === colorsArr.length}
-              onChange={e => dispatch(handleAllCalendars(e.target.checked))}
-            />
-          }
-        />
+        <Box sx={{ mt: 7, mb: 2.5, display: 'flex', flexDirection: 'row', alignItems: 'center' }}>
+          <Typography variant='body2' sx={{ textTransform: 'uppercase' }}>
+            Calendars
+          </Typography>
+          <IconButton onClick={handleEventTypeEdit}>
+            <Icon icon='bx:edit' color='grey' fontSize={18} />
+          </IconButton>
+        </Box>
+
         {renderFilters}
       </Drawer>
     )

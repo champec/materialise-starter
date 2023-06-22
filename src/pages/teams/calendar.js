@@ -1,5 +1,6 @@
 // ** React Imports
 import { useEffect, useState } from 'react'
+import { useOrgAuth } from 'src/hooks/useOrgAuth'
 
 // ** MUI Imports
 import Box from '@mui/material/Box'
@@ -12,20 +13,27 @@ import { useDispatch, useSelector } from 'react-redux'
 import { useSettings } from 'src/@core/hooks/useSettings'
 
 // ** FullCalendar & App Components Imports
-import Calendar from 'src/views/apps/calendar/Calendar'
-import SidebarLeft from 'src/views/apps/calendar/SidebarLeft'
+import Calendar from 'src/views/apps/Calendar/Calendar'
+import SidebarLeft from 'src/views/apps/Calendar/SidebarLeft'
 import CalendarWrapper from 'src/@core/styles/libs/fullcalendar'
-import AddEventSidebar from 'src/views/apps/calendar/AddEventSidebar'
+import AddEventSidebar from 'src/views/apps/Calendar/AddEventSidebar'
+import AddCalendarSidebar from 'src/views/apps/Calendar/AddCalendarSidebar'
 
 // ** Actions
 import {
   addEvent,
   fetchEvents,
+  fetchCalendarTypes,
   deleteEvent,
   updateEvent,
   handleSelectEvent,
   handleAllCalendars,
-  handleCalendarsUpdate
+  handleCalendarsUpdate,
+  addCalendarType,
+  updateCalendarType,
+  deleteCalendarType,
+  handleSelectCalendar,
+  updateViewDates
 } from 'src/store/apps/calendar'
 
 // ** CalendarColors
@@ -42,11 +50,13 @@ const AppCalendar = () => {
   const [calendarApi, setCalendarApi] = useState(null)
   const [leftSidebarOpen, setLeftSidebarOpen] = useState(false)
   const [addEventSidebarOpen, setAddEventSidebarOpen] = useState(false)
+  const [addCalendarSidebarOpen, setAddCalendarSidebarOpen] = useState(false)
 
   // ** Hooks
   const { settings } = useSettings()
   const dispatch = useDispatch()
   const store = useSelector(state => state.calendar)
+  const orgId = useOrgAuth()?.organisation?.id
 
   // ** Vars
   const leftSidebarWidth = 260
@@ -54,10 +64,17 @@ const AppCalendar = () => {
   const { skin, direction } = settings
   const mdAbove = useMediaQuery(theme => theme.breakpoints.up('md'))
   useEffect(() => {
-    dispatch(fetchEvents(store.selectedCalendars))
-  }, [dispatch, store.selectedCalendars])
+    if (orgId) {
+      dispatch(fetchEvents(orgId))
+    }
+  }, [dispatch, store.selectedCalendars, store.viewStart, store.viewEnd, orgId])
+
+  useEffect(() => {
+    dispatch(fetchCalendarTypes())
+  }, [dispatch])
   const handleLeftSidebarToggle = () => setLeftSidebarOpen(!leftSidebarOpen)
   const handleAddEventSidebarToggle = () => setAddEventSidebarOpen(!addEventSidebarOpen)
+  const handleAddCalendarSidebarToggle = () => setAddCalendarSidebarOpen(!addCalendarSidebarOpen)
 
   return (
     <CalendarWrapper
@@ -76,9 +93,11 @@ const AppCalendar = () => {
         leftSidebarWidth={leftSidebarWidth}
         handleSelectEvent={handleSelectEvent}
         handleAllCalendars={handleAllCalendars}
+        handleSelectCalendar={handleSelectCalendar}
         handleCalendarsUpdate={handleCalendarsUpdate}
         handleLeftSidebarToggle={handleLeftSidebarToggle}
         handleAddEventSidebarToggle={handleAddEventSidebarToggle}
+        handleAddCalendarSidebarToggle={handleAddCalendarSidebarToggle}
       />
       <Box
         sx={{
@@ -92,6 +111,7 @@ const AppCalendar = () => {
         }}
       >
         <Calendar
+          orgId={orgId}
           store={store}
           dispatch={dispatch}
           direction={direction}
@@ -99,9 +119,11 @@ const AppCalendar = () => {
           calendarApi={calendarApi}
           calendarsColor={calendarsColor}
           setCalendarApi={setCalendarApi}
+          updateViewDates={updateViewDates}
           handleSelectEvent={handleSelectEvent}
           handleLeftSidebarToggle={handleLeftSidebarToggle}
           handleAddEventSidebarToggle={handleAddEventSidebarToggle}
+          handleAddCalendarSidebarToggle={handleAddCalendarSidebarToggle}
         />
       </Box>
       <AddEventSidebar
@@ -115,6 +137,18 @@ const AppCalendar = () => {
         handleSelectEvent={handleSelectEvent}
         addEventSidebarOpen={addEventSidebarOpen}
         handleAddEventSidebarToggle={handleAddEventSidebarToggle}
+      />
+      <AddCalendarSidebar
+        store={store}
+        dispatch={dispatch}
+        calendarApi={calendarApi}
+        updateCalendarType={updateCalendarType}
+        addCalendarType={addCalendarType}
+        deleteCalendarType={deleteCalendarType}
+        handleSelectCalendar={handleSelectCalendar}
+        drawerWidth={addEventSidebarWidth}
+        addCalendarSidebarOpen={addCalendarSidebarOpen}
+        handleAddCalendarSidebarToggle={handleAddCalendarSidebarToggle}
       />
     </CalendarWrapper>
   )
