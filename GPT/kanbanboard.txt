@@ -27,3 +27,98 @@ team to have continuety and help them manage their work better. ultimately this 
 - What I want you to do now is help me build the kanbanboard. I have one from a react template that I will need to repurpose for my app and get everything working. 
 I can show you the code and you cna help refactor it. Its in a few part, index.js, kanbanboard.js, kanban-style.scss cardbox.js and cardHeader.js cant show you all four component
 in one go, but if you say next I will show you all the template component one at a time untill you have seen them all
+
+
+
+
+Core Features:
+
+1. **Multitenancy:** The website will serve multiple pharmacies, with each pharmacy having its own account. Each pharmacy account will be 
+associated with multiple user accounts. The user accounts will be differentiated by roles.
+
+2. **Task Management:** Users should be able to create tasks, set due dates, assign tasks to team members, add labels (each label having a 
+title and color), add descriptions, and specify recurrence. Tasks should be draggable and droppable, allowing users to move them across lanes. 
+Tasks should also be deletable.
+
+3. **Lane Management:** Users should be able to create and delete lanes. This enables different stages of task progression.
+
+4. **Label Creation:** Apart from choosing from the existing labels, users should be able to create new labels which get added to the pool of 
+labels to choose from.
+
+5. **Recurring Tasks:** Tasks can be set to recur at specific intervals. Users should be able to choose the day and time for recurrence.
+
+6. **Comments:** Tasks should allow users to leave comments. 
+
+Future Features:
+
+1. **Template Cards:** These are predefined task cards that can be used as a starting point for creating new tasks.
+
+2. **Attachments:** Users should be able to attach files to tasks.
+
+3. **Notifications:** Users should receive notifications for various events related to their tasks such as upcoming due dates, new comments, 
+and task assignments.
+
+Additional Suggestions:
+
+1. **Task Prioritization:** Implement a way for users to prioritize tasks, such as a simple High/Medium/Low priority indicator or a more 
+complex scoring system.
+
+2. **Task History/Activity Log:** Keep track of all changes made to a task over time (e.g., status changes, comment additions, etc.) and display 
+this information in an activity log.
+
+3. **Search and Filter:** As the number of tasks grows, it will be important to be able to search for specific tasks and filter tasks based on 
+various criteria such as assignee, due date, labels, etc.
+
+4. **Board Customization:** Allow users to customize the look and feel of their board (e.g., color schemes, layout, etc.) to suit their 
+personal preferences or branding.
+
+5. **Task Dependencies:** Some tasks might depend on others. It could be beneficial to have a way to link tasks together and show their 
+dependencies.
+
+6. **Task Status Updates:** Provide users with the option to update task statuses, allowing team members to stay updated on task progression.
+
+---
+---
+Practical steps 
+---
+---
+
+Set up the Redux Store for Kanban Board:
+Create a slice using Redux Toolkit for your Kanban board. Your slice should have actions to load the board (lanes and tasks), add tasks and 
+lanes, delete tasks and lanes, update tasks (moving them from one lane to another), and update the board (add/remove users, change settings, 
+etc.).
+
+Fetch Data from Supabase:
+Create asynchronous thunk actions using Redux Toolkit's createAsyncThunk to handle API calls to your Supabase backend. 
+This can include fetching all the lanes and tasks for a particular board, creating new tasks or lanes, deleting tasks or lanes, 
+and moving tasks between lanes.
+
+Create Components:
+Create React components for your lanes and tasks. The lane component will contain the task components. Also, create components for 
+the creation of tasks and lanes, as well as the board view which will contain all the lanes.
+
+Connect Components to Redux Store:
+Use useDispatch and useSelector hooks from 'react-redux' to connect your components to the Redux store. Map state to props to get 
+the necessary data from the store and dispatch actions when required.
+
+Handle Interactions:
+Handle user interactions such as creating a task, moving a task to a different lane, and deleting a task. When such an event occurs, 
+dispatch an action to update the state in the Redux store, and also make an API call to the Supabase backend to update the database.
+
+Implement Recurring Tasks:
+For the recurring tasks, you could store a recurring_days field in your database which is a string containing the days of the week 
+when the task should recur. Each day, you could fetch the tasks for the day and add them to the appropriate lane.
+
+Add Comments and Labels:
+Extend your tasks with comments and labels. A task can have multiple comments and labels. When a task is created or updated, the 
+labels and comments should be stored in the corresponding tables in the Supabase backend and fetched when the task is loaded.
+
+Implement User Assignment:
+Implement the ability for users to be assigned tasks. When a task is assigned to a user, update the kan_task_assignees table in your 
+Supabase backend.
+
+Handle Deletion of Tasks:
+When a task is deleted, mark it as inactive in the Supabase database. Also, update the Redux store to remove the task from the view.
+
+Clean up Inactive Tasks:
+Set up a way to regularly delete tasks marked as inactive from your Supabase database, as described in the previous responses.

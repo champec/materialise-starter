@@ -24,11 +24,11 @@ const OrgGuard = props => {
           //router as path is the route without the base-path, take them back to the homepage unless they were trying to access the login page already
 
           router.replace({
-            pathname: '/login/organisation', //if organisation is not logged into the direct user to organisation login page
+            pathname: '/login', //if organisation is not logged into the direct user to organisation login page
             query: { returnUrl: router.asPath } //return url is  the page the user tried to reach before being redirected
           })
         } else {
-          router.replace('/login/organisation')
+          router.replace('/login')
         }
       }
     },

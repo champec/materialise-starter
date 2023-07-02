@@ -7,6 +7,7 @@ import { configureStore } from '@reduxjs/toolkit'
 import chat from 'src/store/apps/chat'
 import user from 'src/store/apps/user'
 import email from 'src/store/apps/email'
+import kanban from 'src/store/apps/kanban'
 import invoice from 'src/store/apps/invoice'
 import calendar from 'src/store/apps/calendar'
 import permissions from 'src/store/apps/permissions'
@@ -18,10 +19,12 @@ export const store = configureStore({
     user,
     chat,
     email,
+    kanban,
     invoice,
     calendar,
     permissions
   },
+
   //by fault it will return any middleware you add or you can just ask it to include only the middle ware you want, this allways it to return defualt middle with a funciton
   //getDefaultMiddleware => getDefaultMiddlware().concat(...add your middleware). here we have added default but turned of one deaulft calles serializableCheck.
   //sserializableCheck a methods for storing objects into bytes or more simply making into a series - a memory hack, if you dont understand you dont need

@@ -1,45 +1,45 @@
 https://demos.pixinvent.com/materialize-nextjs-admin-template/demo-1/ui/cards/basic/
- apple watch card component - for cards 
+ apple watch card component - for cards
  https://demos.pixinvent.com/materialize-nextjs-admin-template/demo-1/tables/data-grid/
- quick filter table 
+ quick filter table
 
- shop is a multitable grid - with an add to cart button 
+ shop is a multitable grid - with an add to cart button
   - shop page is a grid of products
   - cart page - check out and send orders with order confirmation
   - inventory will be a multi data grid with categories at the top and edit button - select checkbox with select all added - use the server side grid for this
   - edit item page - will be a form with a submit button
 
 Mission Statement:
-PharmEx aims to create a connected network of independent pharmacies in the UK, facilitating the trade of medical stock amongst them. 
-This platform will enable pharmacies to manage stock shortages, reduce waste, and improve patient outcomes by ensuring the availability 
-of essential medications. By offering a streamlined process for exchanging medicines or money for medicines, PharmEx will foster collaboration 
+PharmEx aims to create a connected network of independent pharmacies in the UK, facilitating the trade of medical stock amongst them.
+This platform will enable pharmacies to manage stock shortages, reduce waste, and improve patient outcomes by ensuring the availability
+of essential medications. By offering a streamlined process for exchanging medicines or money for medicines, PharmEx will foster collaboration
 between pharmacies, helping them save resources while providing better service to their patients.
 
 Primary Purpose:
 
-The primary purpose of PharmEx is to establish a dynamic, user-friendly website that allows pharmacies to trade stock, 
-arrange deliveries and pickups, track the delivery process, and manage invoices related to exchanges. This platform will 
+The primary purpose of PharmEx is to establish a dynamic, user-friendly website that allows pharmacies to trade stock,
+arrange deliveries and pickups, track the delivery process, and manage invoices related to exchanges. This platform will
 empower pharmacies to make informed decisions and support their communities more effectively by addressing stock shortage issues and keeping stock in circulation.
 
 Build:
 
-PharmEx is poised to become a multiplatform application. Currently, it's a web application developed using React and Next.js, with Supabase serving as the backend. 
-It employs styled components and utilizes MUI for the user interface components, which include a theme along with light and dark modes. A range of components are 
-pre-styled from a purchased template. The app features a persistent vertical and horizontal menu, while the content area adjusts based on the selected menu item. 
-The vertical menu, which can either remain open or closed, displays only the icons when closed. The application includes a custom loader that activates between page 
+PharmEx is poised to become a multiplatform application. Currently, it's a web application developed using React and Next.js, with Supabase serving as the backend.
+It employs styled components and utilizes MUI for the user interface components, which include a theme along with light and dark modes. A range of components are
+pre-styled from a purchased template. The app features a persistent vertical and horizontal menu, while the content area adjusts based on the selected menu item.
+The vertical menu, which can either remain open or closed, displays only the icons when closed. The application includes a custom loader that activates between page
 loads and on mount. The horizontal menu hosts the logo on the far left, light and dark mode buttons, vertical toggle button, and a dropdown profile menu on the far right.
 
 The TradeCenter:
 
-The TradeCenter is a section of the website enabling pharmacies to purchase items from other nearby pharmacies. The inventory page allows pharmacies to manage their 
-stock. A multi-data grid will be used to exhibit the available items in a table. This pre-existing table only requires customization. Each item will feature an edit 
-button, permitting the user to amend the listed item, modify quantity, delete item, change image, description, or title, or unlist the item. Additionally, there will 
-be a shop page, listing all items available from neighboring pharmacies. Another feature will be the add-to-cart button. The cart page will host a list of items that 
-the user has added to their cart, from where items can be removed, and then checked out. Since PharmEx will not process monetary transactions, there's no requirement 
-for a payment gateway. Instead, we will forward the order to the seller, who will then respond. A permanent record of the transaction will be stored in the database 
-in the form of an invoice. Pharmacies are accountable for settling their invoices and updating PharmEx upon completion. The platform will include a 'Business' section 
-displaying all invoice-related activities, including pending and paid invoices. To mark an invoice as paid, pharmacies will have to manually update the invoice status 
-on both ends. This will be managed by the accountants at the end of each month. There will also be a 'Track Order' page where pharmacies can monitor the status of their 
+The TradeCenter is a section of the website enabling pharmacies to purchase items from other nearby pharmacies. The inventory page allows pharmacies to manage their
+stock. A multi-data grid will be used to exhibit the available items in a table. This pre-existing table only requires customization. Each item will feature an edit
+button, permitting the user to amend the listed item, modify quantity, delete item, change image, description, or title, or unlist the item. Additionally, there will
+be a shop page, listing all items available from neighboring pharmacies. Another feature will be the add-to-cart button. The cart page will host a list of items that
+the user has added to their cart, from where items can be removed, and then checked out. Since PharmEx will not process monetary transactions, there's no requirement
+for a payment gateway. Instead, we will forward the order to the seller, who will then respond. A permanent record of the transaction will be stored in the database
+in the form of an invoice. Pharmacies are accountable for settling their invoices and updating PharmEx upon completion. The platform will include a 'Business' section
+displaying all invoice-related activities, including pending and paid invoices. To mark an invoice as paid, pharmacies will have to manually update the invoice status
+on both ends. This will be managed by the accountants at the end of each month. There will also be a 'Track Order' page where pharmacies can monitor the status of their
 orders. Here, both sending and receiving pharmacies can update the status of the order as received, shipped, delivered, cancelled, or returned.
 
 Likely, another data grid will be used for the tracking page and the business page.
@@ -60,30 +60,33 @@ batch_number - batch number of item
 form - liquid / tablet / capsule / cream / ointment / gel / spray / inhaler / injection / patch / suppository / pessary / drops / powder / granules / sachets / other
 strength - strength of item
 
-Pharmacies - from profile table 
+Pharmacies - from profile table
 
-A table structure for orders that will allow tracking of order status, and can be updated by the pharmacies 
+A table structure for orders that will allow tracking of order status, and can be updated by the pharmacies
 A table structure for invoices that will allow tracking of invoice status, and can be updated by the pharmacies
 
 
-I already have a pharmacies, table, write me sql code, for me to create the other tables in my supabase project - then create 5 dummy items. 
-Use f2ce0d63-0c83-4231-b204-c87c491ccfdc as the pharmacy_id for the items. Then create 2 dummy transactions involving 
+I already have a pharmacies, table, write me sql code, for me to create the other tables in my supabase project - then create 5 dummy items.
+Use f2ce0d63-0c83-4231-b204-c87c491ccfdc as the pharmacy_id for the items. Then create 2 dummy transactions involving
 
 Shop page
 - the store page will a MUI table, lists all items in the items supabase table. features will be
--  Button, add / edit - which open up a dialogue, with item name, + and - buttons for quantity, and a submit button, as well as manual input. 
+-  Button, add / edit - which open up a dialogue, with item name, + and - buttons for quantity, and a submit button, as well as manual input.
 - click item title will take you to item details component, has the same features as the dialogue, but also has a description, and image of item.
-- the serverside tool bar has a cart button, which shows number of item in cart, on click goes to cart page, which summaries all items in cart and has a checkout button on click 
+- the serverside tool bar has a cart button, which shows number of item in cart, on click goes to cart page, which summaries all items in cart and has a checkout button on click
 show the comfirmation comonent which summaries order and tells user what will happen.
 
 Track page
 - again a table which shows all open orders - on click it open up dialog with time line componenet, order placed, order shipped, order delivered, order cancelled, order returned etc
-also invoice paid, and incoive received stages. this is automatic as these action are taken. 
+also invoice paid, and incoive received stages. this is automatic as these action are taken.
 
 Business page
-shows - sales, purches table and invoices table - which can be filtered by date paid and unpaid etc. 
+shows - sales, purches table and invoices table - which can be filtered by date paid and unpaid etc.
 - sales are really just orders where the current pharmacy is the seller - items are pending, they can be updated as processed, shipped and delivered.
-chips in tool bar show, pending, processed, shipped, delivered, cancelled, returned. completed, waiting invoice 
-- purchases are really just order where the current pharmacy is the buyer - they can request cancelation, and return, and update the status of the order as received, shipped, delivered, cancelled, or returned. 
-as well as paid 
+chips in tool bar show, pending, processed, shipped, delivered, cancelled, returned. completed, waiting invoice
+- purchases are really just order where the current pharmacy is the buyer - they can request cancelation, and return, and update the status of the order as received, shipped, delivered, cancelled, or returned.
+as well as paid
 Invoics - are orders between 2 pharmacies - depending on who is the buyer of the seller, it will be await payment or to be paid - and can be updated accordingly.
+
+pcn1 - kw25146287
+pcn2 - kw26267152
