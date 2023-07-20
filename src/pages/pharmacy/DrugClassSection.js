@@ -41,20 +41,15 @@ function DrugClassSection({ title, drugs, handleDrugClick }) {
         </Box>
       </Paper>
 
-      <Box>
+      <Grid container spacing={1}>
         {filteredDrugs.map(drug => (
-          <ListItem key={drug.id} onClick={() => handleDrugClick(drug)}>
-            {/* <Card>
-              <h2>{drug?.drug_name}</h2>
-              <h3>{drug?.drug_form}</h3>
-              <p>
-                {drug?.drug_strength} {drug?.units}
-              </p>
-            </Card> */}
-            <CardStatsVertical drug={drug} handleDrugClick={handleDrugClick} />
-          </ListItem>
+          <Grid item xs={12} sm={6} md={4} lg={3} key={drug.id}>
+            <ListItem onClick={() => handleDrugClick(drug)}>
+              <CardStatsVertical drug={drug} handleDrugClick={handleDrugClick} />
+            </ListItem>
+          </Grid>
         ))}
-      </Box>
+      </Grid>
     </Box>
   )
 }

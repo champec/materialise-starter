@@ -15,7 +15,14 @@ const LabelSelect = ({ selectedLabels, setSelectedLabels }) => {
   }
 
   const handleChange = event => {
-    setSelectedLabels(event.target.value.filter(value => value !== 'addNew'))
+    const { value } = event.target
+    const newSelectedLabels = value.filter(label => label !== 'addNew')
+
+    // Get the ids of the selected labels
+    const selectedLabelIds = newSelectedLabels.map(label => label.id)
+
+    // Update the state with the selected labels
+    setSelectedLabels(labels.filter(label => selectedLabelIds.includes(label.id)))
   }
 
   return (
@@ -31,7 +38,7 @@ const LabelSelect = ({ selectedLabels, setSelectedLabels }) => {
           selected
             .filter(value => value !== 'addNew')
             .map(value => {
-              const label = labels.find(label => label.title === value)
+              const label = labels.find(label => label.title === value.title)
 
               return (
                 <Box

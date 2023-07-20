@@ -7,14 +7,20 @@ import Button from '@mui/material/Button'
 import Box from '@mui/material/Box'
 import EntrySidebar from './EntrySideBar'
 import { useOrgAuth } from 'src/hooks/useOrgAuth'
+import { useDispatch, useSelector } from 'react-redux'
+import { fetchPatients, fetchPrescribers, fetchSuppliers, fetchEntries } from 'src/store/apps/cdr'
+
+const dispatch = useDispatch()
+
+const { patients, prescribers, suppliers, entries } = useSelector(state => state.cdr)
 
 function CdrTable({ selectedDrug }) {
   const [open, setOpen] = useState(false)
-  const [patients, setPatients] = useState(['loading'])
+  // const [patients, setPatients] = useState(['loading'])
   const [prescribers, setPrescribers] = useState(['loading'])
   const [suppliers, setSuppliers] = useState(['loading'])
   const [errorLog, setErrorLog] = useState(null)
-  const [entries, setEntries] = useState(null)
+  // const [entries, setEntries] = useState(null)
   const handleSideBar = () => setOpen(prev => !prev)
   const [refetchTrigger, setRefetchTrigger] = useState(false)
   const [type, setType] = useState('handingOut') // 'receiving' or 'handingOut'
@@ -22,57 +28,64 @@ function CdrTable({ selectedDrug }) {
   const supabase = supabaseOrg
 
   useEffect(() => {
-    const fetchTables = async () => {
-      console.log('fetching tables')
-      try {
-        const { data: patientData, error: patientError } = await supabase
-          .from('cdr_patients')
-          .select('*')
-          .eq('organisation_id', organisationId)
+    dispatch(fetchPatients(orgId))
+    dispatch(fetchPrescribers(orgId))
+    dispatch(fetchSuppliers(orgId))
+    dispatch(fetchEntries({ drugId: selectedDrug.id, orgId }))
+  }, [dispatch, selectedDrug.id])
 
-        if (patientError) throw patientError
+  // useEffect(() => {
+  //   const fetchTables = async () =>  {
+  //     console.log('fetching tables')
+  //     try {
+  //       const { data: patientData, error: patientError } = await supabase
+  //         .from('cdr_patients')
+  //         .select('*')
+  //         .eq('organisation_id', organisationId)
 
-        const { data: prescriberData, error: prescriberError } = await supabase
-          .from('cdr_prescribers')
-          .select('*')
-          .eq('organisation_id', organisationId)
+  //       if (patientError) throw patientError
 
-        if (prescriberError) throw prescriberError
+  //       const { data: prescriberData, error: prescriberError } = await supabase
+  //         .from('cdr_prescribers')
+  //         .select('*')
+  //         .eq('organisation_id', organisationId)
 
-        const { data: supplierData, error: supplierError } = await supabase
-          .from('cdr_suppliers')
-          .select('*')
-          .eq('organisation_id', organisationId)
+  //       if (prescriberError) throw prescriberError
 
-        if (supplierError) throw supplierError
+  //       const { data: supplierData, error: supplierError } = await supabase
+  //         .from('cdr_suppliers')
+  //         .select('*')
+  //         .eq('organisation_id', organisationId)
 
-        const { data: entriesData, error: entriesError } = await supabase
-          .from('cdr_entries')
-          .select('*')
-          .eq('organisation_id', organisationId)
-          .eq('drug_id', selectedDrug.id)
-          .order('date')
+  //       if (supplierError) throw supplierError
 
-        if (entriesError) throw entriesError
+  //       const { data: entriesData, error: entriesError } = await supabase
+  //         .from('cdr_entries')
+  //         .select('*')
+  //         .eq('organisation_id', organisationId)
+  //         .eq('drug_id', selectedDrug.id)
+  //         .order('date')
 
-        const { data: errorLogData, error: errorLogError } = await supabase.from('cdr_error_log').select('*')
+  //       if (entriesError) throw entriesError
 
-        if (errorLogError) throw errorLogError
+  //       const { data: errorLogData, error: errorLogError } = await supabase.from('cdr_error_log').select('*')
 
-        console.log({ entriesData })
-        setPatients(patientData || [])
-        setPrescribers(prescriberData || [])
-        setSuppliers(supplierData || [])
-        setErrorLog(errorLogData || [])
-        setEntries(entriesData || [])
-      } catch (error) {
-        console.error('Error fetching data:', error)
-        setErrorLog(error)
-      }
-    }
+  //       if (errorLogError) throw errorLogError
 
-    fetchTables()
-  }, [supabase, organisationId, refetchTrigger, selectedDrug.id])
+  //       console.log({ entriesData })
+  //       setPatients(patientData || [])
+  //       setPrescribers(prescriberData || [])
+  //       setSuppliers(supplierData || [])
+  //       setErrorLog(errorLogData || [])
+  //       setEntries(entriesData || [])
+  //     } catch (error) {
+  //       console.error('Error fetching data:', error)
+  //       setErrorLog(error)
+  //     }
+  //   }
+
+  //   fetchTables()
+  // }, [supabase, organisationId, refetchTrigger, selectedDrug.id])
 
   const handleNewItemMain = async (values, table) => {
     console.log('STARTING handle NEW! item MAIN!', values, table)

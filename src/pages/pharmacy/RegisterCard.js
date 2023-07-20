@@ -16,7 +16,7 @@ const CardStatsVertical = props => {
   const { handleDrugClick, drug, title, color, icon, stats, chipText, trendNumber, trend = 'positive' } = props
 
   return (
-    <Card onClick={() => handleDrugClick(drug)} sx={{ cursor: 'pointer' }}>
+    <Card onClick={() => handleDrugClick(drug)} sx={{ cursor: 'pointer', width: '100%' }}>
       <CardContent sx={{ display: 'flex', flexDirection: 'column' }}>
         <Box sx={{ mb: 6, width: '100%', display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between' }}>
           <CustomAvatar skin='light' variant='rounded' color={color}>

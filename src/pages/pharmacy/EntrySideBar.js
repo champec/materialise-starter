@@ -28,6 +28,8 @@ import { yupResolver } from '@hookform/resolvers/yup'
 import { Controller } from 'react-hook-form'
 import AutocompleteCreatable from './CustomAutoComplete'
 import * as yup from 'yup'
+import { addEntry } from 'src/store/apps/cdr'
+import { useDispatch } from 'react-redux'
 
 const CustomInput = forwardRef(({ ...props }, ref) => {
   return <TextField inputRef={ref} label='Date' {...props} />
@@ -108,6 +110,7 @@ const CDEntryDrawer = ({
   })
 
   // console.log('RESET WATCH', watch('patient'))
+  const dispatch = useDispatch()
 
   useEffect(() => {
     setSupplierValue(watch('supplier'))
@@ -127,8 +130,9 @@ const CDEntryDrawer = ({
       console.log({ currentDate })
       console.log(formData, selectedDrug)
       // Use formData to access the form values
-      const { error } = await supabase.from('cdr_entries').insert([
-        {
+      // const { error } = await supabase.from('cdr_entries').insert([
+      dispatchEvent(
+        addEntry({
           date: currentDate,
           type: selectedDrug.drug_type, //replace with actual type
           drug_id: selectedDrug.id,
@@ -145,8 +149,9 @@ const CDEntryDrawer = ({
           running_total: formData.quantity,
           organisation_id: orgId,
           receiving: type === 'receiving'
-        }
-      ])
+        })
+      )
+      // ])
 
       if (error) {
         throw error
@@ -165,7 +170,7 @@ const CDEntryDrawer = ({
     } finally {
       setLoading(false)
       toggle()
-      refetchData() // Refetch the data after submission
+      //  refetchData() // Refetch the data after submission
     }
   }
 

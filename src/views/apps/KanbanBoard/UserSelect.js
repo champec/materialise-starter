@@ -33,6 +33,7 @@ const UserSelect = props => {
 
   const users = useSelector(state => state.kanban.users)
 
+  console.log('users', users)
   const handleChange = event => {
     setSelectedUsers(event.target.value)
   }

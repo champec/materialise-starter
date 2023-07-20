@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react'
 
 import CdrTable from './EntryTableMain'
+import { fetchDrugs } from 'src/store/apps/cdr'
+import { fetchDrugsFromDb } from './utils/supabase'
 
 import Grid from '@mui/material/Grid'
 import Box from '@mui/material/Box'
@@ -50,10 +52,10 @@ const AccordionDetails = styled(MuiAccordionDetails)(({ theme }) => ({
   padding: theme.spacing(2)
 }))
 
-function Cdr() {
+function Cdr({ dbDrugs }) {
   const [activeComponent, setActiveComponent] = useState('drugList')
   const [loading, setLoading] = useState(false)
-  const [drugs, setDrugs] = useState([])
+  const [drugs, setDrugs] = useState(dbDrugs || [])
   const organisationId = useOrgAuth()?.organisation?.id
   const [globalSearchTerm, setGlobalSearchTerm] = useState('')
   const [expanded, setExpanded] = useState(null)
@@ -73,35 +75,6 @@ function Cdr() {
 
   // Group the filtered drugs by class
   const drugClasses = [...new Set(filteredDrugs.map(drug => drug.drug_class))]
-
-  const supabase = supabaseOrg
-
-  const fetchDrugs = async () => {
-    console.log(organisationId)
-    const { data, error } = await supabase
-      .from('cdr_drug_usage')
-      .select(
-        `
-        *,
-        cdr_drugs (
-          *
-        )
-      `
-      )
-      .eq('organisation_id', organisationId)
-
-    if (error) {
-      console.error('Error fetching drugs:', error)
-    } else {
-      console.log('Drugs fetched successfully:', data)
-      setDrugs(data.map(item => item.cdr_drugs))
-    }
-  }
-
-  useEffect(() => {
-    if (!organisationId) return
-    fetchDrugs()
-  }, [organisationId])
 
   const handleDrugClick = drug => {
     setSelectedDrug(drug)
@@ -167,6 +140,18 @@ function Cdr() {
       )}
     </Card>
   )
+}
+
+export async function getServerSideProps() {
+  // Fetch initial drugs data
+
+  const dbDrugs = await fetchDrugsFromDb()
+
+  return {
+    props: {
+      dbDrugs
+    }
+  }
 }
 
 export default Cdr
