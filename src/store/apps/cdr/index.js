@@ -8,34 +8,35 @@ export const fetchDrugs = createAsyncThunk('cdr/fetchDrugs', async () => {
   return data
 })
 
-export const fetchPatients = createAsyncThunk('cdr/fetchPatients', async organizationId => {
-  const { data: patients, error } = await supabase.from('cdr_patients').select().eq('organization_id', organizationId)
+export const fetchPatients = createAsyncThunk('cdr/fetchPatients', async organisationId => {
+  const { data: patients, error } = await supabase.from('cdr_patients').select().eq('organisation_id', organisationId)
 
   if (error) throw error
   return patients
 })
 
-export const fetchEntries = createAsyncThunk('cdr/fetchEntries', async ({ drugId, organizationId }) => {
+export const fetchEntries = createAsyncThunk('cdr/fetchEntries', async ({ drugId, orgId }) => {
   const { data: entries, error } = await supabase
     .from('cdr_entries')
     .select()
-    .eq('organization_id', organizationId)
+    .eq('organisation_id', orgId)
     .eq('drug_id', drugId)
     .order('date')
-
+  console.log(error)
   if (error) throw error
+
   return entries
 })
 
 export const fetchPrescribers = createAsyncThunk('cdr/fetchPrescribers', async orgId => {
-  const { data, error } = await supabase.from('cdr_prescribers').select().eq('organization_id', orgId)
+  const { data, error } = await supabase.from('cdr_prescribers').select().eq('organisation_id', orgId)
 
   if (error) throw error
   return data
 })
 
 export const fetchSuppliers = createAsyncThunk('cdr/fetchSuppliers', async orgId => {
-  const { data, error } = await supabase.from('cdr_suppliers').select().eq('organization_id', orgId)
+  const { data, error } = await supabase.from('cdr_suppliers').select().eq('organisation_id', orgId)
 
   if (error) throw error
   return data

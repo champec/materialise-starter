@@ -10,28 +10,28 @@ import { useOrgAuth } from 'src/hooks/useOrgAuth'
 import { useDispatch, useSelector } from 'react-redux'
 import { fetchPatients, fetchPrescribers, fetchSuppliers, fetchEntries } from 'src/store/apps/cdr'
 
-const dispatch = useDispatch()
-
-const { patients, prescribers, suppliers, entries } = useSelector(state => state.cdr)
-
 function CdrTable({ selectedDrug }) {
   const [open, setOpen] = useState(false)
   // const [patients, setPatients] = useState(['loading'])
-  const [prescribers, setPrescribers] = useState(['loading'])
-  const [suppliers, setSuppliers] = useState(['loading'])
+  // const [prescribers, setPrescribers] = useState(['loading'])
+  // const [suppliers, setSuppliers] = useState(['loading'])
   const [errorLog, setErrorLog] = useState(null)
   // const [entries, setEntries] = useState(null)
   const handleSideBar = () => setOpen(prev => !prev)
   const [refetchTrigger, setRefetchTrigger] = useState(false)
   const [type, setType] = useState('handingOut') // 'receiving' or 'handingOut'
-  const organisationId = useOrgAuth()?.organisation?.id
+  const orgId = useOrgAuth()?.organisation?.id
   const supabase = supabaseOrg
+
+  const dispatch = useDispatch()
+
+  const { patients, prescribers, suppliers, entries } = useSelector(state => state.cdr)
 
   useEffect(() => {
     dispatch(fetchPatients(orgId))
     dispatch(fetchPrescribers(orgId))
     dispatch(fetchSuppliers(orgId))
-    dispatch(fetchEntries({ drugId: selectedDrug.id, orgId }))
+    dispatch(fetchEntries({ drugId: selectedDrug.drug_id, orgId }))
   }, [dispatch, selectedDrug.id])
 
   // useEffect(() => {

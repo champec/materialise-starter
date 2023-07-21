@@ -27,6 +27,19 @@ import EditProductForm from './EditProductForm'
 import { getInitials } from 'src/@core/utils/get-initials'
 import { dummyData } from './dummyData'
 import { CircularProgress } from '@mui/material'
+import ChangeNotifier from 'src/@core/components/ChangeNotifier'
+import { useDispatch } from 'react-redux'
+import productsSlice from 'src/store/apps/shop/productsSlice'
+
+export const getStaticProps = async () => {
+  const dispatch = useDispatch()
+  const { setProducts } = productsSlice.actions
+  const { data: products } = await supabase.from('products').select()
+  dispatch(setProducts(products))
+  return {
+    props: {}
+  }
+}
 
 // ** renders client column
 const renderClient = params => {
@@ -159,12 +172,12 @@ function getColumns(setShow, setSelectedRow, cart, addToCart, updateCartItem, re
   ]
 }
 
-function ShopTable({ handleCartClick, cart, setCart, isSaving, isCartChanged, handleSaveCart, ...props }) {
+function ShopTable({ handleCartClick, cart, setCart, isSaving, isCartChanged, handleSaveCart, products, ...props }) {
   const [page, setPage] = useState(0)
   const [total, setTotal] = useState(0)
   const [sort, setSort] = useState('asc')
   const [pageSize, setPageSize] = useState(7)
-  const [rows, setRows] = useState([])
+  const [rows, setRows] = useState(products || [])
   const [searchValue, setSearchValue] = useState('')
   const [sortColumn, setSortColumn] = useState('name')
   const [show, setShow] = useState(false)
@@ -175,7 +188,7 @@ function ShopTable({ handleCartClick, cart, setCart, isSaving, isCartChanged, ha
     return data.slice(currentPage * pageSize, (currentPage + 1) * pageSize)
   }
 
-  console.log({ isCartChanged })
+  console.log({ isCartChanged, rows })
 
   const addToCart = item => {
     setCart(prevCart => {

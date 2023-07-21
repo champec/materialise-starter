@@ -18,14 +18,16 @@ const theme = createTheme({
   }
 })
 
-function DrugClassSection({ title, drugs, handleDrugClick }) {
+function DrugClassSection({ title, register, handleDrugClick }) {
   const [localSearchTerm, setLocalSearchTerm] = useState('')
 
   const handleLocalSearchChange = event => {
     setLocalSearchTerm(event.target.value.toLowerCase())
   }
 
-  const filteredDrugs = drugs.filter(drug => drug.drug_name.toLowerCase().includes(localSearchTerm))
+  const filteredRegisters = register.filter(register =>
+    register.cdr_drugs.drug_name.toLowerCase().includes(localSearchTerm)
+  )
 
   return (
     <Box>
@@ -42,10 +44,10 @@ function DrugClassSection({ title, drugs, handleDrugClick }) {
       </Paper>
 
       <Grid container spacing={1}>
-        {filteredDrugs.map(drug => (
+        {filteredRegisters.map(drug => (
           <Grid item xs={12} sm={6} md={4} lg={3} key={drug.id}>
             <ListItem onClick={() => handleDrugClick(drug)}>
-              <CardStatsVertical drug={drug} handleDrugClick={handleDrugClick} />
+              <CardStatsVertical drug={drug.cdr_drugs} handleDrugClick={handleDrugClick} />
             </ListItem>
           </Grid>
         ))}

@@ -55,7 +55,7 @@ const AccordionDetails = styled(MuiAccordionDetails)(({ theme }) => ({
 function Cdr({ dbDrugs }) {
   const [activeComponent, setActiveComponent] = useState('drugList')
   const [loading, setLoading] = useState(false)
-  const [drugs, setDrugs] = useState(dbDrugs || [])
+  const [registers, setRegisters] = useState(dbDrugs || [])
   const organisationId = useOrgAuth()?.organisation?.id
   const [globalSearchTerm, setGlobalSearchTerm] = useState('')
   const [expanded, setExpanded] = useState(null)
@@ -71,10 +71,12 @@ function Cdr({ dbDrugs }) {
   }
 
   // Apply the global search filter here
-  const filteredDrugs = drugs.filter(drug => drug.drug_name.toLowerCase().includes(globalSearchTerm))
+  const filteredRegisters = registers.filter(register =>
+    register.cdr_drugs.drug_name.toLowerCase().includes(globalSearchTerm)
+  )
 
-  // Group the filtered drugs by class
-  const drugClasses = [...new Set(filteredDrugs.map(drug => drug.drug_class))]
+  // Group the filtered registers by class
+  const drugClasses = [...new Set(filteredRegisters.map(register => register.cdr_drugs.drug_class))]
 
   const handleDrugClick = drug => {
     setSelectedDrug(drug)
@@ -123,7 +125,7 @@ function Cdr({ dbDrugs }) {
               <AccordionDetails>
                 <DrugClassSection
                   title={drugClass}
-                  drugs={filteredDrugs.filter(drug => drug.drug_class === drugClass)}
+                  register={filteredRegisters.filter(register => register.cdr_drugs.drug_class === drugClass)}
                   handleDrugClick={handleDrugClick}
                 />
               </AccordionDetails>
