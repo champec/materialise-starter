@@ -3,6 +3,7 @@ import { useState, forwardRef } from 'react'
 import { supabaseOrg } from 'src/configs/supabase'
 import PickersBasic from 'src/@core/components/store/PickerBasic'
 import drugForms from 'src/@core/components/store/DrugForms'
+import { useOrgAuth } from 'src/hooks/useOrgAuth'
 
 // ** MUI Imports
 import Box from '@mui/material/Box'
@@ -69,6 +70,8 @@ const EditProductForm = ({ show, setShow, row, fetchTableData, sort, searchValue
   const { direction } = theme
   const popperPlacement = direction === 'ltr' ? 'bottom-start' : 'bottom-end'
 
+  const { handleUserMadeChange } = useOrgAuth()
+
   const handleChange = event => {
     const {
       target: { value }
@@ -101,11 +104,12 @@ const EditProductForm = ({ show, setShow, row, fetchTableData, sort, searchValue
 
   const handleSubmit = async event => {
     event.preventDefault()
-    console.log(product)
+    // console.log(product)
+    handleUserMadeChange(true)
     try {
       // Perform an upsert operation
       const { data, error } = await supabase
-        .from('items')
+        .from('shop_products')
         .upsert({ ...product, date: new Date().toISOString() }, { onConflict: ['id'] }) // using the 'id' column as the conflict resolver
 
       if (error) {
@@ -114,6 +118,7 @@ const EditProductForm = ({ show, setShow, row, fetchTableData, sort, searchValue
         console.log('Operation successful:', data)
         fetchTableData(sort, searchValue, sortColumn)
         setShow(false)
+        setTimeout(() => handleUserMadeChange(false), 5000)
       }
     } catch (error) {
       console.error('An unexpected error occurred:', error)

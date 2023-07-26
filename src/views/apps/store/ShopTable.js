@@ -28,18 +28,8 @@ import { getInitials } from 'src/@core/utils/get-initials'
 import { dummyData } from './dummyData'
 import { CircularProgress } from '@mui/material'
 import ChangeNotifier from 'src/@core/components/ChangeNotifier'
-import { useDispatch } from 'react-redux'
-import productsSlice from 'src/store/apps/shop/productsSlice'
-
-export const getStaticProps = async () => {
-  const dispatch = useDispatch()
-  const { setProducts } = productsSlice.actions
-  const { data: products } = await supabase.from('products').select()
-  dispatch(setProducts(products))
-  return {
-    props: {}
-  }
-}
+import { useSelector } from 'react-redux'
+import { setFilters, setSearchTerm, setSort } from 'src/store/apps/shop/productsSlice'
 
 // ** renders client column
 const renderClient = params => {
@@ -172,12 +162,13 @@ function getColumns(setShow, setSelectedRow, cart, addToCart, updateCartItem, re
   ]
 }
 
-function ShopTable({ handleCartClick, cart, setCart, isSaving, isCartChanged, handleSaveCart, products, ...props }) {
+function ShopTable({ handleCartClick, cart, setCart, isSaving, isCartChanged, handleSaveCart, ...props }) {
+  const products = useSelector(state => state.productsSlice.items)
   const [page, setPage] = useState(0)
   const [total, setTotal] = useState(0)
   const [sort, setSort] = useState('asc')
   const [pageSize, setPageSize] = useState(7)
-  const [rows, setRows] = useState(products || [])
+  const [rows, setRows] = useState([])
   const [searchValue, setSearchValue] = useState('')
   const [sortColumn, setSortColumn] = useState('name')
   const [show, setShow] = useState(false)
@@ -188,7 +179,16 @@ function ShopTable({ handleCartClick, cart, setCart, isSaving, isCartChanged, ha
     return data.slice(currentPage * pageSize, (currentPage + 1) * pageSize)
   }
 
-  console.log({ isCartChanged, rows })
+  console.log({ isCartChanged, rows, products })
+
+  // Dispatch filter actions
+  const handleFilters = filters => dispatch(setFilters(filters))
+
+  // Dispatch sort actions
+  const handleSort = sort => dispatch(setSort(sort))
+
+  // Dispatch search actions
+  const handleSearch = search => dispatch(setSearchTerm(search))
 
   const addToCart = item => {
     setCart(prevCart => {
@@ -207,9 +207,10 @@ function ShopTable({ handleCartClick, cart, setCart, isSaving, isCartChanged, ha
       }
     })
   }
-  useEffect(() => {
-    console.log('cart', cart)
-  }, [cart])
+
+  // useEffect(() => {
+  //   console.log('cart', cart)
+  // }, [cart])
   const updateCartItem = (item, quantity) => {
     setCart(prevCart => prevCart.map(i => (i.id === item.id ? { ...i, quantity } : i)))
   }
@@ -229,18 +230,18 @@ function ShopTable({ handleCartClick, cart, setCart, isSaving, isCartChanged, ha
       // Add a condition for numeric columns
       if (column === 'date') {
         query = supabase
-          .from('items')
+          .from('shop_products')
           .select('*', { count: 'exact' })
           .order(column, { ascending: sort === 'asc' })
       } else if (column === 'price' || column === 'stock') {
         // Change this condition based on your requirement.
         query = supabase
-          .from('items')
+          .from('shop_products')
           .select('*', { count: 'exact' })
           .order(column, { ascending: sort === 'asc' })
       } else {
         query = supabase
-          .from('items')
+          .from('shop_products')
           .select('*', { count: 'exact' })
           .ilike(column, `%${q}%`)
           .order(column, { ascending: sort === 'asc' })
@@ -261,9 +262,9 @@ function ShopTable({ handleCartClick, cart, setCart, isSaving, isCartChanged, ha
     [page, pageSize]
   )
 
-  useEffect(() => {
-    fetchTableData(sort, searchValue, sortColumn)
-  }, [fetchTableData, searchValue, sort, sortColumn])
+  // useEffect(() => {
+  //   fetchTableData(sort, searchValue, sortColumn)
+  // }, [fetchTableData, searchValue, sort, sortColumn])
 
   const handleSortModel = newModel => {
     if (newModel.length) {
@@ -276,10 +277,10 @@ function ShopTable({ handleCartClick, cart, setCart, isSaving, isCartChanged, ha
     }
   }
 
-  const handleSearch = value => {
-    setSearchValue(value)
-    fetchTableData(sort, value, sortColumn)
-  }
+  // const handleSearch = value => {
+  //   setSearchValue(value)
+  //   fetchTableData(sort, value, sortColumn)
+  // }
 
   return (
     <Card>
@@ -327,7 +328,7 @@ function ShopTable({ handleCartClick, cart, setCart, isSaving, isCartChanged, ha
         <DataGrid
           autoHeight
           pagination
-          rows={rows}
+          rows={products}
           rowCount={total}
           columns={getColumns(setShow, setSelectedRow, cart, addToCart, updateCartItem, removeCartItem)}
           // checkboxSelection

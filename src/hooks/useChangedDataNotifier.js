@@ -2,26 +2,30 @@
 
 import { useState, useEffect } from 'react'
 import { supabaseOrg as supabase } from 'src/configs/supabase'
+import { useOrgAuth } from './useOrgAuth'
 
-export function useChangedDataNotifier(rowIds) {
-  const [dataChanged, setDataChanged] = useState(false)
+export function useChangedDataNotifier(rowIds, table, onDataChanged) {
+  const { userMadeChange } = useOrgAuth()
 
+  console.log('component mounted change hook')
   useEffect(() => {
     const channel = supabase
-      .channel('*')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'products' }, handleChange)
+      .channel('any')
+      .on('postgres_changes', { event: '*', schema: 'public', table: table }, handleChange)
       .subscribe()
 
-    function handleChange(change) {
-      if (rowIds.includes(change.new.id)) {
-        setDataChanged(true)
+    function handleChange(payload) {
+      console.log({ userMadeChange })
+      if (userMadeChange) {
+        return
+      }
+      if (rowIds.includes(payload.new.id)) {
+        onDataChanged(true)
       }
     }
 
     return () => {
       supabase.removeChannel(channel)
     }
-  }, [rowIds])
-
-  return dataChanged
+  }, [rowIds, table, onDataChanged])
 }

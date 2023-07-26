@@ -30,6 +30,12 @@ const AuthOrgProvider = ({ children }) => {
   const [loading, setLoading] = useState(defaultProvider.loading)
   const [isAuthenticated, setIsAuthenticated] = useState(false)
   const [error, setError] = useState(null)
+  const [userMadeChange, setUserMadeChange] = useState(false)
+
+  const handleUserMadeChange = value => {
+    console.log('handle user made change firing')
+    setUserMadeChange(value)
+  }
 
   // ** authentication status
   useEffect(() => {
@@ -142,7 +148,9 @@ const AuthOrgProvider = ({ children }) => {
     setLoading,
     login: handleLogin,
     logout: handleLogout,
-    register: handleRegister
+    register: handleRegister,
+    userMadeChange,
+    handleUserMadeChange
   }
 
   return <OrgAuthContext.Provider value={values}>{children}</OrgAuthContext.Provider>

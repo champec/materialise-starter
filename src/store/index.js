@@ -12,6 +12,9 @@ import invoice from 'src/store/apps/invoice'
 import calendar from 'src/store/apps/calendar'
 import permissions from 'src/store/apps/permissions'
 import cdr from 'src/store/apps/cdr'
+import cartSlice from './apps/shop/cartSlice'
+import productsSlice from './apps/shop/productsSlice'
+import inventorySlice from './apps/shop/inventorySlice'
 
 //when reading data in global storage, we use a hook called useSelector() which takes the store as an argument, this config combines all our reducers so they can be read anywhere
 //with dot notation
@@ -24,6 +27,9 @@ export const store = configureStore({
     kanban,
     invoice,
     calendar,
+    productsSlice,
+    inventorySlice,
+    cartSlice,
     permissions
   },
 

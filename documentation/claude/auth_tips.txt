@@ -1,0 +1,22 @@
+Here are some suggestions to improve your authentication and authorization flow:
+
+Authentication
+
+Storing the user sessions in localStorage can be problematic as it is vulnerable to XSS attacks. I would suggest using HTTP only cookies instead to store the session data.
+When storing session data in cookies, be sure to set the sameSite attribute appropriately (e.g. sameSite: 'lax') and use HTTPS for added security.
+When logging out a user, make sure to invalidate the session on the server in addition to just removing the session data client-side. This prevents session fixation attacks.
+Look into using refresh tokens in addition to access tokens. This allows you to issue a new access token when the current one expires without requiring the user to log in again.
+Use bcrypt or similar to hash passwords before storing them rather than storing plaintext passwords.
+Authorization
+
+The auth guards look good for protecting routes. Some suggestions:
+
+Cache the user's permissions/roles after logging in to avoid extra DB lookups on each route change.
+Consider using a rule-based access control system like Casl instead of hardcoding allowed roles per organization type. This makes it easier to add new roles and permissions in the future.
+Be sure to sanitize/validate any user input on the backend before using it for DB queries to prevent SQL injection and other attacks.
+
+UI Logic
+
+The issue with the switch user UI logic could be caused by browser state not being properly updated after switching users. Try calling router.replace after switching users to force a fresh UI render with the new user context.
+Dispatch redux actions or call setState hooks after user switch to force components to re-render with new user data instead of relying just on context value changes.
+Let me know if any part needs more clarification! Overall the authentication flow looks quite robust with the use of Supabase and react contexts.

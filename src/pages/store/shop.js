@@ -9,8 +9,24 @@ import ProductDetails from 'src/views/apps/store/ProductDetails'
 import Checkout from 'src/views/apps/store/Checkout'
 import Confirmation from 'src/views/apps/store/Confirmation'
 import Cart from 'src/views/apps/store/Cart'
+import { useDispatch, useSelector } from 'react-redux'
+import productsSlice from 'src/store/apps/shop/productsSlice'
+import { setProducts } from 'src/store/apps/shop/productsSlice'
 
-const Shop = () => {
+// RTK imports
+import ChangeNotifier from 'src/@core/components/ChangeNotifier'
+import { fetchProducts } from 'src/store/apps/shop/productsSlice'
+
+import { set } from 'nprogress'
+
+export const getStaticProps = async () => {
+  const { data: products } = await supabaseOrg.from('shop_products').select()
+  return {
+    props: { products }
+  }
+}
+
+const Shop = ({ products }) => {
   const [view, setView] = useState('main')
   const [selectedItem, setSelectedItem] = useState(null)
   const [cart, setCart] = useState([])
@@ -18,11 +34,17 @@ const Shop = () => {
   const [isSaving, setIsSaving] = useState(false)
   const [isSending, setIsSending] = useState(false)
   const [orderSummaries, setOrderSummaries] = useState([])
+  const productsRTK = useSelector(state => state.productsSlice.items)
+  const [rowIds, setRowIds] = useState(productsRTK.map(item => item.id)) // Pass in the row ids here [1, 2, 3, 4, 5, 6, 7]
   const router = useRouter()
   const supabase = supabaseOrg
   const organisationId = useOrgAuth()?.organisation?.id
 
-  console.log(organisationId)
+  const dispatch = useDispatch()
+
+  useEffect(() => {
+    dispatch(setProducts(products))
+  }, [products, dispatch])
 
   useEffect(() => {
     fetchCartData()
@@ -127,29 +149,6 @@ const Shop = () => {
   const isCartChanged = JSON.stringify(cart) !== JSON.stringify(initialCart) // Compare cart and initialCart
   console.log({ isCartChanged })
 
-  // useEffect(() => {
-  //   const updateSubscription = supabase
-  //     .channel('any')
-  //     .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'carts' }, payload => {
-  //       console.log('Update received!', payload)
-  //       setCart(payload.new.items)
-  //     })
-  //     .subscribe()
-
-  //   const insertSubscription = supabase
-  //     .channel('any')
-  //     .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'carts' }, payload => {
-  //       console.log('Insert received!', payload)
-  //       setCart(payload.new.items)
-  //     })
-  //     .subscribe()
-
-  //   return () => {
-  //     supabase.removeChannel(updateSubscription)
-  //     supabase.removeChannel(insertSubscription)
-  //   }
-  // }, [])
-
   const updateCartInDb = async () => {
     const { error } = await supabase.from('carts').upsert(
       {
@@ -186,6 +185,10 @@ const Shop = () => {
     setView('main')
   }
 
+  const handleRefresh = () => {
+    dispatch(fetchProducts()) // Pass in the correct page number
+  }
+
   const handleSaveCart = async () => {
     setIsSaving(true) // Start save operation
     await updateCartInDb()
@@ -208,6 +211,7 @@ const Shop = () => {
           handleSaveCart={handleSaveCart}
           isCartChanged={isCartChanged}
           isSaving={isSaving}
+          products={products}
         />
       )}
       {view === 'details' && <ProductDetails cart={cart} viewCheckout={handleViewCheckout} />}
@@ -218,6 +222,7 @@ const Shop = () => {
       {view === 'confirmation' && (
         <Confirmation item={selectedItem} handleShopClick={handleShopClick} orderSummaries={orderSummaries} />
       )}
+      <ChangeNotifier rowIds={rowIds} fetchAction={() => handleRefresh()} table='shop_products' />
     </div>
   )
 }

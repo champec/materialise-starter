@@ -24,6 +24,7 @@ import EditProductForm from './EditProductForm'
 import { getInitials } from 'src/@core/utils/get-initials'
 import { dummyData } from './dummyData'
 import { CircularProgress } from '@mui/material'
+import { useSelector } from 'react-redux'
 
 // ** renders client column
 const renderClient = params => {
@@ -140,8 +141,8 @@ function getColumns(setShow, setSelectedRow) {
   ]
 }
 
-function InventoryTable({ initialData, initialTotal }) {
-  const [page, setPage] = useState(0)
+function InventoryTable({ page, setPage }) {
+  const props = useSelector(state => state.inventorySlice)
   const [total, setTotal] = useState(0)
   const [sort, setSort] = useState('asc')
   const [pageSize, setPageSize] = useState(7)
@@ -156,40 +157,36 @@ function InventoryTable({ initialData, initialTotal }) {
     return data.slice(currentPage * pageSize, (currentPage + 1) * pageSize)
   }
   const supabase = supabaseOrg
-
-  useEffect(() => {
-    setRows(initialData)
-    setTotal(initialTotal)
-  }, [])
+  // console.log('items', initialData)
 
   const handleSortModelChange = useCallback(newModel => {
     setSortModel(newModel)
     fetchTableData(newModel, searchValue, sortColumn)
   }, [])
 
-  const fetchTableData = useCallback(async (sortModel, searchValue, sortColumn) => {
-    try {
-      // Construct your query based on the sort model, search value, and sort column
-      const query = supabase
-        .from('items')
-        .select('*', { count: 'exact' })
-        .ilike(sortColumn, `%${searchValue}%`)
-        .order(sortColumn, { ascending: sortModel[0]?.sort === 'asc' })
+  // const fetchTableData = useCallback(async (sortModel, searchValue, sortColumn) => {
+  //   try {
+  //     // Construct your query based on the sort model, search value, and sort column
+  //     const query = supabase
+  //       .from('items')
+  //       .select('*', { count: 'exact' })
+  //       .ilike(sortColumn, `%${searchValue}%`)
+  //       .order(sortColumn, { ascending: sortModel[0]?.sort === 'asc' })
 
-      // Execute the query to fetch the data
-      const { data, count, error } = await query.range(page * pageSize, (page + 1) * pageSize - 1)
-      if (error) {
-        console.log(error)
-        return
-      }
+  //     // Execute the query to fetch the data
+  //     const { data, count, error } = await query.range(page * pageSize, (page + 1) * pageSize - 1)
+  //     if (error) {
+  //       console.log(error)
+  //       return
+  //     }
 
-      // Update the rows and total state with the fetched data
-      setRows(data)
-      setTotal(count)
-    } catch (error) {
-      console.log(error)
-    }
-  }, [])
+  //     // Update the rows and total state with the fetched data
+  //     setRows(data)
+  //     setTotal(count)
+  //   } catch (error) {
+  //     console.log(error)
+  //   }
+  // }, [])
 
   const handleSearch = value => {
     setSearchValue(value)
@@ -205,7 +202,7 @@ function InventoryTable({ initialData, initialTotal }) {
           show={show}
           setShow={setShow}
           row={selectedRow}
-          fetchTableData={fetchTableData}
+          fetchTableData={() => console.log('fetchTableData')}
           sort={sort}
           searchValue={searchValue}
           sortColumn={sortColumn}
@@ -228,7 +225,7 @@ function InventoryTable({ initialData, initialTotal }) {
         <DataGrid
           autoHeight
           pagination
-          rows={rows}
+          rows={props.items}
           rowCount={total}
           columns={getColumns(setShow, setSelectedRow)}
           checkboxSelection

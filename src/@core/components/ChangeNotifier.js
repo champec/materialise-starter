@@ -1,14 +1,21 @@
 // ChangeNotifier.js
 
-import { useEffect } from 'react'
+import { useEffect, useState, useCallback } from 'react'
 import { useDispatch } from 'react-redux'
 import { useChangedDataNotifier } from 'src/hooks/useChangedDataNotifier'
 
 import Snackbar from '@mui/material/Snackbar'
+import Button from '@mui/material/Button' // Ensure Button is imported
 
-function ChangeNotifier({ rowIds, fetchAction }) {
+function ChangeNotifier({ rowIds, fetchAction, table }) {
+  const [open, setOpen] = useState(false)
   const dispatch = useDispatch()
-  const dataChanged = useChangedDataNotifier(rowIds)
+
+  const onDataChanged = useCallback(changed => {
+    setOpen(changed)
+  }, [])
+
+  const dataChanged = useChangedDataNotifier(rowIds, table, onDataChanged)
 
   useEffect(() => {
     if (dataChanged) {
@@ -16,17 +23,26 @@ function ChangeNotifier({ rowIds, fetchAction }) {
     }
   }, [dataChanged, rowIds, fetchAction, dispatch])
 
-  if (dataChanged) {
-    return (
-      <Snackbar
-        open={true}
-        message='Data changed, please reload'
-        action={<Button onClick={() => dispatch(fetchAction())}>Reload</Button>}
-      />
-    )
-  }
+  const handleClose = () => setOpen(false)
 
-  return null
+  return (
+    <Snackbar
+      open={open}
+      autoHideDuration={6000}
+      onClose={handleClose}
+      message='Data changed, please reload'
+      action={
+        <Button
+          onClick={() => {
+            fetchAction()
+            handleClose()
+          }}
+        >
+          Reload
+        </Button>
+      }
+    />
+  )
 }
 
 export default ChangeNotifier
