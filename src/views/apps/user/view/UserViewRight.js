@@ -34,9 +34,9 @@ const Tab = styled(MuiTab)(({ theme }) => ({
   }
 }))
 
-const UserViewRight = ({ tab, invoiceData }) => {
+const UserViewRight = ({ invoiceData }) => {
   // ** State
-  const [activeTab, setActiveTab] = useState(tab)
+  const [activeTab, setActiveTab] = useState('overview')
   const [isLoading, setIsLoading] = useState(true)
 
   // ** Hooks
@@ -45,18 +45,9 @@ const UserViewRight = ({ tab, invoiceData }) => {
   const handleChange = (event, value) => {
     setIsLoading(true)
     setActiveTab(value)
-    router
-      .push({
-        pathname: `/pharmacy/settings/${value.toLowerCase()}`
-      })
-      .then(() => setIsLoading(false))
+    setIsLoading(false)
   }
-  useEffect(() => {
-    if (tab && tab !== activeTab) {
-      setActiveTab(tab)
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [tab])
+
   useEffect(() => {
     if (invoiceData) {
       setIsLoading(false)

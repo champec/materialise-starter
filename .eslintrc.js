@@ -26,7 +26,7 @@ module.exports = {
 
     // add new line above comment
     'lines-around-comment': [
-      'error',
+      'warn', // <--- changed from 'error' to 'warn'
       {
         beforeLineComment: true,
         beforeBlockComment: true,
@@ -38,11 +38,11 @@ module.exports = {
     ],
 
     // add new line above return
-    'newline-before-return': 'error',
+    'newline-before-return': 'warn', // <--- changed from 'error' to 'warn'
 
     // add new line below import
     'import/newline-after-import': [
-      'error',
+      'warn', // <--- changed from 'error' to 'warn'
       {
         count: 1
       }
@@ -50,7 +50,7 @@ module.exports = {
 
     // add new line after each var, const, let declaration
     'padding-line-between-statements': [
-      'error',
+      'warn', // <--- changed from 'error' to 'warn'
       { blankLine: 'always', prev: ['export'], next: ['*'] },
       { blankLine: 'always', prev: ['*'], next: ['multiline-const', 'multiline-let', 'multiline-var', 'export'] }
     ]

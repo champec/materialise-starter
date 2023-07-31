@@ -46,7 +46,7 @@ const TabList = styled(MuiTabList)(({ theme }) => ({
 
 const UserProfile = ({ tab, data, nhsData }) => {
   // ** State
-  const [activeTab, setActiveTab] = useState('profile')
+  const [activeTab, setActiveTab] = useState('organisation')
   const [isLoading, setIsLoading] = useState(true)
 
   // ** Hooks
@@ -65,10 +65,10 @@ const UserProfile = ({ tab, data, nhsData }) => {
   }, [data])
 
   const tabContentList = {
-    profile: <Profile data={data} />,
-    teams: <Teams data={data} />,
+    organisation: <Profile data={data} />,
+    team: <Teams data={data} />,
     projects: <Projects data={data} />,
-    connections: <Connections data={data} />
+    network: <Connections pharmData={data} nhsData={nhsData} />
   }
 
   return (
@@ -88,24 +88,24 @@ const UserProfile = ({ tab, data, nhsData }) => {
                   aria-label='customized tabs example'
                 >
                   <Tab
-                    value='profile'
+                    value='organisation'
                     label={
                       <Box sx={{ display: 'flex', alignItems: 'center', ...(!hideText && { '& svg': { mr: 2 } }) }}>
-                        <Icon icon='mdi:account-outline' />
-                        {!hideText && 'Profile'}
+                        <Icon icon='material-symbols:add-business-outline' />
+                        {!hideText && 'Organisation'}
                       </Box>
                     }
                   />
                   <Tab
-                    value='teams'
+                    value='team'
                     label={
                       <Box sx={{ display: 'flex', alignItems: 'center', ...(!hideText && { '& svg': { mr: 2 } }) }}>
                         <Icon icon='mdi:account-multiple-outline' />
-                        {!hideText && 'Teams'}
+                        {!hideText && 'Team'}
                       </Box>
                     }
                   />
-                  <Tab
+                  {/* <Tab
                     value='projects'
                     label={
                       <Box sx={{ display: 'flex', alignItems: 'center', ...(!hideText && { '& svg': { mr: 2 } }) }}>
@@ -113,13 +113,13 @@ const UserProfile = ({ tab, data, nhsData }) => {
                         {!hideText && 'Projects'}
                       </Box>
                     }
-                  />
+                  /> */}
                   <Tab
-                    value='connections'
+                    value='network'
                     label={
                       <Box sx={{ display: 'flex', alignItems: 'center', ...(!hideText && { '& svg': { mr: 2 } }) }}>
                         <Icon icon='mdi:link-variant' />
-                        {!hideText && 'Connections'}
+                        {!hideText && 'Network'}
                       </Box>
                     }
                   />

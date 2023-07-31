@@ -69,7 +69,9 @@ const UserViewSecurity = () => {
     newPassword: '',
     showNewPassword: false,
     confirmNewPassword: '',
-    showConfirmNewPassword: false
+    showConfirmNewPassword: false,
+    oldPassword: '',
+    showOldPassword: false
   })
 
   // Handle Password
@@ -95,6 +97,19 @@ const UserViewSecurity = () => {
   }
 
   const handleMouseDownConfirmNewPassword = event => {
+    event.preventDefault()
+  }
+
+  // Handle Old Password
+  const handleOldPasswordChange = prop => event => {
+    setValues({ ...values, [prop]: event.target.value })
+  }
+
+  const handleClickShowOldPassword = () => {
+    setValues({ ...values, showOldPassword: !values.showOldPassword })
+  }
+
+  const handleMouseDownOldPassword = event => {
     event.preventDefault()
   }
 
@@ -171,6 +186,31 @@ const UserViewSecurity = () => {
                             onMouseDown={handleMouseDownConfirmNewPassword}
                           >
                             <Icon icon={values.showConfirmNewPassword ? 'mdi:eye-outline' : 'mdi:eye-off-outline'} />
+                          </IconButton>
+                        </InputAdornment>
+                      }
+                    />
+                  </FormControl>
+                </Grid>
+
+                <Grid item xs={12} sm={6}>
+                  <FormControl fullWidth>
+                    <InputLabel htmlFor='user-view-security-old-password'>Old Password</InputLabel>
+                    <OutlinedInput
+                      label='Old Password'
+                      value={values.oldPassword}
+                      id='user-view-security-old-password'
+                      onChange={handleOldPasswordChange('oldPassword')}
+                      type={values.showOldPassword ? 'text' : 'password'}
+                      endAdornment={
+                        <InputAdornment position='end'>
+                          <IconButton
+                            edge='end'
+                            onClick={handleClickShowOldPassword}
+                            aria-label='toggle password visibility'
+                            onMouseDown={handleMouseDownOldPassword}
+                          >
+                            <Icon icon={values.showOldPassword ? 'mdi:eye-outline' : 'mdi:eye-off-outline'} />
                           </IconButton>
                         </InputAdornment>
                       }

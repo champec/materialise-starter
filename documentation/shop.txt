@@ -1,0 +1,7 @@
+shop includes
+
+- main shop page - db is shop_products, and inventory page, cart, product modal, checkout, confirmaiton page
+- we render page server side with SSG, get static props - then send it to the RTK store, with a reducer setProducts, and then we can use it in the app
+- i then use a custom hook and a custom component, the hook setup and unsubscribed to the table to listen to changes, and warns if data is stale, the custom component
+rerenders the by receiving a custom action to fire, the custom action just fetches new data and updates the store, which in turn updates the UI. we filter the rowIds to only refresh
+if row being updates is in current view. 

@@ -79,13 +79,13 @@ const InvoiceListTable = () => {
   const [pageSize, setPageSize] = useState(7)
   const [data, setData] = useState([])
   useEffect(() => {
-    axios
-      .get('/apps/users/project-list', {
-        params: {
-          q: value
-        }
-      })
-      .then(res => setData(res.data))
+    // axios
+    //   .get('/apps/users/project-list', {
+    //     params: {
+    //       q: value
+    //     }
+    //   })
+    //   .then(res => setData(res.data))
   }, [value])
 
   return (

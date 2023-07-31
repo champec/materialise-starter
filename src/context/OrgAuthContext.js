@@ -56,6 +56,7 @@ const AuthOrgProvider = ({ children }) => {
         .select('*')
         .eq('id', data.session.user.id)
         .single()
+
       setOrganisation({ ...profiles })
       error ? setError(error) : null
       setLoading(false)

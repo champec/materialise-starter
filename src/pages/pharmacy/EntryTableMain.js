@@ -9,6 +9,7 @@ import EntrySidebar from './EntrySideBar'
 import { useOrgAuth } from 'src/hooks/useOrgAuth'
 import { useDispatch, useSelector } from 'react-redux'
 import { fetchPatients, fetchPrescribers, fetchSuppliers, fetchEntries } from 'src/store/apps/cdr'
+import ChangeNotifier from 'src/@core/components/ChangeNotifier'
 
 function CdrTable({ selectedDrug }) {
   const [open, setOpen] = useState(false)

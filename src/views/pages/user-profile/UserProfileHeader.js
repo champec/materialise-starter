@@ -178,7 +178,6 @@ const UserProfileHeader = ({ data, nhsData }) => {
       // Delete the old profile image from the storage bucket
       if (currentImage) {
         const oldImageKey = currentImage.split('/').pop()
-        console.log({ oldImageKey })
         const { error: deleteImageError } = await supabase.storage.from(bucket).remove([oldImageKey])
 
         if (deleteImageError) {
