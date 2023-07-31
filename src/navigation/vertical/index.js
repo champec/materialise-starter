@@ -12,7 +12,18 @@ const navigation = () => {
       children: [
         {
           title: 'CD Register',
-          path: '/pharmacy/cdr'
+          path: '/pharmacy/cdr',
+          icon: 'bx:book'
+        },
+        {
+          title: 'My Pharmacy',
+          path: '/pharmacy/mypharmacy',
+          icon: 'guidance:pharmacy'
+        },
+        {
+          title: 'Settings',
+          path: '/pharmacy/settings/overview',
+          icon: 'solar:settings-outline'
         }
       ]
     },

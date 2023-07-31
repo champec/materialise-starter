@@ -7,6 +7,8 @@ import { useRouter } from 'next/router'
 // ** SupaBase
 import { supabaseUser } from '../configs/supabase'
 
+// ** helper function
+
 // ** Defaults provides default values to context if not provided init value also for type safety, can draw from default with dot notation
 
 const defaultProvider = {
@@ -30,39 +32,38 @@ const AuthUserProvider = ({ children }) => {
   const [activeUser, setActiveUser] = useState(false)
   const [isLoggingOut, setIsLoggingOut] = useState(false)
 
+  //this methods gets session data if any and is called when auth statechanges and when component first mounts hence why is if fired in two seperate locations bellow
+  const getProfileData = async () => {
+    //await the data frin supabase
+    const { data, error } = await supabaseUser.auth.getSession()
+    //if a session is available then get the data froom the profiles tabale and spread it into user state, if an error then present in error state
+    if (data.session) {
+      let { data: profiles, error } = await supabaseUser
+        .from('profiles')
+        .select('*')
+        .eq('id', data.session.user.id)
+        .single()
+      setUser({ ...profiles })
+      error ? setError(error) : null
+      setLoading(false)
+    } else {
+      // if a session doesnt exists then just the loadingstate to false and allow the page to load
+      //! edge case to be tested
+      setLoading(false)
+    }
+    // this is if there is an error from the initial getsession from supabase
+    if (error) {
+      setError(error)
+      setLoading(false)
+    }
+  }
+
   // ** Hooks
   const router = useRouter()
   useEffect(() => {
     setLoading(true)
-    //this methods gets session data if any and is called when auth statechanges and when component first mounts hence why is if fired in two seperate locations bellow
-    const getProfileData = async () => {
-      //await the data frin supabase
-      const { data, error } = await supabaseUser.auth.getSession()
-      //if a session is available then get the data froom the profiles tabale and spread it into user state, if an error then present in error state
-      if (data.session) {
-        let { data: profiles, error } = await supabaseUser
-          .from('profiles')
-          .select('*')
-          .eq('id', data.session.user.id)
-          .single()
-        setUser({ ...profiles })
-        error ? setError(error) : null
-        setLoading(false)
-      } else {
-        // if a session doesnt exists then just the loadingstate to false and allow the page to load
-        //! edge case to be tested
-        setLoading(false)
-      }
-      // this is if there is an error from the initial getsession from supabase
-      if (error) {
-        setError(error)
-        setLoading(false)
-      }
-    }
-
     // call the getprofileData funciton when component first mounts, auth state might have not changed
     getProfileData()
-
     // call it again when the authstate changes, component may have not remounted
     //! to be tested. quite unlikely this is necessary because all auth related methods are called from this file
     supabaseUser.auth.onAuthStateChange(() => {
@@ -182,7 +183,8 @@ const AuthUserProvider = ({ children }) => {
     login: handleLogin,
     logout: handleLogout,
     register: handleRegister,
-    switchU: handleSwitch
+    switchU: handleSwitch,
+    refreshUserData: getProfileData // <-- Exporting refetch function
   }
 
   return <UserAuthContext.Provider value={values}>{children}</UserAuthContext.Provider>

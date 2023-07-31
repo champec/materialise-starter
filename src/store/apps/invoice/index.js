@@ -5,11 +5,11 @@ import axios from 'axios'
 
 // ** Fetch Invoices
 export const fetchData = createAsyncThunk('appInvoice/fetchData', async params => {
-  const response = await axios.get('/apps/invoice/invoices', {
-    params
-  })
+  // const response = await axios.get('/apps/invoice/invoices', {
+  //   params
+  // })
 
-  return response.data
+  return []
 })
 
 export const deleteInvoice = createAsyncThunk('appInvoice/deleteData', async (id, { getState, dispatch }) => {

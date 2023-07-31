@@ -6,11 +6,11 @@ import axios from 'axios'
 
 // ** Fetch Invoices
 export const fetchData = createAsyncThunk('appPermissions/fetchData', async params => {
-  const response = await axios.get('/apps/permissions/data', {
-    params
-  })
+  // const response = await axios.get('/apps/permissions/data', {
+  //   params
+  // })
 
-  return response.data
+  return []
 })
 
 export const appPermissionsSlice = createSlice({

@@ -150,7 +150,8 @@ const AuthOrgProvider = ({ children }) => {
     logout: handleLogout,
     register: handleRegister,
     userMadeChange,
-    handleUserMadeChange
+    handleUserMadeChange,
+    refreshOrgData: getProfileData
   }
 
   return <OrgAuthContext.Provider value={values}>{children}</OrgAuthContext.Provider>

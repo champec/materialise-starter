@@ -111,13 +111,13 @@ const EditCard = ({ data }) => {
   // ** Hook
   const theme = useTheme()
   useEffect(() => {
-    axios.get('/apps/invoice/clients').then(response => {
-      if (response.data && clients === undefined) {
-        setClients(response.data)
-        setSelected(response.data[0].name)
-        setSelectedClient(response.data[0])
-      }
-    })
+    // axios.get('/apps/invoice/clients').then(response => {
+    //   if (response.data && clients === undefined) {
+    //     setClients(response.data)
+    //     setSelected(response.data[0].name)
+    //     setSelectedClient(response.data[0])
+    //   }
+    // })
   }, [clients])
 
   // ** Deletes form
