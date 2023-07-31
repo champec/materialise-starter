@@ -23,8 +23,10 @@ const ColorPicker = ({ anchorEl, open, onClose, onColorChange }) => {
       }}
     >
       <Box display='flex' flexDirection='column'>
-        {colors.map(color => (
-          <Button onClick={() => handleClick(color)}>{color}</Button>
+        {colors.map((color, index) => (
+          <Button key={index} onClick={() => handleClick(color)}>
+            {color}
+          </Button>
         ))}
       </Box>
     </Popover>
