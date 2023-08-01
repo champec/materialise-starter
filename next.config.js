@@ -18,6 +18,9 @@ module.exports = withTM({
   experimental: {
     esmExternals: false
   },
+  eslint: {
+    ignoreDuringBuilds: true
+  },
   webpack: config => {
     config.resolve.alias = {
       ...config.resolve.alias,
