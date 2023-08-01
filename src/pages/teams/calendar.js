@@ -29,9 +29,9 @@ import {
   handleSelectEvent,
   handleAllCalendars,
   handleCalendarsUpdate,
-  addCalendarType,
-  updateCalendarType,
-  deleteCalendarType,
+  // addCalendarType,
+  // updateCalendarType,
+  // deleteCalendarType,
   handleSelectCalendar,
   updateViewDates
 } from 'src/store/apps/calendar'
