@@ -97,7 +97,7 @@
     "@iconify/types": "2.0.0",
     "@iconify/utils": "2.0.1",
     "eslint": "8.26.0",
-    "eslint-config-next": "13.0.0",
+    "eslint-config-next": "^13.4.12",
     "eslint-config-prettier": "8.5.0",
     "eslint-import-resolver-alias": "1.1.2",
     "eslint-import-resolver-typescript": "3.5.2",
