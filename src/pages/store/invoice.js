@@ -3,7 +3,7 @@ import InvoiceList from './invoiceUtils'
 import { supabase } from 'src/configs/supabase'
 import { useRouter } from 'next/router'
 import InvoiceDetails from './invoiceDetails'
-import { fetchInvoice } from './storeApis'
+import { fetchInvoice } from '../../@core/utils/supabase/storeApis'
 
 function Track({ invoices }) {
   const router = useRouter()

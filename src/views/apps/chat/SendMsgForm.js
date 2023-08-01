@@ -1,6 +1,6 @@
 // ** React Imports
 import { useState } from 'react'
-import { sendChatMessage } from 'src/pages/chat/supabaseActions'
+import { sendChatMessage } from 'src/@core/utils/supabase/supabaseActions'
 // ** MUI Imports
 import Button from '@mui/material/Button'
 import { styled } from '@mui/material/styles'

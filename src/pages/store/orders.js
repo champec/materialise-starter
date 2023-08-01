@@ -6,7 +6,7 @@ import OrderInvoice from './OrderInvoice'
 import { supabaseOrg } from 'src/configs/supabase'
 import { useOrgAuth } from 'src/hooks/useOrgAuth'
 
-import { fetchOrderData, fetchOrderDetails, fetchOrderTasks } from './storeApis'
+import { fetchOrderData, fetchOrderDetails, fetchOrderTasks } from '../../@core/utils/supabase/storeApis'
 
 function OrderPage() {
   const router = useRouter()
