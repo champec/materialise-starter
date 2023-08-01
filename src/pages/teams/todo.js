@@ -1,6 +1,6 @@
 import React from 'react'
 import ToDoAccordion from './todoUtils/TodoAccordion'
-import { getOrgTasks } from './teamApis'
+import { getOrgTasks } from '../../@core/utils/supabase/teamApis'
 import { useOrgAuth } from 'src/hooks/useOrgAuth'
 
 function Todo() {

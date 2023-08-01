@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react'
 
 import CdrTable from './EntryTableMain'
 import { fetchDrugs } from 'src/store/apps/cdr'
-import { fetchDrugsFromDb } from './utils/supabase'
+import { fetchDrugsFromDb } from '../../@core/utils/mypharmacyutils/supabase'
 
 import Grid from '@mui/material/Grid'
 import Box from '@mui/material/Box'
