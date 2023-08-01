@@ -10,7 +10,7 @@ import MuiTabList from '@mui/lab/TabList'
 import AccordionSummary from '@mui/material/AccordionSummary'
 import AccordionDetails from '@mui/material/AccordionDetails'
 import BroadCastComposer from 'src/views/apps/broadcast/BroadCastComposer'
-import BroadCastInBox from 'src/views/apps/broadcast/BroadCastInBox'
+import BroadCastInBox from 'src/views/apps/broadcast/BroadCastInbox'
 import BroadCastTracker from 'src/views/apps/broadcast/BroadCastTracker'
 
 // ** Icon Imports
