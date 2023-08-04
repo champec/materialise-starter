@@ -1,5 +1,7 @@
 // ** React Imports
-import { useState, Fragment } from 'react'
+import { useState, Fragment, forwardRef, useEffect, useMemo } from 'react'
+import { supabaseOrg as supabase } from 'src/configs/supabase'
+import { _, debounce } from 'lodash'
 
 // ** Next Import
 import Link from 'next/link'
@@ -20,6 +22,9 @@ import FormHelperText from '@mui/material/FormHelperText'
 import InputAdornment from '@mui/material/InputAdornment'
 import Typography from '@mui/material/Typography'
 import MuiFormControlLabel from '@mui/material/FormControlLabel'
+import DatePickerWrapper from 'src/@core/styles/libs/react-datepicker'
+import DatePicker from 'react-datepicker'
+import { Snackbar, Autocomplete } from '@mui/material'
 
 // ** Icon Imports
 import Icon from 'src/@core/components/icon'
@@ -46,7 +51,11 @@ const defaultValues = {
   email: '',
   username: '',
   password: '',
-  terms: false
+  terms: false,
+  firstName: '',
+  lastName: '',
+  dateOfBirth: new Date(),
+  organisation: ''
 }
 
 // ** Styled Components
@@ -57,6 +66,19 @@ const RegisterIllustrationWrapper = styled(Box)(({ theme }) => ({
     padding: theme.spacing(10)
   }
 }))
+
+const PickersComponent = forwardRef(({ ...props }, ref) => {
+  return (
+    <TextField
+      inputRef={ref}
+      fullWidth
+      {...props}
+      label={props.label || ''}
+      sx={{ width: '100%' }}
+      error={props.error}
+    />
+  )
+})
 
 const RegisterIllustration = styled('img')(({ theme }) => ({
   maxWidth: '48rem',
@@ -103,6 +125,16 @@ const FormControlLabel = styled(MuiFormControlLabel)(({ theme }) => ({
 const Register = () => {
   // ** States
   const [showPassword, setShowPassword] = useState(false)
+  const [openSnackbar, setOpenSnackbar] = useState(false)
+  const [snackbarMessage, setSnackbarMessage] = useState('')
+  const [snackbarSeverity, setSnackbarSeverity] = useState('success')
+  const [dateOfBirth, setDateOfBirth] = useState(new Date())
+  const [organisationOptions, setOrganisationOptions] = useState([])
+  const [selectedOrganisation, setSelectedOrganisation] = useState(null)
+  const [searchTerm, setSearchTerm] = useState('')
+  const [page, setPage] = useState(1)
+  const [pageSize, setPageSize] = useState(10)
+  const [totalPages, setTotalPages] = useState(0)
 
   // ** Hooks
   const theme = useTheme()
@@ -117,8 +149,41 @@ const Register = () => {
     password: yup.string().min(5).required(),
     username: yup.string().min(3).required(),
     email: yup.string().email().required(),
-    terms: yup.bool().oneOf([true], 'You must accept the privacy policy & terms')
+    terms: yup.bool().oneOf([true], 'You must accept the privacy policy & terms'),
+    firstName: yup.string().required('First name is required'),
+    lastName: yup.string().required('Last name is required'),
+    dateOfBirth: yup.date().required('Date of birth is required'),
+    organisation: yup.string().required('Organisation is required')
   })
+
+  const fetchOrganisations = async searchTerm => {
+    const { data, error, count } = await supabase
+      .from('pharmacies')
+      .select('id, organisation_name, address1, ods_code')
+      .ilike('organisation_name', `%${searchTerm}%`)
+      .ilike('address1', `%${searchTerm}%`)
+      .ilike('ods_code', `%${searchTerm}%`)
+      .range(page * pageSize - pageSize, page * pageSize - 1)
+      .order('organisation_name', { ascending: true })
+
+    if (error) {
+      console.error(error)
+    } else {
+      const options = data.map(({ id, organisation_name, address1, ods_code }) => ({
+        label: `${organisation_name} (${ods_code}) - ${address1}`,
+        value: id
+      }))
+      setOrganisationOptions(options)
+      setTotalPages(Math.ceil(count / pageSize))
+    }
+  }
+
+  // Define a debounced version of fetchOrganisations
+  const fetchOrganisationsDebounced = useMemo(() => debounce(searchTerm => fetchOrganisations(searchTerm), 300), [])
+
+  useEffect(() => {
+    fetchOrganisationsDebounced(searchTerm)
+  }, [searchTerm])
 
   const {
     control,
@@ -148,6 +213,54 @@ const Register = () => {
       }
     })
   }
+
+  const handleClearSearch = () => {
+    setSearchTerm('')
+    setPage(1)
+  }
+
+  const handleRegister = async data => {
+    console.log('SUBMITTING', data)
+    // try {
+    //   const { error } = await supabase.auth.signUp({
+    //     email: data.email,
+    //     password: data.password
+    //   })
+
+    //   if (error) {
+    //     throw error
+    //   }
+
+    //   const { user, error: profileError } = await supabase
+    //     .from('profiles')
+    //     .insert({
+    //       user_id: user.id,
+    //       first_name: data.firstName,
+    //       last_name: data.lastName,
+    //       date_of_birth: data.dateOfBirth,
+    //       organisation: data.organisation
+    //     })
+    //     .single()
+
+    //   if (profileError) {
+    //     throw profileError
+    //   }
+
+    //   setSnackbarSeverity('success')
+    //   setSnackbarMessage('Registration successful')
+    //   setOpenSnackbar(true)
+    //   history.push('/login')
+    // } catch (error) {
+    //   setSnackbarSeverity('error')
+    //   setSnackbarMessage(error.message)
+    //   setOpenSnackbar(true)
+    // }
+  }
+
+  const handleCloseSnackbar = () => {
+    setOpenSnackbar(false)
+  }
+
   const imageSource = skin === 'bordered' ? 'auth-v2-register-illustration-bordered' : 'auth-v2-register-illustration'
 
   return (
@@ -263,7 +376,52 @@ const Register = () => {
               <TypographyStyled variant='h5'>Adventure starts here 🚀</TypographyStyled>
               <Typography variant='body2'>Make your app management easy and fun!</Typography>
             </Box>
-            <form noValidate autoComplete='off' onSubmit={handleSubmit(onSubmit)}>
+            <form noValidate autoComplete='off' onSubmit={handleSubmit(handleRegister)}>
+              <FormControl fullWidth sx={{ mb: 4 }}>
+                <Box sx={{ mb: 3 }}>
+                  <Controller
+                    name='firstName'
+                    control={control}
+                    defaultValue=''
+                    render={({ field: { value, onChange, onBlur } }) => (
+                      <TextField
+                        fullWidth
+                        label='First Name'
+                        margin='normal'
+                        onBlur={onBlur}
+                        onChange={onChange}
+                        value={value}
+                        error={Boolean(errors.firstName)}
+                        helperText={errors.firstName?.message}
+                        variant='outlined'
+                        autoComplete='off'
+                      />
+                    )}
+                  />
+                </Box>
+                <Box sx={{ mb: 3 }}>
+                  <Controller
+                    name='lastName'
+                    control={control}
+                    defaultValue=''
+                    render={({ field: { value, onChange, onBlur } }) => (
+                      <TextField
+                        fullWidth
+                        label='Last Name'
+                        margin='normal'
+                        type='search'
+                        onBlur={onBlur}
+                        onChange={onChange}
+                        value={value}
+                        error={Boolean(errors.lastName)}
+                        helperText={errors.lastName?.message}
+                        variant='outlined'
+                        autoComplete='off'
+                      />
+                    )}
+                  />
+                </Box>
+              </FormControl>
               <FormControl fullWidth sx={{ mb: 4 }}>
                 <Controller
                   name='username'
@@ -271,13 +429,14 @@ const Register = () => {
                   rules={{ required: true }}
                   render={({ field: { value, onChange, onBlur } }) => (
                     <TextField
-                      autoFocus
                       value={value}
                       onBlur={onBlur}
                       label='Username'
                       onChange={onChange}
                       placeholder='johndoe'
                       error={Boolean(errors.username)}
+                      autoComplete='off'
+                      type='search'
                     />
                   )}
                 />
@@ -298,11 +457,45 @@ const Register = () => {
                       onChange={onChange}
                       error={Boolean(errors.email)}
                       placeholder='user@email.com'
+                      autoComplete='off'
+                      type='search'
                     />
                   )}
                 />
                 {errors.email && <FormHelperText sx={{ color: 'error.main' }}>{errors.email.message}</FormHelperText>}
               </FormControl>
+              <DatePickerWrapper>
+                <FormControl fullWidth sx={{ mb: 4 }}>
+                  <Box sx={{ mb: 3 }}>
+                    <Controller
+                      name='dateOfBirth'
+                      control={control}
+                      defaultValue={null}
+                      render={({ field: { value, onChange, onBlur } }) => (
+                        <DatePicker
+                          value={dateOfBirth}
+                          selected={dateOfBirth}
+                          onChange={newValue => {
+                            onChange(newValue)
+                            setDateOfBirth(newValue) // update state
+                          }}
+                          onBlur={onBlur}
+                          customInput={
+                            <PickersComponent
+                              label='Date of Birth'
+                              error={Boolean(errors.dateOfBirth)}
+                              helperText={errors.dateOfBirth?.message}
+                            />
+                          }
+                          renderInput={params => (
+                            <TextField fullWidth margin='normal' variant='outlined' autoComplete='off' />
+                          )}
+                        />
+                      )}
+                    />
+                  </Box>
+                </FormControl>
+              </DatePickerWrapper>
               <FormControl fullWidth>
                 <InputLabel htmlFor='auth-login-v2-password' error={Boolean(errors.password)}>
                   Password
@@ -319,7 +512,8 @@ const Register = () => {
                       onChange={onChange}
                       id='auth-login-v2-password'
                       error={Boolean(errors.password)}
-                      type={showPassword ? 'text' : 'password'}
+                      type={showPassword ? 'search' : 'password'}
+                      autoComplete='off'
                       endAdornment={
                         <InputAdornment position='end'>
                           <IconButton
@@ -337,6 +531,46 @@ const Register = () => {
                 {errors.password && (
                   <FormHelperText sx={{ color: 'error.main' }}>{errors.password.message}</FormHelperText>
                 )}
+              </FormControl>
+
+              <FormControl fullWidth sx={{ mb: 4 }}>
+                <Box sx={{ mb: 3 }}>
+                  <Controller
+                    name='organisation'
+                    control={control}
+                    defaultValue=''
+                    render={({ field: { value, onChange, onBlur } }) => (
+                      <Autocomplete
+                        options={organisationOptions}
+                        getOptionLabel={option => option.label}
+                        value={organisationOptions.find(option => option.value === value) || null}
+                        onChange={(_, newValue) => {
+                          onChange(newValue?.value || '')
+                        }}
+                        onInputChange={(_, inputVal) => setSearchTerm(inputVal)}
+                        onBlur={onBlur}
+                        renderInput={params => (
+                          <TextField
+                            {...params}
+                            fullWidth
+                            margin='normal'
+                            error={Boolean(errors.organisation)}
+                            helperText={errors.organisation?.message}
+                            variant='outlined'
+                            autoComplete='off'
+                            type='search'
+                            label='Organisation'
+                            InputProps={{
+                              ...params.InputProps,
+                              autoComplete: 'off',
+                              type: 'search'
+                            }}
+                          />
+                        )}
+                      />
+                    )}
+                  />
+                </Box>
               </FormControl>
 
               <FormControl sx={{ my: 0 }} error={Boolean(errors.terms)}>
@@ -431,6 +665,8 @@ const Register = () => {
   )
 }
 Register.getLayout = page => <BlankLayout>{page}</BlankLayout>
-Register.guestGuard = true
+Register.authGuard = false
+// LoginPage.authGuard = false
+Register.orgGuard = false
 
 export default Register

@@ -295,7 +295,7 @@ const LoginPage = () => {
 
 LoginPage.getLayout = page => <BlankLayout>{page}</BlankLayout>
 LoginPage.authGuard = false
-LoginPage.authGuard = false
+// LoginPage.authGuard = false
 LoginPage.orgGuard = false
 
 export default LoginPage
