@@ -5,7 +5,6 @@ import { configureStore } from '@reduxjs/toolkit'
 // i.e chat keeps state of current messages - receives new messages and updates its store. store can be consumed/read by components
 // note the import are defualt exports so dont use original names
 import chat from 'src/store/apps/chat'
-import user from 'src/store/apps/user'
 import email from 'src/store/apps/email'
 import kanban from 'src/store/apps/kanban'
 import invoice from 'src/store/apps/invoice'
@@ -15,6 +14,8 @@ import cdr from 'src/store/apps/cdr'
 import cartSlice from './apps/shop/cartSlice'
 import productsSlice from './apps/shop/productsSlice'
 import inventorySlice from './apps/shop/inventorySlice'
+import user from './auth/user'
+import organisation from './auth/organisation'
 
 //when reading data in global storage, we use a hook called useSelector() which takes the store as an argument, this config combines all our reducers so they can be read anywhere
 //with dot notation
@@ -29,6 +30,7 @@ export const store = configureStore({
     calendar,
     productsSlice,
     inventorySlice,
+    organisation,
     cartSlice,
     permissions
   },

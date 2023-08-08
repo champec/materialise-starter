@@ -17,6 +17,7 @@ import Tab from '@mui/material/Tab'
 import TabList from '@mui/lab/TabList'
 import TabPanel from '@mui/lab/TabPanel'
 import TabContext from '@mui/lab/TabContext'
+import { Snackbar, Alert } from '@mui/material'
 
 // ** Third Party Imports
 import * as yup from 'yup'
@@ -36,18 +37,19 @@ import useMediaQuery from '@mui/material/useMediaQuery'
 import { styled, useTheme } from '@mui/material/styles'
 import MuiFormControlLabel from '@mui/material/FormControlLabel'
 
-// ** Configs
-import themeConfig from 'src/configs/themeConfig'
-
-// ** Layout Import
-import BlankLayout from 'src/@core/layouts/BlankLayout'
-
 // ** Hooks
 import { useSettings } from 'src/@core/hooks/useSettings'
 
 // ** Demo Imports
-import FooterIllustrationsV2 from 'src/views/pages/auth/FooterIllustrationsV2'
 import CardCongratulationsDaisy from 'src/views/ui/gamification/CardCongratulationsDaisy'
+
+// ** RTK imports
+import { useDispatch, useSelector } from 'react-redux'
+import { login, setOrganisationError } from 'src/store/auth/organisation'
+import { logout } from 'src/store/auth/user'
+
+import { set } from 'nprogress'
+import { useRouter } from 'next/router'
 
 // this library validates form entries to match as follows
 const schema = yup.object().shape({
@@ -60,34 +62,6 @@ const defaultValues = {
   password: 'example-password',
   email: 'chronic2157@gmail.com'
 }
-
-const LoginIllustrationWrapper = styled(Box)(({ theme }) => ({
-  padding: theme.spacing(20),
-  paddingRight: '0 !important',
-  [theme.breakpoints.down('lg')]: {
-    padding: theme.spacing(10)
-  }
-}))
-
-const LoginIllustration = styled('img')(({ theme }) => ({
-  maxWidth: '48rem',
-  [theme.breakpoints.down('xl')]: {
-    maxWidth: '38rem'
-  },
-  [theme.breakpoints.down('lg')]: {
-    maxWidth: '30rem'
-  }
-}))
-
-const RightWrapper = styled(Box)(({ theme }) => ({
-  width: '100%',
-  [theme.breakpoints.up('md')]: {
-    maxWidth: 400
-  },
-  [theme.breakpoints.up('lg')]: {
-    maxWidth: 450
-  }
-}))
 
 const BoxWrapper = styled(Box)(({ theme }) => ({
   width: '100%',
@@ -117,8 +91,31 @@ const StepAccountDetails = ({ handleNext, authOrg, authUser }) => {
   const { switchU, user } = authUser
   const name = authOrg?.organisation?.organisation_name
   const { settings } = useSettings()
-  //the following hook handles the form data and also received the validation library schema set above
-  // we are extracting the methods provided by hook useForm from library HookForms which allows us to perform certain action
+
+  const error = useSelector(state => state.organisation.organisationError)
+
+  const [openSuccess, setOpenSuccess] = useState(false)
+  const [openError, setOpenError] = useState(false)
+  const [errorMessage, setErrorMessage] = useState(error)
+
+  console.log(error)
+
+  useEffect(() => {
+    console.log('useEffect', error)
+    if (error) {
+      setOpenError(true)
+    }
+  }, [error, errorMessage])
+
+  const handleClose = (event, reason) => {
+    if (reason === 'clickaway') {
+      return
+    }
+    setErrorMessage(null)
+    setOpenSuccess(false)
+    setOpenError(false)
+  }
+
   const {
     control,
     setError,
@@ -132,9 +129,7 @@ const StepAccountDetails = ({ handleNext, authOrg, authUser }) => {
 
   // ** Vars
   const { skin } = settings
-  const hidden = useMediaQuery(theme.breakpoints.down('md'))
 
-  const imageSource = skin === 'bordered' ? 'auth-v2-login-illustration-bordered' : 'auth-v2-login-illustration'
   const loggedInUsers = JSON.parse(window.localStorage.getItem('localUsers'))
   const objectMap = (obj, fn) => Object.fromEntries(Object.entries(obj).map(([k, v], i) => [k, fn(v, k, i)]))
 
@@ -151,6 +146,9 @@ const StepAccountDetails = ({ handleNext, authOrg, authUser }) => {
     showPassword: false,
     showConfirmPassword: false
   })
+
+  const dispatch = useDispatch()
+  const router = useRouter()
 
   const handleTabChange = (event, newValue) => {
     setTabValue(newValue)
@@ -213,6 +211,8 @@ const StepAccountDetails = ({ handleNext, authOrg, authUser }) => {
                   authOrg={authOrg}
                   setRememberMe={setRememberMe}
                   setShowPassword={setShowPassword}
+                  dispatch={dispatch}
+                  router={router}
                 />
               </TabPanel>
               <TabPanel value='2'>
@@ -225,9 +225,16 @@ const StepAccountDetails = ({ handleNext, authOrg, authUser }) => {
             </TabContext>
           </BoxWrapper>
         </Box>
-        {/* <RightWrapper
-          sx={skin === 'bordered' && !hidden ? { borderLeft: `1px solid ${theme.palette.divider}` } : {}}
-        ></RightWrapper> */}
+        <Snackbar open={openSuccess} autoHideDuration={6000} onClose={handleClose}>
+          <Alert onClose={handleClose} severity='success'>
+            Login successful!
+          </Alert>
+        </Snackbar>
+        <Snackbar open={openError} autoHideDuration={6000} onClose={handleClose}>
+          <Alert onClose={handleClose} severity='error'>
+            {errorMessage}
+          </Alert>
+        </Snackbar>
       </Box>
       {/* form below */}
     </>
@@ -245,44 +252,28 @@ function Form({
   authUser,
   authOrg,
   setError,
+  router,
   setRememberMe,
-  setShowPassword
+  setShowPassword,
+  dispatch
 }) {
-  //** methods
-
-  // onsubmit is received data from the handleChange hook provided by RHF and then we can do what we want with it
-  // in this case we pass the credentials to login context using the predefined context changer, login, which returns any errors
   const onSubmit = data => {
     const { email, password } = data
-    console.log(authUser.user)
-    //fetch user data
-    authUser.login({ email, password, rememberMe }, err => {
-      console.log(err.message)
-      setError('email', {
-        type: 'manual',
-        message: 'Email or Password is invalid'
+
+    dispatch(login({ email, password }))
+      .unwrap()
+      .then(res => {
+        console.log(res)
+        router.push('/')
       })
-    })
-  }
-
-  const handleClickShowPassword = () => {
-    setValues({ ...values, showPassword: !values.showPassword })
-  }
-
-  const handleMouseDownPassword = event => {
-    event.preventDefault()
-  }
-
-  const handleClickShowConfirmPassword = () => {
-    setValues({ ...values, showConfirmPassword: !values.showConfirmPassword })
-  }
-
-  const handleMouseDownConfirmPassword = event => {
-    event.preventDefault()
+      .catch(err => {
+        console.log(err)
+        dispatch(setOrganisationError(err))
+      })
   }
 
   const handleLogOut = async () => {
-    await authOrg.logout()
+    dispatch(logout())
   }
 
   //** methods
@@ -358,36 +349,8 @@ function Form({
         >
           Forgot Password?
         </Typography>
-        {/* custom button form below */}
+
         <Grid container spacing={5}>
-          {/* <Grid item xs={12} sm={6}>
-          <FormControl fullWidth>
-            <TextField label='Username' placeholder='johndoe' />
-          </FormControl>
-        </Grid> */}
-
-          {/* <Grid item xs={12} sm={6}>
-          <FormControl fullWidth>
-            <InputLabel htmlFor='input-password'>Password</InputLabel>
-            <OutlinedInput
-              label='Password'
-              id='input-password'
-              type={values.showPassword ? 'text' : 'password'}
-              endAdornment={
-                <InputAdornment position='end'>
-                  <IconButton
-                    edge='end'
-                    onClick={handleClickShowPassword}
-                    onMouseDown={handleMouseDownPassword}
-                  >
-                    <Icon icon={values.showPassword ? 'mdi:eye-outline' : 'mdi:eye-off-outline'} />
-                  </IconButton>
-                </InputAdornment>
-              }
-            />
-          </FormControl>
-        </Grid> */}
-
           <Grid item xs={12}>
             <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
               <Button
@@ -403,11 +366,8 @@ function Form({
             </Box>
           </Grid>
         </Grid>
-        {/*custom button from form below */}
       </Box>
-      {/* <Button fullWidth size='large' type='submit' variant='contained' sx={{ mb: 7 }}>
-      Login
-    </Button> */}
+
       <Box sx={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap', justifyContent: 'center' }}>
         <Typography sx={{ mr: 2, color: 'text.secondary' }}>Don't have an account?</Typography>
         <Typography href='/register' component={Link} sx={{ color: 'primary.main', textDecoration: 'none' }}>

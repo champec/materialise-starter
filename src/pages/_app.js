@@ -16,6 +16,11 @@ import { CacheProvider } from '@emotion/react'
 
 import themeConfig from 'src/configs/themeConfig'
 
+// ** RTK imports
+import { useDispatch, useSelector } from 'react-redux'
+import { initializeSession as initOrg } from 'src/store/auth/organisation'
+import { initializeSession as initUser } from 'src/store/auth/user'
+
 // ** Fake-DB Import
 import 'src/@fake-db'
 
@@ -59,6 +64,7 @@ import 'src/iconify-bundle/icons-bundle-react'
 
 // ** Global css styles
 import '../../styles/globals.css'
+import { useEffect } from 'react'
 
 const clientSideEmotionCache = createEmotionCache()
 
@@ -77,6 +83,14 @@ if (themeConfig.routingLoader) {
 
 const Guard = ({ children, authGuard, guestGuard, orgGuard }) => {
   // display a page depending on which guard is turned on. gustGuard on, guest only, orgGuard on, org only, authGuard on, users only, all off, show to everyone
+
+  const dispatch = useDispatch()
+
+  useEffect(() => {
+    dispatch(initOrg())
+    dispatch(initUser())
+  }, [])
+
   if (guestGuard) {
     console.log('GUEST GUARD')
     // default always off, but if on only show to guests
@@ -112,7 +126,7 @@ const App = props => {
   const authGuard = Component.authGuard ?? true // all pages are automatically auth protected unless turned off - only auth user can see content
   const guestGuard = Component.guestGuard ?? false // automatically all users can see all content unless turned on then only guests can see - i.e login, etc
   const orgGuard = Component.orgGuard ?? true // if the component doesn't have a orgGuard prop then the orGuard is false otherwise whatever the component defines it as
-  // const aclAbilities = Component.acl ?? defaultACLObj
+  // const aclAbilities = Component.acl ??
 
   return (
     <CacheProvider value={emotionCache}>

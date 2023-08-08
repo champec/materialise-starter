@@ -1,9 +1,8 @@
 // ** React Imports
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 
 // ** MUI Components
 import Box from '@mui/material/Box'
-import Grid from '@mui/material/Grid'
 import Button from '@mui/material/Button'
 import TextField from '@mui/material/TextField'
 import Typography from '@mui/material/Typography'
@@ -13,6 +12,7 @@ import FormControl from '@mui/material/FormControl'
 import OutlinedInput from '@mui/material/OutlinedInput'
 import InputAdornment from '@mui/material/InputAdornment'
 import FormHelperText from '@mui/material/FormHelperText'
+import { Snackbar, Alert, Card, CardContent, Avatar } from '@mui/material'
 
 // ** Third Party Imports
 import * as yup from 'yup'
@@ -28,21 +28,17 @@ import Link from 'next/link'
 // ** MUI Components
 import Divider from '@mui/material/Divider'
 import Checkbox from '@mui/material/Checkbox'
-import useMediaQuery from '@mui/material/useMediaQuery'
+
 import { styled, useTheme } from '@mui/material/styles'
 import MuiFormControlLabel from '@mui/material/FormControlLabel'
 
+// ** RTK imports
+import { useDispatch, useSelector } from 'react-redux'
+import { login, setUserError } from 'src/store/auth/user'
+import { logout } from 'src/store/auth/organisation'
+
 // ** Configs
 import themeConfig from 'src/configs/themeConfig'
-
-// ** Layout Import
-import BlankLayout from 'src/@core/layouts/BlankLayout'
-
-// ** Hooks
-import { useSettings } from 'src/@core/hooks/useSettings'
-
-// ** Demo Imports
-import FooterIllustrationsV2 from 'src/views/pages/auth/FooterIllustrationsV2'
 
 // this library validates form entries to match as follows
 const schema = yup.object().shape({
@@ -55,34 +51,6 @@ const defaultValues = {
   password: 'example-password',
   email: 'champe@live.co.uk'
 }
-
-const LoginIllustrationWrapper = styled(Box)(({ theme }) => ({
-  padding: theme.spacing(20),
-  paddingRight: '0 !important',
-  [theme.breakpoints.down('lg')]: {
-    padding: theme.spacing(10)
-  }
-}))
-
-const LoginIllustration = styled('img')(({ theme }) => ({
-  maxWidth: '48rem',
-  [theme.breakpoints.down('xl')]: {
-    maxWidth: '38rem'
-  },
-  [theme.breakpoints.down('lg')]: {
-    maxWidth: '30rem'
-  }
-}))
-
-const RightWrapper = styled(Box)(({ theme }) => ({
-  width: '100%',
-  [theme.breakpoints.up('md')]: {
-    maxWidth: 400
-  },
-  [theme.breakpoints.up('lg')]: {
-    maxWidth: 450
-  }
-}))
 
 const BoxWrapper = styled(Box)(({ theme }) => ({
   width: '100%',
@@ -107,11 +75,33 @@ const FormControlLabel = styled(MuiFormControlLabel)(({ theme }) => ({
 
 //function definition and import function to change steps called handleNext
 const StepOrganisationDetails = ({ handleNext, authOrg, authUser, auth }) => {
-  // ** Hooks
-  const theme = useTheme()
-  const { settings } = useSettings()
-  //the following hook handles the form data and also received the validation library schema set above
-  // we are extracting the methods provided by hook useForm from library HookForms which allows us to perform certain action
+  const error = useSelector(state => state.user.userError)
+  const org = useSelector(state => state.organisation.organisation)
+
+  const [openSuccess, setOpenSuccess] = useState(false)
+  const [openError, setOpenError] = useState(false)
+  const [errorMessage, setErrorMessage] = useState(error)
+
+  useEffect(() => {
+    console.log('useEffect', error)
+    if (error) {
+      setOpenError(true)
+    }
+  }, [error])
+
+  const handleClose = (event, reason) => {
+    if (reason === 'clickaway') {
+      return
+    }
+    setErrorMessage(null)
+    setOpenSuccess(false)
+    setOpenError(false)
+  }
+
+  const handleLogout = () => {
+    dispatch(logout())
+  }
+
   const {
     control,
     setError,
@@ -123,31 +113,22 @@ const StepOrganisationDetails = ({ handleNext, authOrg, authUser, auth }) => {
     resolver: yupResolver(schema)
   })
 
-  // onsubmit is received data from the handleChange hook provided by RHF and then we can do what we want with it
-  // in this case we pass the credentials to login context using the predefined context changer, login, which returns any errors
+  const dispatch = useDispatch()
+
   const onSubmit = data => {
     const { email, password } = data
 
-    //change to use auth from supabase
-    authOrg.login({ email, password, rememberMe }, err => {
-      console.log(err.message)
-      setError('email', {
-        type: 'manual',
-        message: 'Email or Password is invalid'
+    dispatch(login({ email, password }))
+      .unwrap()
+      .then(res => {
+        // Do something with the result if needed
+        console.log(res)
       })
-    })
+      .catch(err => {
+        console.log(err)
+        dispatch(setUserError(err))
+      })
   }
-
-  // ** Vars
-  const { skin } = settings
-  const hidden = useMediaQuery(theme.breakpoints.down('md'))
-
-  const handleChange = prop => event => {
-    console.log(prop, event)
-    setValues({ ...values, [prop]: event.target.value })
-  }
-
-  const imageSource = skin === 'bordered' ? 'auth-v2-login-illustration-bordered' : 'auth-v2-login-illustration'
 
   // ** States
   const [rememberMe, setRememberMe] = useState(true)
@@ -156,22 +137,6 @@ const StepOrganisationDetails = ({ handleNext, authOrg, authUser, auth }) => {
     showPassword: false,
     showConfirmPassword: false
   })
-
-  const handleClickShowPassword = () => {
-    setValues({ ...values, showPassword: !values.showPassword })
-  }
-
-  const handleMouseDownPassword = event => {
-    event.preventDefault()
-  }
-
-  const handleClickShowConfirmPassword = () => {
-    setValues({ ...values, showConfirmPassword: !values.showConfirmPassword })
-  }
-
-  const handleMouseDownConfirmPassword = event => {
-    event.preventDefault()
-  }
 
   return (
     <>
@@ -197,6 +162,28 @@ const StepOrganisationDetails = ({ handleNext, authOrg, authUser, auth }) => {
                 justifyContent: 'center'
               }}
             ></Box>
+            <Box>
+              {org ? (
+                <Card sx={{ mb: 4 }}>
+                  <CardContent sx={{ display: 'flex', alignItems: 'center' }}>
+                    {org.avatar_url ? (
+                      <Avatar src={org.avatar_url} sx={{ mr: 2 }} />
+                    ) : (
+                      <Avatar sx={{ mr: 2 }}>{org.organisation_name.charAt(0)}</Avatar>
+                    )}
+                    <Typography variant='h6' component='div'>
+                      {org.organisation_name} is logged in
+                    </Typography>
+                    <Button onClick={handleLogout} sx={{ ml: 2 }}>
+                      Logout
+                    </Button>
+                  </CardContent>
+                </Card>
+              ) : null}
+              <Box sx={{ p: 7, height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                {/* Rest of the component */}
+              </Box>
+            </Box>
             <Box sx={{ mb: 6 }}>
               <TypographyStyled variant='h5'>{`Welcome to ${themeConfig.templateName}! 👋🏻`}</TypographyStyled>
               <Typography variant='body2'>Please sign-in to your account and start the adventure</Typography>
@@ -295,6 +282,16 @@ const StepOrganisationDetails = ({ handleNext, authOrg, authUser, auth }) => {
             </form>
           </BoxWrapper>
         </Box>
+        <Snackbar open={openSuccess} autoHideDuration={6000} onClose={handleClose}>
+          <Alert onClose={handleClose} severity='success'>
+            Login successful!
+          </Alert>
+        </Snackbar>
+        <Snackbar open={openError} autoHideDuration={6000} onClose={handleClose}>
+          <Alert onClose={handleClose} severity='error'>
+            {errorMessage}
+          </Alert>
+        </Snackbar>
       </Box>
     </>
   )

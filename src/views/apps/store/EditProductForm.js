@@ -32,6 +32,10 @@ import { useTheme } from '@mui/material/styles'
 import Icon from 'src/@core/components/icon'
 import DatePickerWrapper from 'src/@core/styles/libs/react-datepicker'
 
+// ** RTK Imports
+import { useDispatch } from 'react-redux'
+import { createItem, editItem, fetchInventory } from 'src/store/apps/shop/inventorySlice'
+
 const Transition = forwardRef(function Transition(props, ref) {
   return <Fade ref={ref} {...props} />
 })
@@ -42,7 +46,7 @@ const defaultProduct = {
   description: '',
   price: 0,
   status: 1,
-  quantity: 0,
+  stock: 0,
   strength: '',
   pack: '',
   trade_reason: [],
@@ -102,27 +106,24 @@ const EditProductForm = ({ show, setShow, row, fetchTableData, sort, searchValue
     )
   }
 
+  const dispatch = useDispatch()
+
   const handleSubmit = async event => {
     event.preventDefault()
-    // console.log(product)
-    handleUserMadeChange(true)
     try {
-      // Perform an upsert operation
-      const { data, error } = await supabase
-        .from('shop_products')
-        .upsert({ ...product, date: new Date().toISOString() }, { onConflict: ['id'] }) // using the 'id' column as the conflict resolver
-
-      if (error) {
-        console.error('Failed to update or create:', error)
+      // Check if we are updating or creating a product
+      if (row) {
+        dispatch(editItem(product))
       } else {
-        console.log('Operation successful:', data)
-        fetchTableData(sort, searchValue, sortColumn)
-        setShow(false)
-        setTimeout(() => handleUserMadeChange(false), 5000)
+        dispatch(createItem(product))
       }
     } catch (error) {
       console.error('An unexpected error occurred:', error)
     }
+
+    console.log('Operation successful:')
+    dispatch(fetchInventory())
+    setShow(false)
   }
 
   return (
@@ -215,10 +216,10 @@ const EditProductForm = ({ show, setShow, row, fetchTableData, sort, searchValue
             <Grid item sm={6} xs={12}>
               <TextField
                 fullWidth
-                label='Quantity'
+                label='Stock'
                 placeholder='10'
-                value={product.quantity}
-                name='quantity'
+                value={product.stock}
+                name='stock'
                 onChange={handleInputChange}
                 type='number'
               />

@@ -7,9 +7,12 @@ import { useRouter } from 'next/router'
 // ** Hooks Import
 import { useUserAuth } from 'src/hooks/useAuth'
 
+// ** RTK imports
+import { useDispatch, useSelector } from 'react-redux'
+
 const AuthGuard = props => {
   const { children, fallback } = props //destructure received props, children (content in between), also provided a fallback spinner
-  const auth = useUserAuth() //get auth values
+  const auth = useSelector(state => state.user) //get auth values
   const router = useRouter() // get router methods
 
   useEffect(

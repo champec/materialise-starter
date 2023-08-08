@@ -1,5 +1,5 @@
 // ** React Imports
-import { useState, Fragment } from 'react'
+import { useState, Fragment, use } from 'react'
 
 // ** Next Import
 import { useRouter } from 'next/router'
@@ -17,8 +17,9 @@ import Typography from '@mui/material/Typography'
 // ** Icon Imports
 import Icon from 'src/@core/components/icon'
 
-// ** Context
-import { useUserAuth } from 'src/hooks/useAuth'
+// ** RTK imports
+import { useSelector, useDispatch } from 'react-redux'
+import { logout } from 'src/store/auth/user'
 
 // ** Styled Components
 const BadgeContentSpan = styled('span')(({ theme }) => ({
@@ -39,7 +40,9 @@ const UserDropdown = props => {
 
   // ** Hooks
   const router = useRouter()
-  const { logout, user } = useUserAuth()
+  const { user } = useSelector(state => state.user)
+
+  const dispatch = useDispatch()
 
   // ** Vars
   const { direction } = settings
@@ -77,6 +80,14 @@ const UserDropdown = props => {
 
   const handleLogout = () => {
     const email = user.email
+    dispatch(logout(email))
+      .unwrap()
+      .then(res => {
+        console.log(res)
+      })
+      .catch(err => {
+        console.log(err)
+      })
     logout(email, error => {
       setError(error)
       alert(error.message)

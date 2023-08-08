@@ -6,10 +6,11 @@ import { useRouter } from 'next/router'
 
 // ** Hooks Import
 import { useUserAuth } from 'src/hooks/useAuth'
+import { useSelector } from 'react-redux'
 
 const GuestGuard = props => {
   const { children, fallback } = props
-  const auth = useUserAuth()
+  const auth = useSelector(state => state.user)
   const router = useRouter()
   useEffect(() => {
     if (!router.isReady) {

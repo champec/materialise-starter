@@ -3,33 +3,27 @@ import InventoryTable from 'src/views/apps/store/ItemsTable'
 import { supabaseOrg } from 'src/configs/supabase'
 import ChangeNotifier from 'src/@core/components/ChangeNotifier'
 import { fetchInventory, setInventory } from 'src/store/apps/shop/inventorySlice'
-import { useDispatch } from 'react-redux'
+import { useDispatch, useSelector } from 'react-redux'
 import { Button } from '@mui/material'
 
 function Inventory({ initialData, initialTotal }) {
-  const [rowIds, setRowIds] = useState(initialData.map(item => item.id))
-  const [page, setPage] = useState(0)
+  const { items, currentPage, pageSize, status, error } = useSelector(state => state.inventorySlice)
   const dispatch = useDispatch()
 
+  // Fetch inventory when the component mounts
   useEffect(() => {
-    dispatch(setInventory({ items: initialData, total: initialTotal }))
-  }, [])
+    dispatch(fetchInventory(currentPage))
+  }, [dispatch, currentPage])
 
-  useEffect(() => {
-    // Update the rowIds whenever the data changes
-    setRowIds(initialData.map(item => item.id))
-  }, [initialData])
-
+  // Function to handle refresh
   const handleRefresh = () => {
-    console.log('handleRefresh')
-    dispatch(fetchInventory(page)) // Pass in the correct page number
+    dispatch(fetchInventory(currentPage))
   }
 
   return (
     <div>
       <Button onClick={() => handleRefresh()}>Refresh</Button>
-      <InventoryTable page={page} setPage={setPage} />
-      <ChangeNotifier rowIds={rowIds} fetchAction={() => handleRefresh()} table='shop_products' />
+      <InventoryTable page={currentPage} items={items} pageSize={pageSize} />
     </div>
   )
 }

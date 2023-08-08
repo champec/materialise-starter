@@ -9,8 +9,8 @@ import Typography from '@mui/material/Typography'
 
 // ** Step Components
 
-import StepAccountDetails from 'src/views/pages/auth/register-multi-steps/StepAccountDetails'
-import StepOrganisationDetails from './StepOrganisationDetails'
+import OrganisationLoginForm from 'src/views/pages/auth/register-multi-steps/OrganisationLogin'
+import UserLoginForm from './UserLogin'
 import { useOrgAuth } from 'src/hooks/useOrgAuth'
 import { useUserAuth } from 'src/hooks/useAuth'
 import { useAuth } from 'src/hooks/useAuth'
@@ -22,29 +22,32 @@ import StepperCustomDot from 'src/views/forms/form-wizard/StepperCustomDot'
 import StepperWrapper from 'src/@core/styles/mui/stepper'
 import { useEffect } from 'react'
 
+//** RTK user management */
+import { useDispatch, useSelector } from 'react-redux'
+
 const steps = [
-  {
-    title: 'Organisation',
-    subtitle: 'You Pharmacy Details'
-  },
   {
     title: 'Personal',
     subtitle: 'You Personal Details'
+  },
+  {
+    title: 'Organisation',
+    subtitle: 'You Pharmacy Details'
   }
-  // {
-  //   title: 'Billing',
-  //   subtitle: 'Payment Details'
-  // }
 ]
 
 const RegisterMultiSteps = () => {
+  const user = useSelector(state => state.user.user)
+  const organisaiton = useSelector(state => state.organisation.organisaiton)
   const authOrg = useOrgAuth()
   const authUser = useUserAuth()
   const auth = useAuth()
   // ** States
-  const [activeStep, setActiveStep] = useState(auth.organisation ? 1 : 0)
+  const [activeStep, setActiveStep] = useState(user ? 1 : 0)
   const [loading, setIsLoading] = useState(false)
   // console.log('ORG', authOrg, 'USER', authUser, 'AUTH', auth)
+  console.log(user)
+  console.log(organisaiton)
 
   // Handle Stepper
   const handleNext = async data => {
@@ -55,12 +58,12 @@ const RegisterMultiSteps = () => {
   console.log(authOrg.organisation?.id)
 
   useEffect(() => {
-    if (authOrg.isAuthenticated) {
+    if (user) {
       setActiveStep(1)
-    } else if (!authOrg.isAuthenticated) {
+    } else {
       setActiveStep(0)
     }
-  }, [authOrg.isAuthenticated])
+  }, [user])
 
   const handlePrev = () => {
     if (activeStep !== 0) {
@@ -71,10 +74,10 @@ const RegisterMultiSteps = () => {
   const getStepContent = step => {
     switch (step) {
       case 0:
-        return <StepOrganisationDetails handleNext={handleNext} authOrg={authOrg} authUser={authUser} auth={auth} />
+        return <UserLoginForm handleNext={handleNext} authOrg={authOrg} authUser={authUser} auth={auth} />
       case 1:
         return (
-          <StepAccountDetails
+          <OrganisationLoginForm
             /*handleNext={handleNext}*/ handlePrev={handlePrev}
             authUser={authUser}
             authOrg={authOrg}

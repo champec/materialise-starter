@@ -46,6 +46,7 @@ import { useSettings } from 'src/@core/hooks/useSettings'
 
 // ** Demo Imports
 import FooterIllustrationsV2 from 'src/views/pages/auth/FooterIllustrationsV2'
+import email from 'src/store/apps/email'
 
 const defaultValues = {
   email: '',
@@ -211,7 +212,10 @@ const Register = () => {
     console.log('SUBMITTING', data)
 
     try {
-      const { error, data: user } = await supabase.auth.signUp({
+      const {
+        error,
+        data: { user }
+      } = await supabase.auth.signUp({
         email: data.email,
         password: data.newPassword
       })
@@ -226,11 +230,11 @@ const Register = () => {
       const { data: profile, error: profileError } = await supabase
         .from('users')
         .insert({
-          user_id: user.id,
+          id: user.id,
           first_name: data.firstName,
           last_name: data.lastName,
           date_of_birth: data.dateOfBirth,
-          organisation: data.organisation
+          email: data.email
         })
         .single()
 
@@ -239,25 +243,23 @@ const Register = () => {
         throw profileError
       }
 
-      // Find the organization's UUID based on the ODS code
-      const odsCode = data.organisation
-      const { data: matchingOrganisations, error: orgError } = await supabase
-        .from('profiles')
+      // Fetch the organisation ID based on the ods_code
+      const { data: organisationData, error: organisationError } = await supabase
+        .from('organisations')
         .select('id')
-        .eq('ods_code', odsCode)
+        .eq('ods_code', data.organisation)
+        .select('id')
         .single()
 
-      if (orgError || !matchingOrganisations) {
-        console.log('error finding organisation', orgError)
-        throw new Error('Organisation not found')
+      if (organisationError || !organisationData) {
+        console.log('error fetching organisation', organisationError)
+        throw organisationError || new Error('Organisation not found')
       }
-
-      const organisationId = matchingOrganisations[0].id
 
       // Insert into the users_organisation table
       const { error: userOrgError } = await supabase.from('users_organisation').insert({
         user: user.id,
-        organisation: organisationId,
+        organisation: organisationData.id,
         status: 'pending'
       })
 

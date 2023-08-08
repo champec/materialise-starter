@@ -224,6 +224,7 @@ const Register = () => {
         .insert({
           id: user.id,
           ods_code: data.organisation.toUpperCase(),
+          ods: data.organisation.toUpperCase(),
           registered_by: {
             firstName: data.firstName,
             lastName: data.lastName

@@ -1,5 +1,5 @@
 // ** React Imports
-import { useEffect } from 'react'
+import { use, useEffect } from 'react'
 
 // ** Next Import
 import { useRouter } from 'next/router'
@@ -7,9 +7,13 @@ import { useRouter } from 'next/router'
 // ** Hooks Import
 import { useOrgAuth } from 'src/hooks/useOrgAuth'
 
+// ** RTK imports
+import { useSelector } from 'react-redux'
+
 const OrgGuard = props => {
   const { children, fallback } = props //destructure received props, children (content in between), also provided a fallback
-  const auth = useOrgAuth() //get auth values
+  // const auth = useOrgAuth() //get auth values
+  const auth = useSelector(state => state.organisation)
   const router = useRouter() // get router methods
 
   useEffect(
@@ -35,7 +39,7 @@ const OrgGuard = props => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [router.route]
   )
-  if (auth.loading || auth.isAuthenticated === false) {
+  if (auth.loading || auth.organisation === false) {
     return fallback
   }
 
