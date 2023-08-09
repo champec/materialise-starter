@@ -3,6 +3,7 @@ import UserProfile from 'src/views/pages/user-profile/UserProfile'
 import { useOrgAuth } from 'src/hooks/useOrgAuth'
 import { useEffect, useState } from 'react'
 import { set } from 'nprogress'
+import { useSelector } from 'react-redux'
 
 const UserProfileTab = () => {
   const [nhsData, setNhsData] = useState(null) // ['loading'

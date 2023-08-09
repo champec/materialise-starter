@@ -33,6 +33,7 @@ import Icon from 'src/@core/components/icon'
 import * as yup from 'yup'
 import { yupResolver } from '@hookform/resolvers/yup'
 import { useForm, Controller } from 'react-hook-form'
+import SignUpConfirm from 'src/@core/components/auth/SignUpConfirm'
 
 // ** Configs
 import themeConfig from 'src/configs/themeConfig'
@@ -135,6 +136,9 @@ const Register = () => {
   const [pageSize, setPageSize] = useState(10)
   const [totalPages, setTotalPages] = useState(0)
   const [dialogOpen, setDialogOpen] = useState(false)
+  const [showSignupConfirm, setShowSignupConfirm] = useState(false)
+  const [confirmEmail, setConfirmEmail] = useState('')
+  const [confirmFirstName, setConfirmFirstName] = useState('')
 
   // ** Hooks
   const theme = useTheme()
@@ -206,23 +210,47 @@ const Register = () => {
 
   const handleRegister = async data => {
     console.log('SUBMITTING', data)
-    try {
-      const { error, data: user } = await supabase.auth.signUp({
-        email: data.email,
-        password: data.newPassword
-      })
 
-      if (error) {
-        console.log('error auth.signup', error)
-        throw error
+    let userId
+
+    try {
+      const { data: existingProfile, error: existingProfileError } = await supabase
+        .from('profiles')
+        .select('id')
+        .eq('email', data.email)
+        .maybeSingle()
+
+      if (existingProfileError) {
+        console.error('error fetching profile', existingProfileError)
+        setSnackbarSeverity('error')
+        setSnackbarMessage(profileError.message)
+        setOpenSnackbar(true)
+        return
       }
 
-      console.log({ user })
+      if (existingProfile) {
+        userId = existingProfile.id
+      } else {
+        const { error, user } = await supabase.auth.signUp({
+          email: data.email,
+          password: data.newPassword
+        })
+
+        if (error || !user) {
+          console.log('error auth.signup', error)
+          setSnackbarSeverity('error')
+          setSnackbarMessage(error.message)
+          setOpenSnackbar(true)
+          return
+        }
+
+        userId = user.id
+      }
 
       const { data: profile, error: profileError } = await supabase
         .from('organisations')
         .insert({
-          id: user.id,
+          id: userId,
           ods_code: data.organisation.toUpperCase(),
           ods: data.organisation.toUpperCase(),
           registered_by: {
@@ -245,11 +273,18 @@ const Register = () => {
       setSnackbarSeverity('success')
       setSnackbarMessage('Registration successful')
       setOpenSnackbar(true)
-      history.push('/login')
+      const gotoSignupConfirm = async () => {
+        setConfirmEmail(data.email)
+        setConfirmFirstName(data.firstName)
+        setShowSignupConfirm(true)
+      }
+
+      gotoSignupConfirm()
     } catch (error) {
       setSnackbarSeverity('error')
       setSnackbarMessage(error.message)
       setOpenSnackbar(true)
+      return
     }
   }
 
@@ -276,6 +311,10 @@ const Register = () => {
   }
 
   const imageSource = skin === 'bordered' ? 'auth-v2-register-illustration-bordered' : 'auth-v2-register-illustration'
+
+  if (showSignupConfirm) {
+    return <SignUpConfirm email={confirmEmail} firstName={confirmFirstName} />
+  }
 
   return (
     <Box className='content-right'>

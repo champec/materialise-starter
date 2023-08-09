@@ -164,30 +164,6 @@ function InventoryTable({ page, setPage }) {
     fetchTableData(newModel, searchValue, sortColumn)
   }, [])
 
-  // const fetchTableData = useCallback(async (sortModel, searchValue, sortColumn) => {
-  //   try {
-  //     // Construct your query based on the sort model, search value, and sort column
-  //     const query = supabase
-  //       .from('items')
-  //       .select('*', { count: 'exact' })
-  //       .ilike(sortColumn, `%${searchValue}%`)
-  //       .order(sortColumn, { ascending: sortModel[0]?.sort === 'asc' })
-
-  //     // Execute the query to fetch the data
-  //     const { data, count, error } = await query.range(page * pageSize, (page + 1) * pageSize - 1)
-  //     if (error) {
-  //       console.log(error)
-  //       return
-  //     }
-
-  //     // Update the rows and total state with the fetched data
-  //     setRows(data)
-  //     setTotal(count)
-  //   } catch (error) {
-  //     console.log(error)
-  //   }
-  // }, [])
-
   const handleSearch = value => {
     setSearchValue(value)
     fetchTableData(sort, value, sortColumn)

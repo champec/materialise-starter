@@ -33,6 +33,7 @@ import Icon from 'src/@core/components/icon'
 import * as yup from 'yup'
 import { yupResolver } from '@hookform/resolvers/yup'
 import { useForm, Controller } from 'react-hook-form'
+import SignUpConfirm from 'src/@core/components/auth/SignUpConfirm'
 
 // ** Configs
 import themeConfig from 'src/configs/themeConfig'
@@ -138,6 +139,10 @@ const Register = () => {
   const [pageSize, setPageSize] = useState(10)
   const [totalPages, setTotalPages] = useState(0)
   const [dialogOpen, setDialogOpen] = useState(false)
+  const [confirmSignup, setConfirmSignup] = useState(false)
+  const [confirmemail, setConfirmEmail] = useState('')
+  const [confirmfirstName, setConfirmFirstName] = useState('')
+  const [confirmorg, setConfirmOrg] = useState('')
 
   // ** Hooks
   const theme = useTheme()
@@ -181,7 +186,8 @@ const Register = () => {
       const options = data.map(({ id, organisation_name, address1, ods_code }) => ({
         label: `${organisation_name} (${ods_code}) - ${address1}`,
         value: id,
-        ods: ods_code
+        ods: ods_code,
+        organisation_name: organisation_name
       }))
       console.log('options', options)
       setOrganisationOptions(options)
@@ -211,26 +217,39 @@ const Register = () => {
   const handleRegister = async data => {
     console.log('SUBMITTING', data)
 
-    try {
-      const {
-        error,
-        data: { user }
-      } = await supabase.auth.signUp({
-        email: data.email,
-        password: data.newPassword
-      })
+    let userId
 
-      if (error) {
-        console.log('error auth.signup', error)
-        throw error
+    try {
+      const { data: existingProfile, error: existingProfileError } = await supabase
+        .from('profiles')
+        .select('id')
+        .eq('email', data.email)
+        .maybeSingle()
+
+      if (existingProfileError) {
+        console.error('error fetching profile', existingProfileError)
+        throw existingProfileError
       }
 
-      console.log({ user })
+      if (existingProfile) {
+        userId = existingProfile.id
+      } else {
+        const { error, data: newUser } = await supabase.auth.signUp({
+          email: data.email,
+          password: data.newPassword
+        })
+
+        if (error || !newUser) {
+          console.log('error auth.signup', error)
+          throw error
+        }
+        userId = newUser.user.id // accessing the user object inside data
+      }
 
       const { data: profile, error: profileError } = await supabase
         .from('users')
         .insert({
-          id: user.id,
+          id: userId,
           first_name: data.firstName,
           last_name: data.lastName,
           date_of_birth: data.dateOfBirth,
@@ -249,7 +268,7 @@ const Register = () => {
         .select('id')
         .eq('ods_code', data.organisation)
         .select('id')
-        .single()
+        .maybeSingle()
 
       if (organisationError || !organisationData) {
         console.log('error fetching organisation', organisationError)
@@ -258,7 +277,7 @@ const Register = () => {
 
       // Insert into the users_organisation table
       const { error: userOrgError } = await supabase.from('users_organisation').insert({
-        user: user.id,
+        user: userId,
         organisation: organisationData.id,
         status: 'pending'
       })
@@ -268,14 +287,23 @@ const Register = () => {
         throw userOrgError
       }
 
+      console.log({ profile })
+
       setSnackbarSeverity('success')
       setSnackbarMessage('Registration successful')
       setOpenSnackbar(true)
-      history.push('/login')
+      const gotoSignupConfirm = () => {
+        setConfirmEmail(data.email)
+        setConfirmFirstName(data.firstName)
+        setConfirmSignup(true)
+      }
+
+      gotoSignupConfirm()
     } catch (error) {
       setSnackbarSeverity('error')
       setSnackbarMessage(error.message)
       setOpenSnackbar(true)
+      return
     }
   }
 
@@ -299,10 +327,14 @@ const Register = () => {
     console.log({ organisation, organisationId })
     // Assuming you have access to a setValue function from useForm
     setValue('organisation', organisation.ods)
+    setConfirmOrg(organisation.organisation_name)
   }
 
   const imageSource = skin === 'bordered' ? 'auth-v2-register-illustration-bordered' : 'auth-v2-register-illustration'
 
+  if (confirmSignup) {
+    return <SignUpConfirm org={confirmorg} email={confirmemail} firstName={confirmfirstName} />
+  }
   return (
     <Box className='content-right'>
       {!hidden ? (
