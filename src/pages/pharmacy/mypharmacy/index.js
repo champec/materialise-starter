@@ -9,6 +9,10 @@ const UserProfileTab = () => {
   const [nhsData, setNhsData] = useState(null) // ['loading'
   const data = useOrgAuth().organisation
 
+  const orgData = useSelector(state => state.organisation.organisation)
+
+  console.log({ orgData }, 'USER COMP')
+
   const fetchNHSDetails = async () => {
     const { data: nhsData, error: nhsError } = await supabase
       .from('pharmacies')
@@ -27,7 +31,7 @@ const UserProfileTab = () => {
   }, [])
 
   console.log({ data, nhsData }, 'USER COMP')
-  return <UserProfile tab={'non'} data={data} nhsData={nhsData} />
+  return <UserProfile tab={'non'} data={data} nhsData={nhsData} orgData={orgData} />
 }
 
 export default UserProfileTab

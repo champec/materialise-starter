@@ -190,7 +190,7 @@ const UserProfileHeader = ({ data, nhsData }) => {
     updateObject[imageKey] = currentImagePath
 
     const { data: updateData, error } = await supabase
-      .from('profiles')
+      .from('organisations')
       .update(updateObject)
       .eq('id', data.id)
       .select('*')
@@ -276,7 +276,7 @@ const UserProfileHeader = ({ data, nhsData }) => {
                     whiteSpace: 'nowrap'
                   }}
                 >
-                  {`${nhsData?.address1}, ${nhsData?.city} `.replace(
+                  {`${data.pharmacies.address1}, ${data.pharmacies.city} `.replace(
                     /\w\S*/g,
                     txt => txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase()
                   )}

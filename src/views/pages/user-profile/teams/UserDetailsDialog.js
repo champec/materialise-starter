@@ -13,10 +13,10 @@ const UserDetailsDialog = ({ open, user, onClose }) => {
       aria-labelledby='user-details-dialog-title'
       aria-describedby='user-details-dialog-description'
     >
-      <DialogTitle id='user-details-dialog-title'>{user?.profiles.full_name}</DialogTitle>
+      <DialogTitle id='user-details-dialog-title'>{user?.users.first_name}</DialogTitle>
       <DialogContent>
-        <Typography variant='body1'>Username: {user?.profiles.username}</Typography>
-        <Typography variant='body1'>Email: {user?.profiles.email}</Typography>
+        <Typography variant='body1'>Username: {user?.users.username}</Typography>
+        <Typography variant='body1'>Email: {user?.users.email}</Typography>
         {/* Add more fields as needed */}
       </DialogContent>
       <DialogActions>

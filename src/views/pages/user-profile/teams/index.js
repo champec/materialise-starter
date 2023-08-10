@@ -40,12 +40,12 @@ const Teams = ({ data }) => {
     open: false,
     user: null
   })
-  const orgId = useOrgAuth().organisation?.id
+  const orgId = data.id
 
   const fetchTeamMembers = async () => {
     const { data, error } = await supabaseOrg
       .from('users_organisation')
-      .select(`*, profiles!users_organisation_user_fkey(*)`)
+      .select(`*, users(*)`)
       .eq('organisation', orgId)
       .not('status', 'eq', 'Deleted')
     if (error) console.log(error)
@@ -143,9 +143,10 @@ const Teams = ({ data }) => {
                 <CardContent>
                   <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                     <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                      <Avatar src={item.profiles.avatar_url} sx={{ mr: 2, height: 32, width: 32 }} />
+                      <Avatar src={item?.avatar_url} sx={{ mr: 2, height: 32, width: 32 }} />
                       <Typography variant='h6' sx={{ fontSize: '1.125rem', color: 'text.secondary' }}>
-                        {item?.profiles.full_name}
+                        {item?.users.first_name}
+                        {console.log(item, 'item')}
                       </Typography>
                     </Box>
                     <Box sx={{ display: 'flex', alignItems: 'center' }}>
@@ -165,9 +166,9 @@ const Teams = ({ data }) => {
                               onClick: () =>
                                 openConfirmDialog(
                                   'Remove Member',
-                                  `Are you sure you want to remove ${item.profiles.username}?`,
+                                  `Are you sure you want to remove ${item?.users.username}?`,
                                   'delete',
-                                  item.profiles.id
+                                  item?.id
                                 )
                             }
                           },
@@ -177,9 +178,9 @@ const Teams = ({ data }) => {
                               onClick: () =>
                                 openConfirmDialog(
                                   'Suspend Member',
-                                  `Are you sure you want to suspend ${item.profiles.username}?`,
+                                  `Are you sure you want to suspend ${item?.users.username}?`,
                                   'suspend',
-                                  item.profiles.id
+                                  item?.id
                                 )
                             }
                           }
@@ -187,7 +188,7 @@ const Teams = ({ data }) => {
                       />
                     </Box>
                   </Box>
-                  <Typography sx={{ my: 4, color: 'text.secondary' }}>{item.profiles.username}</Typography>
+                  <Typography sx={{ my: 4, color: 'text.secondary' }}>{item?.username}</Typography>
                   <Typography sx={{ my: 4, color: 'text.secondary' }}>{item.descriptio}</Typography>
                   <Box sx={{ gap: 2, display: 'flex', flexWrap: 'wrap', alignItems: 'center' }}>
                     <Box sx={{ display: 'flex', alignItems: 'center' }}>

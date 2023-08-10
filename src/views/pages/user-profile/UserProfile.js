@@ -44,7 +44,7 @@ const TabList = styled(MuiTabList)(({ theme }) => ({
   }
 }))
 
-const UserProfile = ({ tab, data, nhsData }) => {
+const UserProfile = ({ tab, data, nhsData, orgData }) => {
   // ** State
   const [activeTab, setActiveTab] = useState('organisation')
   const [isLoading, setIsLoading] = useState(true)
@@ -65,16 +65,16 @@ const UserProfile = ({ tab, data, nhsData }) => {
   }, [data])
 
   const tabContentList = {
-    organisation: <Profile data={data} />,
-    team: <Teams data={data} />,
-    projects: <Projects data={data} />,
-    network: <Connections pharmData={data} nhsData={nhsData} />
+    organisation: <Profile data={orgData} />,
+    team: <Teams data={orgData} />,
+    projects: <Projects data={orgData} />,
+    network: <Connections pharmData={data} nhsData={nhsData} data={orgData} />
   }
 
   return (
     <Grid container spacing={6}>
       <Grid item xs={12}>
-        <UserProfileHeader data={data} nhsData={nhsData} />
+        <UserProfileHeader data={orgData} nhsData={nhsData} />
       </Grid>
       {activeTab === undefined ? null : (
         <Grid item xs={12}>
