@@ -40,6 +40,10 @@ import UserSubscriptionDialog from 'src/views/apps/user/view/UserSubscriptionDia
 // ** Utils Import
 import { getInitials } from 'src/@core/utils/get-initials'
 
+// ** RTK imports
+
+import { useSelector, useDispatch } from 'react-redux'
+
 const data = {
   id: 1,
   role: 'admin',
@@ -239,21 +243,25 @@ const UserViewLeft = () => {
           <Card>
             <CardContent sx={{ pt: 15, display: 'flex', alignItems: 'center', flexDirection: 'column' }}>
               {data.avatar.length ? (
-                <CustomAvatar
-                  src={user.avatar_url || '/images/avatars/1.png'}
-                  variant='rounded'
-                  alt={user.full_name || `Pending Name`}
-                  sx={{ width: 120, height: 120, fontWeight: 600, mb: 4, fontSize: '3rem' }}
-                />
+                <Button onClick={handleEditClickOpen}>
+                  <CustomAvatar
+                    src={user.avatar_url || '/images/avatars/1.png'}
+                    variant='rounded'
+                    alt={user.full_name || `Pending Name`}
+                    sx={{ width: 120, height: 120, fontWeight: 600, mb: 4, fontSize: '3rem' }}
+                  />
+                </Button>
               ) : (
-                <CustomAvatar
-                  skin='light'
-                  variant='rounded'
-                  color={data.avatarColor}
-                  sx={{ width: 120, height: 120, fontWeight: 600, mb: 4, fontSize: '3rem' }}
-                >
-                  {getInitials(user.full_name || `Pending Name`)}
-                </CustomAvatar>
+                <Button onClick={handleEditClickOpen}>
+                  <CustomAvatar
+                    skin='light'
+                    variant='rounded'
+                    color={data.avatarColor}
+                    sx={{ width: 120, height: 120, fontWeight: 600, mb: 4, fontSize: '3rem' }}
+                  >
+                    {getInitials(user.full_name || `Pending Name`)}
+                  </CustomAvatar>
+                </Button>
               )}
               <Typography variant='h6' sx={{ mb: 2 }}>
                 {user.full_name || `Pending Name`}

@@ -92,7 +92,7 @@ const organisationSlice = createSlice({
     builder
       .addCase(initializeSession.fulfilled, (state, action) => {
         state.organisation = action.payload.organisation
-        state.loading = action.payload.loading
+        state.loading = false
       })
       .addCase(login.pending, state => {
         state.loading = true

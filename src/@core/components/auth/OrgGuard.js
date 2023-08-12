@@ -16,6 +16,8 @@ const OrgGuard = props => {
   const auth = useSelector(state => state.organisation)
   const router = useRouter() // get router methods
 
+  console.log('ORG', { auth })
+
   useEffect(
     //this use effect only runs when you change routes, so check if router is ready if not, don't run the code underneath
     () => {

@@ -49,6 +49,18 @@ export const initializeSession = createAsyncThunk('user/initializeSession', asyn
   return { user: null, loading: false }
 })
 
+export const editUserData = createAsyncThunk('user/editData', async (updatedData, thunkAPI) => {
+  // Assume there's an API endpoint for updating user data
+  const { data, error } = await supabase.from('users').update(updatedData).eq('id', updatedData.id)
+
+  if (error) {
+    console.log('user data update RTK', { error })
+    return thunkAPI.rejectWithValue(error.message)
+  }
+
+  return data[0]
+})
+
 let initialState = {
   user: null,
   loading: true,
@@ -94,7 +106,7 @@ const userSlice = createSlice({
     builder
       .addCase(initializeSession.fulfilled, (state, action) => {
         state.user = action.payload.user
-        state.loading = action.payload.loading
+        state.loading = false
       })
       .addCase(login.pending, state => {
         state.loading = true
@@ -118,6 +130,9 @@ const userSlice = createSlice({
       .addCase(logout.rejected, (state, action) => {
         state.error = action.error.message
         state.loading = false
+      })
+      .addCase(editUserData.fulfilled, (state, action) => {
+        state.user = action.payload
       })
   }
 })
