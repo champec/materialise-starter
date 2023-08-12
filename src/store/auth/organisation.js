@@ -43,24 +43,32 @@ export const initializeSession = createAsyncThunk('organisation/initializeSessio
   console.log('RUNNING INIT ORG')
   const { data, error } = await supabase.auth.getSession()
 
-  console.log('RUNNING INIT ORG 1', data.session.user, error)
+  if (error) {
+    console.error('Error getting session:', error)
+    return thunkAPI.rejectWithValue(error.message)
+  }
 
-  const id = data.session.user.id
+  console.log('Session data:', data)
+
+  const id = data.session.user?.id
 
   if (id) {
+    console.log('Found user ID:', id)
     const { data: organisation, error: organisationError } = await supabase
       .from('organisations')
       .select('*, pharmacies(*)')
       .eq('id', id)
 
     if (organisationError) {
-      console.log('user data fetch RTK', { organisationError })
+      console.error('Error fetching organisation:', organisationError)
       return thunkAPI.rejectWithValue(organisationError.message)
     }
+    console.log('Returning organisation data:', organisation[0])
     return { organisation: organisation[0], loading: false }
   }
 
-  return { organisation: data, loading: false }
+  console.log('No user ID found, returning null for organisation')
+  return { organisation: null, loading: false }
 })
 
 let initialState = {
@@ -90,8 +98,16 @@ const organisationSlice = createSlice({
   },
   extraReducers: builder => {
     builder
+    builder
+      .addCase(initializeSession.pending, state => {
+        state.loading = true
+      })
       .addCase(initializeSession.fulfilled, (state, action) => {
         state.organisation = action.payload.organisation
+        state.loading = false
+      })
+      .addCase(initializeSession.rejected, (state, action) => {
+        state.organisationError = action.error.message
         state.loading = false
       })
       .addCase(login.pending, state => {

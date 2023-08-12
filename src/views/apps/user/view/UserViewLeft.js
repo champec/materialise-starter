@@ -1,6 +1,5 @@
 // ** React Imports
 import { useEffect, useState } from 'react'
-import { useUserAuth } from 'src/hooks/useAuth'
 import { supabaseUser as supabase } from 'src/configs/supabase'
 
 // ** MUI Imports
@@ -41,8 +40,7 @@ import UserSubscriptionDialog from 'src/views/apps/user/view/UserSubscriptionDia
 import { getInitials } from 'src/@core/utils/get-initials'
 
 // ** RTK imports
-
-import { useSelector, useDispatch } from 'react-redux'
+import { useDispatch } from 'react-redux'
 
 const data = {
   id: 1,
@@ -112,7 +110,7 @@ const ImgStyled = styled('img')(({ theme }) => ({
   borderRadius: theme.shape.borderRadius
 }))
 
-const UserViewLeft = () => {
+const UserViewLeft = ({ user }) => {
   // ** States
   const [openEdit, setOpenEdit] = useState(false)
   const [openPlans, setOpenPlans] = useState(false)
@@ -122,9 +120,7 @@ const UserViewLeft = () => {
   const [imgSrc, setImgSrc] = useState('/images/avatars/1.png')
   const [inputValue, setInputValue] = useState('')
 
-  const { user, refreshUserData } = useUserAuth()
-
-  console.log({ user })
+  const userInfo = user.user
 
   // Handle Edit dialog
   const handleEditClickOpen = () => setOpenEdit(true)
@@ -215,7 +211,7 @@ const UserViewLeft = () => {
     }
 
     const { data, error } = await supabase
-      .from('profiles')
+      .from('users')
       .update({
         full_name: fullName,
         email: email,
@@ -224,7 +220,7 @@ const UserViewLeft = () => {
         avatar_url: profileImagePath,
         updated_at: new Date()
       })
-      .eq('id', user.id)
+      .eq('id', user.user.id)
       .select('*')
 
     if (error) {
@@ -236,7 +232,7 @@ const UserViewLeft = () => {
     }
   }
 
-  if (user) {
+  if (userInfo) {
     return (
       <Grid container spacing={6}>
         <Grid item xs={12}>
@@ -245,9 +241,9 @@ const UserViewLeft = () => {
               {data.avatar.length ? (
                 <Button onClick={handleEditClickOpen}>
                   <CustomAvatar
-                    src={user.avatar_url || '/images/avatars/1.png'}
+                    src={userInfo.avatar_url || '/images/avatars/1.png'}
                     variant='rounded'
-                    alt={user.full_name || `Pending Name`}
+                    alt={userInfo.first_name || `Pending Name`}
                     sx={{ width: 120, height: 120, fontWeight: 600, mb: 4, fontSize: '3rem' }}
                   />
                 </Button>
@@ -259,12 +255,12 @@ const UserViewLeft = () => {
                     color={data.avatarColor}
                     sx={{ width: 120, height: 120, fontWeight: 600, mb: 4, fontSize: '3rem' }}
                   >
-                    {getInitials(user.full_name || `Pending Name`)}
+                    {getInitials(userInfo.first_name || `Pending Name`)}
                   </CustomAvatar>
                 </Button>
               )}
               <Typography variant='h6' sx={{ mb: 2 }}>
-                {user.full_name || `Pending Name`}
+                {userInfo.first_name || `Pending Name`}
               </Typography>
               <CustomChip
                 skin='light'
@@ -317,13 +313,13 @@ const UserViewLeft = () => {
                   <Typography variant='subtitle2' sx={{ mr: 2, color: 'text.primary' }}>
                     Username:
                   </Typography>
-                  <Typography variant='body2'>@{user.username}</Typography>
+                  <Typography variant='body2'>@{userInfo.username}</Typography>
                 </Box>
                 <Box sx={{ display: 'flex', mb: 2.7 }}>
                   <Typography variant='subtitle2' sx={{ mr: 2, color: 'text.primary' }}>
                     Billing Email:
                   </Typography>
-                  <Typography variant='body2'>{user.email}</Typography>
+                  <Typography variant='body2'>{userInfo.email}</Typography>
                 </Box>
                 <Box sx={{ display: 'flex', mb: 2.7 }}>
                   <Typography variant='subtitle2' sx={{ mr: 2, color: 'text.primary' }}>
@@ -346,7 +342,7 @@ const UserViewLeft = () => {
                 <Box sx={{ display: 'flex', mb: 2.7 }}>
                   <Typography sx={{ mr: 2, fontWeight: 500, fontSize: '0.875rem' }}>Role:</Typography>
                   <Typography variant='body2' sx={{ textTransform: 'capitalize' }}>
-                    {user.role}
+                    {userInfo.role}
                   </Typography>
                 </Box>
                 <Box sx={{ display: 'flex', mb: 2.7 }}>
@@ -421,7 +417,7 @@ const UserViewLeft = () => {
                       <TextField
                         fullWidth
                         label='Full Name'
-                        defaultValue={user.full_name || `Pending Name`}
+                        defaultValue={userInfo.first_name || `Pending Name`}
                         name='fullName'
                       />
                     </Grid>
@@ -429,13 +425,19 @@ const UserViewLeft = () => {
                       <TextField
                         fullWidth
                         label='Username'
-                        defaultValue={user.username}
+                        defaultValue={userInfo.username}
                         InputProps={{ startAdornment: <InputAdornment position='start'>@</InputAdornment> }}
                         name='userName'
                       />
                     </Grid>
                     <Grid item xs={12} sm={6}>
-                      <TextField fullWidth type='email' label='Billing Email' defaultValue={user.email} name='email' />
+                      <TextField
+                        fullWidth
+                        type='email'
+                        label='Billing Email'
+                        defaultValue={userInfo.email}
+                        name='email'
+                      />
                     </Grid>
                     <Grid item xs={12} sm={6}>
                       <FormControl fullWidth>

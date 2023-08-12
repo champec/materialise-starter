@@ -21,9 +21,15 @@ const navigation = () => {
           icon: 'guidance:pharmacy'
         },
         {
-          title: 'Settings',
-          path: '/pharmacy/settings/overview',
+          title: 'My Account',
+          path: '/pharmacy/settings',
           icon: 'solar:settings-outline'
+        },
+        {
+          title: 'Drug Dash',
+          path: '/pharmacy/drugdash',
+          icon: 'fluent-emoji-high-contrast:man-running',
+          disabled: true
         }
       ]
     },
