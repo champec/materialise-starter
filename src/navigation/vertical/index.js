@@ -84,7 +84,19 @@ const navigation = () => {
       action: 'read',
       subject: 'acl-page',
       title: 'Orders',
-      icon: 'ic:twotone-add-business'
+      icon: 'ic:twotone-add-business',
+      children: [
+        {
+          title: 'Purchases',
+          path: '/store/orders/purchases',
+          icon: 'icons8:buy'
+        },
+        {
+          title: 'Sales',
+          path: '/store/orders/sales',
+          icon: 'grommet-icons:money'
+        }
+      ]
     },
     {
       sectionTitle: 'Team Management'
