@@ -1,5 +1,5 @@
 // ** React Imports
-import { useEffect, useState, useCallback } from 'react'
+import { useState, useCallback } from 'react'
 
 // ** MUI Imports
 import Box from '@mui/material/Box'
@@ -10,8 +10,6 @@ import { DataGrid } from '@mui/x-data-grid'
 import { styled } from '@mui/system'
 
 // ** ThirdParty Components
-import axios from 'axios'
-import { supabaseOrg } from 'src/configs/supabase'
 import Spinner from 'src/@core/components/spinner'
 
 // ** Custom Components
@@ -24,7 +22,11 @@ import EditProductForm from './EditProductForm'
 import { getInitials } from 'src/@core/utils/get-initials'
 import { dummyData } from './dummyData'
 import { CircularProgress } from '@mui/material'
-import { useSelector } from 'react-redux'
+
+// ** RTK imports
+
+import { useSelector, useDispatch } from 'react-redux'
+import { fetchProducts, setSearchTerm } from 'src/store/apps/shop/productsSlice'
 
 // ** renders client column
 const renderClient = params => {
@@ -141,8 +143,7 @@ function getColumns(setShow, setSelectedRow) {
   ]
 }
 
-function InventoryTable({ page, setPage }) {
-  const props = useSelector(state => state.inventorySlice)
+function InventoryTable({ items }) {
   const [total, setTotal] = useState(0)
   const [sort, setSort] = useState('asc')
   const [pageSize, setPageSize] = useState(7)
@@ -153,11 +154,8 @@ function InventoryTable({ page, setPage }) {
   const [selectedRow, setSelectedRow] = useState([])
   const [loading, setLoading] = useState(false)
   const [sortModel, setSortModel] = useState([])
-  function loadServerRows(currentPage, data) {
-    return data.slice(currentPage * pageSize, (currentPage + 1) * pageSize)
-  }
-  const supabase = supabaseOrg
-  // console.log('items', initialData)
+
+  const dispatch = useDispatch()
 
   const handleSortModelChange = useCallback(newModel => {
     setSortModel(newModel)
@@ -165,8 +163,19 @@ function InventoryTable({ page, setPage }) {
   }, [])
 
   const handleSearch = value => {
-    setSearchValue(value)
-    fetchTableData(sort, value, sortColumn)
+    console.log('handleSearch', value)
+    dispatch(setSearchTerm(value))
+    dispatch(
+      fetchProducts({
+        searchTerm: value,
+        page: 0, // You might want to reset the page to 0 after a new search
+        pageSize, // Use the local component state for pageSize
+        sort: sortModel[0] ? { field: sortModel[0].field, order: sortModel[0].sort } : null, // Assumes sortModel is an array; use its first item
+        filters: {} // No filters for now, but you can extend this in the future
+      })
+    )
+    // setSearchValue(value)
+    // fetchTableData(sort, value, sortColumn)
   }
 
   return (
@@ -201,17 +210,15 @@ function InventoryTable({ page, setPage }) {
         <DataGrid
           autoHeight
           pagination
-          rows={props.items}
+          rows={items}
           rowCount={total}
           columns={getColumns(setShow, setSelectedRow)}
           checkboxSelection
           pageSize={pageSize}
           sortingMode='server'
-          paginationMode='server'
+          rowsPerPageOptions={[7, 10, 25, 50]}
           onSortModelChange={handleSortModelChange}
           sortModel={sortModel}
-          rowsPerPageOptions={[7, 10, 25, 50]}
-          onPageChange={newPage => setPage(newPage)}
           components={{ Toolbar: ServerSideToolbar }}
           onPageSizeChange={newPageSize => setPageSize(newPageSize)}
           onSelectionModelChange={newSelection => {

@@ -28,8 +28,12 @@ import { getInitials } from 'src/@core/utils/get-initials'
 import { dummyData } from './dummyData'
 import { CircularProgress } from '@mui/material'
 import ChangeNotifier from 'src/@core/components/ChangeNotifier'
-import { useSelector } from 'react-redux'
-import { setFilters, setSearchTerm, setSort } from 'src/store/apps/shop/productsSlice'
+import debounce from 'lodash/debounce'
+
+// ** RTK imports
+import { useSelector, useDispatch } from 'react-redux'
+import { setFilters, setSearchTerm, setSort, fetchProducts } from 'src/store/apps/shop/productsSlice'
+import { set } from 'nprogress'
 
 // ** renders client column
 const renderClient = params => {
@@ -163,7 +167,9 @@ function getColumns(setShow, setSelectedRow, cart, addToCart, updateCartItem, re
 }
 
 function ShopTable({ handleCartClick, cart, setCart, isSaving, isCartChanged, handleSaveCart, ...props }) {
-  const products = useSelector(state => state.productsSlice.items)
+  const productSlice = useSelector(state => state.productsSlice)
+  const products = productSlice?.items
+  const count = productSlice?.totalCount
   const [page, setPage] = useState(0)
   const [total, setTotal] = useState(0)
   const [sort, setSort] = useState('asc')
@@ -174,21 +180,43 @@ function ShopTable({ handleCartClick, cart, setCart, isSaving, isCartChanged, ha
   const [show, setShow] = useState(false)
   const [selectedRow, setSelectedRow] = useState([])
   const [loading, setLoading] = useState(false)
+  const [sortModel, setSortModel] = useState([{ field: 'name', sort: 'asc' }])
   const [cartItemCount, setCartItemCount] = useState(26)
-  function loadServerRows(currentPage, data) {
-    return data.slice(currentPage * pageSize, (currentPage + 1) * pageSize)
-  }
+  const dispatch = useDispatch()
 
   console.log({ isCartChanged, rows, products })
 
-  // Dispatch filter actions
-  const handleFilters = filters => dispatch(setFilters(filters))
+  useEffect(() => {
+    dispatch(
+      fetchProducts({
+        searchTerm: searchValue,
+        page: page,
+        pageSize: pageSize,
+        sort: sortModel[0] ? { field: sortModel[0].field, order: sortModel[0].sort } : null
+      })
+    )
+  }, [page, pageSize, dispatch, searchValue, sortModel])
 
-  // Dispatch sort actions
-  const handleSort = sort => dispatch(setSort(sort))
+  const debouncedHandleSearch = useCallback(
+    debounce(search => {
+      dispatch(
+        fetchProducts({
+          searchTerm: search,
+          page: 0, // You might want to reset the page to 0 after a new search
+          pageSize, // Use the local component state for pageSize
+          sort: sortModel[0] ? { field: sortModel[0].field, order: sortModel[0].sort } : null, // Assumes sortModel is an array; use its first item
+          filters: {} // No filters for now, but you can extend this in the future
+        })
+      )
+    }, 1000),
+    [dispatch, pageSize, sortModel]
+  )
 
   // Dispatch search actions
-  const handleSearch = search => dispatch(setSearchTerm(search))
+  const handleSearch = search => {
+    setSearchValue(search)
+    debouncedHandleSearch(search)
+  }
 
   const addToCart = item => {
     setCart(prevCart => {
@@ -221,66 +249,15 @@ function ShopTable({ handleCartClick, cart, setCart, isSaving, isCartChanged, ha
 
   const supabase = supabaseOrg
 
-  const fetchTableData = useCallback(
-    async (sort, q, column) => {
-      setLoading(true)
-
-      let query
-
-      // Add a condition for numeric columns
-      if (column === 'date') {
-        query = supabase
-          .from('shop_products')
-          .select('*', { count: 'exact' })
-          .order(column, { ascending: sort === 'asc' })
-      } else if (column === 'price' || column === 'stock') {
-        // Change this condition based on your requirement.
-        query = supabase
-          .from('shop_products')
-          .select('*', { count: 'exact' })
-          .order(column, { ascending: sort === 'asc' })
-      } else {
-        query = supabase
-          .from('shop_products')
-          .select('*', { count: 'exact' })
-          .ilike(column, `%${q}%`)
-          .order(column, { ascending: sort === 'asc' })
-      }
-
-      const { data, error, count } = await query.range(page * pageSize, (page + 1) * pageSize - 1)
-      console.log(count)
-      if (error) {
-        setLoading(false)
-        console.error('Error fetching data: ', error)
-      } else {
-        setLoading(false)
-        console.log('Data fetched successfully!', data)
-        setRows(data)
-        setTotal(count)
-      }
-    },
-    [page, pageSize]
-  )
-
-  // useEffect(() => {
-  //   fetchTableData(sort, searchValue, sortColumn)
-  // }, [fetchTableData, searchValue, sort, sortColumn])
-
   const handleSortModel = newModel => {
     if (newModel.length) {
       setSort(newModel[0].sort)
       setSortColumn(newModel[0].field)
-      fetchTableData(newModel[0].sort, searchValue, newModel[0].field)
     } else {
       setSort('asc')
       setSortColumn('name')
     }
   }
-
-  // const handleSearch = value => {
-  //   setSearchValue(value)
-  //   fetchTableData(sort, value, sortColumn)
-  // }
 
   return (
     <Card>
@@ -305,7 +282,7 @@ function ShopTable({ handleCartClick, cart, setCart, isSaving, isCartChanged, ha
           show={show}
           setShow={setShow}
           row={selectedRow}
-          fetchTableData={fetchTableData}
+          fetchTableData={dispatch(fetchProducts)}
           sort={sort}
           searchValue={searchValue}
           sortColumn={sortColumn}
@@ -329,7 +306,7 @@ function ShopTable({ handleCartClick, cart, setCart, isSaving, isCartChanged, ha
           autoHeight
           pagination
           rows={products}
-          rowCount={total}
+          rowCount={count}
           columns={getColumns(setShow, setSelectedRow, cart, addToCart, updateCartItem, removeCartItem)}
           // checkboxSelection
           disableSelectionOnClick
@@ -355,7 +332,7 @@ function ShopTable({ handleCartClick, cart, setCart, isSaving, isCartChanged, ha
               setShow: setShow,
               setSelectedRow: setSelectedRow,
               selectedRow: selectedRow,
-              fetchTableData: fetchTableData,
+              fetchTableData: dispatch(fetchProducts),
               sort: sort,
               searchValue: searchValue,
               sortColumn: sortColumn,

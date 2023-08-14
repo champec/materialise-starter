@@ -4,7 +4,7 @@
 import UserViewPage from 'src/views/apps/user/view/UserViewPage'
 
 // ** RTK imports
-import { useSelector } from 'react-redux'
+import { useSelector, useDispatch } from 'react-redux'
 
 const UserView = () => {
   const tab = 'overview'
@@ -15,8 +15,9 @@ const UserView = () => {
   ]
 
   const user = useSelector(state => state.user)
+  const dispatch = useDispatch()
 
-  return <UserViewPage tab={tab} user={user} invoiceData={invoiceData} />
+  return <UserViewPage tab={tab} user={user} invoiceData={invoiceData} dispatch={dispatch} />
 }
 
 export default UserView

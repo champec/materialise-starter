@@ -32,6 +32,9 @@ import TableContainer from '@mui/material/TableContainer'
 // ** Icon Imports
 import Icon from 'src/@core/components/icon'
 
+// ** RTK imports
+import { editPassword } from 'src/store/auth/user'
+
 const data = [
   {
     device: 'Dell XPS 15',
@@ -59,7 +62,7 @@ const data = [
   }
 ]
 
-const UserViewSecurity = () => {
+const UserViewSecurity = ({ dispatch }) => {
   // ** States
   const [defaultValues, setDefaultValues] = useState({ mobile: '+1(968) 819-2547' })
   const [mobileNumber, setMobileNumber] = useState(defaultValues.mobile)
@@ -123,8 +126,11 @@ const UserViewSecurity = () => {
     handleEditMobileNumberClose()
   }
 
-  const handleSubmitClick = () => {
-    setDefaultValues({ ...defaultValues, mobile: mobileNumber })
+  const handleSubmitClick = e => {
+    // setDefaultValues({ ...defaultValues, mobile: mobileNumber })
+    e.preventDefault()
+    console.log(values, mobileNumber)
+    dispatch(editPassword(values.newPassword))
     handleEditMobileNumberClose()
   }
 
@@ -141,7 +147,7 @@ const UserViewSecurity = () => {
               Minimum 8 characters long, uppercase & symbol
             </Alert>
 
-            <form onSubmit={e => e.preventDefault()}>
+            <form onSubmit={e => handleSubmitClick(e)}>
               <Grid container spacing={6}>
                 <Grid item xs={12} sm={6}>
                   <FormControl fullWidth>

@@ -34,7 +34,7 @@ const Tab = styled(MuiTab)(({ theme }) => ({
   }
 }))
 
-const UserViewRight = ({ invoiceData }) => {
+const UserViewRight = ({ invoiceData, dispatch }) => {
   // ** State
   const [activeTab, setActiveTab] = useState('overview')
   const [isLoading, setIsLoading] = useState(true)
@@ -81,7 +81,7 @@ const UserViewRight = ({ invoiceData }) => {
               <UserViewOverview invoiceData={invoiceData} />
             </TabPanel>
             <TabPanel sx={{ p: 0 }} value='security'>
-              <UserViewSecurity />
+              <UserViewSecurity dispatch={dispatch} />
             </TabPanel>
             <TabPanel sx={{ p: 0 }} value='billing-plan'>
               <UserViewBilling />

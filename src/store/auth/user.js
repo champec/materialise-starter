@@ -51,12 +51,35 @@ export const initializeSession = createAsyncThunk('user/initializeSession', asyn
 
 export const editUserData = createAsyncThunk('user/editData', async (updatedData, thunkAPI) => {
   // Assume there's an API endpoint for updating user data
-  const { data, error } = await supabase.from('users').update(updatedData).eq('id', updatedData.id)
+  const id = thunkAPI.getState().user.user.id
+  const { data, error } = await supabase.from('users').update(updatedData).eq('id', id).select('*')
 
   if (error) {
     console.log('user data update RTK', { error })
     return thunkAPI.rejectWithValue(error.message)
   }
+
+  console.log('redux edit', data)
+
+  return data[0]
+})
+
+export const editPassword = createAsyncThunk('user/editPassword', async (new_password, thunkAPI) => {
+  // Assume there's an API endpoint for updating user data
+  const id = thunkAPI.getState().user.user.id
+  console.log('RUNNING PASSWORD RESET')
+  const { data, error } = await supabase.auth
+    .updateUser({
+      password: new_password
+    })
+    .eq('id', id)
+
+  if (error) {
+    console.log('user data update RTK', { error })
+    return thunkAPI.rejectWithValue(error.message)
+  }
+
+  console.log('password edit', data)
 
   return data[0]
 })

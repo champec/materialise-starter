@@ -41,6 +41,7 @@ import { getInitials } from 'src/@core/utils/get-initials'
 
 // ** RTK imports
 import { useDispatch } from 'react-redux'
+import { editUserData } from 'src/store/auth/user'
 
 const data = {
   id: 1,
@@ -121,6 +122,7 @@ const UserViewLeft = ({ user }) => {
   const [inputValue, setInputValue] = useState('')
 
   const userInfo = user.user
+  const dispatch = useDispatch()
 
   // Handle Edit dialog
   const handleEditClickOpen = () => setOpenEdit(true)
@@ -210,26 +212,19 @@ const UserViewLeft = ({ user }) => {
       }
     }
 
-    const { data, error } = await supabase
-      .from('users')
-      .update({
-        full_name: fullName,
-        email: email,
-        username: userName,
-        phone_number: parseInt(contact),
-        avatar_url: profileImagePath,
-        updated_at: new Date()
-      })
-      .eq('id', user.user.id)
-      .select('*')
-
-    if (error) {
-      console.log(error)
-    } else {
-      console.log(data)
-      refreshUserData()
-      handleEditClose()
+    const userData = {
+      first_name: fullName,
+      email: email,
+      username: userName,
+      phone_number: parseInt(contact),
+      avatar_url: profileImagePath,
+      updated_at: new Date()
     }
+
+    dispatch(editUserData(userData))
+    console.log(userData)
+    // refreshUserData()
+    handleEditClose()
   }
 
   if (userInfo) {

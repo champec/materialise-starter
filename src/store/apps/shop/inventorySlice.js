@@ -44,11 +44,14 @@ export const fetchInventory = createAsyncThunk('inventory/fetchInventory', async
 export const createItem = createAsyncThunk('inventory/createItem', async (item, thunkAPI) => {
   const userId = thunkAPI.getState().user.user.id
   item.pharmacy_id = userId
-  const { data, error } = await supabaseOrg.from('shop_products').insert([item])
+  const { data, error } = await supabaseOrg.from('shop_products').insert([item]).select('*')
+
   if (error) {
     console.log(error)
     throw Error(error)
   }
+
+  console.log('new product added', data)
   return data[0]
 })
 
@@ -62,11 +65,13 @@ export const deleteItem = createAsyncThunk('inventory/deleteItem', async (id, th
 })
 
 export const editItem = createAsyncThunk('inventory/editItem', async ({ id, changes }, thunkAPI) => {
-  const { data, error } = await supabaseOrg.from('shop_products').update(changes).eq('id', id)
+  const { data, error } = await supabaseOrg.from('shop_products').update(changes).eq('id', id).select('*')
   if (error) {
     console.log(error)
     throw Error(error)
   }
+
+  console.log('product updated', data)
   return data[0]
 })
 
