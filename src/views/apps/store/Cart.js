@@ -1,6 +1,13 @@
 import React from 'react'
 import Header from './Header'
-import { supabaseOrg } from 'src/configs/supabase'
+import { useRouter } from 'next/router'
+
+// ** RTK imports
+
+import { useSelector, useDispatch } from 'react-redux'
+import { fetchCart, removeCartItem, updateCartItemQuantity } from 'src/store/apps/shop/cartSlice'
+import { handleCheckout } from 'src/store/apps/shop/checkoutSlice'
+
 // ** MUI Imports
 import Paper from '@mui/material/Paper'
 import Table from '@mui/material/Table'
@@ -14,7 +21,14 @@ import Box from '@mui/material/Box'
 import { CircularProgress } from '@mui/material'
 
 function Cart({ handleShopClick, cart, isSending, sendOrder }) {
-  const supabase = supabaseOrg
+  const dispatch = useDispatch()
+  const cartItems = useSelector(state => state.cart.items)
+  const checkoutStatus = useSelector(state => state.checkout.status)
+  const checkoutError = useSelector(state => state.checkout.error)
+  const status = useSelector(state => state.cart.status)
+
+  const router = useRouter()
+
   const TAX_RATE = 0.07
 
   const ccyFormat = num => {
@@ -35,10 +49,16 @@ function Cart({ handleShopClick, cart, isSending, sendOrder }) {
     return items.map(({ price }) => price).reduce((sum, i) => sum + i, 0)
   }
 
-  const rows = cart.map(item => createRow(item.name, item.quantity, item.price))
+  const rows = cartItems.map(item => createRow(item.shop_products.name, item.quantity, item.shop_products.price))
   const invoiceSubtotal = subtotal(rows)
   const invoiceTaxes = TAX_RATE * invoiceSubtotal
   const invoiceTotal = invoiceTaxes + invoiceSubtotal
+
+  const handleSendOrder = async () => {
+    const actionResult = await dispatch(handleCheckout())
+    console.log('actionResult', actionResult.payload)
+    router.push(`/store/confirmation?orderId=${actionResult.payload.order.id}`)
+  }
 
   return (
     <TableContainer component={Paper}>
@@ -85,7 +105,7 @@ function Cart({ handleShopClick, cart, isSending, sendOrder }) {
       </Table>
       <Box sx={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center' }}>
         <Button
-          onClick={sendOrder}
+          onClick={handleSendOrder}
           color='primary'
           variant='contained'
           disabled={isSending}
@@ -93,7 +113,9 @@ function Cart({ handleShopClick, cart, isSending, sendOrder }) {
         >
           {isSending ? 'Sending...' : 'Send Order'}
         </Button>
-        {isSending && <CircularProgress size={24} />}
+        {checkoutStatus === 'loading' && <p>Processing order...</p>}
+        {checkoutStatus === 'succeeded' && <p>Order placed successfully!</p>}
+        {checkoutStatus === 'failed' && <p>{checkoutError}</p>}
       </Box>
     </TableContainer>
   )

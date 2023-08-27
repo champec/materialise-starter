@@ -16,6 +16,13 @@ import productsSlice from './apps/shop/productsSlice'
 import inventorySlice from './apps/shop/inventorySlice'
 import user from './auth/user'
 import organisation from './auth/organisation'
+import cart from './apps/shop/cartSlice'
+import checkout from './apps/shop/checkoutSlice'
+import labelsSlice from './apps/email/labelsSlice'
+import conversations from './apps/email/conversationsSlice'
+import messagesSlice from './apps/email/messagesSlice'
+import broadcastSlice from './apps/email/broadcastSlice'
+import network from './network'
 
 //when reading data in global storage, we use a hook called useSelector() which takes the store as an argument, this config combines all our reducers so they can be read anywhere
 //with dot notation
@@ -27,12 +34,19 @@ export const store = configureStore({
     email,
     kanban,
     invoice,
+    network,
     calendar,
     productsSlice,
     inventorySlice,
     organisation,
+    cart,
+    checkout,
     cartSlice,
-    permissions
+    permissions,
+    labelsSlice,
+    conversations,
+    messagesSlice,
+    broadcastSlice
   },
 
   //by fault it will return any middleware you add or you can just ask it to include only the middle ware you want, this allways it to return defualt middle with a funciton

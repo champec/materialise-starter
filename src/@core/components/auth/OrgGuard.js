@@ -7,8 +7,6 @@ const OrgGuard = props => {
   const auth = useSelector(state => state.organisation)
   const router = useRouter()
 
-  console.log('ORG', { auth })
-
   useEffect(() => {
     // If router or authentication is still loading, return early
     if (!router.isReady || auth.loading) return

@@ -12,8 +12,6 @@ export const login = createAsyncThunk('organisation/login', async (params, thunk
     return thunkAPI.rejectWithValue(error.message)
   }
 
-  console.log('RTK user auth', data)
-
   // Fetch corresponding record from the public.users table
   const { data: authUser, error: userError } = await supabase
     .from('organisations')
@@ -25,8 +23,6 @@ export const login = createAsyncThunk('organisation/login', async (params, thunk
     console.log('user data fetch RTK', { userError })
     return thunkAPI.rejectWithValue(userError.message)
   }
-
-  console.log('RTK user return', authUser)
 
   return authUser
 })
@@ -40,7 +36,6 @@ export const logout = createAsyncThunk('organisation/logout', async (_, thunkAPI
 })
 
 export const initializeSession = createAsyncThunk('organisation/initializeSession', async (_, thunkAPI) => {
-  console.log('RUNNING INIT ORG')
   const { data, error } = await supabase.auth.getSession()
 
   if (error) {
@@ -48,12 +43,9 @@ export const initializeSession = createAsyncThunk('organisation/initializeSessio
     return thunkAPI.rejectWithValue(error.message)
   }
 
-  console.log('Session data:', data)
-
   const id = data.session.user?.id
 
   if (id) {
-    console.log('Found user ID:', id)
     const { data: organisation, error: organisationError } = await supabase
       .from('organisations')
       .select('*, pharmacies(*)')
@@ -63,7 +55,7 @@ export const initializeSession = createAsyncThunk('organisation/initializeSessio
       console.error('Error fetching organisation:', organisationError)
       return thunkAPI.rejectWithValue(organisationError.message)
     }
-    console.log('Returning organisation data:', organisation[0])
+
     return { organisation: organisation[0], loading: false }
   }
 

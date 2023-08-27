@@ -92,7 +92,7 @@ const MailLog = props => {
   const [refresh, setRefresh] = useState(false)
   const [currentEmail, setCurrentEmail] = useState(null)
 
-  console.log(store)
+  console.log({ store })
   // ** Vars
   const folders = [
     {
@@ -333,7 +333,7 @@ const MailLog = props => {
         <Box sx={{ py: 1.75, px: { xs: 2.5, sm: 5 } }}>
           <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
             <Box sx={{ display: 'flex', alignItems: 'center' }}>
-              {store && store.mails && store.selectedMails ? (
+              {store.mails && store.mails && store.selectedMails ? (
                 <Checkbox
                   onChange={e => dispatch(handleSelectAllMail(e.target.checked))}
                   checked={(store.mails.length && store.mails.length === store.selectedMails.length) || false}
@@ -351,7 +351,7 @@ const MailLog = props => {
                 />
               ) : null}
 
-              {store && store.selectedMails.length && store.mails && store.mails.length ? (
+              {store.selectedMails && store.selectedMails.length && store.mails && store.mails.length ? (
                 <Fragment>
                   {routeParams && routeParams.folder !== 'trash' ? (
                     <IconButton onClick={handleMoveToTrash}>
@@ -383,11 +383,17 @@ const MailLog = props => {
               <List sx={{ p: 0 }}>
                 {store.mails.map(mail => {
                   const mailReadToggleIcon = mail.isRead ? 'mdi:email-outline' : 'mdi:email-open-outline'
-
+                  const isgroupchat = mail.is_groupchat
+                  const group = {
+                    avatar_url: 'https://i.pravatar.cc/300?img=3',
+                    organisation_name: 'Group chat'
+                  }
+                  const recipient = isgroupchat ? group : mail.email_recipients[0]?.organisations
+                  console.log(recipient)
                   return (
                     <MailItem
                       key={mail.id}
-                      sx={{ backgroundColor: mail.isRead ? 'action.hover' : 'background.paper' }}
+                      sx={{ backgroundColor: mail.is_read ? 'action.hover' : 'background.paper' }}
                       onClick={() => {
                         setMailDetailsOpen(true)
                         setCurrentEmail(mail)
@@ -397,14 +403,14 @@ const MailLog = props => {
                         <Checkbox
                           onClick={e => e.stopPropagation()}
                           onChange={() => dispatch(handleSelectMail(mail.id))}
-                          checked={store.selectedMails.includes(mail.id) || false}
+                          checked={store?.selectedMails?.includes(mail.id) || false}
                         />
                         <IconButton
                           size='small'
-                          onClick={e => handleStarMail(e, mail.id, !mail.isStarred)}
+                          onClick={e => handleStarMail(e, mail.id, !mail.is_starred)}
                           sx={{
                             mr: { xs: 0, sm: 3 },
-                            color: mail.isStarred ? 'warning.main' : 'text.secondary',
+                            color: mail.is_Starred ? 'warning.main' : 'text.secondary',
                             '& svg': {
                               display: { xs: 'none', sm: 'block' }
                             }
@@ -413,8 +419,8 @@ const MailLog = props => {
                           <Icon icon='mdi:star-outline' />
                         </IconButton>
                         <Avatar
-                          alt={mail.profiles.organisation_name}
-                          src={mail.profiles.avatar_url}
+                          alt={isgroupchat ? 'Group chat' : recipient?.organisation_name}
+                          src={isgroupchat ? null : recipient?.avatar_url}
                           sx={{ mr: 3, width: '2rem', height: '2rem' }}
                         />
                         <Box
@@ -435,7 +441,7 @@ const MailLog = props => {
                               textOverflow: ['ellipsis', 'unset']
                             }}
                           >
-                            {mail.profiles.organisation_name}
+                            {isgroupchat ? 'Group chat' : recipient?.organisation_name}
                           </Typography>
                           <Typography noWrap variant='body2' sx={{ width: '100%' }}>
                             {mail.subject}
@@ -489,7 +495,7 @@ const MailLog = props => {
                           variant='caption'
                           sx={{ minWidth: '50px', textAlign: 'right', whiteSpace: 'nowrap', color: 'text.disabled' }}
                         >
-                          {new Date(mail.time).toLocaleTimeString('en-US', {
+                          {new Date(mail.created_at).toLocaleTimeString('en-US', {
                             hour: '2-digit',
                             minute: '2-digit',
                             hour12: true

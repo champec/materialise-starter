@@ -23,7 +23,6 @@ const Inbox = ({
   mails
 }) => {
   const store = {
-    ...dummyData,
     mails: mails
   }
 

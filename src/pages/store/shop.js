@@ -16,6 +16,7 @@ import { setProducts } from 'src/store/apps/shop/productsSlice'
 // RTK imports
 import ChangeNotifier from 'src/@core/components/ChangeNotifier'
 import { fetchProducts } from 'src/store/apps/shop/productsSlice'
+import { fetchCart } from 'src/store/apps/shop/cartSlice'
 
 import { set } from 'nprogress'
 
@@ -26,7 +27,7 @@ export const getStaticProps = async () => {
   }
 }
 
-const Shop = ({ products }) => {
+const Shop = () => {
   const [view, setView] = useState('main')
   const [selectedItem, setSelectedItem] = useState(null)
   const [cart, setCart] = useState([])
@@ -35,6 +36,7 @@ const Shop = ({ products }) => {
   const [isSending, setIsSending] = useState(false)
   const [orderSummaries, setOrderSummaries] = useState([])
   const productsRTK = useSelector(state => state.productsSlice.items)
+  const [loading, setLoading] = useState(true)
   const [rowIds, setRowIds] = useState(productsRTK.map(item => item.id)) // Pass in the row ids here [1, 2, 3, 4, 5, 6, 7]
   const router = useRouter()
   const supabase = supabaseOrg
@@ -42,13 +44,25 @@ const Shop = ({ products }) => {
 
   const dispatch = useDispatch()
 
-  useEffect(() => {
-    dispatch(setProducts(products))
-  }, [products, dispatch])
+  // useEffect(() => {
+  //   dispatch(setProducts(products))
+  // }, [products, dispatch])
 
   useEffect(() => {
-    fetchCartData()
-  }, [organisationId])
+    Promise.all([dispatch(fetchProducts()), dispatch(fetchCart())])
+      .then(() => {
+        setLoading(false)
+      })
+      .catch(error => {
+        // handle any errors
+        console.error('An error occurred:', error)
+        setLoading(false)
+      })
+  }, [dispatch])
+
+  // useEffect(() => {
+  //   fetchCartData()
+  // }, [organisationId])
 
   useEffect(() => {
     const handleRouteChange = url => {
@@ -140,14 +154,12 @@ const Shop = ({ products }) => {
     const { data, error } = await supabase.from('carts').select('*').eq('pharmacy_id', organisationId).single()
 
     if (data) {
-      console.log('Cart data:', data)
       setCart(data.items)
       setInitialCart(data.items)
     }
   }
 
   const isCartChanged = JSON.stringify(cart) !== JSON.stringify(initialCart) // Compare cart and initialCart
-  console.log({ isCartChanged })
 
   const updateCartInDb = async () => {
     const { error } = await supabase.from('carts').upsert(
@@ -199,7 +211,8 @@ const Shop = ({ products }) => {
   useEffect(() => {
     // handle side effects here
   }, [view, selectedItem])
-  console.log({ cart })
+
+  if (loading) return <div>Loading...</div>
   return (
     <div>
       {view === 'main' && (
@@ -211,7 +224,7 @@ const Shop = ({ products }) => {
           handleSaveCart={handleSaveCart}
           isCartChanged={isCartChanged}
           isSaving={isSaving}
-          products={products}
+          products={productsRTK}
         />
       )}
       {view === 'details' && <ProductDetails cart={cart} viewCheckout={handleViewCheckout} />}

@@ -3,41 +3,28 @@ import Box from '@mui/material/Box'
 import Button from '@mui/material/Button'
 import Icon from 'src/@core/components/icon'
 
-function QuantityControl({ item, cartItem, onUpdate, onRemove }) {
-  const [quantity, setQuantity] = useState(cartItem ? cartItem.quantity : 0)
+// RTK imports
+import { useDispatch, useSelector } from 'react-redux'
+import cartSlice, { updateCartItemQuantity } from 'src/store/apps/shop/cartSlice'
 
-  useEffect(() => {
-    if (cartItem) {
-      setQuantity(cartItem.quantity)
-    }
-  }, [cartItem])
+function QuantityControl({ item, cart }) {
+  // Retrieve the current quantity of the item in the cart.
+  const dispatch = useDispatch()
+  const cartItem = cart.items.find(i => i.product_id === item.id)
+  const quantity = cartItem ? cartItem.quantity : 0
 
   const handleIncrement = () => {
-    if (quantity < item.stock) {
-      const newQuantity = quantity + 1
-      setQuantity(newQuantity)
-      onUpdate(item, newQuantity)
-    }
+    dispatch(updateCartItemQuantity({ productId: item.id, newQuantity: quantity + 1, cartItem }))
   }
 
   const handleDecrement = () => {
-    if (quantity > 0) {
-      const newQuantity = quantity - 1
-      setQuantity(newQuantity)
-
-      if (newQuantity === 0) {
-        onRemove(item)
-      } else {
-        onUpdate(item, newQuantity)
-      }
-    }
+    dispatch(updateCartItemQuantity({ productId: item.id, newQuantity: quantity - 1, cartItem }))
   }
 
   const handleChange = event => {
-    const newQuantity = Number(event.target.value)
-    if (newQuantity >= 0 && newQuantity <= item.quantity) {
-      setQuantity(newQuantity)
-      onUpdate(item, newQuantity)
+    const inputQuantity = Number(event.target.value)
+    if (inputQuantity >= 0) {
+      dispatch(updateCartItemQuantity({ productId: item.id, newQuantity: inputQuantity, cartItem }))
     }
   }
 

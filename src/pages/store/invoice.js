@@ -4,12 +4,16 @@ import { supabase } from 'src/configs/supabase'
 import { useRouter } from 'next/router'
 import InvoiceDetails from './invoiceDetails'
 import { fetchInvoice } from '../../@core/utils/supabase/storeApis'
+import { useSelector } from 'react-redux'
 
 function Track({ invoices }) {
   const router = useRouter()
   const { invoiceId, view } = router.query
   const [currentInvoice, setCurrentInvoice] = React.useState(null)
   const [invoiceDetails, setInvoiceDetails] = React.useState(null)
+  const organisation = useSelector(state => state.organisation.organisation)
+
+  console.log(organisation)
 
   React.useEffect(() => {
     if (invoiceId && view === 'invoice_details') {

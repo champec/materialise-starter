@@ -57,7 +57,6 @@ const ScrollWrapper = ({ children, hidden }) => {
     return <PerfectScrollbar options={{ wheelPropagation: false, suppressScrollX: true }}>{children}</PerfectScrollbar>
   }
 }
-console.log('navigation', navigation())
 
 const ShortcutsDropdown = props => {
   const { settings } = props

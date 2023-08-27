@@ -1,5 +1,5 @@
 // ** React Imports
-import { useState, useRef } from 'react'
+import { useState, useRef, useEffect, useMemo } from 'react'
 
 // ** MUI Imports
 import Box from '@mui/material/Box'
@@ -22,7 +22,7 @@ import Autocomplete, { createFilterOptions } from '@mui/material/Autocomplete'
 import Icon from 'src/@core/components/icon'
 
 // ** Third Party Components
-import { EditorState } from 'draft-js'
+import { EditorState, convertToRaw } from 'draft-js'
 
 // ** Custom Components Imports
 import OptionsMenu from 'src/@core/components/option-menu'
@@ -34,6 +34,13 @@ import { EditorWrapper } from 'src/@core/styles/libs/react-draft-wysiwyg'
 
 // ** Utils Import
 import { getInitials } from 'src/@core/utils/get-initials'
+import debounce from 'lodash/debounce'
+
+// ** RTK imports
+import { useDispatch, useSelector } from 'react-redux'
+import { fetchNetworkAndNearby, searchPharmacies } from 'src/store/network'
+import { createConversation } from 'src/store/apps/email/conversationsSlice'
+import { appendMessage } from 'src/store/apps/email/messagesSlice'
 
 // ** Styles
 import 'react-draft-wysiwyg/dist/react-draft-wysiwyg.css'
@@ -76,6 +83,8 @@ const ComposePopup = props => {
   // ** Props
   const { mdAbove, composeOpen, composePopupWidth, toggleComposeOpen } = props
 
+  const dispatch = useDispatch()
+
   // ** States
   const [emailTo, setEmailTo] = useState([])
   const [ccValue, setccValue] = useState([])
@@ -83,11 +92,29 @@ const ComposePopup = props => {
   const [bccValue, setbccValue] = useState([])
   const [sendBtnOpen, setSendBtnOpen] = useState(false)
   const [messageValue, setMessageValue] = useState(EditorState.createEmpty())
+  const networkStatuses = useSelector(state => state.network.status)
+  const userId = useSelector(state => state.organisation.organisation.id)
+
+  // Accessing specific statuses
+  const fetchNetworkAndNearbyStatus = networkStatuses.fetchNetworkAndNearby
+  const searchPharmaciesStatus = networkStatuses.searchPharmacies
 
   const [visibility, setVisibility] = useState({
     cc: false,
     bcc: false
   })
+
+  const contacts = useSelector(state => state.network.contacts)
+
+  console.log({ contacts })
+
+  const handleSearch = debounce(value => {
+    dispatch(searchPharmacies({ searchQuery: value }))
+  }, 300)
+
+  useEffect(() => {
+    dispatch(fetchNetworkAndNearby())
+  }, [])
 
   // ** Ref
   const anchorRefSendBtn = useRef(null)
@@ -108,6 +135,80 @@ const ComposePopup = props => {
     setState([...arr])
   }
 
+  const startNewConversation = async (recipients, isGroupChat) => {
+    console.log('start new conversation')
+    const resultAction = await dispatch(
+      createConversation({
+        subject: subjectValue, // can be empty or any meta-information
+        recipients,
+        groupChat: false
+      })
+    )
+
+    if (createConversation.fulfilled.match(resultAction)) {
+      // If the payload is an array, return it as is. If not, wrap it in an array.
+      const payload = resultAction.payload
+      console.log(payload)
+      return payload
+    } else {
+      // Handle error if needed
+      console.error('Failed to create conversation:', resultAction.error)
+    }
+  }
+
+  const addMessagesToConversations = async (conversations, messageContent) => {
+    const results = []
+
+    for (const conversation of conversations) {
+      console.log('APPEND', conversation)
+      const resultAction = await dispatch(
+        appendMessage({
+          conversationId: conversation.id,
+          content: messageContent
+        })
+      )
+
+      if (appendMessage.fulfilled.match(resultAction)) {
+        results.push(resultAction.payload)
+      } else {
+        console.error('Failed to append message:', resultAction.error)
+      }
+    }
+    console.log(results, 'and message to conversations')
+    return results // This will be an array of results from each message append operation
+  }
+
+  const handleSend = async () => {
+    // Create new conversations
+    console.log('handle send')
+    const recipients = emailTo.map(item => item.value)
+    const groupChat = false
+    const payload = await startNewConversation(recipients, groupChat)
+    const conversations = payload.conversations
+
+    console.log('handlesend', conversations)
+
+    if (conversations && conversations.length > 0) {
+      // Get the content from your EditorState
+      const rawContent = convertToRaw(messageValue.getCurrentContent())
+      const messageContent = JSON.stringify(rawContent)
+
+      // Add messages to the conversations
+      const results = await addMessagesToConversations(conversations, messageContent)
+
+      if (results && results.length === conversations.length) {
+        // This is just a check to ensure all messages were successfully appended.
+        // You can expand on this if you have more specific error handling in mind.
+        // Clear your states after sending the message
+        // handlePopupClose()
+      } else {
+        // Handle the case where not all messages were appended successfully
+      }
+    } else {
+      // Handle case where conversations weren't created successfully
+    }
+  }
+
   const handlePopupClose = () => {
     toggleComposeOpen()
     setEmailTo([])
@@ -120,6 +221,26 @@ const ComposePopup = props => {
       bcc: false
     })
   }
+
+  const transformedData = useMemo(() => {
+    const groups = ['recent', 'network', 'nearby', 'others']
+    const result = []
+
+    groups.forEach(group => {
+      contacts[group].forEach(item => {
+        result.push({
+          group,
+          name: item.organisation_name,
+          value: item.id,
+          email: item.organisation_email,
+          ods: item.ods_code,
+          address: item.address1
+        })
+      })
+    })
+
+    return result
+  }, [contacts])
 
   const handleMinimize = () => {
     toggleComposeOpen()
@@ -145,14 +266,15 @@ const ComposePopup = props => {
   }
 
   const renderListItem = (props, option, array, setState) => {
+    console.log('emailTO', option)
     return (
       <ListItem key={option.value} sx={{ cursor: 'pointer' }} onClick={() => setState([...array, option])}>
         <Box sx={{ display: 'flex', alignItems: 'center' }}>
-          {option.src.length ? (
-            <CustomAvatar src={option.src} alt={option.name} sx={{ mr: 3, width: 22, height: 22 }} />
+          {option?.src?.length ? (
+            <CustomAvatar src={option?.src} alt={option.name} sx={{ mr: 3, width: 22, height: 22 }} />
           ) : (
             <CustomAvatar skin='light' color='primary' sx={{ mr: 3, width: 22, height: 22, fontSize: '.75rem' }}>
-              {getInitials(option.name)}
+              {getInitials(option.name || 'removethis')}
             </CustomAvatar>
           )}
           <Typography sx={{ fontSize: '0.875rem' }}>{option.name}</Typography>
@@ -213,7 +335,11 @@ const ComposePopup = props => {
           <IconButton sx={{ p: 1, mr: 2, color: 'action.active' }} onClick={handleMinimize}>
             <Icon icon='mdi:minus' fontSize={20} />
           </IconButton>
-          <IconButton sx={{ p: 1, color: 'action.active' }} onClick={handlePopupClose}>
+          <IconButton
+            sx={{ p: 1, color: 'action.active' }}
+            onClick={handlePopupClose}
+            // onClick={handleSend}
+          >
             <Icon icon='mdi:close' fontSize={20} />
           </IconButton>
         </Box>
@@ -237,16 +363,39 @@ const ComposePopup = props => {
           <Autocomplete
             multiple
             freeSolo
-            value={emailTo}
-            clearIcon={false}
+            value={emailTo} // Assuming emailTo is a state variable in your component
             id='email-to-select'
             filterSelectedOptions
-            options={menuItemsArr}
+            options={transformedData}
+            groupBy={option => option.group}
             ListboxComponent={List}
             filterOptions={addNewOption}
             getOptionLabel={option => option.name}
             renderOption={(props, option) => renderListItem(props, option, emailTo, setEmailTo)}
             renderTags={(array, getTagProps) => renderCustomChips(array, getTagProps, emailTo, setEmailTo)}
+            renderGroup={params => {
+              if (!params.children.length) return null
+              if (params.group === 'others' && searchPharmaciesStatus === 'loading') {
+                return (
+                  <div>
+                    <Typography variant='caption'>Others loading</Typography>
+                    {/* Display loading spinner here */}
+                  </div>
+                )
+              }
+
+              return (
+                <div>
+                  <Typography variant='caption'>{params.group}</Typography>
+                  {params.children}
+                </div>
+              )
+            }}
+            onInputChange={(event, value, reason) => {
+              if (reason === 'input') {
+                handleSearch(value)
+              }
+            }}
             sx={{
               width: '100%',
               '& .MuiOutlinedInput-root': { p: 2 },
@@ -396,7 +545,7 @@ const ComposePopup = props => {
       >
         <Box sx={{ display: 'flex', alignItems: 'center' }}>
           <ButtonGroup variant='contained' ref={anchorRefSendBtn} aria-label='split button'>
-            <Button onClick={handlePopupClose}>Send</Button>
+            <Button onClick={handleSend}>Send</Button>
             <Button
               size='small'
               aria-haspopup='true'

@@ -8,6 +8,7 @@ import BroadCastComposer from '../broadcast/BroadCastComposer'
 // ** Redux Imports
 import { useDispatch, useSelector } from 'react-redux'
 import { dummyData, getBroadcasts } from './BroadcastAPI'
+import { selectAllConversations, fetchConversations } from 'src/store/apps/email/conversationsSlice'
 
 // ** MUI Imports
 import Box from '@mui/material/Box'
@@ -50,37 +51,6 @@ const EmailAppLayout = ({ folder, label }) => {
   const [currentView, setCurrentView] = useState('inbox')
   const [unreadInbox, setUnreadInbox] = useState(0)
   const [store, setStore] = useState(dummyData)
-  useEffect(() => {
-    getBroadcasts()
-      .then(data => {
-        if (data) {
-          console.log(data)
-          setStore(prevStore => ({
-            ...prevStore,
-            mails: data
-          }))
-        }
-      })
-      .catch(error => {
-        console.error('Error fetching broadcasts', error)
-      })
-  }, [])
-
-  useEffect(() => {
-    let inbox = 0
-    // let sent = 0;
-    // similar for each category
-
-    store.mails.forEach(mail => {
-      if (mail.folder === 'inbox' && !mail.isRead) inbox++
-      // if (mail.folder === 'sent' && mail.unread) sent++;
-      // similar for each category
-    })
-    console.log(inbox)
-    setUnreadInbox(inbox)
-    // setUnreadSent(sent);
-    // similar for each category
-  }, [store.mails])
 
   // ** Hooks
   const theme = useTheme()
@@ -93,6 +63,13 @@ const EmailAppLayout = ({ folder, label }) => {
   // const store = useSelector(state => state.email)
   console.log(dummyData)
 
+  // ** Redux Dispatch & Selectors
+  const { inbox, sent, starred, spam, deleted } = useSelector(selectAllConversations)
+
+  useEffect(() => {
+    dispatch(fetchConversations())
+  }, [dispatch])
+
   // ** Vars
   const leftSidebarWidth = 260
   const { skin, direction } = settings
@@ -102,10 +79,7 @@ const EmailAppLayout = ({ folder, label }) => {
     label: label || '',
     folder: folder || 'inbox'
   }
-  useEffect(() => {
-    // @ts-ignore
-    dispatch(fetchMails({ q: query || '', folder: routeParams.folder, label: routeParams.label }))
-  }, [dispatch, query, routeParams.folder, routeParams.label])
+
   const toggleComposeOpen = () => setComposeOpen(!composeOpen)
   const handleLeftSidebarToggle = () => setLeftSidebarOpen(!leftSidebarOpen)
 
@@ -131,19 +105,19 @@ const EmailAppLayout = ({ folder, label }) => {
   }
 
   const selectView = view => {
-    const filteredMails = store.mails.filter(mail => mail.folder === view)
-    console.log({ filteredMails })
     switch (view) {
       case 'inbox':
-        return <Inbox mails={filteredMails} {...viewProps} />
+        return <Inbox mails={inbox} {...viewProps} />
       case 'sent':
-        return <Sent mails={filteredMails} {...viewProps} />
+        return <Sent mails={sent} {...viewProps} />
       case 'draft':
-        return <Draft mails={filteredMails} {...viewProps} />
+        // NOTE: There is no draft in the slice you provided.
+        // You might need to adjust this based on your actual data structure.
+        return <Draft mails={[]} {...viewProps} />
       case 'openBroadcast':
         return <BroadCastComposer {...viewProps} />
       default:
-        return <Inbox mails={filteredMails} {...viewProps} />
+        return <Inbox mails={inbox} {...viewProps} />
     }
   }
 

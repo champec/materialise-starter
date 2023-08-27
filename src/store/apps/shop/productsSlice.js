@@ -28,11 +28,7 @@ export const fetchProducts = createAsyncThunk('productsSlice/fetchProducts', asy
   // Pagination
   query.range(params.page * params.pageSize, (params.page + 1) * params.pageSize - 1)
 
-  console.log('About to execute Supabase query')
   const { data: products, count, error } = await query
-  console.log('After Supabase query execution')
-
-  console.log('products', products)
 
   if (error) {
     console.log(error)

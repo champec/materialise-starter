@@ -1,5 +1,5 @@
 // ** React Imports
-import { useEffect, useState, useCallback } from 'react'
+import { useEffect, useState, useCallback, useMemo } from 'react'
 
 // ** MUI Imports
 import Box from '@mui/material/Box'
@@ -34,6 +34,7 @@ import debounce from 'lodash/debounce'
 import { useSelector, useDispatch } from 'react-redux'
 import { setFilters, setSearchTerm, setSort, fetchProducts } from 'src/store/apps/shop/productsSlice'
 import { set } from 'nprogress'
+import { addCartItem } from 'src/store/apps/shop/cartSlice'
 
 // ** renders client column
 const renderClient = params => {
@@ -60,7 +61,7 @@ const statusObj = {
   5: { title: 'applied', color: 'info' }
 }
 
-function getColumns(setShow, setSelectedRow, cart, addToCart, updateCartItem, removeCartItem) {
+function getColumns(setShow, setSelectedRow, addToCart, cart, getCartItem) {
   return [
     {
       flex: 0.25,
@@ -154,10 +155,9 @@ function getColumns(setShow, setSelectedRow, cart, addToCart, updateCartItem, re
       headerName: 'Actions',
       renderCell: params => {
         const item = params.row
-        const cartItem = cart.find(i => i.id === item.id)
-
+        const cartItem = cart.items.find(i => i.product_id === item.id)
         return cartItem ? (
-          <QuantityControl item={item} cartItem={cartItem} onUpdate={updateCartItem} onRemove={removeCartItem} />
+          <QuantityControl item={item} cartItem={cartItem} cart={cart} />
         ) : (
           <Button onClick={() => addToCart(item)}>Add</Button>
         )
@@ -166,10 +166,12 @@ function getColumns(setShow, setSelectedRow, cart, addToCart, updateCartItem, re
   ]
 }
 
-function ShopTable({ handleCartClick, cart, setCart, isSaving, isCartChanged, handleSaveCart, ...props }) {
+function ShopTable({ handleCartClick, setCart, isSaving, isCartChanged, handleSaveCart, ...props }) {
   const productSlice = useSelector(state => state.productsSlice)
   const products = productSlice?.items
   const count = productSlice?.totalCount
+  const cart = useSelector(state => state.cartSlice)
+  console.log('cart', cart)
   const [page, setPage] = useState(0)
   const [total, setTotal] = useState(0)
   const [sort, setSort] = useState('asc')
@@ -178,13 +180,11 @@ function ShopTable({ handleCartClick, cart, setCart, isSaving, isCartChanged, ha
   const [searchValue, setSearchValue] = useState('')
   const [sortColumn, setSortColumn] = useState('name')
   const [show, setShow] = useState(false)
+  const [showQC, setShowQC] = useState(false)
   const [selectedRow, setSelectedRow] = useState([])
   const [loading, setLoading] = useState(false)
   const [sortModel, setSortModel] = useState([{ field: 'name', sort: 'asc' }])
-  const [cartItemCount, setCartItemCount] = useState(26)
   const dispatch = useDispatch()
-
-  console.log({ isCartChanged, rows, products })
 
   useEffect(() => {
     dispatch(
@@ -196,6 +196,14 @@ function ShopTable({ handleCartClick, cart, setCart, isSaving, isCartChanged, ha
       })
     )
   }, [page, pageSize, dispatch, searchValue, sortModel])
+
+  const getCartItem = useMemo(() => {
+    return item => {
+      const cartItems = cart.items
+      const open = cartItems.find(i => i.product_id === item.id)
+      return !!open
+    }
+  }, [cart])
 
   const debouncedHandleSearch = useCallback(
     debounce(search => {
@@ -219,26 +227,9 @@ function ShopTable({ handleCartClick, cart, setCart, isSaving, isCartChanged, ha
   }
 
   const addToCart = item => {
-    setCart(prevCart => {
-      const existingItemIndex = prevCart.findIndex(cartItem => cartItem.id === item.id)
-
-      if (existingItemIndex > -1) {
-        // Clone the cart array.
-        const newCart = [...prevCart]
-        // Increment the quantity of the existing item.
-        newCart[existingItemIndex].quantity += 1
-
-        return newCart
-      } else {
-        // If item isn't in the cart, add it with a quantity of 1.
-        return [...prevCart, { ...item, quantity: 1 }]
-      }
-    })
+    dispatch(addCartItem(item))
   }
 
-  // useEffect(() => {
-  //   console.log('cart', cart)
-  // }, [cart])
   const updateCartItem = (item, quantity) => {
     setCart(prevCart => prevCart.map(i => (i.id === item.id ? { ...i, quantity } : i)))
   }
@@ -246,8 +237,6 @@ function ShopTable({ handleCartClick, cart, setCart, isSaving, isCartChanged, ha
   const removeCartItem = item => {
     setCart(prevCart => prevCart.filter(i => i.id !== item.id))
   }
-
-  const supabase = supabaseOrg
 
   const handleSortModel = newModel => {
     if (newModel.length) {
@@ -259,6 +248,8 @@ function ShopTable({ handleCartClick, cart, setCart, isSaving, isCartChanged, ha
     }
   }
 
+  const columns = useMemo(() => getColumns(setShow, setSelectedRow, addToCart, cart, getCartItem), [cart, getCartItem])
+
   return (
     <Card>
       <Box display='flex' justifyContent='space-between' alignItems='center' padding={1}>
@@ -268,7 +259,7 @@ function ShopTable({ handleCartClick, cart, setCart, isSaving, isCartChanged, ha
           onClick={handleCartClick}
           startIcon={
             <Box display='flex' alignItems='center'>
-              <Badge badgeContent={cart?.length} sx={{ mr: 2 }} />
+              <Badge badgeContent={cart.items?.length} sx={{ mr: 2 }} />
               <Icon icon='mdi:cart' />
             </Box>
           }
@@ -307,7 +298,7 @@ function ShopTable({ handleCartClick, cart, setCart, isSaving, isCartChanged, ha
           pagination
           rows={products}
           rowCount={count}
-          columns={getColumns(setShow, setSelectedRow, cart, addToCart, updateCartItem, removeCartItem)}
+          columns={columns}
           // checkboxSelection
           disableSelectionOnClick
           pageSize={pageSize}

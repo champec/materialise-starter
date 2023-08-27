@@ -14,7 +14,7 @@ const AuthGuard = props => {
   const { children, fallback } = props //destructure received props, children (content in between), also provided a fallback spinner
   const auth = useSelector(state => state.user) //get auth values
   const router = useRouter() // get router methods
-  console.log('USer', { auth })
+
   useEffect(
     //this use effect only runs when you change routes, so check if router is ready if not, don't run the code underneath
     () => {
