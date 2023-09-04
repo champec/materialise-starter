@@ -1,6 +1,6 @@
 // ** React Imports
 import { useState } from 'react'
-import { sendChatMessage } from 'src/@core/utils/supabase/supabaseActions'
+
 // ** MUI Imports
 import Button from '@mui/material/Button'
 import { styled } from '@mui/material/styles'
@@ -38,13 +38,11 @@ const SendMsgForm = props => {
     if (store && store.selectedChat && msg.trim().length) {
       const messageObject = {
         chat_id: store.selectedChat.id,
-        message: msg,
+        message: msg
         // image_url: '', // Uncomment this line when you implement the image attachment feature
-        sender_id: store.userProfile.id,
-        organisation_id: store.userProfile.id
       }
 
-      sendChatMessage(messageObject)
+      dispatch(sendMsg(messageObject))
     }
     setMsg('')
   }

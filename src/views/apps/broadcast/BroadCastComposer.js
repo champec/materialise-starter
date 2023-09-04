@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react'
-import { supabaseOrg } from 'src/configs/supabase'
-import { getNHSServiceData } from 'src/API'
+import { supabaseOrg as supabase } from 'src/configs/supabase'
 import {
   Box,
   Typography,
@@ -22,7 +21,10 @@ import BroadCastRequestItem from './broadCastRequestItem'
 import ReactDraftWysiwyg from 'src/@core/components/react-draft-wysiwyg'
 import findOrCreateProfile from './elements/findOrCreateProfile'
 import { useForm, Controller } from 'react-hook-form'
-import { useOrgAuth } from 'src/hooks/useOrgAuth'
+
+// ** RTK imports
+import { useDispatch, useSelector } from 'react-redux'
+import { createBroadcast } from 'src/store/apps/email/broadcastSlice'
 
 function BroadCastComposer(props) {
   const {
@@ -48,34 +50,88 @@ function BroadCastComposer(props) {
 
   const [selectedServices, setSelectedServices] = useState([])
   const [services, setServices] = useState([])
-  const [radius, setRadius] = useState(1500)
-  const [distance, setDistance] = useState(1500)
+  const [fetchedServices, setFetchedServices] = useState([])
+  const [radius, setRadius] = useState(2000)
+  const [distance, setDistance] = useState(2000)
   const [broadcastType, setBroadcastType] = useState('')
   const [activeStep, setActiveStep] = useState(0)
   const [formValues, setFormValues] = useState({
-    transactionType: 'replace',
+    transaction_type: 'replace',
     subject: '',
     messageBody: '',
-    itemname: '',
-    itemType: 'drug',
+    generic: '',
+    item_type: 'drug',
     brand: '',
-    quantityType: 'packs',
-    quantityNumber: '',
+    quantity_type: 'packs',
+    quantity_number: 1,
     state: 'full',
     purpose: '',
-    replaceDate: null,
-    offerPrice: 0,
-    exchangeFor: ''
+    replace_date: null,
+    offer_price: 0,
+    exchange_for: ''
   })
   const steps = ['Step 1: Basic Information', 'Step 2: Additional Information', 'Step 3: Confirmation']
   const [process, setProcess] = useState('')
-  const orgId = useOrgAuth().organisation.id
+  const [quickSelect, setQuickSelect] = useState('') // "nearby", "network", "recent", "manual"
+  const orgId = useSelector(state => state.organisation.organisation.id)
+  const defaultCoords = useSelector(state => state.organisation.organisation.pharmacies)
+  const network = useSelector(state => state.network.contacts.network)
+  const nearby = useSelector(state => state.network.contacts.nearby)
+  const recent = useSelector(state => state.network.contacts.recent)
+
+  const handleQuickSelect = newQuickSelect => {
+    setQuickSelect(prevQuickSelect => {
+      if (newQuickSelect === prevQuickSelect) {
+        return 'manual'
+      } else {
+        return newQuickSelect
+      }
+    })
+  }
+
+  useEffect(() => {
+    let selectedGroup = []
+
+    if (quickSelect === 'nearby') {
+      selectedGroup = nearby
+    } else if (quickSelect === 'network') {
+      selectedGroup = network
+    } else if (quickSelect === 'recent') {
+      selectedGroup = recent
+    } else if (quickSelect === 'manual') {
+      selectedGroup = [] // Reset if manual is selected
+    }
+
+    // Start with fetched services as base
+    let combinedServices = [...fetchedServices]
+
+    // Add newly selected services from quick-select
+    if (quickSelect !== 'manual') {
+      combinedServices = [...combinedServices, ...selectedGroup]
+      setSelectedServices(selectedGroup)
+    } else {
+      setSelectedServices([])
+    }
+
+    // Remove duplicates
+    const uniqueServices = Array.from(new Set(combinedServices.map(s => s.id))).map(id =>
+      combinedServices.find(s => s.id === id)
+    )
+
+    setServices(uniqueServices)
+  }, [quickSelect, fetchedServices, nearby, network, recent])
 
   useEffect(() => {
     const fetchServices = async () => {
-      const coordinates = { lat: 52.4969353, lng: -2.0258233, radius: 0 } // replace with actual coordinates
-      const data = await getNHSServiceData(coordinates, radius)
+      const latitude = defaultCoords.latitude
+      const longitude = defaultCoords.longitude
+      const { data, error: nearbyError } = await supabase.rpc('get_nearby_pharmacies', {
+        lat: latitude,
+        lon: longitude,
+        radius
+      })
       setServices(data)
+      setFetchedServices(data)
       console.log(services)
     }
     fetchServices()
@@ -94,77 +150,53 @@ function BroadCastComposer(props) {
   }
 
   const handleFormSubmit = async () => {
-    // Assuming `selectedServices` is an array of selected pharmacies
-    const profiles = await Promise.all(
-      selectedServices.map(async pharmacy => {
-        setProcess(`Searching profile for ${pharmacy.organisation_name}`)
-        const profile = await findOrCreateProfile(pharmacy.ods_code, pharmacy.organisation_name, 'admin')
-        return profile
-      })
-    )
-    setProcess(`Creating broadcast for ${profiles.length} pharmacies`)
-    console.log(profiles)
-    const currentDate = new Date()
-    // Now you have an array of profiles for each selected pharmacy
-    // You can use this array to create the broadcast and recipients
-
     const {
       subject,
       messageBody,
-      itemname,
-      itemtype,
+      generic,
+      item_type,
       brand,
-      quantityType,
-      quantityNumber,
+      quantity_type,
+      quantity_number,
       state,
       purpose,
-      transactionType,
-      replaceDate,
-      offerPrice,
-      exchangeFor
+      transaction_type,
+      replace_date,
+      offer_price,
+      exchange_for
     } = formValues
-    console.log({ orgId })
-    setProcess(`Creating broadcast for ${profiles.length} pharmacies`)
-    const { data: broadcast, error } = await supabaseOrg
-      .from('broadcasts')
-      .insert({
-        senderid: orgId, // assuming you have the user's id available here
-        type: broadcastType,
-        header: subject, // assuming you have the subject state available here
-        messagebody: messageBody,
-        itemname: broadcastType === 'item' ? itemname : null, // replace itemName with the actual value from the form
-        itemtype: broadcastType === 'item' ? itemtype : null, // replace itemType with the actual value from the form
-        brand: broadcastType === 'item' ? brand : null, // replace brand with the actual value from the form
-        quantitytype: broadcastType === 'item' ? quantityType : null, // replace quantityType with the actual value from the form
-        quantitynumber: broadcastType === 'item' && quantityNumber ? quantityNumber : null, // replace quantityNumber with the actual value from the form
-        state: broadcastType === 'item' ? state : null, // replace state with the actual value from the form
-        date: currentDate, // replace date with the actual value from the form
-        purpose: broadcastType === 'item' ? purpose : null, // replace purpose with the actual value from the form
-        transactiontype: broadcastType === 'item' ? transactionType : null, // replace transactionType with the actual value from the form
-        replacedate: broadcastType === 'item' && replaceDate ? replaceDate : null, // replace replaceDate with the actual value from the form
-        offerprice: broadcastType === 'item' ? offerPrice : null, // replace offerPrice with the actual value from the form
-        exchangefor: broadcastType === 'item' ? exchangeFor : null // replace exchangeFor with the actual value from the form
-      })
-      .select('id')
-      .single()
 
-    if (error) {
+    const recipients = selectedServices.map(profile => profile.id) // Assuming profile.id is the recipient ID
+
+    const broadcastItem = {
+      generic,
+      item_type,
+      brand,
+      quantity_type,
+      quantity_number,
+      state,
+      purpose,
+      transaction_type,
+      replace_date,
+      offer_price,
+      exchange_for
+    }
+
+    const payload = {
+      recipients,
+      subject,
+      content: messageBody,
+      type: broadcastType, // Assuming broadcastType is available in your function
+      broadcastItem
+    }
+
+    try {
+      await dispatch(createBroadcast(payload)).unwrap()
+      setProcess('Completed!')
+    } catch (error) {
       console.error('Error creating broadcast:', error)
-      return
+      setProcess('Failed')
     }
-    setProcess(`Creating recipients for ${profiles.length} pharmacies`)
-
-    const recipients = profiles.map(profile => ({
-      broadcastid: broadcast.id,
-      recipientid: profile.id
-    }))
-
-    const { error: recipientsError } = await supabaseOrg.from('broadcast_recipients').insert(recipients)
-
-    if (recipientsError) {
-      console.error('Error creating recipients:', recipientsError)
-    }
-    setProcess('Completed!')
   }
 
   const handleBroadcastTypeChange = event => {
@@ -203,6 +235,18 @@ function BroadCastComposer(props) {
               min={500}
               max={2500}
             />
+            {/* Rapid Select Buttons */}
+            <Box mt={2}>
+              <Checkbox checked={quickSelect === 'nearby'} onChange={() => handleQuickSelect('nearby')} />
+              Nearby
+              <Checkbox checked={quickSelect === 'network'} onChange={() => handleQuickSelect('network')} />
+              Network
+              <Checkbox checked={quickSelect === 'recent'} onChange={() => handleQuickSelect('recent')} />
+              Recent
+              <Checkbox checked={quickSelect === 'manual'} onChange={() => handleQuickSelect('manual')} />
+              Manual
+            </Box>
+
             <FormControl fullWidth>
               <InputLabel id='services-select-label'>Services</InputLabel>
               <Select

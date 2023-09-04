@@ -61,12 +61,14 @@ const SidebarLeft = props => {
     handleLeftSidebarToggle,
     handleUserProfileLeftSidebarToggle,
     active,
-    setActive
+    setActive,
+    organisation,
+    contacts
   } = props
 
   console.log(store)
 
-  const userId = useOrgAuth().organisation.id
+  const userId = organisation.id
 
   // ** States
   const [query, setQuery] = useState('')
@@ -77,7 +79,7 @@ const SidebarLeft = props => {
   const router = useRouter()
 
   const handleChatClick = (type, chat) => {
-    dispatch(selectChat(chat))
+    dispatch(selectChat(chat.id))
     setActive({ type, id: chat.id })
     if (!mdAbove) {
       handleLeftSidebarToggle()
@@ -127,9 +129,10 @@ const SidebarLeft = props => {
         const arrToMap = query.length && filteredChat.length ? filteredChat : store.chats
 
         return arrToMap.map((chat, index) => {
-          const lastMessage = chat.chatMessages.slice(-1)[0]
+          // const lastMessage = chat.chatMessages.slice(-1)[0]
+          const lastMessage = chat.chatMessages[0]
           const activeCondition = active !== null && active.id === chat.id && active.type === 'chat'
-          const chatParticipant = chat.chatParticipants.find(participant => participant.user_id !== userId)
+          const chatParticipant = chat.chatParticipants[0]
 
           return (
             <ListItem key={index} disablePadding sx={{ '&:not(:last-child)': { mb: 1.5 } }}>
@@ -261,7 +264,7 @@ const SidebarLeft = props => {
           </ListItem>
         )
       } else {
-        const arrToMap = query.length && filteredContacts.length ? filteredContacts : store.contacts
+        const arrToMap = query.length && filteredContacts.length ? filteredContacts : contacts
 
         return arrToMap !== null
           ? arrToMap.map((contact, index) => {
@@ -337,10 +340,11 @@ const SidebarLeft = props => {
 
   const handleFilter = e => {
     setQuery(e.target.value)
-    if (store.chats !== null && store.contacts !== null) {
-      const searchFilterFunction = contact => contact.fullName.toLowerCase().includes(e.target.value.toLowerCase())
+    if (store.chats !== null && contacts !== null) {
+      const searchFilterFunction = contact =>
+        contact?.profile?.organisation_name.toLowerCase().includes(e.target.value.toLowerCase())
       const filteredChatsArr = store.chats.filter(searchFilterFunction)
-      const filteredContactsArr = store.contacts.filter(searchFilterFunction)
+      const filteredContactsArr = contacts.filter(searchFilterFunction)
       setFilteredChat(filteredChatsArr)
       setFilteredContacts(filteredContactsArr)
     }
@@ -419,6 +423,7 @@ const SidebarLeft = props => {
             fullWidth
             size='small'
             value={query}
+            type='search'
             onChange={handleFilter}
             placeholder='Search for contact...'
             sx={{ '& .MuiInputBase-root': { borderRadius: 5 } }}

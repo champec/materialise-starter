@@ -29,7 +29,7 @@ const navigation = () => {
           title: 'Drug Dash',
           path: '/pharmacy/drugdash',
           icon: 'fluent-emoji-high-contrast:man-running',
-          disabled: true
+          disabled: false
         }
       ]
     },

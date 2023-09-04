@@ -389,7 +389,7 @@ const MailLog = props => {
                     organisation_name: 'Group chat'
                   }
                   const recipient = isgroupchat ? group : mail.email_recipients[0]?.organisations
-                  console.log(recipient)
+
                   return (
                     <MailItem
                       key={mail.id}

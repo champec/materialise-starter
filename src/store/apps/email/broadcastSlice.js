@@ -21,10 +21,10 @@ export const createBroadcast = createAsyncThunk(
   'broadcasts/createBroadcast',
   async ({ recipients, subject, content, type, broadcastItem }, { getState }) => {
     const orgId = getState().organisation.organisation.id
-    const userId = getState().user.id
+    const userId = getState().user.user.id
 
     // Assuming you'll replace this with the actual label ID for broadcasts later.
-    const BROADCAST_LABEL_ID = 'YOUR_RANDOM_LABEL_ID_HERE'
+    const BROADCAST_LABEL_ID = 1
 
     // Step 1: Create the Broadcast
     const { data: broadcastData, error: broadcastError } = await supabase
@@ -35,50 +35,83 @@ export const createBroadcast = createAsyncThunk(
         subject,
         content
       })
-      .select('id') // Specify columns to return
-    if (broadcastError) throw broadcastError
+      .select('id')
+      .single()
 
-    const broadcastId = broadcastData[0].id
+    if (broadcastError) {
+      console.log(broadcastError)
+      throw broadcastError
+    }
+
+    const broadcastId = broadcastData.id
+
+    console.log('broadcastId', broadcastId)
 
     // Step 2: If broadcast type is productRequest, create an item in the broadcast_items table
-    if (type === 'productRequest' && broadcastItem) {
-      const { error: itemError } = await supabase
-        .from('broadcast_items')
-        .insert({
-          ...broadcastItem,
-          broadcast_id: broadcastId
-        })
-        .select('*') // Depending on which columns you want to return
+    if (type === 'item' && broadcastItem) {
+      const { error: itemError } = await supabase.from('broadcast_items').insert({
+        ...broadcastItem,
+        broadcast_id: broadcastId
+      })
+
       if (itemError) throw itemError
     }
 
     // Step 3: Create Conversations for each recipient
-    const conversations = recipients.map(recipientId => ({
+    const conversations = recipients.map(recipient => ({
       sender_organisation_id: orgId,
       sender_user_id: userId,
-      recipient_id: recipientId,
+      recipient_id: recipient,
       broadcast_id: broadcastId
     }))
 
     const { data: conversationData, error: conversationsError } = await supabase
       .from('email_conversations')
       .insert(conversations)
-      .select('id') // Specify columns to return
-    if (conversationsError) throw conversationsError
+      .select('*')
 
-    // Step 4: Add a label to each conversation
-    const conversationLabels = conversationData.map(conv => ({
-      message_id: conv.id,
-      label_id: BROADCAST_LABEL_ID
+    if (conversationsError) {
+      console.log(conversationsError)
+      throw conversationsError
+    }
+
+    // Step 4: Add recipients to email_recipients table
+    const emailRecipients = conversationData.map(conv => ({
+      conversation_id: conv.id,
+      recipient_id: orgId,
+      broadcast_id: broadcastId
     }))
 
-    const { error: labelsError } = await supabase
-      .from('email_conversation_labels')
-      .insert(conversationLabels)
-      .select('*') // Depending on which columns you want to return
-    if (labelsError) throw labelsError
+    const { error: recipientsError } = await supabase.from('email_recipients').insert(emailRecipients)
 
-    return broadcastData[0]
+    if (recipientsError) throw recipientsError
+
+    // Step 5: Add initial message to each conversation in email_messages
+    const initialMessages = conversationData.map(conv => ({
+      conversation_id: conv.id,
+      broadcast_id: broadcastId,
+      content // or the initial content you want
+    }))
+
+    const { error: messagesError } = await supabase.from('email_messages').insert(initialMessages)
+
+    if (messagesError) throw messagesError
+
+    // Step 6: Add a label to each conversation
+    const conversationLabels = conversationData.map(conv => ({
+      conversation_id: conv.id,
+      label_id: 1
+    }))
+
+    const { error: labelsError } = await supabase.from('email_conversation_labels').insert(conversationLabels)
+
+    if (labelsError) {
+      console.log(labelsError)
+      throw labelsError
+    }
+
+    console.log('Great Success', broadcastData)
+    return broadcastData
   }
 )
 

@@ -42,6 +42,7 @@ const ChatContent = props => {
     statusObj,
     getInitials,
     sidebarWidth,
+    organisation,
     userProfileRightOpen,
     handleLeftSidebarToggle,
     handleUserProfileRightSidebarToggle
@@ -54,19 +55,21 @@ const ChatContent = props => {
   }
 
   const memoizedChatLog = useMemo(() => {
-    return store.selectedChat && store.userProfile ? (
+    return store.selectedChat && organisation ? (
       <ChatLog
         hidden={hidden}
-        data={{ ...store.selectedChat, userContact: store.userProfile }}
+        data={{ ...store.selectedChat, userContact: organisation }}
         selectedChat={store.selectedChat}
       />
     ) : null
-  }, [store.selectedChat, store.userProfile, hidden])
+  }, [store.selectedChat, organisation, hidden])
 
   const renderContent = () => {
     if (store) {
       const selectedChat = store.selectedChat
-      const contact = selectedChat?.chatParticipants.find(participant => participant.user_id !== store.userProfile.id)
+      const contact = selectedChat?.chatParticipants[0]
+
+      console.log('selectedChat', selectedChat, store)
 
       if (!selectedChat) {
         return (

@@ -11,14 +11,12 @@ import useMediaQuery from '@mui/material/useMediaQuery'
 import { useDispatch, useSelector } from 'react-redux'
 import {
   sendMsg,
-  selectChat,
   fetchUserProfile,
   fetchChatsContacts,
   removeSelectedChat,
-  setUserProfile,
   updateSelectedChat
 } from 'src/store/apps/chat'
-import { fetchUserChats } from 'src/store/apps/chat'
+import { fetchUserChats, selectChat } from 'src/store/apps/chat'
 
 // ** Hooks
 import { useSettings } from 'src/@core/hooks/useSettings'
@@ -64,11 +62,11 @@ const AppChat = () => {
     offline: 'secondary'
   }
 
-  const { organisation } = useOrgAuth()
-  // console.log(organisation.id)
+  // const { organisation } = useOrgAuth()
+  const organisation = useSelector(state => state.organisation.organisation)
+  const contacts = useSelector(state => state.network.contacts.network)
 
   useEffect(() => {
-    dispatch(setUserProfile(organisation)) //! maybe use context data directly or use redux store in futire ?
     dispatch(fetchUserChats(organisation.id))
   }, [dispatch, organisation])
 
@@ -90,9 +88,9 @@ const AppChat = () => {
         .channel('any')
         .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'chatMessages' }, async payload => {
           // Check if the new message is for the current user
-          if (payload.new.organisation_id === store.userProfile.id) {
+          if (payload.new.organisation_id === organisation.id) {
             // Refetch the user chats when a new message is received
-            dispatch(fetchUserChats(store.userProfile.id))
+            dispatch(fetchUserChats(organisation.id))
 
             // If the new message is for the selected chat, update the selectedChat in the store
             if (store.selectedChat && payload.new.chat_id === store.selectedChat.id) {
@@ -125,6 +123,7 @@ const AppChat = () => {
   const handleLeftSidebarToggle = () => setLeftSidebarOpen(!leftSidebarOpen)
   const handleUserProfileLeftSidebarToggle = () => setUserProfileLeftOpen(!userProfileLeftOpen)
   const handleUserProfileRightSidebarToggle = () => setUserProfileRightOpen(!userProfileRightOpen)
+
   if (!store) return <p>Loading...</p>
   return (
     <Box
@@ -159,6 +158,8 @@ const AppChat = () => {
         handleUserProfileLeftSidebarToggle={handleUserProfileLeftSidebarToggle}
         active={active}
         setActive={setActive}
+        organisation={organisation}
+        contacts={contacts}
       />
       <ChatContent
         store={store}
@@ -169,6 +170,7 @@ const AppChat = () => {
         statusObj={statusObj}
         getInitials={getInitials}
         sidebarWidth={sidebarWidth}
+        organisation={organisation}
         userProfileRightOpen={userProfileRightOpen}
         handleLeftSidebarToggle={handleLeftSidebarToggle}
         handleUserProfileRightSidebarToggle={handleUserProfileRightSidebarToggle}

@@ -23,6 +23,7 @@ import conversations from './apps/email/conversationsSlice'
 import messagesSlice from './apps/email/messagesSlice'
 import broadcastSlice from './apps/email/broadcastSlice'
 import network from './network'
+import finder from './apps/finder'
 
 //when reading data in global storage, we use a hook called useSelector() which takes the store as an argument, this config combines all our reducers so they can be read anywhere
 //with dot notation
@@ -32,6 +33,7 @@ export const store = configureStore({
     user,
     chat,
     email,
+    finder,
     kanban,
     invoice,
     network,

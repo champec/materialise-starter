@@ -193,23 +193,25 @@ function BroadCastRequestItem({ activeStep, setActiveStep, steps, setFormValues,
             <Typography variant='h7'>Confirm the details and press submit below to submit the form</Typography>
             <br />
             <br />
-            <Typography>Item: {formValues.itemType}</Typography>
-            <Typography>Name: {formValues.itemname}</Typography>
-            <Typography>Brand: {formValues.brand}</Typography>
-            <Typography>Quantity Type: {formValues.quantityType}</Typography>
-            <Typography>Quantity Number: {formValues.quantityNumber}</Typography>
-            <Typography>State: {formValues.state}</Typography>
-            <Typography>Transaction Type: {formValues.transactionType}</Typography>
-            {formValues.transactionType === 'buy' && <Typography>Offer Price: {formValues.offerPrice}</Typography>}
-            {formValues.transactionType === 'exchange' && (
-              <Typography>Exchange For: {formValues.exchangeFor}</Typography>
-            )}
-            {formValues.transactionType === 'replace' && (
-              <Typography>
-                Replace Date:{' '}
-                {(formValues.replaceDate instanceof Date ? formValues.replaceDate : new Date()).toLocaleDateString()}
-              </Typography>
-            )}
+            <Box style={{ maxHeight: '100px', overflowY: 'auto' }}>
+              <Typography>Item: {formValues.itemType}</Typography>
+              <Typography>Name: {formValues.itemname}</Typography>
+              <Typography>Brand: {formValues.brand}</Typography>
+              <Typography>Quantity Type: {formValues.quantityType}</Typography>
+              <Typography>Quantity Number: {formValues.quantityNumber}</Typography>
+              <Typography>State: {formValues.state}</Typography>
+              <Typography>Transaction Type: {formValues.transactionType}</Typography>
+              {formValues.transactionType === 'buy' && <Typography>Offer Price: {formValues.offerPrice}</Typography>}
+              {formValues.transactionType === 'exchange' && (
+                <Typography>Exchange For: {formValues.exchangeFor}</Typography>
+              )}
+              {formValues.transactionType === 'replace' && (
+                <Typography>
+                  Replace Date:{' '}
+                  {(formValues.replaceDate instanceof Date ? formValues.replaceDate : new Date()).toLocaleDateString()}
+                </Typography>
+              )}
+            </Box>
           </Box>
         )
       default:
