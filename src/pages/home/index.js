@@ -100,6 +100,41 @@ const Home = () => {
 
   const totalPharmaciesCount = getTotalPharmaciesCount()
 
+  async function fetchDrugData() {
+    const response = await fetch('https://bnf.nice.org.uk/page-data/drugs/page-data.json')
+    if (!response.ok) {
+      console.log(response.statusText)
+      throw new Error(response.statusText)
+    }
+    const data = await response.json()
+    return data.result.data.allDrugs.letters.flatMap(letterGroup => letterGroup.links)
+  }
+
+  async function upsertDrugTitlesToSupabase(drugs) {
+    const drugsToUpsert = drugs.map(drug => ({
+      name: drug.title.replace(' [Specialist drug]', ''), // Remove the [Specialist drug] suffix
+      is_specialist: drug.title.includes('[Specialist drug]')
+    }))
+
+    const { error } = await supabase.from('bnf_drugs').upsert(drugsToUpsert, { onConflict: 'name' })
+
+    if (error) {
+      console.log(error)
+      throw error
+    }
+  }
+
+  const updateAllDrugTitles = async () => {
+    try {
+      const drugs = await fetchDrugData()
+      await upsertDrugTitlesToSupabase(drugs)
+      setProcess('All drug titles updated successfully.')
+    } catch (error) {
+      console.error('Error updating drug titles:', error)
+      setProcess('Failed to update drug titles.')
+    }
+  }
+
   return (
     <Grid container spacing={6}>
       <Grid item xs={12}>
@@ -109,6 +144,9 @@ const Home = () => {
           <CardContent>
             <Button variant='contained' color='primary' onClick={updatePharmacies}>
               Update Pharmacies
+            </Button>
+            <Button variant='contained' color='primary' onClick={updateAllDrugTitles}>
+              Update All Drug Titles
             </Button>
             <Button variant='contained' color='primary' onClick={getTotalPharmaciesCount} title='test' />
             <Typography sx={{ mb: 2 }}>All the best for your new project.</Typography>

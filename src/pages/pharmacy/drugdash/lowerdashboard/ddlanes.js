@@ -10,7 +10,7 @@ const PerfectScrollbar = styled(PerfectScrollbarComponent)({
 })
 
 const ScrollWrapper = ({ children }) => {
-  return <PerfectScrollbar options={{ wheelPropagation: false, suppressScrollX: true }}>{children}</PerfectScrollbar>
+  return <PerfectScrollbar options={{ wheelPropagation: true, suppressScrollX: true }}>{children}</PerfectScrollbar>
 }
 
 const Lane = ({ title, children }) => {

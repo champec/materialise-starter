@@ -24,6 +24,11 @@ import messagesSlice from './apps/email/messagesSlice'
 import broadcastSlice from './apps/email/broadcastSlice'
 import network from './network'
 import finder from './apps/finder'
+import drugdash from './apps/drugdash'
+import ddPatients from './apps/drugdash/ddPatients'
+import ddDrugs from './apps/drugdash/ddDrugs'
+import ddDrivers from './apps/drugdash/ddDrivers'
+import ddModals from './apps/drugdash/ddModals'
 
 //when reading data in global storage, we use a hook called useSelector() which takes the store as an argument, this config combines all our reducers so they can be read anywhere
 //with dot notation
@@ -37,6 +42,11 @@ export const store = configureStore({
     kanban,
     invoice,
     network,
+    drugdash,
+    ddDrivers,
+    ddDrugs,
+    ddModals,
+    ddPatients,
     calendar,
     productsSlice,
     inventorySlice,
