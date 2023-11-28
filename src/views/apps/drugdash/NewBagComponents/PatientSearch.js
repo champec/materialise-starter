@@ -26,6 +26,7 @@ function PatientSearch({ inputData, setInputData }) {
 
   const handleOptionClick = option => {
     dispatch(setSelectedPatient(option))
+    dispatch(openModal('patientDetails'))
   }
 
   const openAddPatientModal = () => {
@@ -60,7 +61,6 @@ function PatientSearch({ inputData, setInputData }) {
         }}
         renderInput={params => <TextField {...params} label='Search Patients' variant='outlined' fullWidth />}
         getOptionLabel={option => {
-          console.log('OPTION', option)
           if (typeof option === 'string') {
             return option
           }
@@ -74,9 +74,16 @@ function PatientSearch({ inputData, setInputData }) {
             setInputData({ first_name: newValue, last_name: '' })
           } else if (newValue?.inputValue) {
             openAddPatientModal()
-          } else {
-            setInputData({ first_name: newValue.first_name, last_name: newValue.last_name })
+          } else if (newValue) {
+            // <-- Ensure that newValue is not null or undefined
+            setInputData({
+              first_name: newValue.first_name || '',
+              last_name: newValue.last_name || ''
+            })
             handleOptionClick(newValue)
+          } else {
+            // Handle case where newValue is null or undefined, if necessary
+            setInputData({ first_name: '', last_name: '' }) // This is just an example. You can adjust as needed.
           }
         }}
         renderOption={(props, option) => (

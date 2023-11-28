@@ -17,6 +17,7 @@
     "@babel/eslint-parser": "7.19.1",
     "@casl/ability": "6.3.2",
     "@casl/react": "3.1.0",
+    "@daily-co/daily-js": "^0.54.0",
     "@emotion/cache": "11.10.5",
     "@emotion/react": "11.10.5",
     "@emotion/server": "11.10.0",

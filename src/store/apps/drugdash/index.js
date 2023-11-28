@@ -1,22 +1,6 @@
-import { createSlice, createAsyncThunk } from '@reduxjs/toolkit'
-import { supabaseOrg as supabase } from 'src/configs/supabase'
-
-// Fetch Bags
-export const fetchBags = createAsyncThunk('drug_dash/fetchBags', async () => {
-  const { data, error } = await supabase.from('dd_bags').select(`
-      *,
-      dd_jobs:job_id (*)
-    `)
-  if (error) throw error
-  return data
-})
-
-// Fetch Jobs
-export const fetchJobs = createAsyncThunk('drug_dash/fetchJobs', async () => {
-  const { data, error } = await supabase.from('dd_jobs').select('*')
-  if (error) throw error
-  return data
-})
+import { createSlice } from '@reduxjs/toolkit'
+import { fetchBags } from './ddBags'
+import { fetchJobs } from './ddDelivery'
 
 const drugDashSlice = createSlice({
   name: 'drug_dash',
@@ -25,10 +9,7 @@ const drugDashSlice = createSlice({
       bagLane: {
         id: 1,
         title: 'Bag Lane',
-        data: Array.from({ length: 15 }, (_, index) => ({
-          id: index + 1,
-          title: `Card #${index + 1}`
-        }))
+        data: []
       },
       jobLane: {
         id: 2,
@@ -57,10 +38,7 @@ const drugDashSlice = createSlice({
 
   reducers: {},
   extraReducers: {
-    // Fetch Bags
-    [fetchBags.pending]: state => {
-      state.status = 'loading'
-    },
+    // Update when bags are fetched
     [fetchBags.fulfilled]: (state, action) => {
       action.payload.forEach(bag => {
         if (bag.job_id && bag.job) {
@@ -93,17 +71,9 @@ const drugDashSlice = createSlice({
           }
         }
       })
-
-      state.status = 'succeeded'
     },
 
-    [fetchBags.rejected]: (state, action) => {
-      state.status = 'failed'
-      state.error = action.error.message
-    },
-    [fetchJobs.pending]: state => {
-      state.status = 'loading'
-    },
+    // Update when jobs are fetched
     [fetchJobs.fulfilled]: (state, action) => {
       action.payload.forEach(job => {
         if (job.location_status === 'inTransit') {
@@ -115,12 +85,6 @@ const drugDashSlice = createSlice({
           state.lanes.jobLane.data.push(job)
         }
       })
-      state.status = 'succeeded'
-    },
-
-    [fetchJobs.rejected]: (state, action) => {
-      state.status = 'failed'
-      state.error = action.error.message
     }
   }
 })

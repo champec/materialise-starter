@@ -22,19 +22,22 @@ export const fetchPatientDrugs = createAsyncThunk('drug_dash/fetchPatientDrugs',
 export const searchDrugs = createAsyncThunk('drug_dash/searchDrugs', async searchTerm => {
   const { data, error } = await supabase
     .from('bnf_medicinal_forms')
-    .select('name, manufacturer')
+    .select('id, name, manufacturer, bnf_form_packs(id, size)')
     .ilike('name', `%${searchTerm}%`)
 
   if (error) throw error
+
   return data
 })
 
 // Upsert Patient Drugs
 export const upsertPatientDrug = createAsyncThunk('drug_dash/upsertPatientDrug', async drugInfo => {
-  const conflictColumn = drugInfo.id ? 'id' : null // Determine if we are updating or inserting
-  const { data, error } = await supabase.from('dd_patient_drugs').upsert([drugInfo], { onConflict: conflictColumn })
+  const { data, error } = await supabase.from('dd_patient_medication').upsert([drugInfo], { onConflict: 'id' })
 
-  if (error) throw error
+  if (error) {
+    console.log(error)
+    throw error
+  }
   return data[0]
 })
 
@@ -47,9 +50,28 @@ const ddDrugsSlice = createSlice({
     searchedDrugs: [],
     selectedDrugs: [],
     regularMedications: [],
-    acuteMedications: []
+    acuteMedications: [],
+    selectedDrugDetail: null
   },
-  reducers: {},
+  reducers: {
+    setSelectedDrugDetail: (state, action) => {
+      state.selectedDrugDetail = action.payload
+    },
+    addSelectedDrugs: (state, action) => {
+      state.selectedDrugs.push(action.payload)
+    },
+    removeSelectedDrugs: (state, action) => {
+      state.selectedDrugs = state.selectedDrugs.filter(drug => drug.id !== action.payload.id)
+    },
+    deselectAllDrugs: (state, action) => {
+      const drugsToRemove = action.payload
+      state.selectedDrugs = state.selectedDrugs.filter(drug => !drugsToRemove.find(d => d.id === drug.id))
+    },
+
+    selectAllDrugs: (state, action) => {
+      state.selectedDrugs.push(...action.payload)
+    }
+  },
   extraReducers: {
     [searchDrugs.pending]: state => {
       state.status = 'loading'
@@ -90,4 +112,6 @@ const ddDrugsSlice = createSlice({
   }
 })
 
+export const { setSelectedDrugDetail, addSelectedDrugs, removeSelectedDrugs, deselectAllDrugs, selectAllDrugs } =
+  ddDrugsSlice.actions
 export default ddDrugsSlice.reducer

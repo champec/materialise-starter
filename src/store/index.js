@@ -29,6 +29,8 @@ import ddPatients from './apps/drugdash/ddPatients'
 import ddDrugs from './apps/drugdash/ddDrugs'
 import ddDrivers from './apps/drugdash/ddDrivers'
 import ddModals from './apps/drugdash/ddModals'
+import ddDelivery from './apps/drugdash/ddDelivery'
+import ddBags from './apps/drugdash/ddBags'
 
 //when reading data in global storage, we use a hook called useSelector() which takes the store as an argument, this config combines all our reducers so they can be read anywhere
 //with dot notation
@@ -58,7 +60,9 @@ export const store = configureStore({
     labelsSlice,
     conversations,
     messagesSlice,
-    broadcastSlice
+    broadcastSlice,
+    ddBags,
+    ddDelivery
   },
 
   //by fault it will return any middleware you add or you can just ask it to include only the middle ware you want, this allways it to return defualt middle with a funciton

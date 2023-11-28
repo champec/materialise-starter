@@ -3,6 +3,7 @@ import { useDispatch, useSelector } from 'react-redux'
 import PatientSearch from './NewBagComponents/PatientSearch'
 import PatientDetails from './NewBagComponents/PatientDetails'
 import { fetchPatients } from 'src/store/apps/drugdash/ddPatients'
+import { openModal } from 'src/store/apps/drugdash/ddModals'
 
 function NewBagModal() {
   const dispatch = useDispatch()
@@ -19,13 +20,12 @@ function NewBagModal() {
     dispatch(fetchPatients())
   }, [dispatch])
 
-  if (selectedPatient) {
-    return (
-      <div>
-        <PatientDetails onBackClick={handleBackClick} inputData={inputData} />
-      </div>
-    )
-  }
+  // useEffect(() => {
+  //   if (selectedPatient) {
+  //     dispatch(openModal('patientDetails'))
+  //   }
+  //   dispatch(fetchPatients())
+  // }, [selectedPatient, dispatch])
 
   return (
     <div>

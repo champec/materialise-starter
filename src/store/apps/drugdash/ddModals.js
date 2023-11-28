@@ -18,9 +18,13 @@ const modalSlice = createSlice({
     closeSpecificModal: (state, action) => {
       // filter out the modal with the specified name
       state.openModals = state.openModals.filter(modal => modal !== action.payload)
+    },
+    closeAllModals: state => {
+      // reset the openModals array
+      state.openModals = []
     }
   }
 })
 
-export const { openModal, closeModal, closeSpecificModal } = modalSlice.actions
+export const { openModal, closeModal, closeSpecificModal, closeAllModals } = modalSlice.actions
 export default modalSlice.reducer

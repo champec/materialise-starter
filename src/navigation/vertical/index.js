@@ -34,6 +34,31 @@ const navigation = () => {
       ]
     },
     {
+      title: 'Pharmacy First',
+      path: '/second-page',
+      icon: 'iconoir:pharmacy-cross-circle',
+      children: [
+        {
+          title: 'Appointment Scheduler',
+          path: '/pharmacy-first/appointment-scheduler',
+          icon: 'streamline:waiting-appointments-calendar',
+          disabled: false
+        },
+        {
+          title: 'Appointment List',
+          path: '/pharmacy-first/appointment-list',
+          icon: 'bi:file-medical-fill',
+          disabled: false
+        },
+        {
+          title: 'Call Screen',
+          path: '/pharmacy-first/call-screen',
+          icon: 'wpf:medical-doctor',
+          disabled: false
+        }
+      ]
+    },
+    {
       sectionTitle: 'Communication'
     },
     {

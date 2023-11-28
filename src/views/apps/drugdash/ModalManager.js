@@ -2,7 +2,7 @@ import React from 'react'
 
 // Redux
 import { useSelector, useDispatch } from 'react-redux'
-import { closeModal } from 'src/store/apps/drugdash/ddModals'
+import { closeModal, closeAllModals } from 'src/store/apps/drugdash/ddModals'
 import { setSelectedPatient } from 'src/store/apps/drugdash/ddPatients'
 
 import PatientSearchModal from './PatientSearchModal'
@@ -12,9 +12,10 @@ import AddEditPatientModal from './AddEditPatientModal'
 import EditBag from './EditBag'
 import NewBagModal from './NewBagModal'
 import NewJobModal from './NewJobModal'
+import PatientDetails from './NewBagComponents/PatientDetails'
 
 // MUI Components
-import { Dialog, DialogContent, Container, IconButton } from '@mui/material'
+import { Dialog, DialogContent, Container, IconButton, DialogTitle, AppBar, Toolbar, Typography } from '@mui/material'
 import IconifyIcon from 'src/@core/components/icon'
 
 const ModalManager = () => {
@@ -41,6 +42,8 @@ const ModalManager = () => {
         return <EditBag onClose={handleClose} />
       case 'newBag':
         return <NewBagModal onClose={handleClose} />
+      case 'patientDetails':
+        return <PatientDetails onClose={handleClose} />
       case 'newJob':
         return <NewJobModal onClose={handleClose} />
       default:
@@ -59,7 +62,9 @@ const ModalManager = () => {
           maxWidth='md'
           PaperProps={{
             style: {
-              minHeight: '70vh' // Setting minimum height to 70% of viewport height
+              display: 'flex',
+              flexDirection: 'column',
+              minHeight: '70vh'
             }
           }}
           BackdropProps={{
@@ -68,21 +73,30 @@ const ModalManager = () => {
             }
           }}
         >
-          <IconButton
-            onClick={handleClose}
-            style={{
-              position: 'absolute',
-              top: '10px',
-              right: '10px',
-              color: '#666'
-            }}
-          >
-            <IconifyIcon icon='mdi:close' />
-            {/* <CloseIcon /> */}
-          </IconButton>
-          <Container>
-            <DialogContent>{renderDialogContent(modalName)}</DialogContent>
-          </Container>
+          <AppBar position='static'>
+            <Toolbar>
+              {openModals.length > 1 && (
+                <IconButton edge='start' color='inherit' onClick={() => dispatch(closeModal())}>
+                  <IconifyIcon icon='mdi:arrow-left' />
+                </IconButton>
+              )}
+              <Typography variant='h6' component='div' style={{ flexGrow: 1 }}>
+                Modal Title (can be dynamic based on modalName)
+              </Typography>
+              <IconButton
+                color='inherit'
+                onClick={() => {
+                  dispatch(closeAllModals())
+                  dispatch(setSelectedPatient(null))
+                }}
+              >
+                <IconifyIcon icon='mdi:close' />
+              </IconButton>
+            </Toolbar>
+          </AppBar>
+          <DialogContent style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
+            {renderDialogContent(modalName)}
+          </DialogContent>
         </Dialog>
       ))}
     </>
