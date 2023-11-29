@@ -39,7 +39,9 @@ const Calendar = props => {
     setCalendarApi,
     handleSelectEvent,
     handleLeftSidebarToggle,
-    handleAddEventSidebarToggle
+    handleAddEventSidebarToggle,
+    timeSlotType,
+    appointment
   } = props
 
   // ** Refs
@@ -68,7 +70,7 @@ const Calendar = props => {
           titleFormat: { year: 'numeric', month: 'long', day: 'numeric' }
         }
       },
-
+      slotDuration: appointment ? '00:10:00' : '00:30:00',
       /*
             Enable dragging and resizing event
             ? Docs: https://fullcalendar.io/docs/editable
@@ -157,6 +159,18 @@ const Calendar = props => {
 
       // Get direction from app state (store)
       direction
+    }
+
+    let slotDuration
+    switch (timeSlotType) {
+      case 'appointment':
+        slotDuration = '00:10:00' // 10-minute slots for appointments
+        break
+      case 'workSchedule':
+        slotDuration = '01:00:00' // 1-hour slots for work schedules
+        break
+      default:
+        slotDuration = '00:30:00' // Default slot duration
     }
 
     // @ts-ignore

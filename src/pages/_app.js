@@ -7,7 +7,7 @@ import NProgress from 'nprogress'
 
 //** Reduct
 import { Provider } from 'react-redux'
-import { store } from 'src/store'
+import store from 'src/store'
 
 // ** Emotion Imports
 import { CacheProvider } from '@emotion/react'

@@ -1,7 +1,7 @@
 import React, { useEffect } from 'react'
 import DailyIframe from '@daily-co/daily-js'
 
-const VideoCallComponent = ({ containerRef }) => {
+const VideoCallComponent = ({ containerRef, url }) => {
   useEffect(() => {
     const callFrame = DailyIframe.createFrame(containerRef.current, {
       iframeStyle: {
@@ -13,12 +13,14 @@ const VideoCallComponent = ({ containerRef }) => {
     })
 
     callFrame.join({
-      url: 'https://pharmex.daily.co/0IADVErqAsyP9EmMpbo7',
+      url: url ? url : 'https://pharmex.daily.co/0IADVErqAsyP9EmMpbo7',
       theme: {
         colors: {
           accent: '#1AA1FB',
           background: '#282A42',
-          mainAreaBg: '#282A42'
+          mainAreaBg: '#282A42',
+          backgroundAccent: '#282A42',
+          baseText: '#FFFFFF'
         }
       }
     })

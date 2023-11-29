@@ -23,7 +23,8 @@ const SidebarLeft = props => {
     handleCalendarsUpdate,
     handleLeftSidebarToggle,
     handleAddEventSidebarToggle,
-    handleAddCalendarSidebarToggle
+    handleAddCalendarSidebarToggle,
+    appointment
   } = props
   const colorsArr = calendarsColor ? Object.entries(calendarsColor) : []
 
@@ -49,24 +50,36 @@ const SidebarLeft = props => {
         }
       />
       {store.calendarTypes.map(calendarType => (
-        <FormControlLabel
-          key={calendarType.id}
-          label={calendarType.title}
-          sx={{ mb: 0.5 }}
-          control={
-            isEditing ? (
-              <IconButton onClick={() => handleEditCalendarItem(calendarType)}>
-                <Icon icon='bx:edit' color='grey' fontSize={18} />
-              </IconButton>
-            ) : (
-              <Checkbox
-                color={calendarType.color}
-                checked={store.selectedCalendars.includes(calendarType.id)}
-                onChange={() => dispatch(handleCalendarsUpdate(calendarType.id))}
-              />
-            )
-          }
-        />
+        <>
+          <FormControlLabel
+            key={calendarType.id}
+            label={
+              <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                {calendarType?.icon && (
+                  <IconButton>
+                    <Icon icon={calendarType.icon} color='grey' fontSize={18} />
+                  </IconButton>
+                )}
+                <Box />
+                {calendarType.title}
+              </Box>
+            }
+            sx={{ mb: 0.5 }}
+            control={
+              isEditing ? (
+                <IconButton onClick={() => handleEditCalendarItem(calendarType)}>
+                  <Icon icon='bx:edit' color='grey' fontSize={18} />
+                </IconButton>
+              ) : (
+                <Checkbox
+                  color={calendarType.color}
+                  checked={store.selectedCalendars.includes(calendarType.id)}
+                  onChange={() => dispatch(handleCalendarsUpdate(calendarType.id))}
+                />
+              )
+            }
+          />
+        </>
       ))}
       {isEditing && (
         <Box>
@@ -124,7 +137,7 @@ const SidebarLeft = props => {
         }}
       >
         <Button fullWidth variant='contained' onClick={handleSidebarToggleSidebar}>
-          Add Event
+          {appointment ? 'Book' : 'Add Event'}
         </Button>
 
         <Box sx={{ mt: 7, mb: 2.5, display: 'flex', flexDirection: 'row', alignItems: 'center' }}>
