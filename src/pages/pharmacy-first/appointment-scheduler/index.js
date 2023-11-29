@@ -8,7 +8,21 @@ import useMediaQuery from '@mui/material/useMediaQuery'
 
 // ** Redux Imports
 import { useDispatch, useSelector } from 'react-redux'
-import { fetchCalendarTypes, handleSelectCalendar } from 'src/store/apps/calendar/pharmacyfirst/bookingsCalendarSlice'
+import {
+  fetchCalendarTypes,
+  handleSelectCalendar,
+  handleCalendarsUpdate,
+  addEvent,
+  fetchEvents,
+  deleteEvent,
+  updateEvent,
+  handleSelectEvent,
+  handleAllCalendars,
+  addCalendarType,
+  updateCalendarType,
+  deleteCalendarType,
+  updateViewDates
+} from 'src/store/apps/calendar/pharmacyfirst/bookingsCalendarSlice'
 
 // ** Hooks
 import { useSettings } from 'src/@core/hooks/useSettings'
@@ -23,20 +37,13 @@ import AddEventSidebar from 'src/views/apps/Calendar/AddEventSidebar'
 import AddCalendarSidebar from 'src/views/apps/Calendar/AddCalendarSidebar'
 
 // ** Actions
-import {
-  addEvent,
-  fetchEvents,
-  deleteEvent,
-  updateEvent,
-  handleSelectEvent,
-  handleAllCalendars,
-  handleCalendarsUpdate,
-  addCalendarType,
-  updateCalendarType,
-  deleteCalendarType,
-  // handleSelectCalendar,
-  updateViewDates
-} from 'src/store/apps/calendar'
+// import {
+
+//   // handleCalendarsUpdate,
+
+//   // handleSelectCalendar,
+
+// } from 'src/store/apps/calendar'
 
 // ** CalendarColors
 const calendarsColor = {
