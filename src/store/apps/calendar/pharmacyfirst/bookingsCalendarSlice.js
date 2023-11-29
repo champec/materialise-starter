@@ -71,7 +71,7 @@ export const bookingsCalendarSlice = createSlice({
     events: [],
     selectedEvent: null,
     selectedCalendar: null, // new state
-    selectedCalendars: ['Busines'],
+    selectedCalendars: [],
     calendarTypes: [],
     viewStart: null,
     viewEnd: null
