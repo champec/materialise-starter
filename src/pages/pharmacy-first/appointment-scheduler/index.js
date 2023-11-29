@@ -18,9 +18,6 @@ import {
   updateEvent,
   handleSelectEvent,
   handleAllCalendars,
-  addCalendarType,
-  updateCalendarType,
-  deleteCalendarType,
   updateViewDates
 } from 'src/store/apps/calendar/pharmacyfirst/bookingsCalendarSlice'
 
@@ -54,7 +51,7 @@ const calendarsColor = {
   ETC: 'info'
 }
 
-const AppCalendar = () => {
+const AppCalendar = ({ addCalendarType, updateCalendarType, deleteCalendarType }) => {
   // ** States
   const [calendarApi, setCalendarApi] = useState(null)
   const [leftSidebarOpen, setLeftSidebarOpen] = useState(false)

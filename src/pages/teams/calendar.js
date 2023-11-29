@@ -29,9 +29,6 @@ import {
   handleSelectEvent,
   handleAllCalendars,
   handleCalendarsUpdate,
-  addCalendarType,
-  updateCalendarType,
-  deleteCalendarType,
   handleSelectCalendar,
   updateViewDates
 } from 'src/store/apps/calendar'
@@ -45,7 +42,7 @@ const calendarsColor = {
   ETC: 'info'
 }
 
-const AppCalendar = () => {
+const AppCalendar = ({ addCalendarType, updateCalendarType, deleteCalendarType }) => {
   // ** States
   const [calendarApi, setCalendarApi] = useState(null)
   const [leftSidebarOpen, setLeftSidebarOpen] = useState(false)
