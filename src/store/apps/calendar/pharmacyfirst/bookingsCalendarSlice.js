@@ -14,11 +14,13 @@ export const fetchEvents = createAsyncThunk('appCalendar/fetchEvents', async (or
 })
 
 // ** Add Event
-export const addEvent = createAsyncThunk('appCalendar/addEvent', async ({ modifiedEvent, orgId }, { dispatch }) => {
-  console.log({ orgId, modifiedEvent }, 'add event')
-  const { data, error } = await supabase.from('calendar_events').insert(modifiedEvent)
+export const addEvent = createAsyncThunk('appCalendar/addEvent', async (event, { dispatch, getState }) => {
+  const orgId = getState().organisation.organisation.id
+
+  const { data, error } = await supabase.from('calendar_events').insert(event).select('*').single()
   if (error) {
     console.log(error)
+    throw error
   }
   await dispatch(fetchEvents(orgId))
   return data
@@ -47,9 +49,43 @@ export const deleteEvent = createAsyncThunk('appCalendar/deleteEvent', async ({ 
   return data
 })
 
+// ** Create a booking
+export const createBooking = createAsyncThunk('appCalendar/createBooking', async (booking, { dispatch }) => {
+  const { data, error } = await supabase.from('pp_bookings').insert(booking).select('*').single()
+  if (error) {
+    console.log(error)
+    throw error
+  }
+  return data
+})
+
+// ** Update a booking
+export const updateBooking = createAsyncThunk('appCalendar/updateBooking', async ({ booking, id }, { dispatch }) => {
+  const { data, error } = await supabase.from('pp_bookings').update(booking).eq('id', id).select('*').single()
+  if (error) {
+    console.log(error)
+    throw error
+  }
+  console.log('update booking success', data)
+  dispatch(fetchEvents(orgId))
+  return data
+})
+
+// ** Delete a booking
+export const deleteBooking = createAsyncThunk('appCalendar/deleteBooking', async ({ id }, { dispatch }) => {
+  const { data, error } = await supabase.from('pp_bookings').delete().eq('id', id).select('id').single()
+  if (error) {
+    console.log(error)
+    throw error
+  }
+  console.log('delete booking success', data)
+  dispatch(fetchEvents(orgId))
+  return data
+})
+
 //** Fetch Calendar types
 export const fetchCalendarTypes = createAsyncThunk('appCalendar/fetchCalendarTypes', async () => {
-  const { data, error } = await supabase.from('calendar_types').select('*').eq('type', 'appointment')
+  const { data, error } = await supabase.from('calendar_types').select('*').eq('type', 'booking')
   if (error) {
     console.log(error)
   }
@@ -74,7 +110,8 @@ export const bookingsCalendarSlice = createSlice({
     selectedCalendars: [],
     calendarTypes: [],
     viewStart: null,
-    viewEnd: null
+    viewEnd: null,
+    notifyApiKey: null
   },
   reducers: {
     handleSelectEvent: (state, action) => {

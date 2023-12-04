@@ -25,6 +25,7 @@ import {
 import { useSettings } from 'src/@core/hooks/useSettings'
 import withReducer from 'src/@core/HOC/withReducer'
 import bookingsCalendarSlice from 'src/store/apps/calendar/pharmacyfirst/bookingsCalendarSlice'
+import calendar from 'src/store/apps/calendar'
 
 // ** FullCalendar & App Components Imports
 import Calendar from 'src/views/apps/Calendar/Calendar'
@@ -32,6 +33,7 @@ import SidebarLeft from 'src/views/apps/Calendar/SidebarLeft'
 import CalendarWrapper from 'src/@core/styles/libs/fullcalendar'
 import AddEventSidebar from 'src/views/apps/Calendar/AddEventSidebar'
 import AddCalendarSidebar from 'src/views/apps/Calendar/AddCalendarSidebar'
+import BookCalendarSidebar from 'src/views/apps/Calendar/BookCalendarSidebar'
 
 // ** Actions
 // import {
@@ -56,7 +58,9 @@ const AppCalendar = ({ addCalendarType, updateCalendarType, deleteCalendarType }
   const [calendarApi, setCalendarApi] = useState(null)
   const [leftSidebarOpen, setLeftSidebarOpen] = useState(false)
   const [addEventSidebarOpen, setAddEventSidebarOpen] = useState(false)
+  const [addBookingSidebarOpen, setAddBookingSidebarOpen] = useState(false)
   const [addCalendarSidebarOpen, setAddCalendarSidebarOpen] = useState(false)
+  const [bookCalendarSidebarOpen, setBookCalendarSidebarOpen] = useState(false)
 
   // ** Hooks
   const { settings } = useSettings()
@@ -82,6 +86,7 @@ const AppCalendar = ({ addCalendarType, updateCalendarType, deleteCalendarType }
   }, [dispatch])
   const handleLeftSidebarToggle = () => setLeftSidebarOpen(!leftSidebarOpen)
   const handleAddEventSidebarToggle = () => setAddEventSidebarOpen(!addEventSidebarOpen)
+  const handleAddBookingSidebarToggle = () => setAddBookingSidebarOpen(!addBookingSidebarOpen)
   const handleAddCalendarSidebarToggle = () => setAddCalendarSidebarOpen(!addCalendarSidebarOpen)
 
   return (
@@ -106,6 +111,7 @@ const AppCalendar = ({ addCalendarType, updateCalendarType, deleteCalendarType }
         handleLeftSidebarToggle={handleLeftSidebarToggle}
         handleAddEventSidebarToggle={handleAddEventSidebarToggle}
         handleAddCalendarSidebarToggle={handleAddCalendarSidebarToggle}
+        handleAddBookingSidebarToggle={handleAddBookingSidebarToggle}
         appointment
       />
       <Box
@@ -161,10 +167,26 @@ const AppCalendar = ({ addCalendarType, updateCalendarType, deleteCalendarType }
         addCalendarSidebarOpen={addCalendarSidebarOpen}
         handleAddCalendarSidebarToggle={handleAddCalendarSidebarToggle}
       />
+      <BookCalendarSidebar
+        store={store}
+        dispatch={dispatch}
+        calendarApi={calendarApi}
+        updateCalendarType={updateCalendarType}
+        addCalendarType={addCalendarType}
+        deleteCalendarType={deleteCalendarType}
+        handleSelectCalendar={handleSelectCalendar}
+        drawerWidth={addEventSidebarWidth}
+        addCalendarSidebarOpen={addCalendarSidebarOpen}
+        handleAddCalendarSidebarToggle={handleAddCalendarSidebarToggle}
+        bookCalendarSidebarOpen={bookCalendarSidebarOpen}
+        handleAddBookingSidebarToggle={handleAddBookingSidebarToggle}
+        addBookingSidebarOpen={addBookingSidebarOpen}
+        handleSelectEvent={handleSelectEvent}
+      />
     </CalendarWrapper>
   )
 }
 
 // export default AppCalendar
 
-export default withReducer('bookingsCalendar', bookingsCalendarSlice)(AppCalendar)
+export default withReducer({ bookingsCalendar: bookingsCalendarSlice, calendar: calendar })(AppCalendar)

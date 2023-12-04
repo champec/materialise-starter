@@ -111,7 +111,8 @@ const Calendar = props => {
           `bg-${colorName}`
         ]
       },
-      eventClick({ event: clickedEvent }) {
+      eventClick({ event: clickedEvent, jsEvent }) {
+        jsEvent.preventDefault() // Prevents going to the URL
         dispatch(handleSelectEvent(clickedEvent))
         handleAddEventSidebarToggle()
 
@@ -132,7 +133,7 @@ const Calendar = props => {
         const ev = { ...blankEvent }
         ev.start = info.date
         ev.end = info.date
-        ev.allDay = true
+        ev.allDay = info.allDay
 
         // @ts-ignore
         dispatch(handleSelectEvent(ev))

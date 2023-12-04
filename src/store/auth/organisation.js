@@ -15,9 +15,11 @@ export const login = createAsyncThunk('organisation/login', async (params, thunk
   // Fetch corresponding record from the public.users table
   const { data: authUser, error: userError } = await supabase
     .from('organisations')
-    .select('*, pharmacies(*)')
+    .select('*, pharmacies(*), pharmacy_settings(*)')
     .eq('id', data.user.id)
     .single()
+
+  console.log('user data fetch RTK', authUser)
 
   if (userError) {
     console.log('user data fetch RTK', { userError })
@@ -48,7 +50,7 @@ export const initializeSession = createAsyncThunk('organisation/initializeSessio
   if (id) {
     const { data: organisation, error: organisationError } = await supabase
       .from('organisations')
-      .select('*, pharmacies(*)')
+      .select('*, pharmacies(*), pharmacy_settings(*)')
       .eq('id', id)
 
     if (organisationError) {

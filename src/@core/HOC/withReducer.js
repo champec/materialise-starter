@@ -1,10 +1,17 @@
 import { injectReducer } from 'src/store'
-import { useEffect } from 'react'
 
 const withReducer = (key, reducer) => WrappedComponent => {
-  injectReducer(key, reducer)
+  return props => {
+    // Check if the first argument is an object (multiple reducers)
+    // or a string (single reducer), and call injectReducer accordingly
+    if (typeof key === 'object') {
+      injectReducer(key) // Multiple reducers
+    } else {
+      injectReducer(key, reducer) // Single reducer
+    }
 
-  return props => <WrappedComponent {...props} />
+    return <WrappedComponent {...props} />
+  }
 }
 
 export default withReducer

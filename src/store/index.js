@@ -80,8 +80,25 @@ const store = configureStore({
 store.asyncReducers = {}
 
 export const injectReducer = (key, asyncReducer) => {
-  if (!store.asyncReducers[key]) {
-    store.asyncReducers[key] = asyncReducer
+  let isInjected = false
+
+  if (typeof key === 'object') {
+    // Handle an object of reducers
+    Object.entries(key).forEach(([k, reducer]) => {
+      if (!store.asyncReducers[k]) {
+        store.asyncReducers[k] = reducer
+        isInjected = true
+      }
+    })
+  } else {
+    // Handle a single reducer
+    if (!store.asyncReducers[key]) {
+      store.asyncReducers[key] = asyncReducer
+      isInjected = true
+    }
+  }
+
+  if (isInjected) {
     store.replaceReducer(createReducer(store.asyncReducers))
   }
 }

@@ -24,6 +24,7 @@ const SidebarLeft = props => {
     handleLeftSidebarToggle,
     handleAddEventSidebarToggle,
     handleAddCalendarSidebarToggle,
+    handleAddBookingSidebarToggle,
     appointment
   } = props
   const colorsArr = calendarsColor ? Object.entries(calendarsColor) : []
@@ -94,6 +95,11 @@ const SidebarLeft = props => {
     dispatch(handleSelectEvent(null))
   }
 
+  const handleBookCalendarSidebar = () => {
+    handleAddBookingSidebarToggle()
+    dispatch(handleSelectEvent(null))
+  }
+
   const handleEditCalendarItem = calendarType => {
     dispatch(handleSelectCalendar(calendarType))
     handleAddCalendarSidebarToggleSidebar()
@@ -136,9 +142,15 @@ const SidebarLeft = props => {
           }
         }}
       >
-        <Button fullWidth variant='contained' onClick={handleSidebarToggleSidebar}>
-          {appointment ? 'Book' : 'Add Event'}
-        </Button>
+        {appointment ? (
+          <Button fullWidth variant='contained' onClick={handleBookCalendarSidebar}>
+            Book
+          </Button>
+        ) : (
+          <Button fullWidth variant='contained' onClick={handleSidebarToggleSidebar}>
+            Add Event
+          </Button>
+        )}
 
         <Box sx={{ mt: 7, mb: 2.5, display: 'flex', flexDirection: 'row', alignItems: 'center' }}>
           <Typography variant='body2' sx={{ textTransform: 'uppercase' }}>
