@@ -45,7 +45,7 @@ import withReducer from 'src/@core/HOC/withReducer'
 import CustomChip from 'src/@core/components/mui/chip'
 import CustomAvatar from 'src/@core/components/mui/avatar'
 import OptionsMenu from 'src/@core/components/option-menu'
-import TableHeader from 'src/views/apps/invoice/list/TableHeader'
+import ConsultationHeader from 'src/views/apps/invoice/list/ConsultationHeader'
 
 // ** Styled Components
 import DatePickerWrapper from 'src/@core/styles/libs/react-datepicker'
@@ -217,8 +217,9 @@ const defaultColumns = [
     field: 'issuedDate',
     headerName: 'Booking Date',
     renderCell: ({ row }) => {
-      const formattedTime = dayjs(row.start_date).format('HH:mm') // 24hr format time
-      const formattedDate = dayjs(row.start_date).format('D MMM YYYY') // Date in "12th Jan 2023" format
+      const { calendar_events: event } = row
+      const formattedTime = dayjs(event.created_at).format('HH:mm') // 24hr format time
+      const formattedDate = dayjs(event.created_at).format('D MMM YYYY') // Date in "12th Jan 2023" format
 
       return (
         <Typography variant='body2'>
@@ -368,7 +369,7 @@ const AppointmentList = () => {
               <Grid container spacing={6}>
                 <Grid item xs={12} sm={6}>
                   <FormControl fullWidth>
-                    <InputLabel id='invoice-status-select'>Invoice Status</InputLabel>
+                    <InputLabel id='invoice-status-select'>Status</InputLabel>
 
                     <Select
                       fullWidth
@@ -403,7 +404,7 @@ const AppointmentList = () => {
                       <CustomInput
                         dates={dates}
                         setDates={setDates}
-                        label='Invoice Date'
+                        label='Date Range'
                         end={endDateRange}
                         start={startDateRange}
                       />
@@ -416,14 +417,14 @@ const AppointmentList = () => {
         </Grid>
         <Grid item xs={12}>
           <Card>
-            <TableHeader value={value} selectedRows={selectedRows} handleFilter={handleFilter} />
+            <ConsultationHeader value={value} selectedRows={selectedRows} handleFilter={handleFilter} />
             <DataGrid
               autoHeight
               pagination
               rows={appointments}
               columns={columns}
               checkboxSelection
-              disableRowSelectionOnClick
+              disableSelectionOnClick
               pageSizeOptions={[10, 25, 50]}
               paginationModel={paginationModel}
               onPaginationModelChange={setPaginationModel}

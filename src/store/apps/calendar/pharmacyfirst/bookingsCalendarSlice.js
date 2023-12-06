@@ -51,7 +51,7 @@ export const deleteEvent = createAsyncThunk('appCalendar/deleteEvent', async ({ 
 
 // ** Create a booking
 export const createBooking = createAsyncThunk('appCalendar/createBooking', async (booking, { dispatch }) => {
-  const { data, error } = await supabase.from('pp_bookings').insert(booking).select('*').single()
+  const { data, error } = await supabase.from('consultations').insert(booking).select('*').single()
   if (error) {
     console.log(error)
     throw error
@@ -61,7 +61,7 @@ export const createBooking = createAsyncThunk('appCalendar/createBooking', async
 
 // ** Update a booking
 export const updateBooking = createAsyncThunk('appCalendar/updateBooking', async ({ booking, id }, { dispatch }) => {
-  const { data, error } = await supabase.from('pp_bookings').update(booking).eq('id', id).select('*').single()
+  const { data, error } = await supabase.from('consultations').update(booking).eq('id', id).select('*').single()
   if (error) {
     console.log(error)
     throw error
@@ -73,7 +73,7 @@ export const updateBooking = createAsyncThunk('appCalendar/updateBooking', async
 
 // ** Delete a booking
 export const deleteBooking = createAsyncThunk('appCalendar/deleteBooking', async ({ id }, { dispatch }) => {
-  const { data, error } = await supabase.from('pp_bookings').delete().eq('id', id).select('id').single()
+  const { data, error } = await supabase.from('consultations').delete().eq('id', id).select('id').single()
   if (error) {
     console.log(error)
     throw error

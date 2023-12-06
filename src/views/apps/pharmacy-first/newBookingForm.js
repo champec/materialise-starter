@@ -37,6 +37,11 @@ import Icon from 'src/@core/components/icon'
 // RTK imports
 import { useDispatch, useSelector } from 'react-redux'
 import { createBooking, addEvent } from 'src/store/apps/calendar/pharmacyfirst/bookingsCalendarSlice'
+import {
+  appendMessageToThread,
+  createThreadAndSendSMS,
+  scheduleReminder
+} from 'src/store/apps/calendar/pharmacyfirst/appointmentListSlice'
 
 // ** Custom Components Imports
 import StepperCustomDot from '../broadcast/elements/StepperCustomDot'
@@ -269,38 +274,9 @@ const NewBookingForm = ({ onClose }) => {
         return
       }
 
-      const userData = accountGetValues
+      const userData = accountGetValues()
 
-      const bookingPayload = {
-        pharmacist_id: bookingData?.pharmacist?.id || null,
-        start_date: bookingData?.startDate.format() || null,
-        duration: bookingData?.duration || null,
-        text_message: bookingData?.textMessage || null,
-        presenting_complaint: bookingData?.presentingComplaint || null,
-        clinical_pathway: bookingData?.clinicalPathway || null,
-        patient_object: selectedPatient || null,
-        pharmacist_object: bookingData?.pharmacist || null,
-        pharmacy_id: orgId,
-        booked_by: userId,
-        url: dailyData?.url || null
-      }
-
-      const { payload: newBooking, error: newBookingError } = await dispatch(createBooking(bookingPayload))
-
-      // console.log('Booking Payload', bookingPayload)
-      console.log('Booking Info', newBooking, newBookingError)
-      console.log('BOOKING DATA, ', bookingData)
-
-      if (newBookingError) {
-        console.log('new booking error', newBookingError)
-        //show custom snackbar
-        showMessage(
-          'error creating booking, please try again, if problem persists contact admin with code 102',
-          'error'
-        )
-        setLoading(false)
-        return
-      }
+      const hcpLink = `https://pharmex.uk/pharmacy-first/hcp?url=${dailyData?.room.url}&token=${dailyData?.hcpToken}`
 
       const eventPayload = {
         start: bookingData?.startDate.format() || null,
@@ -310,8 +286,8 @@ const NewBookingForm = ({ onClose }) => {
         allDay: false,
         calendarType: 14,
         title: 'Pharmacy First Appointment',
-        url: dailyData?.url || null,
-        booking_id: newBooking?.id || null
+        url: hcpLink || null,
+        booking_id: null
       }
       if (eventPayload.start_date && eventPayload.duration) {
         const startDate = dayjs(payload.start_date)
@@ -332,22 +308,77 @@ const NewBookingForm = ({ onClose }) => {
         return
       }
 
-      if (dailyData && !dailyError && notifyApiKey && userData?.mobileNumber) {
-        // Invoke edge function to send SMS notification
-        const response = await supabase.functions.invoke('send-appointment-notification', {
-          body: {
-            phoneNumber: userData.mobileNumber, // assuming userData contains the phone number
-            message: `Your appointment is booked for ${dayjs(bookingData.startDate).format('YYYY-MM-DD HH:mm')}.`,
-            scheduledTime: unixTimeStamp,
-            apiKey: notifyApiKey
-          }
-        })
-
-        console.log('NOTIFY response', response)
+      const bookingPayload = {
+        pharmacist_id: bookingData?.pharmacist?.id || null,
+        start_date: bookingData?.startDate.format() || null,
+        duration: bookingData?.duration || null,
+        text_message: bookingData?.textMessage || null,
+        presenting_complaint: bookingData?.presentingComplaint || null,
+        clinical_pathway: bookingData?.clinicalPathway || null,
+        patient_object: selectedPatient || null,
+        pharmacist_object: bookingData?.pharmacist || null,
+        pharmacy_id: orgId,
+        booked_by: userId,
+        url: hcpLink || null,
+        hcp_token: dailyData?.hcpToken || null,
+        patient_token: dailyData?.patientToken || null,
+        event_id: newEvent?.id || null
       }
 
-      //show custom snackbar
+      const { payload: newBooking, error: newBookingError } = await dispatch(createBooking(bookingPayload))
 
+      // console.log('Booking Payload', bookingPayload)
+      console.log('Booking Info', newBooking, newBookingError)
+      console.log('BOOKING DATA, ', bookingData)
+
+      if (newBookingError) {
+        console.log('new booking error', newBookingError)
+        //show custom snackbar
+        showMessage(
+          'error creating booking, please try again, if problem persists contact admin with code 102',
+          'error'
+        )
+        setLoading(false)
+        return
+      }
+
+      const userLink = `https://pharmex.uk/pharmacy-first/patient?url=${dailyData?.room.url}&token=${dailyData?.patientToken}`
+
+      const phoneNumber = userData.mobileNumber // assuming userData contains the phone number
+      const message = `Your appointment is booked for ${dayjs(bookingData.startDate).format(
+        'YYYY-MM-DD HH:mm'
+      )}. use this link to join the meeting when due${userLink}`
+      const org_message = `The scheduled appointment with ${selectedPatient?.full_name} scheduled for ${dayjs(
+        bookingData.startDate
+      ).format('YYYY-MM-DD HH:mm')} is starting soon`
+      const title = `Consultation ${selectedPatient?.full_name}`
+
+      const smsResponse = await dispatch(
+        createThreadAndSendSMS({
+          patientId: selectedPatient?.id,
+          patientName: selectedPatient.full_name,
+          message,
+          phoneNumber: userData.mobileNumber,
+          appointmentId: newBooking.id,
+          time: bookingData.startDate
+        })
+      )
+      console.log('SMS response', smsResponse)
+      // remind 30minuted before appointment
+      const reminderDate = dayjs(bookingData.startDate).subtract(30, 'minute')
+      const scheduledMeeting = await dispatch(
+        scheduleReminder({
+          phoneNumber,
+          message,
+          time: reminderDate,
+          apiKey: notifyApiKey,
+          organisation_id: orgId,
+          org_message,
+          title
+        })
+      )
+      console.log('scheduledMeeting', scheduledMeeting)
+      //show custom snackbar
       showMessage('Booking created successfully', 'success')
 
       setLoading(false)

@@ -1,7 +1,112 @@
-import React from 'react'
+// ** React Imports
+import { useState, useEffect } from 'react'
 
-export default function AppointmentView({ appointment }) {
-  //stringify the appointment object
-  const json = JSON.stringify(appointment)
-  return <div>{json}</div>
+// ** Next Import
+import Link from 'next/link'
+
+// ** MUI Imports
+import Grid from '@mui/material/Grid'
+import Alert from '@mui/material/Alert'
+import Card from '@mui/material/Card'
+import Button from '@mui/material/Button'
+import CardContent from '@mui/material/CardContent'
+
+// ** Icon Imports
+import Icon from 'src/@core/components/icon'
+
+// ** Third Party Components
+import axios from 'axios'
+
+// ** Demo Components Imports
+import PreviewCard from 'src/views/apps/invoice/preview/PreviewCard'
+import PreviewActions from 'src/views/apps/invoice/preview/PreviewActions'
+import AddPaymentDrawer from 'src/views/apps/invoice/shared-drawer/AddPaymentDrawer'
+import SendInvoiceDrawer from 'src/views/apps/invoice/shared-drawer/SendInvoiceDrawer'
+import PreviewCardBooking from './PreviewCardBooking'
+
+const AppointmentView = ({ appointment }) => {
+  // ** State
+  const [error, setError] = useState(false)
+  const [data, setData] = useState(null)
+  const [addPaymentOpen, setAddPaymentOpen] = useState(false)
+  const [sendInvoiceOpen, setSendInvoiceOpen] = useState(false)
+
+  const toggleSendInvoiceDrawer = () => setSendInvoiceOpen(!sendInvoiceOpen)
+  const toggleAddPaymentDrawer = () => setAddPaymentOpen(!addPaymentOpen)
+  if (appointment) {
+    return (
+      <>
+        <Grid container spacing={6}>
+          <Grid item xl={9} md={8} xs={12}>
+            <PreviewCardBooking booking={appointment} />
+          </Grid>
+          <Grid item xl={3} md={4} xs={12}>
+            <Card>
+              <CardContent>
+                <Button
+                  fullWidth
+                  sx={{ mb: 3.5 }}
+                  variant='contained'
+                  onClick={toggleSendInvoiceDrawer}
+                  startIcon={<Icon icon='mdi:send-outline' />}
+                >
+                  Send Message
+                </Button>
+                <Button fullWidth sx={{ mb: 3.5 }} color='secondary' variant='outlined'>
+                  Starting in
+                </Button>
+                <Button
+                  fullWidth
+                  target='_blank'
+                  sx={{ mb: 3.5 }}
+                  component={Link}
+                  color='secondary'
+                  variant='outlined'
+                  href={`/apps/invoice/print/${appointment.id}`}
+                >
+                  Cancel
+                </Button>
+                <Button
+                  fullWidth
+                  sx={{ mb: 3.5 }}
+                  component={Link}
+                  color='secondary'
+                  variant='outlined'
+                  href={`/apps/invoice/edit/${appointment.id}`}
+                >
+                  Edit
+                </Button>
+                <Button
+                  fullWidth
+                  color='success'
+                  variant='contained'
+                  onClick={toggleAddPaymentDrawer}
+                  startIcon={<Icon icon='mdi:video' />}
+                >
+                  Go To Call
+                </Button>
+              </CardContent>
+            </Card>
+          </Grid>
+        </Grid>
+        <SendInvoiceDrawer open={sendInvoiceOpen} toggle={toggleSendInvoiceDrawer} />
+        <AddPaymentDrawer open={addPaymentOpen} toggle={toggleAddPaymentDrawer} />
+      </>
+    )
+  } else if (error) {
+    return (
+      <Grid container spacing={6}>
+        <Grid item xs={12}>
+          <Alert severity='error'>
+            Booking with the id: {appointment?.id} does not exist. Please check the list of bookings:{' '}
+            <Link href='/apps/invoice/list'>Invoice List</Link>
+          </Alert>
+        </Grid>
+      </Grid>
+    )
+  } else {
+    return null
+  }
 }
+
+export default AppointmentView

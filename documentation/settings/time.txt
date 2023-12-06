@@ -1,0 +1,3 @@
+Greenwich Mean Time (GMT): Outside of Daylight Saving Time, London operates on Greenwich Mean Time (GMT), which has an offset of UTC+0. This is typically from late October to late March.
+
+British Summer Time (BST): During Daylight Saving Time, London switches to British Summer Time (BST), which has an offset of UTC+1. This is usually from late March to late October.

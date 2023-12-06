@@ -12,6 +12,7 @@ import { combineReducers } from '@reduxjs/toolkit'
 // import invoice from 'src/store/apps/invoice'
 // import calendar from 'src/store/apps/calendar'
 import permissions from 'src/store/apps/permissions'
+import notifications from './notifications'
 // import cdr from 'src/store/apps/cdr'
 // import cartSlice from './apps/shop/cartSlice'
 // import productsSlice from './apps/shop/productsSlice'
@@ -55,7 +56,8 @@ const staticReducers = {
   // cart,
   // checkout,
   // cartSlice,
-  permissions
+  permissions,
+  notifications
   // labelsSlice,
   // conversations,
   // messagesSlice,

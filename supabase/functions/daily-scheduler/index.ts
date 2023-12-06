@@ -8,6 +8,49 @@ import { corsHeaders } from '../_shared/cors.ts'
 
 const DAILY_API_KEY = Deno.env.get('DAILY_API_KEY')
 const DAILY_API_ENDPOINT = 'https://api.daily.co/v1/rooms'
+const DAILY_API_MEETINGTOKEN = 'https://api.daily.co/v1/meeting-tokens'
+
+// Function to generate token
+const generateToken = async (roomName, isHcp) => {
+  const properties = isHcp
+    ? {
+        room_name: roomName,
+        is_owner: true,
+        enable_screenshare: true
+        // enable_recording: 'cloud'
+        // additional properties for HCP
+      }
+    : {
+        room_name: roomName,
+        enable_screenshare: false,
+        start_video_off: true,
+        close_tab_on_exit: true,
+        redirect_on_meeting_exit: 'www.google.com'
+        // additional properties for patient
+      }
+
+  try {
+    const tokenResponse = await fetch(DAILY_API_MEETINGTOKEN, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${DAILY_API_KEY}`
+      },
+      body: JSON.stringify({ properties })
+    })
+
+    if (!tokenResponse.ok) {
+      throw new Error(`HTTP Error: ${tokenResponse}`)
+    }
+
+    console.log('tokenResponse', tokenResponse)
+    const tokenData = await tokenResponse.json()
+    return tokenData.token
+  } catch (error) {
+    console.error('Failed to generate token:', error)
+    throw error
+  }
+}
 
 Deno.serve(async req => {
   if (req.method === 'OPTIONS') {
@@ -41,7 +84,20 @@ Deno.serve(async req => {
     }
 
     const roomData = await roomResponse.json()
-    return new Response(JSON.stringify(roomData), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } })
+    const roomName = roomData.name
+
+    // Generate tokens for HCP and patient
+    const hcpToken = await generateToken(roomName, true)
+    const patientToken = await generateToken(roomName, false)
+
+    // Include tokens in the response
+    const response = {
+      room: roomData,
+      hcpToken: hcpToken,
+      patientToken: patientToken
+    }
+
+    return new Response(JSON.stringify(response), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } })
   } catch (error) {
     return new Response(JSON.stringify({ error: error.message }), {
       status: 500,

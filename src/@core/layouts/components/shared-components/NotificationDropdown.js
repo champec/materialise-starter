@@ -24,6 +24,13 @@ import CustomAvatar from 'src/@core/components/mui/avatar'
 
 // ** Util Import
 import { getInitials } from 'src/@core/utils/get-initials'
+import { useSelector } from 'react-redux'
+
+import dayjs from 'dayjs'
+import relativeTime from 'dayjs/plugin/relativeTime'
+
+// Extend Day.js with the plugin
+dayjs.extend(relativeTime)
 
 // ** Styled Menu component
 const Menu = styled(MuiMenu)(({ theme }) => ({
@@ -90,7 +97,9 @@ const ScrollWrapper = ({ children, hidden }) => {
 
 const NotificationDropdown = props => {
   // ** Props
-  const { settings, notifications } = props
+  const { settings } = props
+
+  const notifications = useSelector(state => state.notifications.notifications)
 
   // ** States
   const [anchorEl, setAnchorEl] = useState(null)
@@ -166,20 +175,32 @@ const NotificationDropdown = props => {
           </Box>
         </MenuItem>
         <ScrollWrapper hidden={hidden}>
-          {notifications.map((notification, index) => (
-            <MenuItem key={index} onClick={handleDropdownClose}>
-              <Box sx={{ width: '100%', display: 'flex', alignItems: 'center' }}>
-                <RenderAvatar notification={notification} />
-                <Box sx={{ mx: 4, flex: '1 1', display: 'flex', overflow: 'hidden', flexDirection: 'column' }}>
-                  <MenuItemTitle>{notification.title}</MenuItemTitle>
-                  <MenuItemSubtitle variant='body2'>{notification.subtitle}</MenuItemSubtitle>
+          {notifications.map((notification, index) => {
+            const now = dayjs()
+            const createdAt = dayjs(notification.created_at)
+            let displayTime
+
+            if (now.diff(createdAt, 'day') < 1) {
+              displayTime = createdAt.fromNow()
+            } else {
+              displayTime = createdAt.format('D MMM')
+            }
+
+            return (
+              <MenuItem key={index} onClick={handleDropdownClose}>
+                <Box sx={{ width: '100%', display: 'flex', alignItems: 'center' }}>
+                  {/* <RenderAvatar notification={notification} /> */}
+                  <Box sx={{ mx: 4, flex: '1 1', display: 'flex', overflow: 'hidden', flexDirection: 'column' }}>
+                    <MenuItemTitle>{notification.title}</MenuItemTitle>
+                    <MenuItemSubtitle variant='body2'>{notification.message}</MenuItemSubtitle>
+                  </Box>
+                  <Typography variant='caption' sx={{ color: 'text.disabled' }}>
+                    {displayTime}
+                  </Typography>
                 </Box>
-                <Typography variant='caption' sx={{ color: 'text.disabled' }}>
-                  {notification.meta}
-                </Typography>
-              </Box>
-            </MenuItem>
-          ))}
+              </MenuItem>
+            )
+          })}
         </ScrollWrapper>
         <MenuItem
           disableRipple

@@ -20,6 +20,8 @@ import themeConfig from 'src/configs/themeConfig'
 import { useDispatch, useSelector } from 'react-redux'
 import { initializeSession as initOrg } from 'src/store/auth/organisation'
 import { initializeSession as initUser } from 'src/store/auth/user'
+import { addNotification, fetchNotifications } from 'src/store/notifications'
+import { supabaseOrg as supabase } from 'src/configs/supabase'
 
 // ** Fake-DB Import
 import 'src/@fake-db'
@@ -89,6 +91,30 @@ const Guard = ({ children, authGuard, guestGuard, orgGuard }) => {
   useEffect(() => {
     dispatch(initOrg())
     dispatch(initUser())
+    dispatch(fetchNotifications())
+  }, [])
+
+  const setupSupabaseListener = () => {
+    supabase
+      .channel('notifications')
+      .on('postgres_changes', { schema: 'public', table: 'notifications' }, payload => {
+        console.log('New notification:', payload)
+        dispatch(addNotification(payload.new))
+      })
+      .subscribe()
+  }
+
+  // Clean up listener
+  const removeSupabaseListener = () => {
+    supabase.removeChannel('notifications')
+  }
+
+  useEffect(() => {
+    setupSupabaseListener()
+
+    return () => {
+      removeSupabaseListener()
+    }
   }, [])
 
   if (guestGuard) {
