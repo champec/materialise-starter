@@ -45,6 +45,41 @@ code[class*='language-'] {
   background: #787fff3f;
 }
 
-.mapboxgl-marker {
+/* .mapboxgl-marker {
   position: absolute;
+} */
+
+/* .new-row-cell {
+  background-color: rgba(0, 72, 255, 0.285);
+} */
+
+/* .new-row-cell:hover {
+  background-color: rgba(124, 151, 6, 0.235); /* Change to your preferred hover color
+  cursor: pointer;
+}
+ */
+
+/*Add this CSS class in your stylesheet */
+.selected-cell {
+  border: 2px solid blue; /* Example style, adjust as needed */
+}
+
+/* .selected-cell:hover {
+  background-color: rgba(124, 151, 6, 0.235); /* Change to your preferred hover color
+  cursor: pointer;
+} */
+
+.new-cells:hover {
+  background-color: rgba(124, 151, 6, 0.235); /* Change to your preferred hover color */
+  cursor: pointer;
+}
+
+.data-grid-left-align {
+  display: flex;
+  justify-content: flex-start;
+}
+
+.disabled-cell {
+  background-color: #18196a71; /* Light grey background */
+  pointer-events: none; /* Prevent interactions */
 }

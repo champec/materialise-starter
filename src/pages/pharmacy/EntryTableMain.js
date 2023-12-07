@@ -20,6 +20,7 @@ function CdrTable({ selectedDrug }) {
   // const [entries, setEntries] = useState(null)
   const handleSideBar = () => setOpen(prev => !prev)
   const [refetchTrigger, setRefetchTrigger] = useState(false)
+  const [isSupply, setIsSupply] = useState('default') // ['receiving', 'handingOut'
   const [type, setType] = useState('handingOut') // 'receiving' or 'handingOut'
   const orgId = useOrgAuth()?.organisation?.id
   const supabase = supabaseOrg
@@ -34,59 +35,6 @@ function CdrTable({ selectedDrug }) {
     dispatch(fetchSuppliers(orgId))
     dispatch(fetchEntries({ drugId: selectedDrug.drug_id, orgId }))
   }, [dispatch, selectedDrug.id])
-
-  // useEffect(() => {
-  //   const fetchTables = async () =>  {
-  //     console.log('fetching tables')
-  //     try {
-  //       const { data: patientData, error: patientError } = await supabase
-  //         .from('cdr_patients')
-  //         .select('*')
-  //         .eq('organisation_id', organisationId)
-
-  //       if (patientError) throw patientError
-
-  //       const { data: prescriberData, error: prescriberError } = await supabase
-  //         .from('cdr_prescribers')
-  //         .select('*')
-  //         .eq('organisation_id', organisationId)
-
-  //       if (prescriberError) throw prescriberError
-
-  //       const { data: supplierData, error: supplierError } = await supabase
-  //         .from('cdr_suppliers')
-  //         .select('*')
-  //         .eq('organisation_id', organisationId)
-
-  //       if (supplierError) throw supplierError
-
-  //       const { data: entriesData, error: entriesError } = await supabase
-  //         .from('cdr_entries')
-  //         .select('*')
-  //         .eq('organisation_id', organisationId)
-  //         .eq('drug_id', selectedDrug.id)
-  //         .order('date')
-
-  //       if (entriesError) throw entriesError
-
-  //       const { data: errorLogData, error: errorLogError } = await supabase.from('cdr_error_log').select('*')
-
-  //       if (errorLogError) throw errorLogError
-
-  //       console.log({ entriesData })
-  //       setPatients(patientData || [])
-  //       setPrescribers(prescriberData || [])
-  //       setSuppliers(supplierData || [])
-  //       setErrorLog(errorLogData || [])
-  //       setEntries(entriesData || [])
-  //     } catch (error) {
-  //       console.error('Error fetching data:', error)
-  //       setErrorLog(error)
-  //     }
-  //   }
-
-  //   fetchTables()
-  // }, [supabase, organisationId, refetchTrigger, selectedDrug.id])
 
   const handleNewItemMain = async (values, table) => {
     console.log('STARTING handle NEW! item MAIN!', values, table)
@@ -119,7 +67,13 @@ function CdrTable({ selectedDrug }) {
           Out
         </Button> */}
       </Box>
-      <TableColumns selectedDrug={selectedDrug} errorLog={errorLog} entries={entries} />
+      <TableColumns
+        isSupply={isSupply}
+        setIsSupply={setIsSupply}
+        selectedDrug={selectedDrug}
+        errorLog={errorLog}
+        entries={entries}
+      />
       <EntrySidebar
         open={open}
         toggle={handleSideBar}
@@ -131,18 +85,22 @@ function CdrTable({ selectedDrug }) {
         refetchData={refetchData}
         type={type}
       />
-      <Box sx={{ display: 'flex', justifyContent: 'center', marginTop: 2 }}>
-        <Button
-          variant='outlined'
-          color='primary'
-          onClick={() => handleTypeChangeAndOpen('receiving')}
-          style={{ marginRight: '20px' }}
-        >
-          In
-        </Button>
-        <Button variant='outlined' color='primary' onClick={() => handleTypeChangeAndOpen('handingOut')}>
-          Out
-        </Button>
+      <Box sx={{ display: 'flex', justifyContent: 'space-between', marginTop: 2 }}>
+        <div>{isSupply === true ? 'SUPPLYING ' : isSupply === false ? 'RECEIVING ' : null}</div>
+        <div>
+          <Button
+            variant='outlined'
+            color='primary'
+            onClick={() => handleTypeChangeAndOpen('receiving')}
+            style={{ marginRight: '20px' }}
+          >
+            In
+          </Button>
+          <Button variant='outlined' color='primary' onClick={() => handleTypeChangeAndOpen('handingOut')}>
+            Out
+          </Button>
+        </div>
+        <div></div>
       </Box>
     </Box>
   )

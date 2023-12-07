@@ -24,6 +24,8 @@ import { styled } from '@mui/system'
 import MuiAccordion from '@mui/material/Accordion'
 import MuiAccordionSummary from '@mui/material/AccordionSummary'
 import MuiAccordionDetails from '@mui/material/AccordionDetails'
+import withReducer from 'src/@core/HOC/withReducer'
+import { cdrSlice } from 'src/store/apps/cdr'
 
 const Accordion = styled(MuiAccordion)(({ theme }) => ({
   boxShadow: 'none',
@@ -156,4 +158,5 @@ export async function getServerSideProps() {
   }
 }
 
-export default Cdr
+// export default Cdr
+export default withReducer('cdr', cdrSlice.reducer)(Cdr)
