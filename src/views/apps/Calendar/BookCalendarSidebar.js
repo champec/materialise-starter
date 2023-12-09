@@ -23,6 +23,7 @@ import DatePicker from 'react-datepicker'
 import { useForm, Controller } from 'react-hook-form'
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider'
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs'
+import { useSelector } from 'react-redux'
 
 // ** Icon Imports
 import Icon from 'src/@core/components/icon'
@@ -64,7 +65,7 @@ const BookCalendarSidebar = props => {
   const [values, setValues] = useState(defaultState)
   const [isRecurring, setIsRecurring] = useState(false)
   const [editAllInstances, setEditAllInstances] = useState(false)
-  const orgId = useOrgAuth()?.organisation?.id
+  const orgId = useSelector(state => state.organisation.organisation.id)
   const userId = useUserAuth()?.user?.id
 
   const {

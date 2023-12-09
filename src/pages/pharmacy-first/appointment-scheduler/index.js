@@ -66,7 +66,7 @@ const AppCalendar = ({ addCalendarType, updateCalendarType, deleteCalendarType }
   const { settings } = useSettings()
   const dispatch = useDispatch()
   const store = useSelector(state => state.bookingsCalendar)
-  const orgId = useOrgAuth()?.organisation?.id
+  const orgId = useSelector(state => state.organisation.organisation.id)
 
   console.log('store', store)
 
@@ -77,9 +77,13 @@ const AppCalendar = ({ addCalendarType, updateCalendarType, deleteCalendarType }
   const mdAbove = useMediaQuery(theme => theme.breakpoints.up('md'))
   useEffect(() => {
     if (orgId) {
+      console.log('USE EFFECT EVENT FETCH ON LOAD', orgId)
       dispatch(fetchEvents(orgId))
     }
-  }, [dispatch, store.selectedCalendars, store.viewStart, store.viewEnd, orgId])
+    // removed the following dependencies  store.selectedCalendars, store.viewStart, store.viewEnd,
+    // felt like all calendar events are fetched for the view anyway not point refetch when calendar changed
+    //also view state should trigger fetch event not just autotomatically by useEffect
+  }, [dispatch, orgId])
 
   useEffect(() => {
     dispatch(fetchCalendarTypes())

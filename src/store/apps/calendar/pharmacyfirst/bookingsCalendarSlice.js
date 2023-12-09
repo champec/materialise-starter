@@ -4,11 +4,12 @@ import { createSlice, createAsyncThunk } from '@reduxjs/toolkit'
 const supabase = supabaseOrg
 
 export const fetchEvents = createAsyncThunk('appCalendar/fetchEvents', async (orgId, { getState }) => {
-  const { viewStart, viewEnd } = getState().calendar
-  const { data, error } = await supabase.rpc('get_events', { org_id: orgId, start_time: viewStart, end_time: viewEnd })
-  if (error) {
-    console.log(error)
-  }
+  // const { viewStart, viewEnd } = getState().calendar
+  // const { data, error } = await supabase.rpc('get_events', { org_id: orgId, start_time: viewStart, end_time: viewEnd })
+  // if (error) {
+  //   console.log(error)
+  // }
+  const { data, error } = await supabase.from('calendar_events').select('*').eq('company_id', orgId)
   console.log(data, 'fetchEvents')
   return data || []
 })

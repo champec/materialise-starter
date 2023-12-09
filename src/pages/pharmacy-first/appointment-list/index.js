@@ -218,6 +218,10 @@ const defaultColumns = [
     headerName: 'Booking Date',
     renderCell: ({ row }) => {
       const { calendar_events: event } = row
+      //if an event doesnt have a calendar event.created_at then log it to the console
+      if (!event?.created_at) {
+        console.log('event doesnt have a created at', event)
+      }
       const formattedTime = dayjs(event.created_at).format('HH:mm') // 24hr format time
       const formattedDate = dayjs(event.created_at).format('D MMM YYYY') // Date in "12th Jan 2023" format
 

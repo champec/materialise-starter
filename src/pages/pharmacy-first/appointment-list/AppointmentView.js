@@ -76,15 +76,17 @@ const AppointmentView = ({ appointment }) => {
                 >
                   Edit
                 </Button>
-                <Button
-                  fullWidth
-                  color='success'
-                  variant='contained'
-                  onClick={toggleAddPaymentDrawer}
-                  startIcon={<Icon icon='mdi:video' />}
-                >
-                  Go To Call
-                </Button>
+                <Link href={`call-screen/${appointment.id}`}>
+                  <Button
+                    fullWidth
+                    color='success'
+                    variant='contained'
+                    onClick={toggleAddPaymentDrawer}
+                    startIcon={<Icon icon='mdi:video' />}
+                  >
+                    Go To Call
+                  </Button>
+                </Link>
               </CardContent>
             </Card>
           </Grid>
