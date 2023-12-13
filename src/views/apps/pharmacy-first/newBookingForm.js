@@ -276,7 +276,7 @@ const NewBookingForm = ({ onClose }) => {
 
       const userData = accountGetValues()
 
-      const hcpLink = `https://pharmex.uk/pharmacy-first/hcp?url=${dailyData?.room.url}&token=${dailyData?.hcpToken}`
+      const dailyUrl = dailyData?.room.url
 
       const eventPayload = {
         start: bookingData?.startDate.format() || null,
@@ -286,7 +286,7 @@ const NewBookingForm = ({ onClose }) => {
         allDay: false,
         calendarType: 14,
         title: 'Pharmacy First Appointment',
-        url: hcpLink || null,
+        url: dailyUrl || null,
         booking_id: null
       }
       if (eventPayload.start_date && eventPayload.duration) {
@@ -319,7 +319,7 @@ const NewBookingForm = ({ onClose }) => {
         pharmacist_object: bookingData?.pharmacist || null,
         pharmacy_id: orgId,
         booked_by: userId,
-        url: hcpLink || null,
+        url: dailyUrl,
         hcp_token: dailyData?.hcpToken || null,
         patient_token: dailyData?.patientToken || null,
         event_id: newEvent?.id || null
