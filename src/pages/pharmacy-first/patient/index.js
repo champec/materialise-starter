@@ -1,6 +1,6 @@
 import React from 'react'
 import { useRouter } from 'next/router'
-import PatientCallScreen from '../../call-screen/PatientCallScreen'
+import PatientCallScreen from '../call-screen/PatientCallScreen'
 import BlankLayout from 'src/@core/layouts/BlankLayout'
 import { supabase } from 'src/configs/supabase'
 
