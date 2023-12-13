@@ -33,20 +33,26 @@ export const logout = createAsyncThunk('user/logout', async (_, thunkAPI) => {
 })
 
 export const initializeSession = createAsyncThunk('user/initializeSession', async (_, thunkAPI) => {
-  const { data, error } = await supabase.auth.getSession()
+  try {
+    const { data, error } = await supabase.auth.getSession()
 
-  const id = data.session.user.id
+    if (error) throw error
 
-  if (id) {
-    const { data: user, error: userError } = await supabase.from('users').select('*').eq('id', id).single()
+    const user = data?.session?.user
 
-    if (userError) {
-      console.log('user data fetch RTK', { userError })
-      return thunkAPI.rejectWithValue(userError.message)
+    if (user && user.id) {
+      const { data: userData, error: userError } = await supabase.from('users').select('*').eq('id', user.id).single()
+      if (userError) throw userError
+
+      return { user: userData, loading: false }
+    } else {
+      return { user: null, loading: false }
     }
-    return { user: user, loading: false }
+  } catch (error) {
+    console.error('initializeSession error:', error)
+    // Optionally, handle the error or log it
+    return thunkAPI.rejectWithValue({ user: null, loading: false })
   }
-  return { user: null, loading: false }
 })
 
 export const editUserData = createAsyncThunk('user/editData', async (updatedData, thunkAPI) => {

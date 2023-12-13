@@ -200,10 +200,6 @@ const NewBookingForm = ({ onClose }) => {
     resolver: yupResolver(accountSchema)
   })
 
-  const fullNameValue = accountWatch('fullName')
-  const Pharmacist = accountWatch('pharmacist')
-  const startDate = accountWatch('startDate')
-
   const {
     reset: bookingReset,
     control: bookingControl,
@@ -227,6 +223,10 @@ const NewBookingForm = ({ onClose }) => {
     defaultValues: defaultConfirmValues,
     resolver: yupResolver(confirmSchema)
   })
+
+  const fullNameValue = accountWatch('fullName')
+  const Pharmacist = bookingWatch('pharmacist')
+  const startDate = bookingWatch('startDate')
 
   // Handle Stepper
   const handleBack = () => {
@@ -342,12 +342,10 @@ const NewBookingForm = ({ onClose }) => {
         return
       }
 
-      const userLink = `https://pharmex.uk/pharmacy-first/patient?url=${dailyData?.room.url}&token=${dailyData?.patientToken}`
+      const userLink = `https://pharmex.uk/pharmacy-first/patient/${newBooking?.id}`
 
       const phoneNumber = userData.mobileNumber // assuming userData contains the phone number
-      const message = `Your appointment is booked for ${dayjs(bookingData.startDate).format(
-        'YYYY-MM-DD HH:mm'
-      )}. use this link to join the meeting when due${userLink}`
+      const message = `${bookingData.textMessage}. Use this link to join the meeting ${userLink}. Your secure word is your first name = ${selectedPatient.first_name}`
       const org_message = `The scheduled appointment with ${selectedPatient?.full_name} scheduled for ${dayjs(
         bookingData.startDate
       ).format('YYYY-MM-DD HH:mm')} is starting soon`
@@ -412,12 +410,22 @@ const NewBookingForm = ({ onClose }) => {
 
   useEffect(() => {
     let message = ''
+    let pharmacistName = ''
+
+    // Check if Pharmacist is an object and has a property 'full_name'
+    if (Pharmacist && typeof Pharmacist === 'object' && Pharmacist.full_name) {
+      pharmacistName = Pharmacist.full_name
+    } else if (Pharmacist && typeof Pharmacist === 'string') {
+      // Pharmacist is a string
+      pharmacistName = Pharmacist
+    }
+
     if (fullNameValue && Pharmacist && startDate) {
-      message = `Dear ${fullNameValue}, Your appointment has been booked. pharmacist: ${Pharmacist} Date: ${dayjs(
-        startDate
-      ).format('DD/MMM/YYYY')} time: ${dayjs(startDate).format('h:mm A')}`
+      message = `Dear ${fullNameValue}, Your appointment has been booked. To see: ${
+        pharmacistName || 'a pharmacist'
+      } Date: ${dayjs(startDate).format('DD/MMM/YYYY')} time: ${dayjs(startDate).format('h:mm A')}`
     } else if (fullNameValue && Pharmacist) {
-      message = `Dear ${fullNameValue}, Your appointment has  been booked. pharmacist: ${Pharmacist}`
+      message = `Dear ${fullNameValue}, Your appointment has  been booked. To see: ${pharmacistName || 'a pharmacist'}`
     } else if (fullNameValue && startDate) {
       message = `Dear ${fullNameValue}, Your appointment has  been booked. Date: ${dayjs(startDate).format(
         'DD/MMM/YYYY'
@@ -461,6 +469,7 @@ const NewBookingForm = ({ onClose }) => {
                         displayField={'full_name'}
                         onAdd={() => setAddNewPatientDialog(true)}
                         label='Search or add patient'
+                        searchVector={'name_search_vector'}
                       />
                     )}
                   />
@@ -627,14 +636,15 @@ const NewBookingForm = ({ onClose }) => {
                         <DatePicker
                           value={parsedDate}
                           onChange={onChange}
+                          label='Date of Birth'
                           renderInput={<CustomInput />}
-                          error={Boolean(accountErrors.nhsNumber)}
-                          aria-describedby='stepper-linear-account-nhsNumber'
+                          error={Boolean(accountErrors.dateOfBirth)}
+                          aria-describedby='stepper-linear-account-dateOfBirth'
                         />
                       )
                     }}
                   />
-                  {accountErrors.nhsNumber && (
+                  {accountErrors.dateOfBirth && (
                     <FormHelperText sx={{ color: 'error.main' }} id='stepper-linear-account-nhsNumber'>
                       This field is required
                     </FormHelperText>
@@ -895,6 +905,58 @@ const NewBookingForm = ({ onClose }) => {
                 </Typography>
               </Box>
               <Stack>
+                <Card sx={{ p: 2, mb: 4 }}>
+                  <Grid container spacing={2}>
+                    <Grid item xs={12} sm={6}>
+                      <Typography variant='subtitle1' sx={{ fontWeight: 600, color: 'text.primary' }}>
+                        Patient
+                      </Typography>
+                      <Typography variant='body2' sx={{ color: 'text.secondary' }}>
+                        {fullNameValue}
+                      </Typography>
+                    </Grid>
+                    <Grid item xs={12} sm={6}>
+                      <Typography variant='subtitle1' sx={{ fontWeight: 600, color: 'text.primary' }}>
+                        Pharmacist
+                      </Typography>
+                      <Typography variant='body2' sx={{ color: 'text.secondary' }}>
+                        {Pharmacist?.full_name}
+                      </Typography>
+                    </Grid>
+                    <Grid item xs={12} sm={6}>
+                      <Typography variant='subtitle1' sx={{ fontWeight: 600, color: 'text.primary' }}>
+                        Date
+                      </Typography>
+                      <Typography variant='body2' sx={{ color: 'text.secondary' }}>
+                        {dayjs(startDate).format('DD/MMM/YYYY h:mm A')}
+                      </Typography>
+                    </Grid>
+                    <Grid item xs={12} sm={6}>
+                      <Typography variant='subtitle1' sx={{ fontWeight: 600, color: 'text.primary' }}>
+                        Duration
+                      </Typography>
+                      <Typography variant='body2' sx={{ color: 'text.secondary' }}>
+                        {bookingGetValues().duration} minutes
+                      </Typography>
+                    </Grid>
+                    <Grid item xs={12} sm={6}>
+                      <Typography variant='subtitle1' sx={{ fontWeight: 600, color: 'text.primary' }}>
+                        Presenting Complaint
+                      </Typography>
+                      <Typography variant='body2' sx={{ color: 'text.secondary' }}>
+                        {bookingGetValues().presentingComplaint}
+                      </Typography>
+                    </Grid>
+                    <Grid item xs={12} sm={6}>
+                      <Typography variant='subtitle1' sx={{ fontWeight: 600, color: 'text.primary' }}>
+                        Reminder Message time
+                      </Typography>
+                      <Typography variant='body2' sx={{ color: 'text.secondary' }}>
+                        {dayjs(startDate).subtract(30, 'minute').format('DD/MMM/YYYY h:mm A')}
+                      </Typography>
+                    </Grid>
+                  </Grid>
+                </Card>
                 <FormControl fullWidth>
                   <Controller
                     name='iAgree'

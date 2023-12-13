@@ -25,23 +25,28 @@ function PatientCall() {
   }
 
   React.useEffect(() => {
+    if (!id) {
+      console.log('No id', id)
+      return
+    }
     fetchConsultation()
-  }, [])
+  }, [id])
 
   if (loading) {
     return <div>Loading...</div>
   }
 
   if (error) {
-    return <div>{error}</div>
+    return <div>{error.message}</div>
   }
 
   console.log({ consultation })
   let url = consultation?.url
   if (consultation?.patient_token) {
-    url = `${baseUrl}?token=${consultation?.patient_token}`
+    url = `${url}?token=${consultation?.patient_token}`
   }
 
+  console.log({ url })
   return (
     <div ref={containerRef} style={{ height: '100vh' }}>
       <h1>Video Call</h1>

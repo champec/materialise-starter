@@ -106,7 +106,8 @@ const Guard = ({ children, authGuard, guestGuard, orgGuard }) => {
 
   // Clean up listener
   const removeSupabaseListener = () => {
-    supabase.removeChannel('notifications')
+    supabase.removeAllChannels()
+    //.removeChannel('notifications')
   }
 
   useEffect(() => {

@@ -32,4 +32,7 @@ const PatientCallScreen = ({ containerRef, url }) => {
   return null // The iframe is attached to the ref's current element
 }
 
+PatientCallScreen.authGuard = false
+PatientCallScreen.orgGuard = false
+
 export default PatientCallScreen

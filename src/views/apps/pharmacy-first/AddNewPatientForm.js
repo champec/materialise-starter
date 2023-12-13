@@ -1,5 +1,5 @@
 // ** React Imports
-import { forwardRef, useState } from 'react'
+import { forwardRef, useState, useEffect } from 'react'
 
 import { supabase } from 'src/configs/supabase'
 
@@ -47,6 +47,9 @@ const AddNewPatientForm = ({ patient, onClose, onSelect }) => {
   const [snackMessage, setSnackMessage] = useState('')
   const [snackSeverity, setSnackSeverity] = useState('success') // success, error, warning, info, or default
   const [loading, setLoading] = useState(false)
+  const [firstName, setFirstName] = useState('')
+  const [middleName, setMiddleName] = useState('')
+  const [lastName, setLastName] = useState('')
   const orgId = useSelector(state => state.organisation.organisation.id)
   const userId = useSelector(state => state.user.user.id)
 
@@ -56,13 +59,45 @@ const AddNewPatientForm = ({ patient, onClose, onSelect }) => {
     setOpenSnack(true)
   }
 
+  const splitName = fullName => {
+    const nameParts = fullName.trim().split(' ')
+    let firstName = '',
+      middleName = '',
+      lastName = ''
+
+    if (nameParts.length === 1) {
+      lastName = nameParts[0]
+    } else if (nameParts.length === 2) {
+      ;[firstName, lastName] = nameParts
+    } else {
+      firstName = nameParts[0]
+      lastName = nameParts[nameParts.length - 1]
+      middleName = nameParts.slice(1, -1).join(' ')
+    }
+
+    return { firstName, middleName, lastName }
+  }
+
+  useEffect(() => {
+    if (patient && patient.full_name) {
+      const { firstName, middleName, lastName } = splitName(patient.full_name)
+      setFirstName(firstName)
+      setMiddleName(middleName)
+      setLastName(lastName)
+    }
+  }, [patient])
+
+  console.log('patient', firstName)
+
   // ** Function to handle form submit
   const handleSubmit = async event => {
-    setLoading(true)
+    // setLoading(true)
     event.preventDefault()
-    console.log('ADD NEW PATIENT FORM SUBMIT')
+
     const formData = new FormData(event.target)
     const formFields = Object.fromEntries(formData.entries())
+    // enrich the form field with the date after converting it from dayjs object to string
+    formFields.dob = date?.format('YYYY-MM-DD')
 
     // ** Add new patient to database
     const { data, error } = await supabase
@@ -87,6 +122,20 @@ const AddNewPatientForm = ({ patient, onClose, onSelect }) => {
     }, 2000)
   }
 
+  const handleFirstNameChange = event => {
+    setFirstName(event.target.value)
+  }
+
+  // Function to handle middle name change
+  const handleMiddleNameChange = event => {
+    setMiddleName(event.target.value)
+  }
+
+  // Function to handle last name change
+  const handleLastNameChange = event => {
+    setLastName(event.target.value)
+  }
+
   return (
     <Card>
       <CustomSnackbar
@@ -109,11 +158,36 @@ const AddNewPatientForm = ({ patient, onClose, onSelect }) => {
             </Grid>
             <Grid item xs={12} sm={6}>
               <TextField
-                defaultValue={patient?.full_name}
+                value={firstName}
+                onChange={handleFirstNameChange}
                 fullWidth
-                name='full_name'
+                name='first_name'
                 autoComplete='off'
-                label='Full Name'
+                label='Fist Name'
+                placeholder='carterLeonard'
+                disabled={loading}
+              />
+            </Grid>
+            <Grid item xs={12} sm={6}>
+              <TextField
+                value={lastName}
+                onChange={handleLastNameChange}
+                fullWidth
+                name='last_name'
+                autoComplete='off'
+                label='Last Name'
+                placeholder='carterLeonard'
+                disabled={loading}
+              />
+            </Grid>
+            <Grid item xs={12} sm={6}>
+              <TextField
+                value={middleName}
+                onChange={handleMiddleNameChange}
+                fullWidth
+                name='middle_name'
+                autoComplete='off'
+                label='Middle Name'
                 placeholder='carterLeonard'
                 disabled={loading}
               />
@@ -121,10 +195,10 @@ const AddNewPatientForm = ({ patient, onClose, onSelect }) => {
             <Grid item xs={12} sm={6}>
               <TextField
                 fullWidth
-                type='text'
+                type='number'
                 label='NHS Number'
                 autoComplete='off'
-                placeholder='carterleonard@gmail.com'
+                placeholder='12345678'
                 name='nhs_number'
                 disabled={loading}
               />
@@ -135,7 +209,12 @@ const AddNewPatientForm = ({ patient, onClose, onSelect }) => {
                 showYearDropdown
                 showMonthDropdown
                 placeholderText='MM-DD-YYYY'
-                customInput={<CustomInput />}
+                // customInput={<CustomInput />}
+                slotProps={{
+                  textField: {
+                    fullWidth: true
+                  }
+                }}
                 id='form-layouts-separator-date'
                 onChange={date => setDate(date)}
                 name='dob'
