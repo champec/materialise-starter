@@ -64,7 +64,12 @@ export const createThreadAndSendSMS = createAsyncThunk(
 
     const { data, error } = await supabase
       .from('sms_threads')
-      .insert({ patient_id: patientId, consultation_id: appointmentId, organisation_id: orgId })
+      .insert({
+        patient_id: patientId,
+        consultation_id: appointmentId,
+        organisation_id: orgId,
+        patient_phone_number: phoneNumber
+      })
       .select('id')
       .single()
 
@@ -106,18 +111,6 @@ export const appendMessageToThread = createAsyncThunk(
   'appointmentList/appendMessageToThread',
   async ({ threadId, message }, { getState }) => {
     const orgId = getState().organisation.organisation.id
-    const notifyApiKey = getState().organisation?.organisation?.pharmacy_settings?.notify_api_key
-
-    const response = await supabase.functions.invoke('send-appointment-notification', {
-      body: {
-        phoneNumber: phoneNumber, // assuming userData contains the phone number
-        message: message,
-        scheduledTime: null,
-        apiKey: notifyApiKey
-      }
-    })
-
-    console.log(response, 'response')
 
     const { data, error } = await supabase
       .from('sms_messages')

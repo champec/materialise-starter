@@ -407,8 +407,7 @@ const NewBookingForm = ({ onClose, isEditing }) => {
           message,
           phoneNumber: userData.mobileNumber,
           appointmentId: newBooking.id,
-          time: bookingData.startDate,
-          patient_number: userData.mobileNumber
+          time: bookingData.startDate
         })
       )
       console.log('SMS response', smsResponse)
