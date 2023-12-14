@@ -20,12 +20,14 @@ import {
   handleAllCalendars,
   updateViewDates
 } from 'src/store/apps/calendar/pharmacyfirst/bookingsCalendarSlice'
+import { fetchSelectedBooking } from 'src/store/apps/calendar/pharmacyfirst/appointmentListSlice'
 
 // ** Hooks
 import { useSettings } from 'src/@core/hooks/useSettings'
 import withReducer from 'src/@core/HOC/withReducer'
 import bookingsCalendarSlice from 'src/store/apps/calendar/pharmacyfirst/bookingsCalendarSlice'
 import calendar from 'src/store/apps/calendar'
+import appointmentListSlice from 'src/store/apps/calendar/pharmacyfirst/appointmentListSlice'
 
 // ** FullCalendar & App Components Imports
 import Calendar from 'src/views/apps/Calendar/Calendar'
@@ -143,6 +145,8 @@ const AppCalendar = ({ addCalendarType, updateCalendarType, deleteCalendarType }
           handleLeftSidebarToggle={handleLeftSidebarToggle}
           handleAddEventSidebarToggle={handleAddEventSidebarToggle}
           handleAddCalendarSidebarToggle={handleAddCalendarSidebarToggle}
+          handleAddBookingSidebarToggle={handleAddBookingSidebarToggle}
+          fetchSelectedBooking={fetchSelectedBooking}
           appointment
         />
       </Box>
@@ -193,4 +197,8 @@ const AppCalendar = ({ addCalendarType, updateCalendarType, deleteCalendarType }
 
 // export default AppCalendar
 
-export default withReducer({ bookingsCalendar: bookingsCalendarSlice, calendar: calendar })(AppCalendar)
+export default withReducer({
+  bookingsCalendar: bookingsCalendarSlice,
+  calendar: calendar,
+  appointmentListSlice: appointmentListSlice
+})(AppCalendar)

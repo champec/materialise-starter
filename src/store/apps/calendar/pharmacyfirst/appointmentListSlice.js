@@ -75,18 +75,18 @@ export const createThreadAndSendSMS = createAsyncThunk(
 
     console.log(data, 'data')
 
-    const unixTimeStamp = dayjs(time).unix()
-    const response = await supabase.functions.invoke('send-appointment-notification', {
-      body: {
-        phoneNumber: phoneNumber, // assuming userData contains the phone number
-        message: message,
-        scheduledTime: unixTimeStamp,
-        apiKey: notifyApiKey,
-        name: patientName
-      }
-    })
+    // const unixTimeStamp = dayjs(time).unix()
+    // const response = await supabase.functions.invoke('send-appointment-notification', {
+    //   body: {
+    //     phoneNumber: phoneNumber, // assuming userData contains the phone number
+    //     message: message,
+    //     scheduledTime: unixTimeStamp,
+    //     apiKey: notifyApiKey,
+    //     name: patientName
+    //   }
+    // })
 
-    console.log(response, 'response')
+    // console.log(response, 'response')
 
     // create message and append to thread
     const { data: messageData, error: messageError } = await supabase
@@ -132,6 +132,24 @@ export const appendMessageToThread = createAsyncThunk(
   }
 )
 
+export const updateAppointmentStatus = createAsyncThunk(
+  'appointmentList/updateAppointmentStatus',
+  async ({ appointmentId, status }) => {
+    const { data, error } = await supabase
+      .from('consultations')
+      .update({ status: status })
+      .eq('id', appointmentId)
+      .select('*')
+
+    if (error) {
+      console.error(error)
+      throw error // Consider throwing the error to be handled by Redux Toolkit
+    }
+
+    return data
+  }
+)
+
 export const scheduleReminder = createAsyncThunk(
   'appointmentList/scheduleReminder',
   async ({ phoneNumber, message, time, apiKey, organisation_id, title, org_message }) => {
@@ -155,17 +173,42 @@ export const scheduleReminder = createAsyncThunk(
   }
 )
 
+export const fetchSelectedBooking = createAsyncThunk('appointmentList/fetchSelectedBooking', async bookingId => {
+  const { data, error } = await supabase
+    .from('consultations')
+    .select('*, consultation_status(*), calendar_events!calendar_events_booking_id_fkey(*)')
+    .eq('id', bookingId)
+    .single()
+
+  if (error) {
+    console.error(error)
+    throw error // Consider throwing the error to be handled by Redux Toolkit
+  }
+
+  console.log(data, 'fetchSelectedBooking')
+  return data
+})
+
 const initialState = {
   appointments: [],
   loading: false,
   pdsPatient: null,
-  selectedPatient: null
+  selectedPatient: null,
+  selectedBooking: null,
+  loadingSelectedBooking: false
 }
 
 export const appointmnetListSlice = createSlice({
   name: 'appointmnetList',
   initialState: initialState,
-  reducers: {},
+  reducers: {
+    setSelectedPatient: (state, action) => {
+      state.selectedPatient = action.payload
+    },
+    setSelectedBooking: (state, action) => {
+      state.selectedBooking = action.payload
+    }
+  },
   extraReducers: {
     [fetchAppointments.fulfilled]: (state, action) => {
       state.appointments = action.payload
@@ -175,8 +218,19 @@ export const appointmnetListSlice = createSlice({
     },
     [fetchAppointments.rejected]: (state, action) => {
       state.loading = false
+    },
+    [fetchSelectedBooking.fulfilled]: (state, action) => {
+      state.selectedBooking = action.payload
+    },
+    [fetchSelectedBooking.pending]: (state, action) => {
+      state.loadingSelectedBooking = true
+    },
+    [fetchSelectedBooking.rejected]: (state, action) => {
+      state.loadingSelectedBooking = false
     }
   }
 })
+
+export const { setSelectedPatient, setSelectedBooking } = appointmnetListSlice.actions
 
 export default appointmnetListSlice.reducer

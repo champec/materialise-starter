@@ -40,8 +40,10 @@ const Calendar = props => {
     handleSelectEvent,
     handleLeftSidebarToggle,
     handleAddEventSidebarToggle,
+    handleAddBookingSidebarToggle,
     timeSlotType,
-    appointment
+    appointment,
+    fetchSelectedBooking
   } = props
 
   // ** Refs
@@ -113,9 +115,17 @@ const Calendar = props => {
       },
       eventClick({ event: clickedEvent, jsEvent }) {
         jsEvent.preventDefault() // Prevents going to the URL
-        dispatch(handleSelectEvent(clickedEvent))
-        handleAddEventSidebarToggle()
-
+        const eventId = clickedEvent?._def.extendedProps?.booking_id
+        // if (eventId) {
+        //   window.open(`/apps/appointment-scheduler/${eventId}`, '_blank')
+        // }
+        if (eventId) {
+          dispatch(fetchSelectedBooking(eventId))
+          handleAddBookingSidebarToggle(eventId)
+        } else {
+          dispatch(handleSelectEvent(clickedEvent))
+          handleAddEventSidebarToggle(eventId)
+        }
         // * Only grab required field otherwise it goes in infinity loop
         // ! Always grab all fields rendered by form (even if it get `undefined`) otherwise due to Vue3/Composition API you might get: "object is not extensible"
         // event.value = grabEventDataFromEventApi(clickedEvent)
@@ -146,7 +156,8 @@ const Calendar = props => {
             ? We can use `eventDragStop` but it doesn't return updated event so we have to use `eventDrop` which returns updated event
           */
       eventDrop({ event: droppedEvent }) {
-        dispatch(updateEvent({ event: droppedEvent, orgId: orgId }))
+        const bookingId = droppedEvent._def.extendedProps.booking_id
+        dispatch(updateEvent({ event: droppedEvent, orgId: orgId, bookingId: bookingId }))
       },
 
       /*
@@ -154,7 +165,8 @@ const Calendar = props => {
             ? Docs: https://fullcalendar.io/docs/eventResize
           */
       eventResize({ event: resizedEvent }) {
-        dispatch(updateEvent({ event: resizedEvent, orgId: orgId }))
+        const bookingId = resizedEvent._def.extendedProps.booking_id
+        dispatch(updateEvent({ event: resizedEvent, orgId: orgId, bookingId: bookingId }))
       },
       ref: calendarRef,
 

@@ -40,7 +40,9 @@ import { createBooking, addEvent } from 'src/store/apps/calendar/pharmacyfirst/b
 import {
   appendMessageToThread,
   createThreadAndSendSMS,
-  scheduleReminder
+  scheduleReminder,
+  updateAppointmentStatus,
+  setSelectedBooking
 } from 'src/store/apps/calendar/pharmacyfirst/appointmentListSlice'
 
 // ** Custom Components Imports
@@ -132,7 +134,7 @@ const confirmSchema = yup.object().shape({
   iAgree: yup.boolean().required()
 })
 
-const NewBookingForm = ({ onClose }) => {
+const NewBookingForm = ({ onClose, isEditing }) => {
   // ** States
   const [activeStep, setActiveStep] = useState(0)
   const [addNewPatientDialog, setAddNewPatientDialog] = useState(false)
@@ -141,11 +143,57 @@ const NewBookingForm = ({ onClose }) => {
   const [snackSeverity, setSnackSeverity] = useState('success') // success, error, warning, info, or default
   const [loading, setLoading] = useState(false)
   const dispatch = useDispatch()
+  const selectedBookingLoading = useSelector(state => state.appointmentListSlice.selectedBookingLoading)
+  const selectedBooking = useSelector(state => state.appointmentListSlice.selectedBooking)
+
+  console.log('selectedBooking', selectedBooking, selectedBookingLoading)
+
+  useEffect(() => {
+    if (selectedBooking) {
+      // set all form values based on the selectedBooking object
+      // set the selected patient
+      setSelectedPatient(selectedBooking.patient_object)
+      // set the selected pharmacist
+      setSelectedPharmacist(selectedBooking.pharmacist_object)
+      // set the form values
+      bookingReset({
+        pharmacist: selectedBooking.pharmacist_object,
+        startDate: selectedBooking.start_date,
+        duration: selectedBooking.duration,
+        textMessage: selectedBooking.text_message,
+        presentingComplaint: selectedBooking.presenting_complaint,
+        clinicalPathway: selectedBooking.clinical_pathway
+      })
+      patientReset({
+        fullName: selectedBooking.patient_object.full_name,
+        email: selectedBooking.patient_object.email,
+        nhsNumber: selectedBooking.patient_object.nhs_number,
+        mobileNumber: selectedBooking.patient_object.mobile_number,
+        houseNumber: selectedBooking.patient_object.house_number,
+        address: selectedBooking.patient_object.address,
+        postCode: selectedBooking.patient_object.post_code,
+        dateOfBirth: selectedBooking.patient_object.dob,
+        telephoneNumber: selectedBooking.patient_object.telephone_number
+      })
+    }
+
+    return () => {
+      setSelectedPatient(null)
+      setSelectedPharmacist(null)
+      dispatch(setSelectedBooking(null))
+      setSnackMessage('')
+      setActiveStep(0)
+      // patientReset(defaultAccountValues)
+      // bookingReset(defaultBookingValues)
+    }
+  }, [selectedBooking])
 
   const handleSelect = value => {
     console.log('handle select value', value)
     setSelectedPatient(value)
   }
+
+  console.log('IS EDITING', isEditing)
 
   const showMessage = (msg, sev) => {
     setSnackMessage(msg)
@@ -278,6 +326,40 @@ const NewBookingForm = ({ onClose }) => {
 
       const dailyUrl = dailyData?.room.url
 
+      const bookingPayload = {
+        pharmacist_id: bookingData?.pharmacist?.id || null,
+        start_date: bookingData?.startDate.format() || null,
+        duration: bookingData?.duration || null,
+        text_message: bookingData?.textMessage || null,
+        presenting_complaint: bookingData?.presentingComplaint || null,
+        clinical_pathway: bookingData?.clinicalPathway || null,
+        patient_object: selectedPatient || null,
+        pharmacist_object: bookingData?.pharmacist || null,
+        pharmacy_id: orgId,
+        booked_by: userId,
+        url: dailyUrl,
+        hcp_token: dailyData?.hcpToken || null,
+        patient_token: dailyData?.patientToken || null
+        // event_id: newEvent?.id || null
+      }
+
+      const { payload: newBooking, error: newBookingError } = await dispatch(createBooking(bookingPayload))
+
+      // console.log('Booking Payload', bookingPayload)
+      // console.log('Booking Info', newBooking, newBooking.id, newBookingError)
+      // console.log('BOOKING DATA, ', bookingData)
+
+      if (newBookingError) {
+        console.log('new booking error', newBookingError)
+        //show custom snackbar
+        showMessage(
+          'error creating booking, please try again, if problem persists contact admin with code 102',
+          'error'
+        )
+        setLoading(false)
+        return
+      }
+
       const eventPayload = {
         start: bookingData?.startDate.format() || null,
         location: 'online',
@@ -287,8 +369,9 @@ const NewBookingForm = ({ onClose }) => {
         calendarType: 14,
         title: 'Pharmacy First Appointment',
         url: dailyUrl || null,
-        booking_id: null
+        booking_id: newBooking?.id || null
       }
+
       if (eventPayload.start_date && eventPayload.duration) {
         const startDate = dayjs(payload.start_date)
         const endDate = startDate.add(payload.duration, 'minute')
@@ -304,40 +387,6 @@ const NewBookingForm = ({ onClose }) => {
         console.log('new event error', newEventError)
         //show custom snackbar
         showMessage('error creating event, please try again, if problem persists contact admin with code 103', 'error')
-        setLoading(false)
-        return
-      }
-
-      const bookingPayload = {
-        pharmacist_id: bookingData?.pharmacist?.id || null,
-        start_date: bookingData?.startDate.format() || null,
-        duration: bookingData?.duration || null,
-        text_message: bookingData?.textMessage || null,
-        presenting_complaint: bookingData?.presentingComplaint || null,
-        clinical_pathway: bookingData?.clinicalPathway || null,
-        patient_object: selectedPatient || null,
-        pharmacist_object: bookingData?.pharmacist || null,
-        pharmacy_id: orgId,
-        booked_by: userId,
-        url: dailyUrl,
-        hcp_token: dailyData?.hcpToken || null,
-        patient_token: dailyData?.patientToken || null,
-        event_id: newEvent?.id || null
-      }
-
-      const { payload: newBooking, error: newBookingError } = await dispatch(createBooking(bookingPayload))
-
-      // console.log('Booking Payload', bookingPayload)
-      console.log('Booking Info', newBooking, newBookingError)
-      console.log('BOOKING DATA, ', bookingData)
-
-      if (newBookingError) {
-        console.log('new booking error', newBookingError)
-        //show custom snackbar
-        showMessage(
-          'error creating booking, please try again, if problem persists contact admin with code 102',
-          'error'
-        )
         setLoading(false)
         return
       }
@@ -358,7 +407,8 @@ const NewBookingForm = ({ onClose }) => {
           message,
           phoneNumber: userData.mobileNumber,
           appointmentId: newBooking.id,
-          time: bookingData.startDate
+          time: bookingData.startDate,
+          patient_number: userData.mobileNumber
         })
       )
       console.log('SMS response', smsResponse)

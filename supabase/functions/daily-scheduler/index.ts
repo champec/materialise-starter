@@ -73,7 +73,8 @@ Deno.serve(async req => {
       body: JSON.stringify({
         properties: {
           nbf: scheduledTime, // Unix timestamp for "Not Before" time
-          max_participants: 2 // Limit to 2 people
+          max_participants: 2, // Limit to 2 people
+          enable_prejoin_ui: true
           // Add any additional properties you need
         }
       })

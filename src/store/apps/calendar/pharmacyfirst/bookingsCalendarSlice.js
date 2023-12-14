@@ -1,6 +1,7 @@
 import { supabaseOrg } from 'src/configs/supabase'
 // ** Redux Imports
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit'
+import { appendMessageToThread } from './appointmentListSlice'
 const supabase = supabaseOrg
 
 export const fetchEvents = createAsyncThunk('appCalendar/fetchEvents', async (orgId, { getState }) => {
@@ -9,9 +10,16 @@ export const fetchEvents = createAsyncThunk('appCalendar/fetchEvents', async (or
   // if (error) {
   //   console.log(error)
   // }
-  const { data, error } = await supabase.from('calendar_events').select('*').eq('company_id', orgId)
+  const { data, error } = await supabase
+    .from('calendar_events')
+    .select('*, consultations!calendar_events_booking_id_fkey(*)')
+    .eq('company_id', orgId)
+  if (error) {
+    console.log(error)
+    throw error
+  }
   console.log(data, 'fetchEvents')
-  return data || []
+  return data
 })
 
 // ** Add Event
@@ -28,17 +36,51 @@ export const addEvent = createAsyncThunk('appCalendar/addEvent', async (event, {
 })
 
 // ** Update Event
-export const updateEvent = createAsyncThunk('appCalendar/updateEvent', async ({ event, orgId }, { dispatch }) => {
-  console.log('updateEvent is being called', { event, orgId })
-  console.log({ event })
-  const { data, error } = await supabase.from('calendar_events').update(event).eq('id', event.id)
-  if (error) {
-    console.log(error)
+export const updateEvent = createAsyncThunk(
+  'appCalendar/updateEvent',
+  async ({ event, orgId, bookingId }, { dispatch, getState }) => {
+    console.log('updateEvent is being called', { event, orgId, bookingId })
+    console.log({ event })
+    if (!bookingId) {
+      const { data, error } = await supabase.from('calendar_events').update(event).eq('id', event.id)
+      if (error) {
+        console.log(error)
+      }
+      console.log(data)
+      dispatch(fetchEvents(orgId))
+      return data
+    } else {
+      //find old event
+      const oldEvent = getState().bookingsCalendar.events.find(calEvent => calEvent.id == event._def.publicId)
+      console.log('OldEvent', oldEvent, 'bookingId', bookingId, 'EVENT', event)
+      const oldEventStart = new Date(oldEvent.start)
+      const newEventStart = new Date(event._instance.range.start)
+      console.log(`Your event has been updated from ${oldEventStart} to ${newEventStart}`)
+
+      //update event
+      const { data, error } = await supabase.from('calendar_events').update(event).eq('id', event.id)
+      if (error) {
+        console.log(error)
+      }
+
+      //fetch thread id
+      const { data: threadId, error: threadError } = await supabase
+        .from('sms_threads')
+        .select('id')
+        .eq('consultation_id', bookingId)
+        .single()
+
+      if (threadError) {
+        console.log(threadError)
+      }
+
+      if (threadId?.id) {
+        const message = `Your appointment has been updated from ${oldEventStart} to ${newEventStart}`
+        dispatch(appendMessageToThread({ threadId: threadId.id, message: message }))
+      }
+    }
   }
-  console.log(data)
-  dispatch(fetchEvents(orgId))
-  return data
-})
+)
 
 // ** Delete Event
 export const deleteEvent = createAsyncThunk('appCalendar/deleteEvent', async ({ id, orgId }, { dispatch }) => {
