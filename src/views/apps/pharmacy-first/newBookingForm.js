@@ -339,7 +339,8 @@ const NewBookingForm = ({ onClose, isEditing }) => {
         booked_by: userId,
         url: dailyUrl,
         hcp_token: dailyData?.hcpToken || null,
-        patient_token: dailyData?.patientToken || null
+        patient_token: dailyData?.patientToken || null,
+        duration: bookingData?.duration || null
         // event_id: newEvent?.id || null
       }
 
