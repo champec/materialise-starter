@@ -23,6 +23,7 @@ import PreviewActions from 'src/views/apps/invoice/preview/PreviewActions'
 import AddPaymentDrawer from 'src/views/apps/invoice/shared-drawer/AddPaymentDrawer'
 import SendInvoiceDrawer from 'src/views/apps/invoice/shared-drawer/SendInvoiceDrawer'
 import PreviewCardBooking from './PreviewCardBooking'
+import AppointMentChat from './AppointMentChat'
 
 const AppointmentView = ({ appointment }) => {
   // ** State
@@ -30,15 +31,18 @@ const AppointmentView = ({ appointment }) => {
   const [data, setData] = useState(null)
   const [addPaymentOpen, setAddPaymentOpen] = useState(false)
   const [sendInvoiceOpen, setSendInvoiceOpen] = useState(false)
+  const [showChat, setShowChat] = useState(false)
 
   const toggleSendInvoiceDrawer = () => setSendInvoiceOpen(!sendInvoiceOpen)
   const toggleAddPaymentDrawer = () => setAddPaymentOpen(!addPaymentOpen)
+  const toggleShowChat = () => setShowChat(!showChat)
+
   if (appointment) {
     return (
       <>
         <Grid container spacing={6}>
           <Grid item xl={9} md={8} xs={12}>
-            <PreviewCardBooking booking={appointment} />
+            {showChat ? <AppointMentChat appointment={appointment} /> : <PreviewCardBooking booking={appointment} />}
           </Grid>
           <Grid item xl={3} md={4} xs={12}>
             <Card>
@@ -47,10 +51,10 @@ const AppointmentView = ({ appointment }) => {
                   fullWidth
                   sx={{ mb: 3.5 }}
                   variant='contained'
-                  onClick={toggleSendInvoiceDrawer}
-                  startIcon={<Icon icon='mdi:send-outline' />}
+                  onClick={toggleShowChat}
+                  startIcon={<Icon icon={showChat ? 'akar-icons:schedule' : 'mdi:send-outline'} />}
                 >
-                  Send Message
+                  {showChat ? 'SHOW BOOKING' : 'SEND MESSAGE'}
                 </Button>
                 <Button fullWidth sx={{ mb: 3.5 }} color='secondary' variant='outlined'>
                   Starting in

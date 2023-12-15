@@ -63,7 +63,7 @@ function index() {
 
   let url = consultation.url
   if (hcp_token) {
-    url = `${baseUrl}?token=${hcp_token}`
+    url = `${url}?token=${hcp_token}`
   }
 
   const handleBookingButton = () => {

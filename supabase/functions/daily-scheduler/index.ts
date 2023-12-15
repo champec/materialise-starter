@@ -67,6 +67,7 @@ Deno.serve(async req => {
     const roomResponse = await fetch(DAILY_API_ENDPOINT, {
       method: 'POST',
       headers: {
+        ...corsHeaders,
         'Content-Type': 'application/json',
         Authorization: `Bearer ${DAILY_API_KEY}`
       },

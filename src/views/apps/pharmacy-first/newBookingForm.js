@@ -328,8 +328,8 @@ const NewBookingForm = ({ onClose, isEditing }) => {
 
       const bookingPayload = {
         pharmacist_id: bookingData?.pharmacist?.id || null,
-        start_date: bookingData?.startDate.format() || null,
-        duration: bookingData?.duration || null,
+        // start_date: bookingData?.startDate.format() || null,
+        // duration: bookingData?.duration || null,
         text_message: bookingData?.textMessage || null,
         presenting_complaint: bookingData?.presentingComplaint || null,
         clinical_pathway: bookingData?.clinicalPathway || null,
@@ -360,8 +360,11 @@ const NewBookingForm = ({ onClose, isEditing }) => {
         return
       }
 
+      const endDateTime = dayjs(bookingData?.startDate).add(bookingData?.duration, 'minute')
+
       const eventPayload = {
         start: bookingData?.startDate.format() || null,
+        end: endDateTime.format() || null,
         location: 'online',
         company_id: orgId,
         created_by: userId,

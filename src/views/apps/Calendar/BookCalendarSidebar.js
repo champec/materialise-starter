@@ -24,6 +24,7 @@ import { useForm, Controller } from 'react-hook-form'
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider'
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs'
 import { useSelector } from 'react-redux'
+import { handleSelectEvent } from 'src/store/apps/calendar/pharmacyfirst/bookingsCalendarSlice'
 
 // ** Icon Imports
 import Icon from 'src/@core/components/icon'
@@ -56,7 +57,7 @@ const BookCalendarSidebar = props => {
     drawerWidth,
     calendarApi,
     deleteEvent,
-    handleSelectEvent,
+    // handleSelectEvent,
     addBookingSidebarOpen,
     handleAddBookingSidebarToggle
   } = props

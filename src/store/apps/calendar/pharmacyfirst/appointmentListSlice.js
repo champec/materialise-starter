@@ -18,7 +18,7 @@ export const fetchAppointments = createAsyncThunk(
 
     const { data, error } = await supabase
       .from('consultations')
-      .select('*, pp_booking_status(status), calendar_events!consultations_event_id_fkey(*)')
+      .select('*, consultation_status(*), calendar_events!calendar_events_booking_id_fkey(*), sms_threads(id)')
       .eq('pharmacy_id', orgId)
       .gte('start_date', startDate || defaultStartDate)
       .lte('start_date', endDate || defaultEndDate)
@@ -115,6 +115,7 @@ export const appendMessageToThread = createAsyncThunk(
     const { data, error } = await supabase
       .from('sms_messages')
       .insert({ thread_id: threadId, message: message, sender_id: orgId })
+      .select('*')
 
     if (error) {
       console.error(error)
@@ -205,6 +206,7 @@ export const appointmnetListSlice = createSlice({
   extraReducers: {
     [fetchAppointments.fulfilled]: (state, action) => {
       state.appointments = action.payload
+      state.loading = false
     },
     [fetchAppointments.pending]: (state, action) => {
       state.loading = true

@@ -3,7 +3,8 @@ import { Card, CardContent, Typography, Grid } from '@mui/material'
 import dayjs from 'dayjs'
 
 const PreviewCardBooking = ({ booking }) => {
-  const formattedDate = dayjs(booking.calendar_events.created_at).format('D MMM YYYY [at] HH:mm')
+  const eventDateTime = booking.calendar_events?.start
+  const formattedDate = eventDateTime ? dayjs(booking.calendar_events?.start).format('D MMM YYYY [at] HH:mm') : 'N/A'
   const patientDOB = dayjs(booking.patient_object.dob).format('D MMM YYYY')
 
   return (

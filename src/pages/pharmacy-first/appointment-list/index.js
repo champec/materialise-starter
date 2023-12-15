@@ -1,5 +1,5 @@
 // ** React Imports
-import { useState, useEffect, forwardRef } from 'react'
+import { useState, useEffect, forwardRef, useMemo } from 'react'
 
 // ** Next Import
 import Link from 'next/link'
@@ -46,48 +46,15 @@ import CustomChip from 'src/@core/components/mui/chip'
 import CustomAvatar from 'src/@core/components/mui/avatar'
 import OptionsMenu from 'src/@core/components/option-menu'
 import ConsultationHeader from 'src/views/apps/invoice/list/ConsultationHeader'
+import BatchActionsModal from './BatchActionsModal'
 
 // ** Styled Components
 import DatePickerWrapper from 'src/@core/styles/libs/react-datepicker'
+import BookCalendarSidebar from 'src/views/apps/Calendar/BookCalendarSidebar'
+import bookingsCalendarSlice from 'src/store/apps/calendar/pharmacyfirst/bookingsCalendarSlice'
 
 const now = new Date()
 const currentMonth = now.toLocaleString('default', { month: 'short' })
-
-const data = [
-  {
-    id: 4987,
-    issuedDate: `13 ${currentMonth} ${now.getFullYear()}`,
-    address: '7777 Mendez Plains',
-    company: 'Hall-Robbins PLC',
-    companyEmail: 'don85@johnson.com',
-    country: 'USA',
-    contact: '(616) 865-4180',
-    name: 'Jordan Stevenson',
-    service: 'Software Development',
-    total: 3428,
-    avatar: '',
-    avatarColor: 'primary',
-    invoiceStatus: 'Paid',
-    balance: 'PFS',
-    dueDate: `23 ${currentMonth} ${now.getFullYear()}`
-  },
-  {
-    id: 4988,
-    issuedDate: `17 ${currentMonth} ${now.getFullYear()}`,
-    address: '04033 Wesley Wall Apt. 961',
-    company: 'Mccann LLC and Sons',
-    companyEmail: 'brenda49@taylor.info',
-    country: 'Haiti',
-    contact: '(226) 204-8287',
-    name: 'Stephanie Burns',
-    service: 'UI/UX Design & Development',
-    total: 5219,
-    avatar: '/images/avatars/1.png',
-    invoiceStatus: 'Downloaded',
-    balance: 'Flu',
-    dueDate: `15 ${currentMonth} ${now.getFullYear()}`
-  }
-]
 
 // ** Styled component for the link in the dataTable
 const LinkStyled = styled(Link)(({ theme }) => ({
@@ -101,7 +68,8 @@ const Transition = forwardRef(function Transition(props, ref) {
 
 // ** Vars
 const invoiceStatusObj = {
-  pending: { color: 'secondary', icon: 'mdi:send' },
+  Booked: { color: 'secondary', icon: 'mdi:send' },
+  Rescheduled: { color: 'warning', icon: 'mdi:send' },
   live: { color: 'success', icon: 'mdi:check' },
   completed: { color: 'primary', icon: 'mdi:content-save-outline' },
   gp_submitted: { color: 'warning', icon: 'mdi:chart-pie' },
@@ -171,36 +139,42 @@ const defaultColumns = [
       </Box>
     ),
     renderCell: ({ row }) => {
-      const { pp_booking_status } = row
-      const status = pp_booking_status?.status
+      const { consultation_status: status } = row
+      const title = status?.title
+
       const dueDate = 'destructured from row'
       const balance = 'destructured from row'
-      const color = invoiceStatusObj[status] ? invoiceStatusObj[status].color : 'primary'
+      const color = invoiceStatusObj[title] ? invoiceStatusObj[title]?.color : 'primary'
 
       return (
-        <Tooltip
-          title={
-            <div>
-              <Typography variant='caption' sx={{ color: 'common.white', fontWeight: 600 }}>
-                {status}
-              </Typography>
-              <br />
-              <Typography variant='caption' sx={{ color: 'common.white', fontWeight: 600 }}>
-                Balance:
-              </Typography>{' '}
-              {balance}
-              <br />
-              <Typography variant='caption' sx={{ color: 'common.white', fontWeight: 600 }}>
-                Due Date:
-              </Typography>{' '}
-              {dueDate}
-            </div>
-          }
-        >
-          <CustomAvatar skin='light' color={color} sx={{ width: 34, height: 34 }}>
-            <Icon icon={invoiceStatusObj[status]?.icon || 'ri:question-line'} fontSize='1.25rem' />
-          </CustomAvatar>
-        </Tooltip>
+        <Box style={{ display: 'flex', flexDirection: 'row', alignItems: 'center' }}>
+          <Tooltip
+            title={
+              <Box>
+                <Typography variant='caption' sx={{ color: 'common.white', fontWeight: 600 }}>
+                  {title}
+                </Typography>
+                <br />
+                <Typography variant='caption' sx={{ color: 'common.white', fontWeight: 600 }}>
+                  Balance:
+                </Typography>{' '}
+                {balance}
+                <br />
+                <Typography variant='caption' sx={{ color: 'common.white', fontWeight: 600 }}>
+                  Due Date:
+                </Typography>{' '}
+                {dueDate}
+              </Box>
+            }
+          >
+            <CustomAvatar skin='light' color={color} sx={{ width: 34, height: 34 }}>
+              <Icon icon={invoiceStatusObj[title]?.icon || 'ri:question-line'} fontSize='1.25rem' />
+            </CustomAvatar>
+          </Tooltip>
+          <Typography variant='caption' sx={{ color: 'common.white', fontWeight: 600 }}>
+            {title}
+          </Typography>
+        </Box>
       )
     }
   },
@@ -222,8 +196,9 @@ const defaultColumns = [
       if (!event?.created_at) {
         console.log('event doesnt have a created at', event)
       }
-      const formattedTime = dayjs(event.created_at).format('HH:mm') // 24hr format time
-      const formattedDate = dayjs(event.created_at).format('D MMM YYYY') // Date in "12th Jan 2023" format
+      const eventDateTime = event?.start
+      const formattedTime = eventDateTime ? dayjs(event?.start).format('HH:mm') : 'None' // 24hr format time
+      const formattedDate = eventDateTime ? dayjs(event?.created_at).format('D MMM YYYY') : 'None' // Date in "12th Jan 2023" format
 
       return (
         <Typography variant='body2'>
@@ -267,37 +242,129 @@ const AppointmentList = () => {
   const [value, setValue] = useState('')
   const [statusValue, setStatusValue] = useState('')
   const [endDateRange, setEndDateRange] = useState(null)
-  const [selectedRows, setSelectedRows] = useState([])
+  const [selectedRowIds, setSelectedRowIds] = useState([])
   const [startDateRange, setStartDateRange] = useState(null)
   const [paginationModel, setPaginationModel] = useState({ page: 0, pageSize: 10 })
-  const appointmentsSlice = useSelector(state => state.appointmentList)
+  const appointmentsSlice = useSelector(state => state.appointmentListSlice)
+  const slice = useSelector(state => state.bookingsCalendar)
   const [appointmentView, setAppointmentView] = useState(false)
   const [appointment, setAppointment] = useState(null)
+  const [bookingSideBarOpen, setBookingSideBarOpen] = useState(false)
+  const [filteredAppointments, setFilteredAppointments] = useState([])
+  const [batchModalOpen, setBatchModalOpen] = useState(false)
+  const [currentAction, setCurrentAction] = useState('')
+  const [refetching, setRefetching] = useState(false)
   const appointments = appointmentsSlice?.appointments
   const loading = appointmentsSlice?.loading
   dayjs.extend(advancedFormat)
+
+  const selectedRows = useMemo(() => {
+    return appointments.filter(row => selectedRowIds.includes(row.id))
+  }, [appointments, selectedRowIds])
 
   useEffect(() => {
     dispatch(fetchAppointments())
   }, [])
 
-  console.log('APPOINTMENTS', appointments)
+  useEffect(() => {
+    if (appointments !== null) {
+      setFilteredAppointments(appointments)
+    }
+  }, [appointments])
+
+  useEffect(() => {
+    if (startDateRange !== null && endDateRange !== null) {
+      // Convert to ISO 8601 format
+      const formattedStartDate = new Date(startDateRange).toISOString()
+      const formattedEndDate = new Date(endDateRange).toISOString()
+
+      dispatch(
+        fetchAppointments({
+          startDate: formattedStartDate,
+          endDate: formattedEndDate
+        })
+      )
+    }
+  }, [startDateRange, endDateRange])
+
+  const reFetchAppointments = async () => {
+    setFilteredAppointments([])
+    const response = await dispatch(fetchAppointments())
+    if (response.error) {
+      console.log('ERROR', response.error)
+    }
+
+    setFilteredAppointments(response.payload)
+  }
+
+  // console.log('APPOINTMENTS', appointments)
+  const toggleBookingSideBar = () => {
+    console.log('PRESSED')
+    setBookingSideBarOpen(!bookingSideBarOpen)
+  }
 
   // ** Hooks
 
   const store = useSelector(state => state.invoice)
+
+  const applyFilter = () => {
+    if (statusValue == 'all') {
+      setFilteredAppointments(appointments)
+    } else {
+      setFilteredAppointments(
+        appointments.filter(appointment => appointment.consultation_status?.title === statusValue)
+      )
+    }
+  }
+
   useEffect(() => {
-    dispatch(
-      fetchData({
-        dates,
-        q: value,
-        status: statusValue
-      })
-    )
+    applyFilter()
   }, [dispatch, statusValue, value, dates])
 
   const handleFilter = val => {
     setValue(val)
+  }
+
+  useEffect(() => {
+    // Perform filtering whenever the input value changes
+    if (!value.trim()) {
+      setFilteredAppointments(appointments)
+    } else {
+      searchFilter(value)
+    }
+  }, [value])
+
+  const handleBatchAction = action => {
+    console.log('ACTION', action)
+    setCurrentAction(action)
+    setBatchModalOpen(true)
+    // use MUI alert to confirm action and then perform action for each row if confirmed or cancel
+
+    // if (action === 'delete') {
+    //   selectedRows.forEach(row => {
+    //     dispatch(deleteInvoice(row))
+    //   })
+    // }
+  }
+
+  const searchFilter = inputValue => {
+    const lowercasedInput = inputValue.toLowerCase().split(' ').filter(Boolean)
+
+    setFilteredAppointments(
+      appointments.filter(appointment => {
+        const firstName = appointment.patient_object.first_name
+        const lastName = appointment.patient_object.last_name
+        const fullName = appointment.patient_object.full_nam
+        const middleName = appointment.patient_object.middle_name
+        return lowercasedInput.every(
+          input =>
+            (firstName && firstName.toLowerCase().includes(input)) ||
+            (lastName && lastName.toLowerCase().includes(input)) ||
+            (fullName && fullName.toLowerCase().includes(input)) ||
+            (middleName && middleName.toLowerCase().includes(input))
+        )
+      })
+    )
   }
 
   const handleStatusValue = e => {
@@ -383,13 +450,14 @@ const AppointmentList = () => {
                       onChange={handleStatusValue}
                       labelId='invoice-status-select'
                     >
-                      <MenuItem value=''>none</MenuItem>
-                      <MenuItem value='downloaded'>Downloaded</MenuItem>
-                      <MenuItem value='draft'>Draft</MenuItem>
+                      <MenuItem value='all'>All</MenuItem>
+                      <MenuItem value='Booked'>Booked</MenuItem>
+                      <MenuItem value='Rescheduled'>Reschedules</MenuItem>
+                      {/* <MenuItem value='draft'>Draft</MenuItem>
                       <MenuItem value='paid'>Paid</MenuItem>
                       <MenuItem value='partial payment'>Partial Payment</MenuItem>
                       <MenuItem value='past due'>Past Due</MenuItem>
-                      <MenuItem value='sent'>Sent</MenuItem>
+                      <MenuItem value='sent'>Sent</MenuItem> */}
                     </Select>
                   </FormControl>
                 </Grid>
@@ -421,18 +489,27 @@ const AppointmentList = () => {
         </Grid>
         <Grid item xs={12}>
           <Card>
-            <ConsultationHeader value={value} selectedRows={selectedRows} handleFilter={handleFilter} />
+            <ConsultationHeader
+              onBook={toggleBookingSideBar}
+              value={value}
+              selectedRows={selectedRows}
+              handleFilter={handleFilter}
+              handleBatchAction={handleBatchAction}
+              reFetching={loading}
+              reFetchAppointments={reFetchAppointments}
+            />
             <DataGrid
               autoHeight
               pagination
-              rows={appointments}
+              rows={filteredAppointments}
               columns={columns}
               checkboxSelection
               disableSelectionOnClick
               pageSizeOptions={[10, 25, 50]}
               paginationModel={paginationModel}
               onPaginationModelChange={setPaginationModel}
-              onRowSelectionModelChange={rows => setSelectedRows(rows)}
+              onSelectionModelChange={rows => setSelectedRowIds(rows)}
+              onRowDoubleClick={appointment => window.open(`/pharmacy-first/appointment-list/${appointment.id}`)}
             />
           </Card>
         </Grid>
@@ -462,9 +539,30 @@ const AppointmentList = () => {
             <AppointmentView appointment={appointment} />
           </DialogContent>
         </Dialog>
+        <BatchActionsModal
+          open={batchModalOpen}
+          onClose={() => setBatchModalOpen(false)}
+          selectedRows={selectedRows}
+          currentAction={currentAction}
+          setCurrentAction={setCurrentAction}
+        />
       </Grid>
+      <BookCalendarSidebar
+        store={slice}
+        drawerWidth={400}
+        dispatch={dispatch}
+        // addCalendarSidebarOpen={() => {}}
+        // handleAddCalendarSidebarToggle={() => {}}
+        // bookCalendarSidebarOpen={bookingSideBarOpen}
+        handleAddBookingSidebarToggle={toggleBookingSideBar}
+        addBookingSidebarOpen={bookingSideBarOpen}
+        handleSelectEvent={() => {}}
+      />
     </DatePickerWrapper>
   )
 }
 
-export default withReducer('appointmentList', appointmnetListSlice.reducer)(AppointmentList)
+export default withReducer({
+  appointmentListSlice: appointmnetListSlice.reducer,
+  bookingsCalendar: bookingsCalendarSlice
+})(AppointmentList)
