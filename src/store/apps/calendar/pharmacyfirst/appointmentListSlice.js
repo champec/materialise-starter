@@ -20,8 +20,9 @@ export const fetchAppointments = createAsyncThunk(
       .from('consultations')
       .select('*, consultation_status(*), calendar_events!calendar_events_booking_id_fkey(*), sms_threads(id)')
       .eq('pharmacy_id', orgId)
-      .gte('start_date', startDate || defaultStartDate)
-      .lte('start_date', endDate || defaultEndDate)
+      .gte('calendar_events.start', startDate || defaultStartDate)
+      .lte('calendar_events.end', endDate || defaultEndDate)
+      .order('start', { foreignTable: 'calendar_events', ascending: true })
 
     if (error) {
       console.error(error)
