@@ -22,7 +22,7 @@ import Icon from 'src/@core/components/icon'
 // ** Demo Components
 import Teams from 'src/views/pages/user-profile/teams'
 import Profile from 'src/views/pages/user-profile/profile'
-import Projects from 'src/views/pages/user-profile/projects'
+import Integrations from 'src/views/pages/user-profile/integrations'
 import Connections from 'src/views/pages/user-profile/connections'
 import UserProfileHeader from 'src/views/pages/user-profile/UserProfileHeader'
 
@@ -44,7 +44,7 @@ const TabList = styled(MuiTabList)(({ theme }) => ({
   }
 }))
 
-const UserProfile = ({ tab, data, nhsData, orgData }) => {
+const MyPharmacyTabs = ({ tab, data, nhsData, orgData }) => {
   // ** State
   const [activeTab, setActiveTab] = useState('organisation')
   const [isLoading, setIsLoading] = useState(true)
@@ -67,7 +67,7 @@ const UserProfile = ({ tab, data, nhsData, orgData }) => {
   const tabContentList = {
     organisation: <Profile data={orgData} />,
     team: <Teams data={orgData} />,
-    projects: <Projects data={orgData} />,
+    Integrations: <Integrations data={orgData} />,
     network: <Connections pharmData={data} nhsData={nhsData} data={orgData} />
   }
 
@@ -105,15 +105,15 @@ const UserProfile = ({ tab, data, nhsData, orgData }) => {
                       </Box>
                     }
                   />
-                  {/* <Tab
-                    value='projects'
+                  <Tab
+                    value='Integrations'
                     label={
                       <Box sx={{ display: 'flex', alignItems: 'center', ...(!hideText && { '& svg': { mr: 2 } }) }}>
                         <Icon icon='mdi:view-grid-outline' />
-                        {!hideText && 'Projects'}
+                        {!hideText && 'Integrations'}
                       </Box>
                     }
-                  /> */}
+                  />
                   <Tab
                     value='network'
                     label={
@@ -145,4 +145,4 @@ const UserProfile = ({ tab, data, nhsData, orgData }) => {
   )
 }
 
-export default UserProfile
+export default MyPharmacyTabs

@@ -1,5 +1,5 @@
 import { supabaseOrg as supabase } from 'src/configs/supabase'
-import UserProfile from 'src/views/pages/user-profile/UserProfile'
+import MyPharmacyTabs from 'src/views/pages/user-profile/myPharmacyTabs'
 import { useOrgAuth } from 'src/hooks/useOrgAuth'
 import { useEffect, useState } from 'react'
 import { set } from 'nprogress'
@@ -31,7 +31,7 @@ const UserProfileTab = () => {
   }, [])
 
   console.log({ data, nhsData }, 'USER COMP')
-  return <UserProfile tab={'non'} data={data} nhsData={nhsData} orgData={orgData} />
+  return <MyPharmacyTabs tab={'non'} data={data} nhsData={nhsData} orgData={orgData} />
 }
 
 export default UserProfileTab
