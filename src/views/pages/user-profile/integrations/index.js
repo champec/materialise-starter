@@ -1,50 +1,65 @@
-// ** Next Import
+import React from 'react'
 import Link from 'next/link'
+import {
+  Box,
+  Typography,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+  Button,
+  Paper
+} from '@mui/material'
 
-// ** MUI Components
-import Box from '@mui/material/Box'
-import Grid from '@mui/material/Grid'
-import Card from '@mui/material/Card'
-import Divider from '@mui/material/Divider'
-import Tooltip from '@mui/material/Tooltip'
-import CardHeader from '@mui/material/CardHeader'
-import Typography from '@mui/material/Typography'
-import AvatarGroup from '@mui/material/AvatarGroup'
-import CardContent from '@mui/material/CardContent'
-import LinearProgress from '@mui/material/LinearProgress'
-
-// ** Icon Imports
-import Icon from 'src/@core/components/icon'
-
-// ** Utils Import
-import { getInitials } from 'src/@core/utils/get-initials'
-
-// ** Custom Components Imports
-import CustomChip from 'src/@core/components/mui/chip'
-import CustomAvatar from 'src/@core/components/mui/avatar'
-import OptionsMenu from 'src/@core/components/option-menu'
-
-const ProjectAvatar = ({ project }) => {
-  const { title, avatar, avatarColor = 'primary' } = project
-  if (avatar.length) {
-    return <CustomAvatar src={avatar} sx={{ width: 38, height: 38 }} />
-  } else {
-    return (
-      <CustomAvatar skin='light' color={avatarColor} sx={{ width: 38, height: 38 }}>
-        {getInitials(title)}
-      </CustomAvatar>
-    )
+// Updated dummy data
+const integrationData = [
+  {
+    id: 1,
+    name: 'NHS Mail',
+    status: 'Active',
+    configureUrl: 'mypharmacy/integratemail'
   }
-}
+  // Add more integrations as needed
+]
 
-const Projects = ({ data }) => {
+const IntegrationsTable = () => {
   return (
-    <Box>
-      <Typography variant='h6' className='mb-4'>
-        Projects
+    <Box sx={{ width: '100%' }}>
+      <Typography variant='h6' sx={{ mb: 4 }}>
+        Integrations
       </Typography>
+      <TableContainer component={Paper}>
+        <Table sx={{ minWidth: 650 }} aria-label='simple table'>
+          <TableHead>
+            <TableRow>
+              <TableCell>Integration</TableCell>
+              <TableCell>Status</TableCell>
+              <TableCell>Configure</TableCell>
+            </TableRow>
+          </TableHead>
+          <TableBody>
+            {integrationData.map(row => (
+              <TableRow key={row.id} sx={{ '&:last-child td, &:last-child th': { border: 0 } }}>
+                <TableCell component='th' scope='row'>
+                  {row.name}
+                </TableCell>
+                <TableCell>{row.status}</TableCell>
+                <TableCell>
+                  <Link href={row.configureUrl} passHref>
+                    <Button variant='contained' color='primary' component='a' target='_blank'>
+                      Configure
+                    </Button>
+                  </Link>
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </TableContainer>
     </Box>
   )
 }
 
-export default Projects
+export default IntegrationsTable
