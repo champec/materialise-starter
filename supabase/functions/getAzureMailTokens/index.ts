@@ -1,23 +1,60 @@
-// Follow this setup guide to integrate the Deno language server with your editor:
-// https://deno.land/manual/getting_started/setup_your_environment
-// This enables autocomplete, go to definition, etc.
+import { corsHeaders } from '../_shared/cors.ts'
 
-console.log("Hello from Functions!")
+const AZURE_MAIL_SECRETE_VALUE = Deno.env.get('azureMailSecrete')
+const tokenEndpoint = 'https://login.microsoftonline.com/common/oauth2/v2.0/token'
 
-Deno.serve(async (req) => {
-  const { name } = await req.json()
-  const data = {
-    message: `Hello ${name}!`,
+Deno.serve(async req => {
+  if (req.method === 'OPTIONS') {
+    return new Response('ok', { headers: corsHeaders })
   }
 
-  return new Response(
-    JSON.stringify(data),
-    { headers: { "Content-Type": "application/json" } },
-  )
-})
+  try {
+    const { code, clientId, redirectUrl } = await req.json()
 
-// To invoke:
-// curl -i --location --request POST 'http://127.0.0.1:54321/functions/v1/' \
-//   --header 'Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZS1kZW1vIiwicm9sZSI6ImFub24iLCJleHAiOjE5ODM4MTI5OTZ9.CRXP1A7WOeoJeXxjNni43kdQwgnWNReilDMblYTn_I0' \
-//   --header 'Content-Type: application/json' \
-//   --data '{"name":"Functions"}'
+    console.log(code)
+    console.log(clientId)
+    console.log(redirectUrl)
+    console.log(AZURE_MAIL_SECRETE_VALUE)
+
+    // Prepare the request for the token exchange
+    const params = new URLSearchParams()
+    params.append('client_id', clientId)
+    params.append('scope', 'Mail.Read Mail.Send offline_access')
+    params.append('code', code)
+    params.append('redirect_uri', redirectUrl)
+    params.append('grant_type', 'authorization_code')
+    // params.append('client_secret', AZURE_MAIL_SECRETE_VALUE)
+
+    // Make a POST request to the Azure token endpoint
+    const tokenResponse = await fetch(tokenEndpoint, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded'
+      },
+      body: params.toString()
+    })
+
+    // Check for successful response
+    if (!tokenResponse.ok) {
+      const errorBody = await tokenResponse.json()
+      console.error('Token Exchange Error Details:', errorBody)
+      throw new Error('Failed to exchange authorization code for tokens')
+    }
+
+    // Extract tokens from the response
+    const tokenData = await tokenResponse.json()
+
+    console.log('TOKEN RESPONSE', tokenData)
+    // Return tokens to the client
+    return new Response(JSON.stringify(tokenData), {
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      status: 200
+    })
+  } catch (error) {
+    console.error('Failed to exchange authorization code for tokens:', error.message)
+    return new Response(JSON.stringify({ error: error.message }), {
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      status: 400
+    })
+  }
+})

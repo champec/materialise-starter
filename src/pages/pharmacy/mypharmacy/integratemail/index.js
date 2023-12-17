@@ -2,11 +2,15 @@ import React, { useEffect, useState } from 'react'
 import { useRouter } from 'next/router'
 import { supabase } from 'src/configs/supabase'
 import { Box, Button, Typography } from '@mui/material'
+import BlankLayout from 'src/@core/layouts/BlankLayout'
+import { useSelector } from 'react-redux'
+import dayjs from 'dayjs'
 
 const AzureIntegration = () => {
   const [isAuthenticated, setIsAuthenticated] = useState(false)
   const azureClientId = process.env.NEXT_PUBLIC_AZURE_CLIENT_ID
   const redirectUri = '/pharmacy/mypharmacy/integratemail'
+  const orgId = useSelector(state => state.organisation.organisation.id)
   const router = useRouter()
 
   const getRedirectUri = () => {
@@ -19,29 +23,35 @@ const AzureIntegration = () => {
   useEffect(() => {
     const code = new URLSearchParams(window.location.search).get('code')
     if (code) {
+      console.log('Authorization code:', code)
       handleAuthorizationCode(code)
     }
   }, [router])
 
   const handleIntegration = () => {
     const redirectUri = getRedirectUri()
-    const microsoftAuthUrl = `https://login.microsoftonline.com/common/oauth2/v2.0/authorize?client_id=${azureClientId}&response_type=code&redirect_uri=${redirectUri}&scope=...`
+    const scope = encodeURIComponent('Mail.Read Mail.Send offline_access')
+    const microsoftAuthUrl = `https://login.microsoftonline.com/common/oauth2/v2.0/authorize?client_id=${azureClientId}&response_type=code&redirect_uri=${redirectUri}&scope=${scope}`
     window.location.href = microsoftAuthUrl
   }
 
   const handleAuthorizationCode = async code => {
+    const redirectUrl = getRedirectUri()
+    console.log('HANDLE INTE', redirectUrl)
     try {
-      const response = await fetch('/api/exchange-code', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({ code })
+      const response = await supabase.functions.invoke('getAzureMailTokens', {
+        body: {
+          code,
+          clientId: azureClientId,
+          redirectUrl: redirectUrl
+        }
       })
-      const { accessToken, refreshToken } = await response.json()
 
-      if (accessToken && refreshToken) {
-        await storeTokens(accessToken, refreshToken)
+      console.log('Tokens:', response)
+      const { data, error } = response
+
+      if (data) {
+        await storeTokens(data)
         setIsAuthenticated(true)
       }
     } catch (error) {
@@ -49,11 +59,18 @@ const AzureIntegration = () => {
     }
   }
 
-  const storeTokens = async (accessToken, refreshToken) => {
+  const storeTokens = async data => {
+    const { access_token, refresh_token } = data
+
+    // calculate the date 90 days from now in time stamptz format
+    const expiryDate = dayjs().add(expires_in, 'second').format('YYYY-MM-DD HH:mm:ssZ')
+
     try {
-      const { data, error } = await supabase
-        .from('pharmacy_settings')
-        .insert({ nhs_mail_access_token: accessToken, nhs_mail_refresh_token: refreshToken })
+      const { data, error } = await supabase.from('pharmacy_settings').insert({
+        nhs_mail_access_token: access_token,
+        nhs_mail_refresh_token: expiryDate,
+        pharmacy_id: orgId
+      })
 
       if (error) throw error
       console.log('Tokens stored:', data)
@@ -79,5 +96,9 @@ const AzureIntegration = () => {
     </Box>
   )
 }
+
+// AzureIntegration.getLayout = page => <BlankLayout>{page}</BlankLayout>
+// AzureIntegration.authGuard = false
+// AzureIntegration.orgGuard = false
 
 export default AzureIntegration
