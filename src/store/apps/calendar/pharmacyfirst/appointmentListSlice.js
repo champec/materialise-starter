@@ -168,6 +168,103 @@ export const scheduleReminder = createAsyncThunk(
   }
 )
 
+async function refreshAccessToken(refreshToken) {
+  const tokenEndpoint = 'https://login.microsoftonline.com/common/oauth2/v2.0/token'
+  const clientId = process.env.NEXT_PUBLIC_AZURE_CLIENT_ID
+
+  const params = new URLSearchParams()
+  params.append('client_id', clientId)
+  params.append('grant_type', 'refresh_token')
+  params.append('refresh_token', refreshToken)
+  params.append('scope', 'Mail.Read Mail.Send offline_access')
+  // params.append('client_secret', clientSecret); // Include for confidential clients
+
+  try {
+    const response = await fetch(tokenEndpoint, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: params.toString()
+    })
+
+    if (!response.ok) {
+      throw new Error(`Failed to refresh token: ${response.status}`)
+    }
+
+    const data = await response.json()
+    return data.access_token
+  } catch (error) {
+    console.error('Error refreshing access token:', error)
+    throw error
+  }
+}
+
+export const sendEmailThunk = createAsyncThunk(
+  'email/sendEmail',
+  async ({ toAddress, subject, content }, { rejectWithValue, getState }) => {
+    const graphApiEndpoint = 'https://graph.microsoft.com/v1.0/me/sendMail'
+
+    const accessToken = getState().organisation.organisation.pharmacy_settings.nhs_mail_access_token
+    const refreshToken = getState().organisation.organisation.pharmacy_settings.nhs_mail_refresh_token
+
+    const sendEmailRequest = async token => {
+      const email = {
+        message: {
+          subject: subject,
+          body: {
+            contentType: 'Text',
+            content: content
+          },
+          toRecipients: [
+            {
+              emailAddress: {
+                address: toAddress
+              }
+            }
+          ]
+        },
+        saveToSentItems: 'true'
+      }
+
+      const response = await fetch(graphApiEndpoint, {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(email)
+      })
+
+      return response
+    }
+
+    let response = await sendEmailRequest(accessToken)
+
+    // Check if the response indicates an expired token
+    if (!response.ok && response.status === 401) {
+      // Refresh the token
+      const newAccessToken = await refreshAccessToken(refreshToken) // Implement this function
+      response = await sendEmailRequest(newAccessToken)
+    }
+
+    if (!response.ok) {
+      const errorText = await response.text()
+      console.error('Email Send Error Response:', errorText)
+      return rejectWithValue(`Error sending email: ${errorText}`)
+    }
+
+    if (response.status === 202) {
+      return 'Email sending initiated'
+    }
+
+    try {
+      return await response.json()
+    } catch (error) {
+      console.error('Non-202 success response not in JSON format:', error)
+      return 'Email sent successfully'
+    }
+  }
+)
+
 export const fetchSelectedBooking = createAsyncThunk('appointmentList/fetchSelectedBooking', async bookingId => {
   const { data, error } = await supabase
     .from('consultations')

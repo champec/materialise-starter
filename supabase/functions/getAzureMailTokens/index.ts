@@ -34,12 +34,15 @@ Deno.serve(async req => {
       body: params.toString()
     })
 
-    // Check for successful response
-    if (!tokenResponse.ok) {
-      const errorBody = await tokenResponse.json()
-      console.error('Token Exchange Error Details:', errorBody)
-      throw new Error('Failed to exchange authorization code for tokens')
-    }
+    // // Check for successful response
+    // if (!tokenResponse.ok) {
+    //   const errorBody = await tokenResponse.json()
+    //   console.error('Token Exchange Error Details:', errorBody)
+    //   return new Response(JSON.stringify({ error: errorBody }), {
+    //     headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    //     status: tokenResponse.status // Use the actual status code from the Azure response
+    //   });
+    // }
 
     // Extract tokens from the response
     const tokenData = await tokenResponse.json()

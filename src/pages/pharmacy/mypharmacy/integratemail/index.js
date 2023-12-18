@@ -5,13 +5,24 @@ import { Box, Button, Typography } from '@mui/material'
 import BlankLayout from 'src/@core/layouts/BlankLayout'
 import { useSelector } from 'react-redux'
 import dayjs from 'dayjs'
+import CustomSnackbar from 'src/views/apps/pharmacy-first/CustomSnackBar'
 
 const AzureIntegration = () => {
   const [isAuthenticated, setIsAuthenticated] = useState(false)
+  const [openSnack, setOpenSnack] = useState(false)
+  const [snackMessage, setSnackMessage] = useState('')
+  const [snackSeverity, setSnackSeverity] = useState('success')
+
   const azureClientId = process.env.NEXT_PUBLIC_AZURE_CLIENT_ID
   const redirectUri = '/pharmacy/mypharmacy/integratemail'
   const orgId = useSelector(state => state.organisation.organisation.id)
   const router = useRouter()
+
+  const showSnack = (message, severity) => {
+    setSnackMessage(message)
+    setSnackSeverity(severity)
+    setOpenSnack(true)
+  }
 
   const getRedirectUri = () => {
     const protocol = window.location.protocol
@@ -50,6 +61,13 @@ const AzureIntegration = () => {
       console.log('Tokens:', response)
       const { data, error } = response
 
+      if (data.error) {
+        // show the error in a snackbar
+        showSnack(data.error, 'error')
+        console.log('error', data.error)
+        return
+      }
+
       if (data) {
         await storeTokens(data)
         setIsAuthenticated(true)
@@ -62,15 +80,22 @@ const AzureIntegration = () => {
   const storeTokens = async data => {
     const { access_token, refresh_token } = data
 
-    // calculate the date 90 days from now in time stamptz format
-    const expiryDate = dayjs().add(expires_in, 'second').format('YYYY-MM-DD HH:mm:ssZ')
+    console.log('access_token', access_token, 'refresh_token', refresh_token)
+    const expiryDate = dayjs().add(90, 'day')
+
+    // Format the date as a timestamp with time zone string
+    const expiryDateFormatted = expiryDate.format()
 
     try {
-      const { data, error } = await supabase.from('pharmacy_settings').insert({
-        nhs_mail_access_token: access_token,
-        nhs_mail_refresh_token: expiryDate,
-        pharmacy_id: orgId
-      })
+      const { data, error } = await supabase.from('pharmacy_settings').upsert(
+        {
+          nhs_mail_access_token: access_token,
+          nhs_mail_refresh_token: refresh_token,
+          pharmacy_id: orgId,
+          nhs_mail_token_expiry: expiryDateFormatted
+        },
+        { onConflict: 'pharmacy_id' }
+      )
 
       if (error) throw error
       console.log('Tokens stored:', data)
@@ -93,12 +118,16 @@ const AzureIntegration = () => {
           Integrate with Azure
         </Button>
       )}
+      <CustomSnackbar
+        vertical='top'
+        horizontal='center'
+        open={openSnack}
+        setOpen={setOpenSnack}
+        message={snackMessage}
+        severity={snackSeverity}
+      />
     </Box>
   )
 }
-
-// AzureIntegration.getLayout = page => <BlankLayout>{page}</BlankLayout>
-// AzureIntegration.authGuard = false
-// AzureIntegration.orgGuard = false
 
 export default AzureIntegration
