@@ -74,7 +74,7 @@ const UserDropdown = props => {
   }
 
   const handleSwtich = () => {
-    router.push('/login')
+    router.push('/auth/switch-screen')
     handleDropdownClose()
   }
 

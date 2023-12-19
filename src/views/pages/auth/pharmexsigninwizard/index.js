@@ -9,7 +9,7 @@ import Typography from '@mui/material/Typography'
 
 // ** Step Components
 
-import OrganisationLoginForm from 'src/views/pages/auth/register-multi-steps/OrganisationLogin'
+import OrganisationLoginForm from 'src/views/pages/auth/pharmexsigninwizard/OrganisationLogin'
 import UserLoginForm from './UserLogin'
 import { useOrgAuth } from 'src/hooks/useOrgAuth'
 import { useUserAuth } from 'src/hooks/useAuth'

@@ -32,8 +32,7 @@ import Icon from 'src/@core/components/icon'
 import { useSettings } from 'src/@core/hooks/useSettings'
 
 // ** Demo Components Imports
-import RegisterMultiStepsWizard from 'src/views/pages/auth/register-multi-steps'
-import FooterIllustrationsV2 from 'src/views/pages/auth/FooterIllustrationsV2'
+import PharmExSigninWizard from 'src/views/pages/auth/pharmexsigninwizard'
 
 // ** Styled Components
 const RegisterMultiStepsIllustration = styled('img')({
@@ -286,7 +285,7 @@ const LoginPage = () => {
           </Typography>
         </Box>
         <WizardWrapper>
-          <RegisterMultiStepsWizard />
+          <PharmExSigninWizard />
         </WizardWrapper>
       </RightWrapper>
     </Box>
