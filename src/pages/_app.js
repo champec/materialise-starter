@@ -20,7 +20,7 @@ import themeConfig from 'src/configs/themeConfig'
 import { useDispatch, useSelector } from 'react-redux'
 import { initializeSession as initOrg } from 'src/store/auth/organisation'
 import { initializeSession as initUser } from 'src/store/auth/user'
-import { addNotification, fetchNotifications } from 'src/store/notifications'
+import { addNotification, fetchNotifications, updateNotification } from 'src/store/notifications'
 import { supabaseOrg as supabase } from 'src/configs/supabase'
 
 // ** Fake-DB Import
@@ -88,20 +88,49 @@ const Guard = ({ children, authGuard, guestGuard, orgGuard }) => {
 
   const dispatch = useDispatch()
 
+  const playNotificationSound = () => {
+    const audio = new Audio('/audio/airplane_chime.mp3')
+    audio.play()
+  }
+
   useEffect(() => {
-    dispatch(initOrg())
-    dispatch(initUser())
-    dispatch(fetchNotifications())
+    playNotificationSound()
   }, [])
 
-  const setupSupabaseListener = () => {
-    supabase
+  useEffect(() => {
+    const initSession = async () => {
+      const { payload: org } = await dispatch(initOrg())
+      const { payload: user } = await dispatch(initUser())
+      dispatch(fetchNotifications())
+
+      const orgId = org.organisation.id
+      const userId = user.user.id
+
+      setupSupabaseListener(orgId, userId)
+    }
+    initSession()
+
+    return () => {
+      removeSupabaseListener()
+    }
+  }, [])
+
+  const setupSupabaseListener = async (orgId, userId) => {
+    // filter: `or.organisation_id=eq${orgId}, user_id=eq${userId} `
+    const response = await supabase
       .channel('notifications')
-      .on('postgres_changes', { schema: 'public', table: 'notifications' }, payload => {
+      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'notifications' }, payload => {
         console.log('New notification:', payload)
         dispatch(addNotification(payload.new))
       })
+      .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'notifications' }, payload => {
+        console.log('Updated notification:', payload)
+        playNotificationSound()
+        dispatch(updateNotification(payload.new))
+      })
       .subscribe()
+
+    console.log('RESPONSE', response)
   }
 
   // Clean up listener
@@ -110,13 +139,17 @@ const Guard = ({ children, authGuard, guestGuard, orgGuard }) => {
     //.removeChannel('notifications')
   }
 
-  useEffect(() => {
-    setupSupabaseListener()
+  // useEffect(() => {
+  //   try {
+  //     setupSupabaseListener()
+  //   } catch (error) {
+  //     console.log(error)
+  //   }
 
-    return () => {
-      removeSupabaseListener()
-    }
-  }, [])
+  //   return () => {
+  //     removeSupabaseListener()
+  //   }
+  // }, [])
 
   if (guestGuard) {
     console.log('GUEST GUARD')

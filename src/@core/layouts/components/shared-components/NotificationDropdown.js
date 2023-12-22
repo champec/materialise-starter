@@ -28,6 +28,9 @@ import { useSelector } from 'react-redux'
 
 import dayjs from 'dayjs'
 import relativeTime from 'dayjs/plugin/relativeTime'
+import { supabase } from 'src/configs/supabase'
+import CustomSnackbar from 'src/views/apps/pharmacy-first/CustomSnackBar'
+import { useRouter } from 'next/router'
 
 // Extend Day.js with the plugin
 dayjs.extend(relativeTime)
@@ -99,10 +102,19 @@ const NotificationDropdown = props => {
   // ** Props
   const { settings } = props
 
-  const notifications = useSelector(state => state.notifications.notifications)
+  const notifications = useSelector(state =>
+    state.notifications.notifications.filter(notification => notification.read === false)
+  )
+  const orgId = useSelector(state => state.organisation.organisation?.id)
+  const userId = useSelector(state => state.user.user?.id)
+  const router = useRouter()
 
   // ** States
   const [anchorEl, setAnchorEl] = useState(null)
+  const [loading, setIsLoading] = useState(false)
+  const [snackbarOpen, setSnackbarOpen] = useState(false)
+  const [snackbarSeverity, setSnackbarSeverity] = useState('success')
+  const [snackbarMessage, setSnackbarMessage] = useState('')
 
   // ** Hook
   const hidden = useMediaQuery(theme => theme.breakpoints.down('lg'))
@@ -112,6 +124,44 @@ const NotificationDropdown = props => {
 
   const handleDropdownOpen = event => {
     setAnchorEl(event.currentTarget)
+  }
+
+  const showMessage = (severity, message) => {
+    setSnackbarSeverity(severity)
+    setSnackbarMessage(message)
+    setSnackbarOpen(true)
+  }
+
+  const handleNotificationClick = async notification => {
+    // mark the notificaiton as read and if there is a link redirect to it
+    console.log('NOTIFICATION CLICKED', notification)
+    setIsLoading(true)
+    const { data, error } = await supabase.from('notifications').update({ read: true }).eq('id', notification.id)
+
+    if (error) {
+      showMessage('error', error.message)
+      setIsLoading(false)
+      return
+    }
+
+    if (notification.link) {
+      router.push(notification.link)
+    }
+  }
+
+  const handleReadAllNotifications = async () => {
+    playNotificationSound()
+    console.log('READ ALL NOTIFICATIONS')
+    setIsLoading(true)
+    const { data, error } = await supabase
+      .from('notifications')
+      .update({ read: true })
+      .eq('read', false)
+      .eq('organisation_id', orgId)
+      .or(`user_id.eq.${userId},user_id.is.null`)
+
+    showMessage('success', 'All notifications have been read')
+    setAnchorEl(null)
   }
 
   const handleDropdownClose = () => {
@@ -187,7 +237,7 @@ const NotificationDropdown = props => {
             }
 
             return (
-              <MenuItem key={index} onClick={handleDropdownClose}>
+              <MenuItem key={index} onClick={() => handleNotificationClick(notification)}>
                 <Box sx={{ width: '100%', display: 'flex', alignItems: 'center' }}>
                   {/* <RenderAvatar notification={notification} /> */}
                   <Box sx={{ mx: 4, flex: '1 1', display: 'flex', overflow: 'hidden', flexDirection: 'column' }}>
@@ -214,11 +264,19 @@ const NotificationDropdown = props => {
             borderTop: theme => `1px solid ${theme.palette.divider}`
           }}
         >
-          <Button fullWidth variant='contained' onClick={handleDropdownClose}>
+          <Button fullWidth variant='contained' onClick={handleReadAllNotifications}>
             Read All Notifications
           </Button>
         </MenuItem>
       </Menu>
+      <CustomSnackbar
+        open={snackbarOpen}
+        setOpen={setSnackbarOpen}
+        severity={snackbarSeverity}
+        horizontal='center'
+        vertical='top'
+        message={snackbarMessage}
+      />
     </Fragment>
   )
 }

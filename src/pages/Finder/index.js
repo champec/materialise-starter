@@ -1,6 +1,8 @@
 //** React imports
 import { useRef, useEffect, useState, use } from 'react'
 import { supabaseOrg as supabase } from 'src/configs/supabase'
+import withReducer from 'src/@core/HOC/withReducer'
+import finderSlice from 'src/store/apps/finder'
 
 //** Component Imports
 import Header from 'src/@core/layouts/components/Maps/Header'
@@ -166,4 +168,4 @@ const Finder = () => {
   )
 }
 
-export default Finder
+export default withReducer('finder', finderSlice)(Finder)

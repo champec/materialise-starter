@@ -1,4 +1,9 @@
-const navigation = () => {
+const navigation = (role, plan) => {
+  console.log('NAVIGATION', role, plan)
+  const manager = role === 'manager' || role === 'pharmacist-manager'
+  const pharmacist = role === 'pharmacist' || role === 'pharmacist-manager'
+  const staff = role === 'staff'
+
   return [
     {
       title: 'Dashboard',
@@ -13,7 +18,8 @@ const navigation = () => {
         {
           title: 'CD Register',
           path: '/pharmacy/cdr',
-          icon: 'bx:book'
+          icon: 'bx:book',
+          disabled: role !== 'manager'
         },
         {
           title: 'My Pharmacy',
@@ -29,7 +35,7 @@ const navigation = () => {
           title: 'Drug Dash',
           path: '/pharmacy/drugdash',
           icon: 'fluent-emoji-high-contrast:man-running',
-          disabled: false
+          disabled: plan === 'free'
         }
       ]
     },
@@ -71,14 +77,16 @@ const navigation = () => {
       action: 'read',
       subject: 'acl-page',
       title: 'Chat',
-      icon: 'ic:outline-mark-unread-chat-alt'
+      icon: 'ic:outline-mark-unread-chat-alt',
+      disabled: plan === 'free'
     },
     {
       path: '/broadcast',
       action: 'read',
       subject: 'acl-page',
       title: 'Broadcast',
-      icon: 'grommet-icons:announce'
+      icon: 'grommet-icons:announce',
+      disabled: plan === 'free'
     },
     {
       sectionTitle: 'Buy, Sell & trade'
@@ -88,21 +96,24 @@ const navigation = () => {
       action: 'read',
       subject: 'acl-page',
       title: 'Inventory',
-      icon: 'arcticons:inventory'
+      icon: 'arcticons:inventory',
+      disabled: plan === 'free'
     },
     {
       path: '/store/shop',
       action: 'read',
       subject: 'acl-page',
       title: 'Shop',
-      icon: 'mdi:drugs'
+      icon: 'mdi:drugs',
+      disabled: plan === 'free'
     },
     {
       path: '/store/invoice',
       action: 'read',
       subject: 'acl-page',
       title: 'Invoice',
-      icon: 'mingcute:paper-line'
+      icon: 'mingcute:paper-line',
+      disabled: plan === 'free'
     },
     {
       path: '/store/orders',
@@ -110,16 +121,19 @@ const navigation = () => {
       subject: 'acl-page',
       title: 'Orders',
       icon: 'ic:twotone-add-business',
+      disabled: plan === 'free',
       children: [
         {
           title: 'Purchases',
           path: '/store/orders/purchases',
-          icon: 'icons8:buy'
+          icon: 'icons8:buy',
+          disabled: plan === 'free'
         },
         {
           title: 'Sales',
           path: '/store/orders/sales',
-          icon: 'grommet-icons:money'
+          icon: 'grommet-icons:money',
+          disabled: plan === 'free'
         }
       ]
     },
@@ -131,28 +145,32 @@ const navigation = () => {
       action: 'read',
       subject: 'acl-page',
       title: 'Kanban',
-      icon: 'bi:kanban-fill'
+      icon: 'bi:kanban-fill',
+      disabled: plan === 'free'
     },
     {
       path: '/teams/calendar',
       action: 'read',
       subject: 'acl-page',
       title: 'Calendar',
-      icon: 'uim:calender'
+      icon: 'uim:calender',
+      disabled: plan === 'free'
     },
     {
       path: '/teams/sticky-notes',
       action: 'read',
       subject: 'acl-page',
       title: 'Sticky Notes',
-      icon: 'mdi:sticky-note-alert'
+      icon: 'mdi:sticky-note-alert',
+      disabled: plan === 'free'
     },
     {
       path: '/teams/todo',
       action: 'read',
       subject: 'acl-page',
       title: 'To do list',
-      icon: 'material-symbols:list-alt-add'
+      icon: 'material-symbols:list-alt-add',
+      disabled: plan === 'free'
     }
   ]
 }

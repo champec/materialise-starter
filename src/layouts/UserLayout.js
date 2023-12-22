@@ -15,13 +15,46 @@ import HorizontalNavItems from 'src/navigation/horizontal'
 
 import VerticalAppBarContent from './components/vertical/AppBarContent'
 import HorizontalAppBarContent from './components/horizontal/AppBarContent'
+import { useSelector } from 'react-redux'
 
 // ** Hook Import
 import { useSettings } from 'src/@core/hooks/useSettings'
+import { useEffect, useState } from 'react'
+import { supabaseUser } from 'src/configs/supabase'
+import { supabaseOrg } from 'src/configs/supabase'
 
 const UserLayout = ({ children, contentHeightFixed }) => {
   // ** Hooks
   const { settings, saveSettings } = useSettings()
+  const [role, setRole] = useState()
+  const [loading, setLoading] = useState(true)
+  const plan = useSelector(state => state.organisation.organisation?.profiles?.plan)
+  const userId = useSelector(state => state.user.user?.id)
+  const organisationId = useSelector(state => state.organisation.organisation?.id)
+
+  useEffect(() => {
+    const getRole = async () => {
+      const { data, error } = await supabaseOrg
+        .from('users_organisation')
+        .select('role')
+        .eq('user', userId)
+        .eq('organisation', organisationId)
+        .single()
+
+      if (error) {
+        console.log(error)
+        setLoading(false)
+        return
+      }
+
+      setRole(data.role)
+      setLoading(false)
+    }
+
+    getRole()
+  }, [])
+
+  console.log('NAVE BAR ', plan, role)
 
   // ** Vars for server side navigation
   // const { menuItems: verticalMenuItems } = ServerSideVerticalNavItems()
@@ -39,6 +72,10 @@ const UserLayout = ({ children, contentHeightFixed }) => {
     settings.layout = 'vertical'
   }
 
+  if (loading) {
+    return null
+  }
+
   return (
     <Layout
       hidden={hidden}
@@ -47,7 +84,7 @@ const UserLayout = ({ children, contentHeightFixed }) => {
       contentHeightFixed={contentHeightFixed}
       verticalLayoutProps={{
         navMenu: {
-          navItems: VerticalNavItems()
+          navItems: VerticalNavItems(role, plan)
 
           // Uncomment the below line when using server-side menu in vertical layout and comment the above line
           // navItems: verticalMenuItems
@@ -78,7 +115,6 @@ const UserLayout = ({ children, contentHeightFixed }) => {
       })}
     >
       {children}
-      
     </Layout>
   )
 }

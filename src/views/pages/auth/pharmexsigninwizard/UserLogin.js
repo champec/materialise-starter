@@ -74,7 +74,7 @@ const FormControlLabel = styled(MuiFormControlLabel)(({ theme }) => ({
 }))
 
 //function definition and import function to change steps called handleNext
-const StepOrganisationDetails = ({ handleNext, authOrg, authUser, auth }) => {
+const UserLoginForm = ({ handleNext, authOrg, authUser, auth }) => {
   const error = useSelector(state => state.user.userError)
   const org = useSelector(state => state.organisation.organisation)
 
@@ -122,12 +122,40 @@ const StepOrganisationDetails = ({ handleNext, authOrg, authUser, auth }) => {
       .unwrap()
       .then(res => {
         // Do something with the result if needed
-        console.log(res)
+        console.log('SUPABASE LOGIN', res)
+        const accessToken = res.access_token
+        const refreshToken = res.refresh_token
+        const name = res.username
+        const email = res.email
+        const lastSignIn = new Date()
+        const avatar = res.avatar_url
+
+        // Get local storage users
+        let users = JSON.parse(localStorage.getItem('pharmexusers')) || []
+
+        // Prepare new user object
+        const newUser = { name, email, avatar, lastSignIn, accessToken, refreshToken }
+
+        // Check if the user already exists based on email
+        const existingUserIndex = users.findIndex(user => user.email === email)
+
+        if (existingUserIndex !== -1) {
+          // User exists, update their details
+          users[existingUserIndex] = newUser
+        } else {
+          // New user, add to array
+          users.push(newUser)
+        }
+
+        // Update local storage
+        localStorage.setItem('pharmexusers', JSON.stringify(users))
       })
       .catch(err => {
         console.log(err)
         dispatch(setUserError(err))
       })
+
+    handleNext()
   }
 
   // ** States
@@ -185,7 +213,7 @@ const StepOrganisationDetails = ({ handleNext, authOrg, authUser, auth }) => {
               </Box>
             </Box>
             <Box sx={{ mb: 6 }}>
-              <TypographyStyled variant='h5'>{`Welcome to ${themeConfig.templateName}! 👋🏻`}</TypographyStyled>
+              <TypographyStyled variant='h5'>{`Welcome to PharmEx! 👋🏻`}</TypographyStyled>
               <Typography variant='body2'>Please sign-in to your account and start the adventure</Typography>
             </Box>
             <form noValidate autoComplete='off' onSubmit={handleSubmit(onSubmit)}>
@@ -297,4 +325,4 @@ const StepOrganisationDetails = ({ handleNext, authOrg, authUser, auth }) => {
   )
 }
 
-export default StepOrganisationDetails
+export default UserLoginForm

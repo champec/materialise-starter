@@ -30,11 +30,11 @@ const AuthGuard = props => {
         if (router.asPath !== '/') {
           //router as path is the route without the base-path, take them back to the homepage unless they were trying to access the login page already
           router.replace({
-            pathname: '/login',
+            pathname: '/auth/switch-screen',
             query: { returnUrl: router.asPath } //return url is the page the user tried to reach before being redirected
           })
         } else {
-          router.replace('/login')
+          router.replace('/auth/switch-screen')
         }
       }
     },

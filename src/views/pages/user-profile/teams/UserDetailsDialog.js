@@ -5,7 +5,9 @@ import DialogActions from '@mui/material/DialogActions'
 import Button from '@mui/material/Button'
 import Typography from '@mui/material/Typography'
 
-const UserDetailsDialog = ({ open, user, onClose }) => {
+const UserDetailsDialog = ({ open, user: item, onClose }) => {
+  console.log({ item })
+  const user = item?.profiles?.users
   return (
     <Dialog
       open={open}
@@ -13,11 +15,12 @@ const UserDetailsDialog = ({ open, user, onClose }) => {
       aria-labelledby='user-details-dialog-title'
       aria-describedby='user-details-dialog-description'
     >
-      <DialogTitle id='user-details-dialog-title'>{user?.users.first_name}</DialogTitle>
+      <DialogTitle id='user-details-dialog-title'>{user?.first_name}</DialogTitle>
       <DialogContent>
-        <Typography variant='body1'>Username: {user?.users.username}</Typography>
-        <Typography variant='body1'>Email: {user?.users.email}</Typography>
-        {/* Add more fields as needed */}
+        <Typography variant='body1'>Username: {user?.username}</Typography>
+        <Typography variant='body1'>Email: {user?.email}</Typography>
+        <Typography variant='body1'>Role: {item?.role}</Typography>
+        <Typography variant='body1'>Status: {item?.status}</Typography>
       </DialogContent>
       <DialogActions>
         <Button onClick={onClose} color='primary'>

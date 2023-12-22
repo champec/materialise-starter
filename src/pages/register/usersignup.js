@@ -1,6 +1,7 @@
 // ** React Imports
 import { useState, Fragment, forwardRef, useEffect, useMemo } from 'react'
-import { supabaseOrg as supabase } from 'src/configs/supabase'
+// import { supabaseOrg as supabase } from 'src/configs/supabase'
+import { supabase } from 'src/configs/supabase'
 import { _, debounce } from 'lodash'
 
 // ** Next Import
@@ -25,7 +26,7 @@ import MuiFormControlLabel from '@mui/material/FormControlLabel'
 import DatePickerWrapper from 'src/@core/styles/libs/react-datepicker'
 import DatePicker from 'react-datepicker'
 import { Snackbar, Autocomplete, Dialog, DialogContent, DialogTitle, DialogActions, MenuItem } from '@mui/material'
-
+import CustomSnackbar from 'src/views/apps/pharmacy-first/CustomSnackBar'
 // ** Icon Imports
 import Icon from 'src/@core/components/icon'
 
@@ -150,6 +151,12 @@ const Register = () => {
   const { settings } = useSettings()
   const hidden = useMediaQuery(theme.breakpoints.down('md'))
 
+  const showSnackbar = (message, severity) => {
+    setSnackbarMessage(message)
+    setSnackbarSeverity(severity)
+    setOpenSnackbar(true)
+  }
+
   // ** Vars
   const { skin } = settings
 
@@ -214,97 +221,120 @@ const Register = () => {
     resolver: yupResolver(schema)
   })
 
+  async function checkIfEmailExists(email) {
+    // Query your custom users table to check if the email exists
+    const { data, error } = await supabase.from('profiles').select('email').eq('email', email)
+
+    return data[0]?.email ? true : false
+  }
+
+  async function deleteProfile(id) {
+    const { error } = await supabase.from('profiles').delete().eq('id', id)
+    if (error) {
+      console.log('error deleting profile', error)
+      showSnackbar(error.message, 'error')
+    }
+    return error ? error.message : 'complete'
+  }
+
   const handleRegister = async data => {
-    console.log('SUBMITTING', data)
+    // console.log('SUBMITTING', data)
 
-    let userId
+    // check if the email already exists
+    const emailExists = await checkIfEmailExists(data.email)
 
-    try {
-      const { data: existingProfile, error: existingProfileError } = await supabase
-        .from('profiles')
-        .select('id')
-        .eq('email', data.email)
-        .maybeSingle()
-
-      if (existingProfileError) {
-        console.error('error fetching profile', existingProfileError)
-        throw existingProfileError
-      }
-
-      if (existingProfile) {
-        userId = existingProfile.id
-      } else {
-        const { error, data: newUser } = await supabase.auth.signUp({
-          email: data.email,
-          password: data.newPassword
-        })
-
-        if (error || !newUser) {
-          console.log('error auth.signup', error)
-          throw error
-        }
-        userId = newUser.user.id // accessing the user object inside data
-      }
-
-      const { data: profile, error: profileError } = await supabase
-        .from('users')
-        .insert({
-          id: userId,
-          first_name: data.firstName,
-          last_name: data.lastName,
-          date_of_birth: data.dateOfBirth,
-          email: data.email
-        })
-        .single()
-
-      if (profileError) {
-        console.log('error profile', profileError)
-        throw profileError
-      }
-
-      // Fetch the organisation ID based on the ods_code
-      const { data: organisationData, error: organisationError } = await supabase
-        .from('organisations')
-        .select('id')
-        .eq('ods_code', data.organisation)
-        .select('id')
-        .maybeSingle()
-
-      if (organisationError || !organisationData) {
-        console.log('error fetching organisation', organisationError)
-        throw organisationError || new Error('Organisation not found')
-      }
-
-      // Insert into the users_organisation table
-      const { error: userOrgError } = await supabase.from('users_organisation').insert({
-        user: userId,
-        organisation: organisationData.id,
-        status: 'pending'
-      })
-
-      if (userOrgError) {
-        console.log('error users_organisation', userOrgError)
-        throw userOrgError
-      }
-
-      console.log({ profile })
-
-      setSnackbarSeverity('success')
-      setSnackbarMessage('Registration successful')
-      setOpenSnackbar(true)
-      const gotoSignupConfirm = () => {
-        setConfirmEmail(data.email)
-        setConfirmFirstName(data.firstName)
-        setConfirmSignup(true)
-      }
-
-      gotoSignupConfirm()
-    } catch (error) {
-      setSnackbarSeverity('error')
-      setSnackbarMessage(error.message)
-      setOpenSnackbar(true)
+    if (emailExists) {
+      console.log('email already exists')
+      showSnackbar('Email already exists', 'error')
       return
     }
+
+    // try to register the user
+    const { data: newUser, error: signUpError } = await supabase.auth.signUp({
+      email: data.email,
+      password: data.newPassword
+      // options: {
+      //   data: {
+      //     first_name: data.firstName,
+      //     last_name: data.lastName,
+      //     date_of_birth: data.dateOfBirth,
+      //     username: data.username
+      //   }
+      // }
+    })
+
+    if (signUpError) {
+      console.log('error auth.signup', signUpError.message)
+      showSnackbar(signUpError.message, 'error')
+      return
+    }
+
+    const userId = newUser.user.id // accessing the user object inside data
+    console.log('newUser', newUser)
+
+    console.log('userId recently added', userId)
+    // update the profiles data with the new users profile
+    const { data: profile, error: profileError } = await supabase
+      .from('profiles')
+      .update({
+        first_name: data.firstName,
+        last_name: data.lastName,
+        dob: data.dateOfBirth
+      })
+      .eq('id', userId)
+      .select('*')
+      .single()
+
+    if (profileError) {
+      console.log('error profile', profileError)
+      showSnackbar(profileError.message, 'error')
+      deleteProfile(userId)
+      throw profileError
+    }
+
+    console.log('recently added profile', profile)
+
+    // Fetch the organisation ID based on the ods_code
+    const { data: organisationData, error: organisationError } = await supabase
+      .from('organisations')
+      .select('id')
+      .eq('ods_code', data.organisation)
+      .select('id')
+      .maybeSingle()
+
+    if (organisationError || !organisationData) {
+      showSnackbar('Organisation not found', 'error')
+      console.log('error fetching organisation', organisationError)
+      deleteProfile(userId)
+      return
+    }
+
+    // Insert into the users_organisation table
+    const { error: userOrgError } = await supabase.from('users_organisation').insert({
+      user: userId,
+      organisation: organisationData.id,
+      status: 'pending'
+    })
+
+    if (userOrgError) {
+      console.log('error users_organisation', userOrgError)
+      showSnackbar(userOrgError.message, 'error')
+      deleteProfile(userId)
+      return
+    }
+
+    // console.log({ profile })
+
+    setSnackbarSeverity('success')
+    setSnackbarMessage('Registration successful')
+    setOpenSnackbar(true)
+    const gotoSignupConfirm = () => {
+      setConfirmEmail(data.email)
+      setConfirmFirstName(data.firstName)
+      setConfirmSignup(true)
+    }
+
+    gotoSignupConfirm()
   }
 
   const handleCloseSnackbar = () => {
@@ -775,6 +805,15 @@ const Register = () => {
           </BoxWrapper>
         </Box>
       </RightWrapper>
+
+      <CustomSnackbar
+        vertical='top'
+        horizontal='center'
+        open={openSnackbar}
+        setOpen={() => setOpenSnackbar(false)}
+        message={snackbarMessage}
+        severity={snackbarSeverity}
+      />
     </Box>
   )
 }

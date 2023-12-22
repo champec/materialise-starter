@@ -50,7 +50,7 @@ export const initializeSession = createAsyncThunk('organisation/initializeSessio
   if (id) {
     const { data: organisation, error: organisationError } = await supabase
       .from('organisations')
-      .select('*, pharmacies(*), pharmacy_settings(*)')
+      .select('*, pharmacies(*), pharmacy_settings(*), profiles(*)')
       .eq('id', id)
 
     if (organisationError) {

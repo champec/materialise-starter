@@ -21,7 +21,15 @@ export const login = createAsyncThunk('user/login', async (params, thunkAPI) => 
     return thunkAPI.rejectWithValue(userError.message)
   }
 
-  return authUser
+  const access_token = data.session.access_token
+  const refresh_token = data.session.refresh_token
+
+  const enrichedUser = {
+    ...authUser,
+    access_token,
+    refresh_token
+  }
+  return enrichedUser
 })
 
 export const logout = createAsyncThunk('user/logout', async (_, thunkAPI) => {
@@ -93,7 +101,8 @@ export const editPassword = createAsyncThunk('user/editPassword', async (new_pas
 let initialState = {
   user: null,
   loading: true,
-  userError: null
+  userError: null,
+  loggedInUsers: []
 }
 
 const userSlice = createSlice({
@@ -129,6 +138,9 @@ const userSlice = createSlice({
     },
     setUserError: (state, action) => {
       state.userError = action.payload
+    },
+    setUser(state, action) {
+      state.user = action.payload
     }
   },
   extraReducers: builder => {
@@ -166,6 +178,6 @@ const userSlice = createSlice({
   }
 })
 
-export const { switchUser, logoutUser, setLoading, setActiveSessions, setUserError } = userSlice.actions
+export const { switchUser, setUser, logoutUser, setLoading, setActiveSessions, setUserError } = userSlice.actions
 
 export default userSlice.reducer
