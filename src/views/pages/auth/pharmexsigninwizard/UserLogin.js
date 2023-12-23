@@ -48,8 +48,8 @@ const schema = yup.object().shape({
 
 //form default values
 const defaultValues = {
-  password: 'example-password',
-  email: 'champe@live.co.uk'
+  password: '123456',
+  email: 'bradleychemistowner1@pharmex.app'
 }
 
 const BoxWrapper = styled(Box)(({ theme }) => ({
@@ -119,8 +119,15 @@ const UserLoginForm = ({ handleNext, authOrg, authUser, auth }) => {
     const { email, password } = data
 
     dispatch(login({ email, password }))
-      .unwrap()
       .then(res => {
+        console.log('SUPABASE LOGIN', res)
+        // check if there is an error logging in and set the error message
+        if (res.error) {
+          setErrorMessage(res.error.message)
+          setOpenError(true)
+          return
+        }
+
         // Do something with the result if needed
         console.log('SUPABASE LOGIN', res)
         const accessToken = res.access_token
@@ -155,7 +162,7 @@ const UserLoginForm = ({ handleNext, authOrg, authUser, auth }) => {
         dispatch(setUserError(err))
       })
 
-    handleNext()
+    // handleNext()
   }
 
   // ** States

@@ -59,6 +59,7 @@ const RegisterMultiSteps = () => {
 
   useEffect(() => {
     if (user) {
+      console.log('user if present and ', user)
       setActiveStep(1)
     } else {
       setActiveStep(0)

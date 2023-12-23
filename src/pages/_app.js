@@ -102,9 +102,9 @@ const Guard = ({ children, authGuard, guestGuard, orgGuard }) => {
       const { payload: org } = await dispatch(initOrg())
       const { payload: user } = await dispatch(initUser())
       dispatch(fetchNotifications())
-
-      const orgId = org.organisation.id
-      const userId = user.user.id
+      console.log('INIT SESSION ORG', { org })
+      const orgId = org?.organisation?.id
+      const userId = user?.user?.id
 
       setupSupabaseListener(orgId, userId)
     }

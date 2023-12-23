@@ -89,13 +89,12 @@ const StepAccountDetails = ({ handleNext, authOrg, authUser }) => {
   // ** Hooks
   const theme = useTheme()
   const name = useSelector(state => state.organisation.organisation?.organisation_name)
-  const username = useSelector(state => state.user.user?.username)
+  const username = useSelector(state => state?.user?.user?.username)
 
-  console.log(username, 'FROM LOG')
 
   const { settings } = useSettings()
 
-  const error = useSelector(state => state.organisation.organisationError)
+  const error = false // useSelector(state => state.organisation.organisationError)
 
   const [openSuccess, setOpenSuccess] = useState(false)
   const [openError, setOpenError] = useState(false)
@@ -252,7 +251,7 @@ function Form({
     const { email, password } = data
 
     dispatch(login({ email, password }))
-      .unwrap()
+      // .unwrap()
       .then(res => {
         console.log(res)
         router.push('/')

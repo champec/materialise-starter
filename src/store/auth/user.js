@@ -9,7 +9,7 @@ export const login = createAsyncThunk('user/login', async (params, thunkAPI) => 
 
   if (error) {
     console.log('user login RTK', { error })
-    return thunkAPI.rejectWithValue(error.message)
+    throw new Error(error.message)
   }
 
   console.log('RTK user auth', data)
@@ -18,7 +18,7 @@ export const login = createAsyncThunk('user/login', async (params, thunkAPI) => 
 
   if (userError) {
     console.log('user data fetch RTK', { userError })
-    return thunkAPI.rejectWithValue(userError.message)
+    throw new Error(userError.message)
   }
 
   const access_token = data.session.access_token
