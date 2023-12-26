@@ -40,18 +40,24 @@ const navigation = (role, plan) => {
       ]
     },
     {
-      title: 'Pharmacy First',
+      title: 'Services',
       path: '/second-page',
       icon: 'iconoir:pharmacy-cross-circle',
       children: [
         {
-          title: 'Appointment Scheduler',
+          title: 'Service Calendar',
           path: '/pharmacy-first/appointment-scheduler',
           icon: 'streamline:waiting-appointments-calendar',
           disabled: false
         },
         {
-          title: 'Appointment List',
+          title: 'Service List',
+          path: '/services/pharmacy-first/appointment-list',
+          icon: 'bi:file-medical-fill',
+          disabled: false
+        },
+        {
+          title: 'Service Stats',
           path: '/pharmacy-first/appointment-list',
           icon: 'bi:file-medical-fill',
           disabled: false

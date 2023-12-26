@@ -31,7 +31,7 @@ import Icon from 'src/@core/components/icon'
 
 // ** Styled Components
 import DatePickerWrapper from 'src/@core/styles/libs/react-datepicker'
-import NewBookingForm from '../pharmacy-first/newBookingForm'
+import NewBookingForm from './services/pharmacy-first/newBookingForm'
 const capitalize = string => string && string[0].toUpperCase() + string.slice(1)
 
 const defaultState = {

@@ -29,7 +29,7 @@ import { useSelector } from 'react-redux'
 import dayjs from 'dayjs'
 import relativeTime from 'dayjs/plugin/relativeTime'
 import { supabase } from 'src/configs/supabase'
-import CustomSnackbar from 'src/views/apps/pharmacy-first/CustomSnackBar'
+import CustomSnackbar from 'src/views/apps/Calendar/services/pharmacy-first/CustomSnackBar'
 import { useRouter } from 'next/router'
 
 // Extend Day.js with the plugin

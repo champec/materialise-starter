@@ -5,7 +5,7 @@ import { Box, Button, Typography } from '@mui/material'
 import BlankLayout from 'src/@core/layouts/BlankLayout'
 import { useSelector } from 'react-redux'
 import dayjs from 'dayjs'
-import CustomSnackbar from 'src/views/apps/pharmacy-first/CustomSnackBar'
+import CustomSnackbar from 'src/views/apps/Calendar/services/pharmacy-first/CustomSnackBar'
 
 const AzureIntegration = () => {
   const [isAuthenticated, setIsAuthenticated] = useState(false)

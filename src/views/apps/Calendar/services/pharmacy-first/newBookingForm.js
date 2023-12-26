@@ -46,7 +46,7 @@ import {
 } from 'src/store/apps/calendar/pharmacyfirst/appointmentListSlice'
 
 // ** Custom Components Imports
-import StepperCustomDot from '../broadcast/elements/StepperCustomDot'
+import StepperCustomDot from '../../../broadcast/elements/StepperCustomDot'
 import CustomAutoCompleteInput from './CustomAutoComplete'
 import CustomSnackbar from './CustomSnackBar'
 

@@ -23,7 +23,7 @@ import { logout as logoutOrg } from 'src/store/auth/organisation'
 import { supabaseUser } from 'src/configs/supabase'
 import UserLoginForm from 'src/views/pages/auth/pharmexsigninwizard/UserLogin'
 import { setUser } from 'src/store/auth/user'
-import CustomSnackbar from 'src/views/apps/pharmacy-first/CustomSnackBar'
+import CustomSnackbar from 'src/views/apps/Calendar/services/pharmacy-first/CustomSnackBar'
 
 // Dummy data
 const currentOrganization = {
@@ -53,7 +53,7 @@ function SwitchScreen() {
     const currentEmail = currentUser?.email
 
     // Filter out the current user based on email
-    const filteredUsers = storageUsers.filter(user => user.email !== currentEmail)
+    const filteredUsers = storageUsers.filter(user => user?.email !== currentEmail)
 
     setLocalUsers(filteredUsers)
 
@@ -83,9 +83,10 @@ function SwitchScreen() {
     setNewSignup(false)
   }
 
-  const handleRemoveUser = () => {
-    const newUsers = localUsers.filter(user => user.email !== currentUser.email)
+  const handleRemoveUser = clickedUser => {
+    const newUsers = localUsers.filter(user => user.email !== clickedUser?.email)
     localStorage.setItem('pharmexusers', JSON.stringify(newUsers))
+    console.log('NEW USERS AFTER LOG OUT', newUsers)
     setLocalUsers(newUsers)
   }
 
@@ -253,7 +254,7 @@ function SwitchScreen() {
                       </CardContent>
                     </CardActionArea>
                     <IconButton
-                      onClick={handleRemoveUser}
+                      onClick={() => handleRemoveUser(user)}
                       aria-label='logout'
                       // sx={{
                       //   '&:hover': {

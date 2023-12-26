@@ -88,15 +88,6 @@ const Guard = ({ children, authGuard, guestGuard, orgGuard }) => {
 
   const dispatch = useDispatch()
 
-  const playNotificationSound = () => {
-    const audio = new Audio('/audio/airplane_chime.mp3')
-    audio.play()
-  }
-
-  useEffect(() => {
-    playNotificationSound()
-  }, [])
-
   useEffect(() => {
     const initSession = async () => {
       const { payload: org } = await dispatch(initOrg())

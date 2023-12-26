@@ -1,7 +1,7 @@
 import React, { useState } from 'react'
 import axios from 'axios'
 import { TextField, Button, Typography, Box, Alert } from '@mui/material'
-import CustomSnackbar from 'src/views/apps/pharmacy-first/CustomSnackBar'
+import CustomSnackbar from 'src/views/apps/Calendar/services/pharmacy-first/CustomSnackBar'
 
 const PDSApiComponent = () => {
   const [searchParams, setSearchParams] = useState({

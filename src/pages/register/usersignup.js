@@ -26,7 +26,7 @@ import MuiFormControlLabel from '@mui/material/FormControlLabel'
 import DatePickerWrapper from 'src/@core/styles/libs/react-datepicker'
 import DatePicker from 'react-datepicker'
 import { Snackbar, Autocomplete, Dialog, DialogContent, DialogTitle, DialogActions, MenuItem } from '@mui/material'
-import CustomSnackbar from 'src/views/apps/pharmacy-first/CustomSnackBar'
+import CustomSnackbar from 'src/views/apps/Calendar/services/pharmacy-first/CustomSnackBar'
 // ** Icon Imports
 import Icon from 'src/@core/components/icon'
 
