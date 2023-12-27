@@ -38,8 +38,8 @@ const CustomInput = forwardRef((props, ref) => {
   return <TextField fullWidth {...props} inputRef={ref} label='Birth Date' autoComplete='off' />
 })
 
-const AddNewPatientForm = ({ patient, onClose, onSelect }) => {
-  console.log('add new patiuent form', patient)
+const AddNewPatientForm = ({ patient, onClose, onSelect, selectedPatient, setSelectedPatient }) => {
+  console.log('add new patient form', selectedPatient)
   // ** States
   const [date, setDate] = useState(null)
   const [language, setLanguage] = useState([])
@@ -57,6 +57,11 @@ const AddNewPatientForm = ({ patient, onClose, onSelect }) => {
     setSnackMessage(msg)
     setSnackSeverity(sev)
     setOpenSnack(true)
+  }
+
+  const handleChange = event => {
+    const { name, value } = event.target
+    setSelectedPatient({ ...selectedPatient, [name]: value })
   }
 
   const splitName = fullName => {
@@ -86,6 +91,14 @@ const AddNewPatientForm = ({ patient, onClose, onSelect }) => {
       setLastName(lastName)
     }
   }, [patient])
+
+  useEffect(() => {
+    if (selectedPatient) {
+      setFirstName(selectedPatient.first_name)
+      setMiddleName(selectedPatient.middle_name)
+      setLastName(selectedPatient.last_name)
+    }
+  }, [selectedPatient])
 
   console.log('patient', firstName)
 
@@ -259,6 +272,8 @@ const AddNewPatientForm = ({ patient, onClose, onSelect }) => {
             <Grid item xs={12} sm={6}>
               <TextField
                 disabled={loading}
+                value={selectedPatient?.email || ''}
+                onChange={handleChange}
                 fullWidth
                 type='email'
                 name='email'

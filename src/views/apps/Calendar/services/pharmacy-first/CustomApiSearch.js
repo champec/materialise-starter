@@ -64,10 +64,13 @@ const CustomApiSearch = ({
 
   const filterOptions = (options, { inputValue }) => {
     if (inputValue === '' || !noResults) {
-      return options
+      return options;
     }
-    return 'No results found'
+    // Return an array with a special object indicating no results
+    // Adjust as needed for your UI
+    return [{ OrganisationName: 'No results found', disabled: true }];
   }
+
 
   const displayOption = option => {
     if (option.isAddNew) {

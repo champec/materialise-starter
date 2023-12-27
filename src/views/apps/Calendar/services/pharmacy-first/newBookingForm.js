@@ -94,7 +94,9 @@ const defaultAccountValues = {
   address: '',
   postCode: '',
   dateOfBirth: '',
-  telephoneNumber: ''
+  telephoneNumber: '',
+  pharmacist: '',
+  surgery: ''
 }
 
 const defaultBookingValues = {
@@ -120,7 +122,9 @@ const accountSchema = yup.object().shape({
   address: yup.string().required(),
   postCode: yup.string().required(),
   dateOfBirth: yup.string().required(),
-  telephoneNumber: yup.number().required()
+  telephoneNumber: yup.number().required(),
+  pharmacist: yup.string().required(),
+  surgery: yup.string().required()
 })
 
 const bookingSchema = yup.object().shape({
@@ -176,7 +180,9 @@ const NewBookingForm = ({ onClose, isEditing }) => {
         address: selectedBooking.patient_object.address,
         postCode: selectedBooking.patient_object.post_code,
         dateOfBirth: selectedBooking.patient_object.dob,
-        telephoneNumber: selectedBooking.patient_object.telephone_number
+        telephoneNumber: selectedBooking.patient_object.telephone_number,
+        pharmacist: selectedBooking.pharmacist,
+        surgery: selectedBooking.surgery
       })
     }
 
@@ -239,6 +245,7 @@ const NewBookingForm = ({ onClose, isEditing }) => {
   const orgId = useSelector(state => state.organisation.organisation.id)
   const notifyApiKey = useSelector(state => state.organisation?.organisation?.pharmacy_settings?.notify_api_key)
   const userId = useSelector(state => state.user.user.id)
+
   // ** Hooks
   const {
     reset: patientReset,
@@ -519,6 +526,7 @@ const NewBookingForm = ({ onClose, isEditing }) => {
             dispatch={dispatch}
             selectedGPData={selectedGP}
             handleSelectedGP={handleSelectedGP}
+            selectedPatient={selectedPatient}
           />
         )
       case 1:
@@ -923,6 +931,8 @@ const NewBookingForm = ({ onClose, isEditing }) => {
             patient={fullNameValue}
             onClose={() => setAddNewPatientDialog(false)}
             onSelect={handleSelect}
+            selectedPatient={selectedPatient}
+            setSelectedPatient={setSelectedPatient}
           />
         </DialogContent>
       </Dialog>

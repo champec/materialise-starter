@@ -17,7 +17,8 @@ function CapturePersonalInfo({
   pharmacistData,
   dispatch,
   selectedGPData,
-  handleSelectedGP
+  handleSelectedGP,
+  selectedPatient
 }) {
   return (
     <form key={0} onSubmit={handleAccountSubmit(onSubmit)}>
@@ -30,6 +31,7 @@ function CapturePersonalInfo({
         handleSelect={handleSelect}
         setAddNewPatientDialog={setAddNewPatientDialog}
         patientData={patientData}
+        selectedPatient={selectedPatient}
       />
       <CaptureSurgery
         steps={steps}

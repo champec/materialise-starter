@@ -17,7 +17,8 @@ function Capturepatient({
   onSubmit,
   handleSelect,
   setAddNewPatientDialog,
-  patientData
+  patientData,
+  setSelectedPatient,
 }) {
   return (
     <Box>
