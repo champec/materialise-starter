@@ -29,6 +29,11 @@ import { handleSelectEvent } from 'src/store/apps/calendar/pharmacyfirst/booking
 // ** Icon Imports
 import Icon from 'src/@core/components/icon'
 
+// ** import forms
+import BookDMSform from './services/dms/BookDMSform'
+import BookNMSform from './services/nms/BookNMSform'
+import BookFluform from './services/flu/BookFluform'
+
 // ** Styled Components
 import DatePickerWrapper from 'src/@core/styles/libs/react-datepicker'
 import NewBookingForm from './services/pharmacy-first/newBookingForm'
@@ -59,7 +64,8 @@ const BookCalendarSidebar = props => {
     deleteEvent,
     // handleSelectEvent,
     addBookingSidebarOpen,
-    handleAddBookingSidebarToggle
+    handleAddBookingSidebarToggle,
+    selectedService
   } = props
 
   // ** States
@@ -68,6 +74,8 @@ const BookCalendarSidebar = props => {
   const [editAllInstances, setEditAllInstances] = useState(false)
   const orgId = useSelector(state => state.organisation.organisation.id)
   const userId = useUserAuth()?.user?.id
+
+  // console.log('selectedService', selectedService)
 
   const {
     control,
@@ -175,6 +183,21 @@ const BookCalendarSidebar = props => {
     )
   })
 
+  const formToUse = () => {
+    switch (selectedService) {
+      case 'DMS':
+        return <BookDMSform />
+      case 'NMS':
+        return <BookNMSform />
+      case 'Flu':
+        return <BookFluform />
+      case 'Pharmacy First':
+        return <NewBookingForm onClose={handleSidebarClose} />
+      default:
+        return null
+    }
+  }
+
   const RenderSidebarFooter = () => {
     if (store.selectedEvent === null || (store.selectedEvent !== null && !store.selectedEvent.title.length)) {
       return (
@@ -238,9 +261,7 @@ const BookCalendarSidebar = props => {
           </Box>
         </Box>
         <Box className='sidebar-body' sx={{ p: theme => theme.spacing(5, 6) }}>
-          <DatePickerWrapper>
-            <NewBookingForm onClose={handleSidebarClose} />
-          </DatePickerWrapper>
+          <DatePickerWrapper>{formToUse()}</DatePickerWrapper>
         </Box>
       </Drawer>
     </LocalizationProvider>

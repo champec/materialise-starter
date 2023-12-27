@@ -28,6 +28,7 @@ import withReducer from 'src/@core/HOC/withReducer'
 import bookingsCalendarSlice from 'src/store/apps/calendar/pharmacyfirst/bookingsCalendarSlice'
 import calendar from 'src/store/apps/calendar'
 import appointmentListSlice from 'src/store/apps/calendar/pharmacyfirst/appointmentListSlice'
+import services from 'src/store/apps/services'
 
 // ** FullCalendar & App Components Imports
 import Calendar from 'src/views/apps/Calendar/Calendar'
@@ -94,6 +95,9 @@ const AppCalendar = ({ addCalendarType, updateCalendarType, deleteCalendarType }
   const handleAddEventSidebarToggle = () => setAddEventSidebarOpen(!addEventSidebarOpen)
   const handleAddBookingSidebarToggle = () => setAddBookingSidebarOpen(!addBookingSidebarOpen)
   const handleAddCalendarSidebarToggle = () => setAddCalendarSidebarOpen(!addCalendarSidebarOpen)
+  const selectedService = useSelector(state => state.services.selectedService)
+
+  console.log('selectedService', selectedService)
 
   return (
     <CalendarWrapper
@@ -190,6 +194,7 @@ const AppCalendar = ({ addCalendarType, updateCalendarType, deleteCalendarType }
         handleAddBookingSidebarToggle={handleAddBookingSidebarToggle}
         addBookingSidebarOpen={addBookingSidebarOpen}
         handleSelectEvent={handleSelectEvent}
+        selectedService={selectedService}
       />
     </CalendarWrapper>
   )
@@ -200,5 +205,6 @@ const AppCalendar = ({ addCalendarType, updateCalendarType, deleteCalendarType }
 export default withReducer({
   bookingsCalendar: bookingsCalendarSlice,
   calendar: calendar,
-  appointmentListSlice: appointmentListSlice
+  appointmentListSlice: appointmentListSlice,
+  services: services
 })(AppCalendar)

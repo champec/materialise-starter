@@ -8,6 +8,7 @@ import Box from '@mui/material/Box'
 import IconButton from '@mui/material/IconButton'
 import Icon from 'src/@core/components/icon'
 import { useState } from 'react'
+import ServiceSelectorModal from '../services/ServiceSelectorModal'
 
 const SidebarLeft = props => {
   const {
@@ -30,12 +31,15 @@ const SidebarLeft = props => {
   const colorsArr = calendarsColor ? Object.entries(calendarsColor) : []
 
   const [isEditing, setIsEditing] = useState(false)
+  const [openServiceSelectorModal, setOpenServiceSelectorModal] = useState(false)
 
   const handleAddCalendarSidebarToggleSidebar = () => {
     handleAddCalendarSidebarToggle()
     setIsEditing(!isEditing)
     dispatch(handleSelectEvent(null))
   }
+
+  const calendarTypes = store.calendarTypes
 
   const renderFilters = store.calendarTypes ? (
     <>
@@ -96,8 +100,9 @@ const SidebarLeft = props => {
   }
 
   const handleBookCalendarSidebar = () => {
-    handleAddBookingSidebarToggle()
-    dispatch(handleSelectEvent(null))
+    setOpenServiceSelectorModal(true)
+    // handleAddBookingSidebarToggle()
+    // dispatch(handleSelectEvent(null))
   }
 
   const handleEditCalendarItem = calendarType => {
@@ -162,6 +167,13 @@ const SidebarLeft = props => {
         </Box>
 
         {renderFilters}
+        <ServiceSelectorModal
+          calendarTypes={calendarTypes}
+          open={openServiceSelectorModal}
+          onClose={() => setOpenServiceSelectorModal(false)}
+          dispatch={dispatch}
+          handleAddBookingSidebarToggle={handleAddBookingSidebarToggle}
+        />
       </Drawer>
     )
   } else {

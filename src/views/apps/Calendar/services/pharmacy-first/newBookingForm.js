@@ -57,6 +57,9 @@ import { DatePicker } from '@mui/x-date-pickers'
 import { StaticDateTimePicker } from '@mui/x-date-pickers'
 import dayjs from 'dayjs'
 
+import Capturepatient from '../commonformelements/capturepatient'
+import CapturePersonalInfo from '../commonformelements/CapturePersonalInfo'
+
 // ** supabase
 import { supabase } from 'src/configs/supabase'
 
@@ -231,6 +234,7 @@ const NewBookingForm = ({ onClose, isEditing }) => {
 
   const [selectedPatient, setSelectedPatient] = useState(null)
   const [selectedPharmacist, setSelectedPharmacist] = useState(null)
+  const [selectedGP, setSelectedGP] = useState(null)
   const [datePickerOpen, setDatePickerOpen] = useState(false)
   const orgId = useSelector(state => state.organisation.organisation.id)
   const notifyApiKey = useSelector(state => state.organisation?.organisation?.pharmacy_settings?.notify_api_key)
@@ -492,253 +496,30 @@ const NewBookingForm = ({ onClose, isEditing }) => {
     setValue('textMessage', message)
   }, [fullNameValue, Pharmacist, startDate])
 
+  const handleSelectedGP = value => {
+    console.log('handle select value', value)
+    setSelectedGP(value)
+  }
+
   const getStepContent = step => {
     switch (step) {
       case 0:
         return (
-          <form key={0} onSubmit={handleAccountSubmit(onSubmit)}>
-            <Box sx={{ mb: 4 }}>
-              <Box sx={{ mb: 4 }}>
-                <Typography variant='body2' sx={{ fontWeight: 600, color: 'text.primary' }}>
-                  {steps[0].title}
-                </Typography>
-                <Typography variant='caption' component='p'>
-                  {steps[0].subtitle}
-                </Typography>
-              </Box>
-              <Stack spacing={4}>
-                <FormControl fullWidth>
-                  <Controller
-                    name='fullName'
-                    control={accountControl}
-                    rules={{ required: true }}
-                    render={({ field: { value, onChange } }) => (
-                      <CustomAutoCompleteInput
-                        onSelect={handleSelect}
-                        value={value}
-                        setValue={onChange}
-                        placeHolder={'Search for a patient'}
-                        tableName={'patients'}
-                        displayField={'full_name'}
-                        onAdd={() => setAddNewPatientDialog(true)}
-                        label='Search or add patient'
-                        searchVector={'name_search_vector'}
-                      />
-                    )}
-                  />
-                  {accountErrors.fullName && (
-                    <FormHelperText sx={{ color: 'error.main' }} id='stepper-linear-book-fullName'>
-                      This field is required
-                    </FormHelperText>
-                  )}
-                </FormControl>
-
-                <FormControl fullWidth>
-                  <Controller
-                    name='nhsNumber'
-                    control={accountControl}
-                    rules={{ required: true }}
-                    render={({ field: { value, onChange } }) => (
-                      <TextField
-                        value={value}
-                        label='NHS Number'
-                        onChange={onChange}
-                        autoComplete='off'
-                        error={Boolean(accountErrors.nhsNumber)}
-                        aria-describedby='stepper-linear-account-nhsNumber'
-                      />
-                    )}
-                  />
-                  {accountErrors.nhsNumber && (
-                    <FormHelperText sx={{ color: 'error.main' }} id='stepper-linear-account-nhsNumber'>
-                      This field is required
-                    </FormHelperText>
-                  )}
-                </FormControl>
-
-                <FormControl fullWidth>
-                  <Controller
-                    name='email'
-                    control={accountControl}
-                    rules={{ required: true }}
-                    render={({ field: { value, onChange } }) => (
-                      <TextField
-                        type='email'
-                        value={value}
-                        label='Email'
-                        onChange={onChange}
-                        autoComplete='off'
-                        error={Boolean(accountErrors.email)}
-                        placeholder='carterleonard@pharmex.com'
-                        aria-describedby='stepper-linear-account-email'
-                      />
-                    )}
-                  />
-                  {accountErrors.email && (
-                    <FormHelperText sx={{ color: 'error.main' }} id='stepper-linear-account-email'>
-                      {accountErrors.email.message}
-                    </FormHelperText>
-                  )}
-                </FormControl>
-
-                <FormControl fullWidth>
-                  <Controller
-                    name='mobileNumber'
-                    control={accountControl}
-                    rules={{ required: true }}
-                    render={({ field: { value, onChange } }) => (
-                      <TextField
-                        value={value}
-                        label='Mobile Number'
-                        onChange={onChange}
-                        type='number'
-                        placeholder=''
-                        autoComplete='off'
-                        error={Boolean(accountErrors.nhsNumber)}
-                        aria-describedby='stepper-linear-account-nhsNumber'
-                      />
-                    )}
-                  />
-                  {accountErrors.nhsNumber && (
-                    <FormHelperText sx={{ color: 'error.main' }} id='stepper-linear-account-nhsNumber'>
-                      This field is required
-                    </FormHelperText>
-                  )}
-                </FormControl>
-
-                <FormControl fullWidth>
-                  <Controller
-                    name='houseNumber'
-                    control={accountControl}
-                    rules={{ required: true }}
-                    render={({ field: { value, onChange } }) => (
-                      <TextField
-                        value={value}
-                        label='House Number'
-                        onChange={onChange}
-                        placeholder='A1'
-                        autoComplete='off'
-                        error={Boolean(accountErrors.nhsNumber)}
-                        aria-describedby='stepper-linear-account-nhsNumber'
-                      />
-                    )}
-                  />
-                  {accountErrors.nhsNumber && (
-                    <FormHelperText sx={{ color: 'error.main' }} id='stepper-linear-account-nhsNumber'>
-                      This field is required
-                    </FormHelperText>
-                  )}
-                </FormControl>
-
-                <FormControl fullWidth>
-                  <Controller
-                    name='address'
-                    control={accountControl}
-                    rules={{ required: true }}
-                    render={({ field: { value, onChange } }) => (
-                      <TextField
-                        value={value}
-                        label='address'
-                        onChange={onChange}
-                        placeholder='carterLeonard'
-                        autoComplete='off'
-                        error={Boolean(accountErrors.nhsNumber)}
-                        aria-describedby='stepper-linear-account-nhsNumber'
-                      />
-                    )}
-                  />
-                  {accountErrors.nhsNumber && (
-                    <FormHelperText sx={{ color: 'error.main' }} id='stepper-linear-account-nhsNumber'>
-                      This field is required
-                    </FormHelperText>
-                  )}
-                </FormControl>
-
-                <FormControl fullWidth>
-                  <Controller
-                    name='postCode'
-                    control={accountControl}
-                    rules={{ required: true }}
-                    render={({ field: { value, onChange } }) => (
-                      <TextField
-                        value={value}
-                        label='Post Code'
-                        onChange={onChange}
-                        placeholder='ABC 123'
-                        autoComplete='off'
-                        error={Boolean(accountErrors.nhsNumber)}
-                        aria-describedby='stepper-linear-account-nhsNumber'
-                      />
-                    )}
-                  />
-                  {accountErrors.nhsNumber && (
-                    <FormHelperText sx={{ color: 'error.main' }} id='stepper-linear-account-nhsNumber'>
-                      This field is required
-                    </FormHelperText>
-                  )}
-                </FormControl>
-
-                <FormControl fullWidth>
-                  <Controller
-                    name='dateOfBirth'
-                    control={accountControl}
-                    rules={{ required: true }}
-                    render={({ field: { value, onChange } }) => {
-                      const parsedDate = value ? dayjs(value) : null
-                      return (
-                        <DatePicker
-                          value={parsedDate}
-                          onChange={onChange}
-                          label='Date of Birth'
-                          renderInput={<CustomInput />}
-                          error={Boolean(accountErrors.dateOfBirth)}
-                          aria-describedby='stepper-linear-account-dateOfBirth'
-                        />
-                      )
-                    }}
-                  />
-                  {accountErrors.dateOfBirth && (
-                    <FormHelperText sx={{ color: 'error.main' }} id='stepper-linear-account-nhsNumber'>
-                      This field is required
-                    </FormHelperText>
-                  )}
-                </FormControl>
-
-                <FormControl fullWidth>
-                  <Controller
-                    name='telephoneNumber'
-                    control={accountControl}
-                    rules={{ required: true }}
-                    render={({ field: { value, onChange } }) => (
-                      <TextField
-                        value={value}
-                        label='Telephone Number'
-                        onChange={onChange}
-                        placeholder=''
-                        autoComplete='off'
-                        error={Boolean(accountErrors.nhsNumber)}
-                        aria-describedby='stepper-linear-account-nhsNumber'
-                      />
-                    )}
-                  />
-                  {accountErrors.nhsNumber && (
-                    <FormHelperText sx={{ color: 'error.main' }} id='stepper-linear-account-nhsNumber'>
-                      This field is required
-                    </FormHelperText>
-                  )}
-                </FormControl>
-              </Stack>
-
-              <Box item xs={12} sx={{ mt: 4, display: 'flex', justifyContent: 'space-between' }}>
-                <Button size='large' variant='outlined' color='secondary' disabled>
-                  Back
-                </Button>
-                <Button size='large' type='submit' variant='contained'>
-                  Next
-                </Button>
-              </Box>
-            </Box>
-          </form>
+          <CapturePersonalInfo
+            steps={steps}
+            handleAccountSubmit={handleAccountSubmit}
+            accountControl={accountControl}
+            accountErrors={accountErrors}
+            onSubmit={onSubmit}
+            handleSelect={handleSelect}
+            setAddNewPatientDialog={setAddNewPatientDialog}
+            patientData={selectedPatient}
+            handleSelectedPharmacist={handleSelectedPharmacist}
+            pharmacistData={selectedPharmacist}
+            dispatch={dispatch}
+            selectedGPData={selectedGP}
+            handleSelectedGP={handleSelectedGP}
+          />
         )
       case 1:
         return (
