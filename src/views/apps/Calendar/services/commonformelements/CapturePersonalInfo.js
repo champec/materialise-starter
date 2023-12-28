@@ -3,6 +3,7 @@ import Capturepatient from './capturepatient'
 import { Box, Button } from '@mui/material'
 import CaptureSurgery from './captureSurgery'
 import CaptureConsultant from './CaptureConsultant'
+import CaptureAppointmentInfo from './CaptureAppointmentInfo'
 
 function CapturePersonalInfo({
   steps,
@@ -19,7 +20,11 @@ function CapturePersonalInfo({
   selectedGPData,
   handleSelectedGP,
   selectedPatient,
-  setAddNewPharmacistDialog
+  setAddNewPharmacistDialog,
+  bookingErrors,
+  bookingControl,
+  setDatePickerOpen,
+  datePickerOpen
 }) {
   return (
     <form key={0} onSubmit={handleAccountSubmit(onSubmit)}>
@@ -58,6 +63,20 @@ function CapturePersonalInfo({
         patientData={patientData}
         handleSelectedPharmacist={handleSelectedPharmacist}
         pharmacistData={pharmacistData}
+      />
+      <CaptureAppointmentInfo
+        steps={steps}
+        handleAccountSubmit={handleAccountSubmit}
+        accountControl={accountControl}
+        accountErrors={accountErrors}
+        onSubmit={onSubmit}
+        handleSelect={handleSelect}
+        setAddNewPatientDialog={setAddNewPatientDialog}
+        patientData={patientData}
+        bookingErrors={bookingErrors}
+        bookingControl={bookingControl}
+        setDatePickerOpen={setDatePickerOpen}
+        datePickerOpen={datePickerOpen}
       />
       <Box item xs={12} sx={{ mt: 4, display: 'flex', justifyContent: 'space-between' }}>
         <Button size='large' variant='outlined' color='secondary' disabled>

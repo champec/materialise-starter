@@ -1,6 +1,7 @@
 // ** React Imports
 import { forwardRef, useState, useEffect } from 'react'
 
+
 import { supabase } from 'src/configs/supabase'
 
 // ** MUI Imports
@@ -21,7 +22,8 @@ import OutlinedInput from '@mui/material/OutlinedInput'
 import InputAdornment from '@mui/material/InputAdornment'
 import Select from '@mui/material/Select'
 import CustomSnackbar from './CustomSnackBar'
-import { CircularProgress } from '@mui/material'
+import { Checkbox, CircularProgress } from '@mui/material'
+import FormControlLabel from '@mui/material/FormControlLabel'
 
 // ** Third Party Imports
 // import DatePicker from 'react-datepicker'
@@ -40,7 +42,7 @@ const CustomInput = forwardRef((props, ref) => {
 })
 
 const AddNewPatientForm = ({ patient, onClose, onSelect, selectedPatient, setSelectedPatient }) => {
-  console.log('add new patient form', selectedPatient)
+  console.log('add new patient form', selectedPatient, "PATIENT", patient)
   // ** States
   const [date, setDate] = useState(null)
   const [language, setLanguage] = useState([])
@@ -53,6 +55,7 @@ const AddNewPatientForm = ({ patient, onClose, onSelect, selectedPatient, setSel
   const [lastName, setLastName] = useState('')
   const orgId = useSelector(state => state.organisation.organisation.id)
   const userId = useSelector(state => state.user.user.id)
+  const [savePermanently, setSavePermanently] = useState(false)
 
   const showMessage = (msg, sev) => {
     setSnackMessage(msg)
@@ -86,11 +89,12 @@ const AddNewPatientForm = ({ patient, onClose, onSelect, selectedPatient, setSel
   }
 
   useEffect(() => {
-    if (patient && patient.full_name) {
+    if (patient && patient.full_name && !selectedPatient) {
       const { firstName, middleName, lastName } = splitName(patient.full_name)
-      setFirstName(firstName)
-      setMiddleName(middleName)
-      setLastName(lastName)
+      // setFirstName(selectedfirstName)
+      // setMiddleName(middleName)
+      // setLastName(lastName)
+      setSelectedPatient({ ...patient, first_name: firstName, middle_name: middleName, last_name: lastName })
     }
   }, [patient])
 
@@ -109,15 +113,20 @@ const AddNewPatientForm = ({ patient, onClose, onSelect, selectedPatient, setSel
     // setLoading(true)
     event.preventDefault()
 
+    console.log('selected patient', selectedPatient)
+
+    if(savePermanently) {
     const formData = new FormData(event.target)
     const formFields = Object.fromEntries(formData.entries())
     // enrich the form field with the date after converting it from dayjs object to string
-    formFields.dob = date?.format('YYYY-MM-DD')
+    patientWithoutFullName.dob = date?.format('YYYY-MM-DD')
+
+    const { full_name, ...patientWithoutFullName } = selectedPatient;
 
     // ** Add new patient to database
     const { data, error } = await supabase
       .from('patients')
-      .insert({ ...formFields, pharmacy_id: orgId, created_by: userId })
+      .upsert({ ...patientWithoutFullName, pharmacy_id: orgId, created_by: userId }, {onConflict: 'id'})
       .select('*')
       .single()
 
@@ -135,6 +144,10 @@ const AddNewPatientForm = ({ patient, onClose, onSelect, selectedPatient, setSel
       onClose()
       setLoading(false)
     }, 2000)
+  } else {
+    onSelect(selectedPatient)
+    onClose()
+  }
   }
 
   const handleFirstNameChange = event => {
@@ -357,10 +370,23 @@ const AddNewPatientForm = ({ patient, onClose, onSelect, selectedPatient, setSel
               Reset
             </Button>
           </div>
+          <div>
+            <FormControlLabel
+              control={
+                <Checkbox
+                  disabled={loading}
+                  checked={savePermanently}
+                  onChange={e => setSavePermanently(savePermanently => !savePermanently)}
+                  inputProps={{ 'aria-label': 'controlled' }}
+                />
+              }
+              label='Save Permanently'
+            />
 
-          <Button disabled={loading} size='large' type='submit' sx={{ mr: 2 }} variant='contained'>
-            {loading ? <CircularProgress size={20} /> : 'Add Patient'}
-          </Button>
+            <Button disabled={loading} size='large' type='submit' sx={{ mr: 2 }} variant='contained'>
+              {loading ? <CircularProgress size={20} /> : 'Add Patient'}
+            </Button>
+          </div>
         </CardActions>
       </form>
     </Card>

@@ -21,7 +21,8 @@ import OutlinedInput from '@mui/material/OutlinedInput'
 import InputAdornment from '@mui/material/InputAdornment'
 import Select from '@mui/material/Select'
 import CustomSnackbar from './CustomSnackBar'
-import { CircularProgress } from '@mui/material'
+import { CircularProgress, Checkbox } from '@mui/material'
+import FormControlLabel from '@mui/material/FormControlLabel'
 
 // ** Third Party Imports
 // import DatePicker from 'react-datepicker'
@@ -51,6 +52,7 @@ const AddNewPharmacistForm = ({ patient, onClose, onSelect, selectedPharmacist, 
   const [firstName, setFirstName] = useState('')
   const [middleName, setMiddleName] = useState('')
   const [lastName, setLastName] = useState('')
+  const [savePermanently, setSavePermanently] = useState(false)
   const orgId = useSelector(state => state.organisation.organisation.id)
   const userId = useSelector(state => state.user.user.id)
 
@@ -86,11 +88,12 @@ const AddNewPharmacistForm = ({ patient, onClose, onSelect, selectedPharmacist, 
   }
 
   useEffect(() => {
-    if (patient && patient.full_name) {
+    if (patient && patient.full_name && !selectedPharmacist) {
       const { firstName, middleName, lastName } = splitName(patient.full_name)
-      setFirstName(firstName)
-      setMiddleName(middleName)
-      setLastName(lastName)
+      // setFirstName(firstName)
+      // setMiddleName(middleName)
+      // setLastName(lastName)
+      setSelectedPharmacist({ ...patient, first_name: firstName, middle_name: middleName, last_name: lastName })
     }
   }, [patient])
 
@@ -109,15 +112,22 @@ const AddNewPharmacistForm = ({ patient, onClose, onSelect, selectedPharmacist, 
     // setLoading(true)
     event.preventDefault()
 
-    const formData = new FormData(event.target)
-    const formFields = Object.fromEntries(formData.entries())
-    // enrich the form field with the date after converting it from dayjs object to string
-    formFields.dob = date?.format('YYYY-MM-DD')
+    console.log('selected pharmacist', selectedPharmacist)
+
+    if(savePermanently) {
+    // const formData = new FormData(event.target)
+    // const formFields = Object.fromEntries(formData.entries())
+    // // enrich the form field with the date after converting it from dayjs object to string
+    // formFields.dob = date?.format('YYYY-MM-DD')
+
+    const { full_name, ...pharmacistWithoutFullName } = selectedPharmacist;
+
+    console.log('pharmacist without full name', pharmacistWithoutFullName)
 
     // ** Add new patient to database
     const { data, error } = await supabase
-      .from('patients')
-      .insert({ ...formFields, pharmacy_id: orgId, created_by: userId })
+      .from('pharmacists')
+      .upsert({ ...pharmacistWithoutFullName}, {onConflict: 'id'})
       .select('*')
       .single()
 
@@ -127,7 +137,7 @@ const AddNewPharmacistForm = ({ patient, onClose, onSelect, selectedPharmacist, 
       return
     }
 
-    showMessage('Patient added successfully', 'success')
+    showMessage('Pharmacist added successfully', 'success')
 
     console.log(data)
     onSelect(data)
@@ -135,6 +145,10 @@ const AddNewPharmacistForm = ({ patient, onClose, onSelect, selectedPharmacist, 
       onClose()
       setLoading(false)
     }, 2000)
+  } else {
+    onSelect(selectedPharmacist)
+    onClose()
+  }
   }
 
   const handleFirstNameChange = event => {
@@ -357,10 +371,23 @@ const AddNewPharmacistForm = ({ patient, onClose, onSelect, selectedPharmacist, 
               Reset
             </Button>
           </div>
+          <div>
+            <FormControlLabel
+              control={
+                <Checkbox
+                disabled={loading || (selectedPharmacist && userId !== selectedPharmacist.profile_id)}
+                  checked={savePermanently}
+                  onChange={e => setSavePermanently(savePermanently => !savePermanently)}
+                  inputProps={{ 'aria-label': 'controlled' }}
+                />
+              }
+              label='Save Permanently'
+            />
 
           <Button disabled={loading} size='large' type='submit' sx={{ mr: 2 }} variant='contained'>
             {loading ? <CircularProgress size={20} /> : 'Add Pharmacist'}
           </Button>
+          </div>
         </CardActions>
       </form>
     </Card>

@@ -206,6 +206,11 @@ const NewBookingForm = ({ onClose, isEditing }) => {
     setSelectedPatient(value)
   }
 
+  const handlePharmacistSelect = value => {
+    console.log('handle select value', value)
+    setSelectedPharmacist(value)
+  }
+
   console.log('IS EDITING', isEditing)
 
   const showMessage = (msg, sev) => {
@@ -530,7 +535,10 @@ const NewBookingForm = ({ onClose, isEditing }) => {
             dispatch={dispatch}
             selectedGPData={selectedGP}
             handleSelectedGP={handleSelectedGP}
-            selecte
+            bookingErrors={bookingErrors}
+            bookingControl={bookingControl}
+            setDatePickerOpen={setDatePickerOpen}
+            datePickerOpen={datePickerOpen}
           />
         )
       case 1:
@@ -935,6 +943,8 @@ const NewBookingForm = ({ onClose, isEditing }) => {
             patient={fullNameValue}
             onClose={() => setAddNewPatientDialog(false)}
             onSelect={handleSelect}
+            selectedPatient={selectedPatient}
+            setSelectedPatient={setSelectedPatient}
           />
         </DialogContent>
       </Dialog>
@@ -951,7 +961,7 @@ const NewBookingForm = ({ onClose, isEditing }) => {
             selectedPharmacist={selectedPharmacist}
             setSelectedPharmacist={setSelectedPharmacist}
             onClose={() => setAddNewPharmacistDialog(false)}
-            onSelect={handleSelect}
+            onSelect={handlePharmacistSelect}
           />
         </DialogContent>
       </Dialog>
