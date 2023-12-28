@@ -62,6 +62,7 @@ import CapturePersonalInfo from '../commonformelements/CapturePersonalInfo'
 
 // ** supabase
 import { supabase } from 'src/configs/supabase'
+import AddNewPharmacistForm from './AddNewPharmacistForm'
 
 const CustomInput = forwardRef(({ ...props }, ref) => {
   return <TextField inputRef={ref} label='Date' {...props} />
@@ -95,8 +96,10 @@ const defaultAccountValues = {
   postCode: '',
   dateOfBirth: '',
   telephoneNumber: '',
-  pharmacist: '',
-  surgery: ''
+  surgery: {},
+  pharmacist: {},
+  p_first_name: '',
+  pFirstName: ''
 }
 
 const defaultBookingValues = {
@@ -123,8 +126,8 @@ const accountSchema = yup.object().shape({
   postCode: yup.string().required(),
   dateOfBirth: yup.string().required(),
   telephoneNumber: yup.number().required(),
-  pharmacist: yup.string().required(),
-  surgery: yup.string().required()
+  // surgery: yup.object().required(),
+  pharmacist: yup.object().required()
 })
 
 const bookingSchema = yup.object().shape({
@@ -145,6 +148,7 @@ const NewBookingForm = ({ onClose, isEditing }) => {
   // ** States
   const [activeStep, setActiveStep] = useState(0)
   const [addNewPatientDialog, setAddNewPatientDialog] = useState(false)
+  const [addNewPharmacistDialog, setAddNewPharmacistDialog] = useState(false)
   const [openSnack, setOpenSnack] = useState(false)
   const [snackMessage, setSnackMessage] = useState('')
   const [snackSeverity, setSnackSeverity] = useState('success') // success, error, warning, info, or default
@@ -181,8 +185,8 @@ const NewBookingForm = ({ onClose, isEditing }) => {
         postCode: selectedBooking.patient_object.post_code,
         dateOfBirth: selectedBooking.patient_object.dob,
         telephoneNumber: selectedBooking.patient_object.telephone_number,
-        pharmacist: selectedBooking.pharmacist,
-        surgery: selectedBooking.surgery
+        surgery: selectedBooking?.surgery_object,
+        pharmacist: selectedBooking?.pharmacist_object
       })
     }
 
@@ -245,7 +249,6 @@ const NewBookingForm = ({ onClose, isEditing }) => {
   const orgId = useSelector(state => state.organisation.organisation.id)
   const notifyApiKey = useSelector(state => state.organisation?.organisation?.pharmacy_settings?.notify_api_key)
   const userId = useSelector(state => state.user.user.id)
-
   // ** Hooks
   const {
     reset: patientReset,
@@ -520,13 +523,14 @@ const NewBookingForm = ({ onClose, isEditing }) => {
             onSubmit={onSubmit}
             handleSelect={handleSelect}
             setAddNewPatientDialog={setAddNewPatientDialog}
+            setAddNewPharmacistDialog={setAddNewPharmacistDialog}
             patientData={selectedPatient}
             handleSelectedPharmacist={handleSelectedPharmacist}
             pharmacistData={selectedPharmacist}
             dispatch={dispatch}
             selectedGPData={selectedGP}
             handleSelectedGP={handleSelectedGP}
-            selectedPatient={selectedPatient}
+            selecte
           />
         )
       case 1:
@@ -931,8 +935,23 @@ const NewBookingForm = ({ onClose, isEditing }) => {
             patient={fullNameValue}
             onClose={() => setAddNewPatientDialog(false)}
             onSelect={handleSelect}
-            selectedPatient={selectedPatient}
-            setSelectedPatient={setSelectedPatient}
+          />
+        </DialogContent>
+      </Dialog>
+      <Dialog
+        fullWidth
+        maxWidth='md'
+        scroll='body'
+        TransitionComponent={Transition}
+        open={addNewPharmacistDialog}
+        onClose={() => setAddNewPharmacistDialog(false)}
+      >
+        <DialogContent>
+          <AddNewPharmacistForm
+            selectedPharmacist={selectedPharmacist}
+            setSelectedPharmacist={setSelectedPharmacist}
+            onClose={() => setAddNewPharmacistDialog(false)}
+            onSelect={handleSelect}
           />
         </DialogContent>
       </Dialog>

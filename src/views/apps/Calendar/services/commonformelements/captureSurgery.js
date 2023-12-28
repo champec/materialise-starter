@@ -41,8 +41,6 @@ function CaptureSurgery({
               control={accountControl}
               rules={{ required: true }}
               render={({ field: { value, onChange } }) => {
-                console.log('controller value', value)
-
                 return (
                   <CustomApiSearch
                     onSelect={handleSelectedGP}
@@ -79,9 +77,10 @@ function CaptureSurgery({
           <Typography
             variant='caption'
             sx={{ cursor: 'pointer', fontStyle: 'italic' }}
-            onClick={setAddNewPatientDialog}
+            // onClick={setAddNewPatientDialog}
+            onClick={() => handleSelectedGP(null)}
           >
-            Edit
+            Remove
           </Typography>
         </Box>
       </Box>

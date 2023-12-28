@@ -19,7 +19,8 @@ function CaptureConsultant({
   setAddNewPatientDialog,
   patientData,
   handleSelectedPharmacist,
-  pharmacistData
+  pharmacistData,
+  setAddNewPharmacistDialog
 }) {
   return (
     <Box>
@@ -27,10 +28,10 @@ function CaptureConsultant({
         <Box sx={{ mb: 4 }}>
           <Box sx={{ mb: 4 }}>
             <Typography variant='body2' sx={{ fontWeight: 600, color: 'text.primary' }}>
-              {steps[0].title}
+              Pharmacist Details
             </Typography>
             <Typography variant='caption' component='p'>
-              {steps[0].subtitle}
+              Please select the pharmacist
             </Typography>
           </Box>
           <Stack spacing={4}>
@@ -47,7 +48,7 @@ function CaptureConsultant({
                     placeHolder={'Search for a pharmacist'}
                     tableName={'pharmacists'}
                     displayField={'full_name'}
-                    onAdd={() => console.log('add new pharmacist')}
+                    onAdd={() => setAddNewPharmacistDialog(true)}
                     label='Search Pharmacist'
                   />
                 )}
@@ -58,7 +59,6 @@ function CaptureConsultant({
                 </FormHelperText>
               )}
             </FormControl>
-
           </Stack>
 
           <Box sx={{ p: 2, border: '1px solid grey', borderRadius: '4px' }}>
@@ -73,7 +73,7 @@ function CaptureConsultant({
             <Typography
               variant='caption'
               sx={{ cursor: 'pointer', fontStyle: 'italic' }}
-              onClick={setAddNewPatientDialog}
+              onClick={() => setAddNewPharmacistDialog(true)}
             >
               Edit
             </Typography>

@@ -18,7 +18,8 @@ function CapturePersonalInfo({
   dispatch,
   selectedGPData,
   handleSelectedGP,
-  selectedPatient
+  selectedPatient,
+  setAddNewPharmacistDialog
 }) {
   return (
     <form key={0} onSubmit={handleAccountSubmit(onSubmit)}>
@@ -53,7 +54,7 @@ function CapturePersonalInfo({
         accountErrors={accountErrors}
         onSubmit={onSubmit}
         handleSelect={handleSelect}
-        setAddNewPatientDialog={setAddNewPatientDialog}
+        setAddNewPharmacistDialog={setAddNewPharmacistDialog}
         patientData={patientData}
         handleSelectedPharmacist={handleSelectedPharmacist}
         pharmacistData={pharmacistData}

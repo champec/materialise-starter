@@ -39,8 +39,8 @@ const CustomInput = forwardRef((props, ref) => {
   return <TextField fullWidth {...props} inputRef={ref} label='Birth Date' autoComplete='off' />
 })
 
-const AddNewPatientForm = ({ patient, onClose, onSelect, selectedPatient, setSelectedPatient }) => {
-  console.log('add new patient form', selectedPatient)
+const AddNewPharmacistForm = ({ patient, onClose, onSelect, selectedPharmacist, setSelectedPharmacist }) => {
+  console.log('add new pharmaicst form', selectedPharmacist)
   // ** States
   const [date, setDate] = useState(null)
   const [language, setLanguage] = useState([])
@@ -62,8 +62,8 @@ const AddNewPatientForm = ({ patient, onClose, onSelect, selectedPatient, setSel
 
   const handleChange = event => {
     const { name, value } = event.target
-    console.log('name', name)
-    setSelectedPatient({ ...selectedPatient, [name]: value })
+    console.log('[harmacist handlechange', name, value)
+    setSelectedPharmacist({ ...selectedPharmacist, [name]: value })
   }
 
   const splitName = fullName => {
@@ -95,12 +95,12 @@ const AddNewPatientForm = ({ patient, onClose, onSelect, selectedPatient, setSel
   }, [patient])
 
   useEffect(() => {
-    if (selectedPatient) {
-      setFirstName(selectedPatient.first_name)
-      setMiddleName(selectedPatient.middle_name)
-      setLastName(selectedPatient.last_name)
+    if (selectedPharmacist) {
+      setFirstName(selectedPharmacist.first_name)
+      setMiddleName(selectedPharmacist.middle_name)
+      setLastName(selectedPharmacist.last_name)
     }
-  }, [selectedPatient])
+  }, [selectedPharmacist])
 
   console.log('patient', firstName)
 
@@ -161,7 +161,7 @@ const AddNewPatientForm = ({ patient, onClose, onSelect, selectedPatient, setSel
         message={snackMessage}
         severity={snackSeverity}
       />
-      <CardHeader title='Add New Patient' />
+      <CardHeader title='Add New Pharmacist' />
       <Divider sx={{ m: '0 !important' }} />
       <form onSubmit={handleSubmit}>
         <CardContent>
@@ -175,7 +175,7 @@ const AddNewPatientForm = ({ patient, onClose, onSelect, selectedPatient, setSel
               <TextField
                 // value={firstName}
                 // onChange={handleFirstNameChange}
-                value={selectedPatient?.first_name || ''}
+                value={selectedPharmacist?.first_name || ''}
                 onChange={handleChange}
                 fullWidth
                 name='first_name'
@@ -189,7 +189,7 @@ const AddNewPatientForm = ({ patient, onClose, onSelect, selectedPatient, setSel
               <TextField
                 // value={lastName}
                 // onChange={handleLastNameChange}
-                value={selectedPatient?.last_name || ''}
+                value={selectedPharmacist?.last_name || ''}
                 onChange={handleChange}
                 fullWidth
                 name='last_name'
@@ -201,7 +201,7 @@ const AddNewPatientForm = ({ patient, onClose, onSelect, selectedPatient, setSel
             </Grid>
             <Grid item xs={12} sm={6}>
               <TextField
-                value={selectedPatient?.middle_name || ''}
+                value={selectedPharmacist?.middle_name || ''}
                 onChange={handleChange}
                 fullWidth
                 name='middle_name'
@@ -215,12 +215,12 @@ const AddNewPatientForm = ({ patient, onClose, onSelect, selectedPatient, setSel
               <TextField
                 fullWidth
                 type='number'
-                value={selectedPatient?.nhs_number || ''}
+                value={selectedPharmacist?.gphc_number || ''}
                 onChange={handleChange}
-                label='NHS Number'
+                label='GPhC Number'
                 autoComplete='off'
                 placeholder='12345678'
-                name='nhs_number'
+                name='gphc_number'
                 disabled={loading}
               />
             </Grid>
@@ -228,7 +228,7 @@ const AddNewPatientForm = ({ patient, onClose, onSelect, selectedPatient, setSel
               <DatePicker
                 selected={date}
                 showYearDropdown
-                defaultValue={selectedPatient?.dob ? dayjs(selectedPatient?.dob) : null}
+                defaultValue={selectedPharmacist?.dob ? dayjs(selectedPharmacist?.dob) : null}
                 showMonthDropdown
                 placeholderText='MM-DD-YYYY'
                 // customInput={<CustomInput />}
@@ -238,7 +238,7 @@ const AddNewPatientForm = ({ patient, onClose, onSelect, selectedPatient, setSel
                   }
                 }}
                 id='form-layouts-separator-date'
-                onChange={newDate => setSelectedPatient({ ...selectedPatient, dob: newDate })}
+                onChange={newDate => setSelectedPharmacist({ ...selectedPharmacist, dob: newDate })}
                 name='dob'
                 disabled={loading}
               />
@@ -248,12 +248,12 @@ const AddNewPatientForm = ({ patient, onClose, onSelect, selectedPatient, setSel
                 <InputLabel id='form-layouts-separator-select-label'>Sex</InputLabel>
                 <Select
                   label='Country'
-                  defaultValue={selectedPatient?.sex || ''}
+                  value={selectedPharmacist?.sex || ''}
+                  onChange={handleChange}
                   id='form-layouts-separator-select'
                   labelId='form-layouts-separator-select-label'
                   name='sex'
                   disabled={loading}
-                  onChange={handleChange}
                 >
                   <MenuItem value='male'>Male</MenuItem>
                   <MenuItem value='female'>Female</MenuItem>
@@ -271,7 +271,7 @@ const AddNewPatientForm = ({ patient, onClose, onSelect, selectedPatient, setSel
             </Grid>
             <Grid item xs={12} sm={6}>
               <TextField
-                value={selectedPatient?.house_number || ''}
+                value={selectedPharmacist?.house_number || ''}
                 onChange={handleChange}
                 disabled={loading}
                 fullWidth
@@ -282,7 +282,7 @@ const AddNewPatientForm = ({ patient, onClose, onSelect, selectedPatient, setSel
             </Grid>
             <Grid item xs={12} sm={6}>
               <TextField
-                value={selectedPatient?.address || ''}
+                value={selectedPharmacist?.address || ''}
                 onChange={handleChange}
                 disabled={loading}
                 fullWidth
@@ -293,7 +293,7 @@ const AddNewPatientForm = ({ patient, onClose, onSelect, selectedPatient, setSel
             </Grid>
             <Grid item xs={12} sm={6}>
               <TextField
-                value={selectedPatient?.post_code || ''}
+                value={selectedPharmacist?.post_code || ''}
                 onChange={handleChange}
                 disabled={loading}
                 fullWidth
@@ -306,7 +306,7 @@ const AddNewPatientForm = ({ patient, onClose, onSelect, selectedPatient, setSel
             <Grid item xs={12} sm={6}>
               <TextField
                 disabled={loading}
-                value={selectedPatient?.email || ''}
+                value={selectedPharmacist?.email || ''}
                 onChange={handleChange}
                 fullWidth
                 type='email'
@@ -320,24 +320,24 @@ const AddNewPatientForm = ({ patient, onClose, onSelect, selectedPatient, setSel
               <TextField
                 disabled={loading}
                 fullWidth
-                value={selectedPatient?.mobile_number || ''}
+                value={selectedPharmacist?.modible_number || ''}
                 onChange={handleChange}
                 label='Mobile No.'
                 name='mobile_number'
                 placeholder='+1-123-456-8790'
               />
             </Grid>
-            <Grid item xs={12} sm={6}>
+            {/* <Grid item xs={12} sm={6}>
               <TextField
                 disabled={loading}
-                value={selectedPatient?.telephone_number || ''}
+                value={selectedPharmacist?.telephone_number || ''}
                 onChange={handleChange}
                 fullWidth
                 label='Landline No.'
                 name='telephone_number'
                 placeholder='+1-123-456-8790'
               />
-            </Grid>
+            </Grid> */}
           </Grid>
         </CardContent>
         <Divider sx={{ m: '0 !important' }} />
@@ -359,7 +359,7 @@ const AddNewPatientForm = ({ patient, onClose, onSelect, selectedPatient, setSel
           </div>
 
           <Button disabled={loading} size='large' type='submit' sx={{ mr: 2 }} variant='contained'>
-            {loading ? <CircularProgress size={20} /> : 'Add Patient'}
+            {loading ? <CircularProgress size={20} /> : 'Add Pharmacist'}
           </Button>
         </CardActions>
       </form>
@@ -367,4 +367,4 @@ const AddNewPatientForm = ({ patient, onClose, onSelect, selectedPatient, setSel
   )
 }
 
-export default AddNewPatientForm
+export default AddNewPharmacistForm
