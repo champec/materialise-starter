@@ -557,69 +557,6 @@ const NewBookingForm = ({ onClose, isEditing }) => {
               <Stack spacing={4}>
                 <FormControl fullWidth>
                   <Controller
-                    name='pharmacist'
-                    control={bookingControl}
-                    rules={{ required: true }}
-                    render={({ field: { value, onChange } }) => (
-                      <CustomAutoCompleteInput
-                        onSelect={handleSelectedPharmacist}
-                        value={value}
-                        setValue={onChange}
-                        placeHolder={'Search for a pharmacist'}
-                        tableName={'pharmacists'}
-                        displayField={'full_name'}
-                        onAdd={() => console.log('add new pharmacist')}
-                        label='Search Pharmacist'
-                      />
-                    )}
-                  />
-                  {bookingErrors.pharmacist && (
-                    <FormHelperText sx={{ color: 'error.main' }} id='stepper-linear-booking-pharmacist'>
-                      This field is required
-                    </FormHelperText>
-                  )}
-                </FormControl>
-
-                <FormControl fullWidth>
-                  <Controller
-                    name='startDate'
-                    control={bookingControl}
-                    rules={{ required: true }}
-                    render={({ field: { value, onChange } }) => (
-                      <>
-                        <TextField
-                          label='Appointment Date'
-                          value={value ? dayjs(value).format('DD/MMM/YYYY h:mm A') : ''}
-                          name='startDate'
-                          onChange={onChange}
-                          onClick={() => setDatePickerOpen(true)}
-                          autoComplete='off'
-                          aria-readonly
-                        />
-                        <Dialog open={datePickerOpen} onClose={() => setDatePickerOpen(false)}>
-                          <StaticDateTimePicker
-                            showTimeSelect
-                            timeFormat='HH:mm'
-                            timeIntervals={15}
-                            selected={value}
-                            id='date-time-picker'
-                            defaultValue={value}
-                            onChange={onChange}
-                            onClose={() => setDatePickerOpen(false)}
-                          />
-                        </Dialog>
-                      </>
-                    )}
-                  />
-                  {bookingErrors.startDate && (
-                    <FormHelperText sx={{ color: 'error.main' }} id='stepper-linear-booking-startDate'>
-                      This field is required
-                    </FormHelperText>
-                  )}
-                </FormControl>
-
-                <FormControl fullWidth>
-                  <Controller
                     name='presentingComplaint'
                     control={bookingControl}
                     rules={{ required: true }}
@@ -640,32 +577,6 @@ const NewBookingForm = ({ onClose, isEditing }) => {
                   {bookingErrors.presentingComplaint && (
                     <FormHelperText sx={{ color: 'error.main' }} id='stepper-linear-booking-presentingComplaint'>
                       This field is required
-                    </FormHelperText>
-                  )}
-                </FormControl>
-
-                <FormControl fullWidth>
-                  <Controller
-                    name='textMessage'
-                    control={bookingControl}
-                    rules={{ required: true }}
-                    render={({ field: { value, onChange } }) => (
-                      <TextField
-                        value={value}
-                        label='Text Message'
-                        multiline
-                        rows={4}
-                        onChange={onChange}
-                        autoComplete='off'
-                        error={Boolean(bookingErrors.textMessage)}
-                        placeholder='Text to send to the patient'
-                        aria-describedby='stepper-linear-booking-textMessage'
-                      />
-                    )}
-                  />
-                  {bookingErrors.textMessage && (
-                    <FormHelperText sx={{ color: 'error.main' }} id='stepper-linear-booking-textMessage'>
-                      {bookingErrors.textMessage.message}
                     </FormHelperText>
                   )}
                 </FormControl>
@@ -698,37 +609,6 @@ const NewBookingForm = ({ onClose, isEditing }) => {
                   />
                   {bookingErrors.clinicalPathway && (
                     <FormHelperText sx={{ color: 'error.main' }} id='stepper-linear-booking-clinicalPathway'>
-                      This field is required
-                    </FormHelperText>
-                  )}
-                </FormControl>
-
-                <FormControl fullWidth>
-                  <Controller
-                    name='duration'
-                    control={bookingControl}
-                    rules={{ required: true }}
-                    render={({ field: { value, onChange } }) => (
-                      <Select
-                        value={value}
-                        onChange={onChange}
-                        error={Boolean(bookingErrors.duration)}
-                        aria-describedby='stepper-linear-booking-duration'
-                        defaultValue={15}
-                      >
-                        <MenuItem value=''>
-                          <em>None</em>
-                        </MenuItem>
-                        <MenuItem value={5}>5 minutes</MenuItem>
-                        <MenuItem value={10}>10 minutes</MenuItem>
-                        <MenuItem value={15}>15 minutes</MenuItem>
-                        <MenuItem value={20}>20 minutes</MenuItem>
-                        <MenuItem value={25}>25 minutes</MenuItem>
-                      </Select>
-                    )}
-                  />
-                  {bookingErrors.duration && (
-                    <FormHelperText sx={{ color: 'error.main' }} id='stepper-linear-booking-duration'>
                       This field is required
                     </FormHelperText>
                   )}
@@ -774,7 +654,7 @@ const NewBookingForm = ({ onClose, isEditing }) => {
                         Pharmacist
                       </Typography>
                       <Typography variant='body2' sx={{ color: 'text.secondary' }}>
-                        {Pharmacist?.full_name}
+                        {selectedPharmacist?.full_name}
                       </Typography>
                     </Grid>
                     <Grid item xs={12} sm={6}>
@@ -811,6 +691,33 @@ const NewBookingForm = ({ onClose, isEditing }) => {
                     </Grid>
                   </Grid>
                 </Card>
+
+                <FormControl fullWidth>
+                  <Controller
+                    name='textMessage'
+                    control={bookingControl}
+                    rules={{ required: true }}
+                    render={({ field: { value, onChange } }) => (
+                      <TextField
+                        value={value}
+                        label='Text Message'
+                        multiline
+                        rows={4}
+                        onChange={onChange}
+                        autoComplete='off'
+                        error={Boolean(bookingErrors.textMessage)}
+                        placeholder='Text to send to the patient'
+                        aria-describedby='stepper-linear-booking-textMessage'
+                      />
+                    )}
+                  />
+                  {bookingErrors.textMessage && (
+                    <FormHelperText sx={{ color: 'error.main' }} id='stepper-linear-booking-textMessage'>
+                      {bookingErrors.textMessage.message}
+                    </FormHelperText>
+                  )}
+                </FormControl>
+
                 <FormControl fullWidth>
                   <Controller
                     name='iAgree'
