@@ -353,13 +353,14 @@ const NewBookingForm = ({ onClose, isEditing }) => {
         presenting_complaint: bookingData?.presentingComplaint || null,
         clinical_pathway: bookingData?.clinicalPathway || null,
         patient_object: selectedPatient || null,
-        pharmacist_object: bookingData?.pharmacist || null,
+        pharmacist_object: selectedPharmacist || null,
         pharmacy_id: orgId,
         booked_by: userId,
         url: dailyUrl,
         hcp_token: dailyData?.hcpToken || null,
         patient_token: dailyData?.patientToken || null,
-        duration: bookingData?.duration || null
+        duration: bookingData?.duration || null,
+        service: 'pharmacy_first'
         // event_id: newEvent?.id || null
       }
 
