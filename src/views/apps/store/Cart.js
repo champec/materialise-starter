@@ -22,10 +22,10 @@ import { CircularProgress } from '@mui/material'
 
 function Cart({ handleShopClick, cart, isSending, sendOrder }) {
   const dispatch = useDispatch()
-  const cartItems = useSelector(state => state.cart.items)
-  const checkoutStatus = useSelector(state => state.checkout.status)
-  const checkoutError = useSelector(state => state.checkout.error)
-  const status = useSelector(state => state.cart.status)
+  const cartItems = useSelector(state => state.cartSlice.items)
+  const checkoutStatus = useSelector(state => state.checkoutSlice.status)
+  const checkoutError = useSelector(state => state.checkoutSlice.error)
+  const status = useSelector(state => state.cartSlice.status)
 
   const router = useRouter()
 

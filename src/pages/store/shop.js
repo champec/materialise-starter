@@ -12,6 +12,9 @@ import Cart from 'src/views/apps/store/Cart'
 import { useDispatch, useSelector } from 'react-redux'
 import productsSlice from 'src/store/apps/shop/productsSlice'
 import { setProducts } from 'src/store/apps/shop/productsSlice'
+import withReducer from 'src/@core/HOC/withReducer'
+import cartSlice from 'src/store/apps/shop/cartSlice'
+import checkoutSlice from 'src/store/apps/shop/checkoutSlice'
 
 // RTK imports
 import ChangeNotifier from 'src/@core/components/ChangeNotifier'
@@ -240,4 +243,6 @@ const Shop = () => {
   )
 }
 
-export default Shop
+// export default Shop
+// export default withReducer('productsSlice', productsSlice)(Shop)
+export default withReducer({ productsSlice: productsSlice, cartSlice: cartSlice, checkoutSlice: checkoutSlice })(Shop)

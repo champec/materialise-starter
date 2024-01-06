@@ -102,6 +102,19 @@ export const createBooking = createAsyncThunk('appCalendar/createBooking', async
   return data
 })
 
+export const createNMSServiceBooking = createAsyncThunk(
+  'appCalendar/createNMSServiceBooking',
+  async (nms, { dispatch }) => {
+    const { error } = await supabase.from('service_nms').insert(nms)
+    if (error) {
+      console.log(error)
+      throw error
+    }
+
+    return supabase
+  }
+)
+
 // ** Update a booking
 export const updateBooking = createAsyncThunk('appCalendar/updateBooking', async ({ booking, id }, { dispatch }) => {
   const { data, error } = await supabase.from('consultations').update(booking).eq('id', id).select('*').single()
@@ -170,9 +183,9 @@ export const bookingsCalendarSlice = createSlice({
       } else {
         state.selectedCalendars.push(action.payload)
       }
-      if (state.selectedCalendars.length === 0) {
-        state.events.length = 0
-      }
+      // if (state.selectedCalendars.length === 0) {
+      //   state.events.length = 0
+      // }
     },
     handleAllCalendars: (state, action) => {
       const value = action.payload

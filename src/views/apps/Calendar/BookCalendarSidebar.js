@@ -186,11 +186,11 @@ const BookCalendarSidebar = props => {
   const formToUse = () => {
     switch (selectedService) {
       case 'DMS':
-        return <BookDMSform />
+        return <BookDMSform onClose={handleSidebarClose} />
       case 'NMS':
-        return <BookNMSform />
+        return <BookNMSform onClose={handleSidebarClose} />
       case 'Flu':
-        return <BookFluform />
+        return <BookFluform onClose={handleSidebarClose} />
       case 'Pharmacy First':
         return <NewBookingForm onClose={handleSidebarClose} />
       default:

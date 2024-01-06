@@ -5,8 +5,8 @@ import dayjs from 'dayjs'
 const supabase = supabaseOrg
 
 export const fetchAppointments = createAsyncThunk(
-  'appointmnetList/fetchAppointments',
-  async (dateRange, { getState }) => {
+  'appointmentList/fetchAppointments',
+  async ({ dateRange, type, table }, { getState }) => {
     const orgId = getState().organisation.organisation.id
 
     // Set default start and end dates to 2 weeks before and after today
@@ -16,13 +16,30 @@ export const fetchAppointments = createAsyncThunk(
     // Extract startDate and endDate from dateRange if provided, else use defaults
     const { startDate = defaultStartDate, endDate = defaultEndDate } = dateRange || {}
 
-    const { data, error } = await supabase
+    // Define the base select query
+    let selectQuery = '*, consultation_status(*), calendar_events!calendar_events_booking_id_fkey(*), sms_threads(id)'
+
+    // Add table to the select query if it's provided
+    if (table) {
+      selectQuery += `, ${table}(*)`
+    }
+
+    // Initialize the query builder
+    let query = supabase
       .from('consultations')
-      .select('*, consultation_status(*), calendar_events!calendar_events_booking_id_fkey(*), sms_threads(id)')
+      .select(selectQuery)
       .eq('pharmacy_id', orgId)
-      .gte('calendar_events.start', startDate || defaultStartDate)
-      .lte('calendar_events.end', endDate || defaultEndDate)
+      .gte('calendar_events.start', startDate)
+      .lte('calendar_events.end', endDate)
       .order('start', { foreignTable: 'calendar_events', ascending: true })
+
+    // Add service conditionally
+    if (type) {
+      query = query.eq('service', type)
+    }
+
+    // Execute the query
+    const { data, error } = await query
 
     if (error) {
       console.error(error)

@@ -5,6 +5,8 @@ import ChangeNotifier from 'src/@core/components/ChangeNotifier'
 import { fetchInventory, setInventory } from 'src/store/apps/shop/inventorySlice'
 import { useDispatch, useSelector } from 'react-redux'
 import { Button } from '@mui/material'
+import withReducer from 'src/@core/HOC/withReducer'
+import inventorySlice from 'src/store/apps/shop/inventorySlice'
 
 function Inventory() {
   const { items, currentPage, pageSize, status, error } = useSelector(state => state.inventorySlice)
@@ -28,4 +30,5 @@ function Inventory() {
   )
 }
 
-export default Inventory
+// export default Inventory
+export default withReducer('inventorySlice', inventorySlice)(Inventory)

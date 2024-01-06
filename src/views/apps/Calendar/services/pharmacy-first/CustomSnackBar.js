@@ -7,7 +7,7 @@ const CustomSnackbar = ({ open, setOpen, message, severity, vertical, horizontal
     if (open) {
       const timer = setTimeout(() => {
         setOpen(false)
-      }, 3000)
+      }, duration || 3000)
 
       return () => clearTimeout(timer)
     }

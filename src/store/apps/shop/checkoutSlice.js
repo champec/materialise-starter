@@ -6,7 +6,7 @@ import { clearCart } from './cartSlice'
 // Thunk for handling the checkout process
 export const handleCheckout = createAsyncThunk('checkout/process', async (_, thunkAPI) => {
   const { getState } = thunkAPI
-  const cartItems = getState().cart.items
+  const cartItems = getState().cartSlice.items
   const buyer_profile = getState().organisation.organisation
 
   console.log({ buyer_profile })
@@ -187,7 +187,7 @@ export const fetchFullOrderDetails = createAsyncThunk('checkout/fetchFullOrderDe
         unit_price,
         shop_products (
           *,
-          organisations (
+          profiles (
             *,
             pharmacies (
               *

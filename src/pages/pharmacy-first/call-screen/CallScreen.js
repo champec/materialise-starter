@@ -7,7 +7,9 @@ const VideoCallComponent = ({
   handleBookingButton,
   handleScrButton,
   handleNotesButton,
-  handlePrescriptionButton
+  handlePrescriptionButton,
+  handleNmsButton,
+  handleDmsButton
 }) => {
   useEffect(() => {
     if (!containerRef.current) return
@@ -56,6 +58,18 @@ const VideoCallComponent = ({
           iconPathDarkMode: 'https://xsqwpmqfbirqdncoephf.supabase.co/storage/v1/object/public/icons/notesdark.png',
           label: 'Notes',
           tooltip: 'Write notes here'
+        },
+        nmsButton: {
+          iconPath: 'https://xsqwpmqfbirqdncoephf.supabase.co/storage/v1/object/public/icons/nmslight.png',
+          iconPathDarkMode: 'https://xsqwpmqfbirqdncoephf.supabase.co/storage/v1/object/public/icons/nmsdark.png',
+          label: 'NMS',
+          tooltip: 'Fill in NMS form here'
+        },
+        dmsButton: {
+          iconPath: 'https://xsqwpmqfbirqdncoephf.supabase.co/storage/v1/object/public/icons/dmslight.png',
+          iconPathDarkMode: 'https://xsqwpmqfbirqdncoephf.supabase.co/storage/v1/object/public/icons/dmsdark.png',
+          label: 'DMS',
+          tooltip: 'Fill in DMS form here'
         }
       }
     })
@@ -73,6 +87,12 @@ const VideoCallComponent = ({
       } else if (event.button_id === 'notesButton') {
         console.log('customButtonFour')
         handleNotesButton()
+      } else if (event.button_id === 'nmsButton') {
+        console.log('customButtonFive')
+        handleNmsButton()
+      } else if (event.button_id === 'dmsButton') {
+        console.log('customButtonSix')
+        handleDmsButton()
       }
     })
 

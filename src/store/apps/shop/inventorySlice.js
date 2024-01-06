@@ -17,7 +17,7 @@ const initialState = {
 
 export const fetchInventory = createAsyncThunk('inventory/fetchInventory', async (page, thunkAPI) => {
   const { pageSize, sortColumn, sort, searchValue } = thunkAPI.getState().inventorySlice
-  const userId = thunkAPI.getState().user.user.id
+  const userId = thunkAPI.getState().organisation.organisation.id
   const query = supabaseOrg
     .from('shop_products')
     .select('*', { count: 'exact' })
@@ -42,7 +42,7 @@ export const fetchInventory = createAsyncThunk('inventory/fetchInventory', async
 })
 
 export const createItem = createAsyncThunk('inventory/createItem', async (item, thunkAPI) => {
-  const userId = thunkAPI.getState().user.user.id
+  const userId = thunkAPI.getState().organisation.organisation.id
   item.pharmacy_id = userId
   const { data, error } = await supabaseOrg.from('shop_products').insert([item]).select('*')
 

@@ -67,6 +67,18 @@ const navigation = (role, plan) => {
           path: '/pharmacy-first/call-screen',
           icon: 'wpf:medical-doctor',
           disabled: false
+        },
+        {
+          title: 'NMS',
+          path: '/services/nms',
+          icon: 'game-icons:medicine-pills',
+          disabled: false
+        },
+        {
+          title: 'DMS',
+          path: '/services/dms',
+          icon: 'bi:hospital-fill',
+          disabled: false
         }
       ]
     },

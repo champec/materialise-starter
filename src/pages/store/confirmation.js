@@ -3,6 +3,8 @@ import { useDispatch, useSelector } from 'react-redux'
 import { useRouter } from 'next/router'
 import { fetchFullOrderDetails } from 'src/store/apps/shop/checkoutSlice'
 import { supabaseOrg as supabase } from 'src/configs/supabase'
+import checkoutSlice from 'src/store/apps/shop/checkoutSlice'
+import withReducer from 'src/@core/HOC/withReducer'
 
 function Confirmation() {
   const dispatch = useDispatch()
@@ -10,8 +12,8 @@ function Confirmation() {
   const { orderId } = router.query
 
   const loggedInUser = useSelector(state => state.organisation.organisation.id)
-  const status = useSelector(state => state.checkout.status)
-  const error = useSelector(state => state.checkout.error)
+  const status = useSelector(state => state.checkoutSlice.status)
+  const error = useSelector(state => state.checkoutSlice.error)
   const [order, setOrder] = useState()
 
   const [isAuthorized, setIsAuthorized] = useState(false)
@@ -60,11 +62,11 @@ function Confirmation() {
       {order.map(item => (
         <div key={item.product_id}>
           <h2>{item.shop_products.name}</h2>
-          <p>Price: ${item.unit_price}</p>
+          <p>Price: £{item.unit_price}</p>
           <p>Quantity: {item.quantity}</p>
           <p>Brand: {item.shop_products.brand}</p>
           <p>Description: {item.shop_products.description}</p>
-          <p>Seller: {item.shop_products.organisations.organisation_name}</p>
+          <p>Seller: {item.shop_products.profiles.organisation_name}</p>
           {/* ... Add more details as necessary */}
         </div>
       ))}
@@ -72,4 +74,5 @@ function Confirmation() {
   )
 }
 
-export default Confirmation
+// export default Confirmation
+export default withReducer('checkoutSlice', checkoutSlice)(Confirmation)
