@@ -1,5 +1,5 @@
 // ** React Imports
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useEffect } from 'react'
 
 // ** MUI Imports
 import Box from '@mui/material/Box'
@@ -8,6 +8,7 @@ import Typography from '@mui/material/Typography'
 import CardHeader from '@mui/material/CardHeader'
 import { DataGrid } from '@mui/x-data-grid'
 import { styled } from '@mui/system'
+import _ from 'lodash'
 
 // ** ThirdParty Components
 import Spinner from 'src/@core/components/spinner'
@@ -22,11 +23,13 @@ import EditProductForm from './EditProductForm'
 import { getInitials } from 'src/@core/utils/get-initials'
 import { dummyData } from './dummyData'
 import { CircularProgress } from '@mui/material'
+import dayjs from 'dayjs'
 
 // ** RTK imports
 
 import { useSelector, useDispatch } from 'react-redux'
 import { fetchProducts, setSearchTerm } from 'src/store/apps/shop/productsSlice'
+import { fetchInventory } from 'src/store/apps/shop/inventorySlice'
 
 // ** renders client column
 const renderClient = params => {
@@ -58,8 +61,9 @@ function getColumns(setShow, setSelectedRow) {
     {
       flex: 0.25,
       minWidth: 290,
+      sortable: true,
       field: 'name',
-      headerName: 'Name',
+      headerName: 'Drug Name and Brand',
       cellClassName: 'clickableCell',
       renderCell: params => {
         const { row } = params
@@ -74,10 +78,10 @@ function getColumns(setShow, setSelectedRow) {
               setShow(true)
             }}
           >
-            {renderClient(params)}
+            {/* {renderClient(params)} */}
             <Box sx={{ display: 'flex', flexDirection: 'column' }}>
               <Typography noWrap variant='body2' sx={{ color: 'text.primary', fontWeight: 600 }}>
-                {row.name}
+                {`${row.name}, ${row.strength} ${row.form}`}
               </Typography>
               <Typography noWrap variant='caption'>
                 {row.brand}
@@ -90,11 +94,12 @@ function getColumns(setShow, setSelectedRow) {
     {
       flex: 0.175,
       minWidth: 120,
-      headerName: 'Date',
-      field: 'date',
+      sortable: true,
+      headerName: 'Expiry Date',
+      field: 'expiry_date',
       renderCell: params => (
         <Typography variant='body2' sx={{ color: 'text.primary' }}>
-          {params.row.date}
+          {dayjs(params.row.expiry_date).format('DD MMM YYYY')}
         </Typography>
       )
     },
@@ -102,7 +107,8 @@ function getColumns(setShow, setSelectedRow) {
       flex: 0.175,
       minWidth: 110,
       field: 'price',
-      headerName: 'Salary',
+      sortable: true,
+      headerName: 'Drug Price',
       renderCell: params => (
         <Typography variant='body2' sx={{ color: 'text.primary' }}>
           {params.row.price}
@@ -111,32 +117,50 @@ function getColumns(setShow, setSelectedRow) {
     },
     {
       flex: 0.125,
-      field: 'quantity',
+      field: 'stock',
+      sortable: true,
       minWidth: 80,
-      headerName: 'Age',
+      headerName: 'Quantity',
       renderCell: params => (
         <Typography variant='body2' sx={{ color: 'text.primary' }}>
-          {params.row.quantity}
+          {params.row.stock}
         </Typography>
       )
     },
     {
       flex: 0.175,
       minWidth: 140,
-      field: 'status',
-      headerName: 'Status',
+      field: 'trade_reason',
+      headerName: 'Status & Reason',
       sortable: false,
       renderCell: params => {
         const status = statusObj[params.row.status]
-
+        const reason = params.row.trade_reason
+        // console.log('reason', reason)
         return (
-          <CustomChip
-            size='small'
-            skin='light'
-            color={status.color}
-            label={status.title}
-            sx={{ '& .MuiChip-label': { textTransform: 'capitalize' } }}
-          />
+          <>
+            <CustomChip
+              size='small'
+              skin='light'
+              color={status.color}
+              label={status.title}
+              sx={{ '& .MuiChip-label': { textTransform: 'capitalize' } }}
+            />
+            <br />
+            {reason &&
+              (reason.length > 0 ? (
+                <Typography
+                  variant='caption'
+                  sx={{ color: 'text.secondary', margin: '2px', wordWrap: 'break-word', whiteSpace: 'normal' }}
+                >
+                  {reason + ' '}
+                </Typography>
+              ) : (
+                <Typography variant='caption' sx={{ color: 'text.secondary' }}>
+                  No reason provided
+                </Typography>
+              ))}
+          </>
         )
       }
     }
@@ -148,35 +172,46 @@ function InventoryTable({ items }) {
   const [sort, setSort] = useState('asc')
   const [pageSize, setPageSize] = useState(7)
   const [rows, setRows] = useState([])
-  const [searchValue, setSearchValue] = useState('')
+  // const [searchValue, setSearchValue] = useState('')
   const [sortColumn, setSortColumn] = useState('name')
   const [show, setShow] = useState(false)
   const [selectedRow, setSelectedRow] = useState([])
   const [loading, setLoading] = useState(false)
   const [sortModel, setSortModel] = useState([])
+  const [searchValue, setSearchValue] = useState('')
 
   const dispatch = useDispatch()
 
-  const handleSortModelChange = useCallback(newModel => {
-    setSortModel(newModel)
-    fetchTableData(newModel, searchValue, sortColumn)
-  }, [])
+  const debouncedSearch = useCallback(
+    _.debounce(searchTerm => {
+      dispatch(
+        fetchInventory({
+          searchValue: searchTerm
+          // ...rest of your arguments
+        })
+      )
+    }, 1000),
+    [] // Dependency array
+  )
 
-  const handleSearch = value => {
-    console.log('handleSearch', value)
-    dispatch(setSearchTerm(value))
-    dispatch(
-      fetchProducts({
-        searchTerm: value,
-        page: 0, // You might want to reset the page to 0 after a new search
-        pageSize, // Use the local component state for pageSize
-        sort: sortModel[0] ? { field: sortModel[0].field, order: sortModel[0].sort } : null, // Assumes sortModel is an array; use its first item
-        filters: {} // No filters for now, but you can extend this in the future
-      })
-    )
-    // setSearchValue(value)
-    // fetchTableData(sort, value, sortColumn)
+  const handleSortModelChange = useCallback(
+    newModel => {
+      setSortModel(newModel)
+      const sortField = newModel[0]?.field || 'name'
+      const sortOrder = newModel[0]?.sort || 'asc'
+      dispatch(fetchInventory({ sortModel: newModel, searchValue, sortColumn: sortField, sort: sortOrder }))
+    },
+    [dispatch, searchValue]
+  )
+
+  const handleSearch = event => {
+    setSearchValue(event.target.value) // Update the searchValue state immediately with each keystroke
   }
+  useEffect(() => {
+    if (searchValue) {
+      debouncedSearch(searchValue) // Call the debounced search function
+    }
+  }, [searchValue, debouncedSearch])
 
   return (
     <Card>
@@ -230,8 +265,11 @@ function InventoryTable({ items }) {
             },
             toolbar: {
               value: searchValue,
-              clearSearch: () => handleSearch(''),
-              onChange: event => handleSearch(event.target.value),
+              clearSearch: () => {
+                setSearchValue('')
+                dispatch(fetchInventory(''))
+              },
+              onChange: handleSearch,
               setShow: setShow,
               setSelectedRow: setSelectedRow,
               selectedRow: selectedRow,

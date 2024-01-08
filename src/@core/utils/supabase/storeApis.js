@@ -1,16 +1,14 @@
-import { supabaseOrg } from 'src/configs/supabase'
-
-const supabase = supabaseOrg
+import { supabase } from 'src/configs/supabase'
 
 const fetchOrderDetails = async orderId => {
   const { data, error } = await supabase
-    .from('orders')
+    .from('shop_order_items')
     .select(
       `
            *,
             buyer_id(organisation_name, id),
             seller_id(organisation_name, id),
-            items(*),
+            product_id(*),
             job_pipeline(*)
           `
     )
@@ -19,6 +17,8 @@ const fetchOrderDetails = async orderId => {
   if (error) {
     console.error('Error fetching order details:', error)
   }
+
+  console.log('fetchOrderDetailsDATA', data, error)
   if (data) return data
   // setOrderData(data)
 }
@@ -35,20 +35,8 @@ const fetchOrderTasks = async orderId => {
 const fetchOrderData = async id => {
   try {
     // Fetch order data from Supabase
-    const { data, error } = await supabase
-      .from('orders')
-      .select(
-        `
-          id,
-          order_status,
-          quantity,
-          order_date,
-          buyer_id(organisation_name, id),
-          seller_id(organisation_name, id),
-          items(name)
-        `
-      )
-      .or(`buyer_id.eq.${id},seller_id.eq.${id}`)
+    const { data, error } = await supabase.from('orders').select('*')
+    // .or(`buyer_id.eq.${id},seller_id.eq.${id}`)
 
     if (error) {
       console.error('Error fetching order data:', error)
@@ -56,6 +44,7 @@ const fetchOrderData = async id => {
     }
 
     // Set the fetched order data to the state
+    console.log('fetchOrderData', data)
     return data
   } catch (error) {
     console.error('Error fetching order data:', error)
@@ -65,7 +54,7 @@ const fetchOrderData = async id => {
 
 const fetchInvoice = async invoiceId => {
   console.log('fetch invoice for', invoiceId)
-  const { data, error } = await supabase.from('invoice').select('*').eq('id', invoiceId).single()
+  const { data, error } = await supabase.from('invoice').select('*, invoice_items(*)').eq('id', invoiceId).single()
 
   if (error) {
     console.log(error)

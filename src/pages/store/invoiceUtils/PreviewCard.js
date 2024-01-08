@@ -13,6 +13,7 @@ import { styled, useTheme } from '@mui/material/styles'
 import TableContainer from '@mui/material/TableContainer'
 import TableCell from '@mui/material/TableCell'
 import Logo from 'src/@core/components/logo/Logo'
+import dayjs from 'dayjs'
 
 // ** Configs
 import themeConfig from 'src/configs/themeConfig'
@@ -32,6 +33,7 @@ const CalcWrapper = styled(Box)(({ theme }) => ({
 }))
 
 const PreviewCard = ({ data }) => {
+  console.log('INVOICE CARD DATA', data)
   // ** Hook
   const theme = useTheme()
   if (data) {
@@ -49,12 +51,13 @@ const PreviewCard = ({ data }) => {
                 </Box>
                 <Box>
                   <Typography variant='body2' sx={{ mb: 1 }}>
-                    1 Seymour Road oldbury
+                    To {data.companyreceivablename}
                   </Typography>
                   <Typography variant='body2' sx={{ mb: 1 }}>
-                    West Midlands, b70 555, United Kingdom
+                    {data.companyreceivableaddress || "New Lufya's Office"}
                   </Typography>
-                  <Typography variant='body2'>+44 (0) 456 7891, +44 (876) 543 2198</Typography>
+                  <Typography variant='body2'>{data.companyreceivablecontactnumber || '0121 5255 378'}</Typography>
+                  <Typography variant='body2'>{data.companyreceivableemail || 'thenewpharmacy@aol.com'}</Typography>
                 </Box>
               </Box>
             </Grid>
@@ -67,7 +70,7 @@ const PreviewCard = ({ data }) => {
                         <Typography variant='h6'>Invoice</Typography>
                       </MUITableCell>
                       <MUITableCell>
-                        <Typography variant='h6'>{`#${data.invoicenumber}`}</Typography>
+                        <Typography variant='h6'>{`#${data.invoice_number}`}</Typography>
                       </MUITableCell>
                     </TableRow>
                     <TableRow>
@@ -75,7 +78,7 @@ const PreviewCard = ({ data }) => {
                         <Typography variant='body2'>Date Issued:</Typography>
                       </MUITableCell>
                       <MUITableCell>
-                        <Typography variant='body2'>{data.dateissued}</Typography>
+                        <Typography variant='body2'>{dayjs(data.dateissues).format('DD MMM YYYY')}</Typography>
                       </MUITableCell>
                     </TableRow>
                     <TableRow>
@@ -83,7 +86,7 @@ const PreviewCard = ({ data }) => {
                         <Typography variant='body2'>Date Due:</Typography>
                       </MUITableCell>
                       <MUITableCell>
-                        <Typography variant='body2'>{data.datedue}</Typography>
+                        <Typography variant='body2'>{dayjs(data.datedue).format('DD MMM YYYY')}</Typography>
                       </MUITableCell>
                     </TableRow>
                   </TableBody>
@@ -133,7 +136,7 @@ const PreviewCard = ({ data }) => {
                           <Typography variant='body2'>Total Due:</Typography>
                         </MUITableCell>
                         <MUITableCell>
-                          <Typography variant='body2'>{data?.ttotalamount}</Typography>
+                          <Typography variant='body2'>{data?.totalamount}</Typography>
                         </MUITableCell>
                       </TableRow>
                       <TableRow>
@@ -146,10 +149,10 @@ const PreviewCard = ({ data }) => {
                       </TableRow>
                       <TableRow>
                         <MUITableCell>
-                          <Typography variant='body2'>Country:</Typography>
+                          <Typography variant='body2'>Account Number:</Typography>
                         </MUITableCell>
                         <MUITableCell>
-                          <Typography variant='body2'>{data?.paymentDetails?.country}</Typography>
+                          <Typography variant='body2'>{data?.accountnumber}</Typography>
                         </MUITableCell>
                       </TableRow>
                       <TableRow>
@@ -162,10 +165,10 @@ const PreviewCard = ({ data }) => {
                       </TableRow>
                       <TableRow>
                         <MUITableCell>
-                          <Typography variant='body2'>SWIFT code:</Typography>
+                          <Typography variant='body2'>sort code:</Typography>
                         </MUITableCell>
                         <MUITableCell>
-                          <Typography variant='body2'>{data?.paymentDetails?.swiftCode}</Typography>
+                          <Typography variant='body2'>{data?.sortcode}</Typography>
                         </MUITableCell>
                       </TableRow>
                     </TableBody>
@@ -182,42 +185,24 @@ const PreviewCard = ({ data }) => {
           <Table>
             <TableHead>
               <TableRow>
-                <TableCell>Item</TableCell>
+                <TableCell>Product Name</TableCell>
                 <TableCell>Description</TableCell>
-                <TableCell>hours</TableCell>
-                <TableCell>qty</TableCell>
-                <TableCell>Total</TableCell>
+                <TableCell>Quantity</TableCell>
+                <TableCell>Unit Price</TableCell>
+                <TableCell>Subtotal</TableCell>
               </TableRow>
             </TableHead>
             <TableBody>
-              <TableRow>
-                <TableCell>Premium Branding Package</TableCell>
-                <TableCell>Branding & Promotion</TableCell>
-                <TableCell>48</TableCell>
-                <TableCell>1</TableCell>
-                <TableCell>$32</TableCell>
-              </TableRow>
-              <TableRow>
-                <TableCell>Social Media</TableCell>
-                <TableCell>Social media templates</TableCell>
-                <TableCell>42</TableCell>
-                <TableCell>1</TableCell>
-                <TableCell>$28</TableCell>
-              </TableRow>
-              <TableRow>
-                <TableCell>Web Design</TableCell>
-                <TableCell>Web designing package</TableCell>
-                <TableCell>46</TableCell>
-                <TableCell>1</TableCell>
-                <TableCell>$24</TableCell>
-              </TableRow>
-              <TableRow>
-                <TableCell>SEO</TableCell>
-                <TableCell>Search engine optimization</TableCell>
-                <TableCell>40</TableCell>
-                <TableCell>1</TableCell>
-                <TableCell>$22</TableCell>
-              </TableRow>
+              {data.invoice_items &&
+                data.invoice_items.map((item, index) => (
+                  <TableRow key={index}>
+                    <TableCell>{item.product_name || 'N/A'}</TableCell>
+                    <TableCell>{item.product_description || 'N/A'}</TableCell>
+                    <TableCell>{item.quantity || 0}</TableCell>
+                    <TableCell>{`£${item.unit_price || 0}`}</TableCell>
+                    <TableCell>{`£${item.subtotal || 0}`}</TableCell>
+                  </TableRow>
+                ))}
             </TableBody>
           </Table>
         </TableContainer>
@@ -241,19 +226,21 @@ const PreviewCard = ({ data }) => {
               <CalcWrapper>
                 <Typography variant='body2'>Subtotal:</Typography>
                 <Typography variant='body2' sx={{ color: 'text.primary', letterSpacing: '.25px', fontWeight: 600 }}>
-                  $1800
+                  {data?.invoice_items?.reduce((acc, item) => {
+                    return acc + item.subtotal
+                  }, 0)}
                 </Typography>
               </CalcWrapper>
               <CalcWrapper>
                 <Typography variant='body2'>Discount:</Typography>
                 <Typography variant='body2' sx={{ color: 'text.primary', letterSpacing: '.25px', fontWeight: 600 }}>
-                  $28
+                  {data?.discount || 0}
                 </Typography>
               </CalcWrapper>
               <CalcWrapper>
                 <Typography variant='body2'>Tax:</Typography>
                 <Typography variant='body2' sx={{ color: 'text.primary', letterSpacing: '.25px', fontWeight: 600 }}>
-                  21%
+                  0%
                 </Typography>
               </CalcWrapper>
               <Divider
@@ -262,7 +249,10 @@ const PreviewCard = ({ data }) => {
               <CalcWrapper>
                 <Typography variant='body2'>Total:</Typography>
                 <Typography variant='body2' sx={{ color: 'text.primary', letterSpacing: '.25px', fontWeight: 600 }}>
-                  $1690
+                  {'£' +
+                    data?.invoice_items?.reduce((acc, item) => {
+                      return acc + item.subtotal
+                    }, 0)}
                 </Typography>
               </CalcWrapper>
             </Grid>

@@ -26,9 +26,9 @@ function OrdersTable({ orders, onOrderClick, orgId }) {
                 {isCurrentUserBuyer(order) ? 'Buying' : isCurrentUserSeller(order) ? 'Selling' : ''}
               </TableCell>
               <TableCell>{new Date(order.order_date).toLocaleDateString()}</TableCell>
-              <TableCell>{order.items?.name}</TableCell>
+              <TableCell>{order.product_id?.name}</TableCell>
               <TableCell>{order.quantity}</TableCell>
-              <TableCell>{order.order_status}</TableCell>
+              <TableCell>{order.job_pipeline?.order_status}</TableCell>
               <TableCell>{order.seller_id?.organisation_name}</TableCell>
               <TableCell>
                 <button onClick={() => onOrderClick(order.id)}>View Details</button>

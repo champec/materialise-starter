@@ -15,30 +15,43 @@ const initialState = {
   previousItem: undefined // Added to keep track of previous state for rollback
 }
 
-export const fetchInventory = createAsyncThunk('inventory/fetchInventory', async (page, thunkAPI) => {
-  const { pageSize, sortColumn, sort, searchValue } = thunkAPI.getState().inventorySlice
+export const fetchInventory = createAsyncThunk('inventory/fetchInventory', async (args, thunkAPI) => {
+  const { sortModel = [], searchValue = '', searchField = 'name' } = args
+  const { pageSize, currentPage } = thunkAPI.getState().inventorySlice
   const userId = thunkAPI.getState().organisation.organisation.id
-  const query = supabaseOrg
-    .from('shop_products')
-    .select('*', { count: 'exact' })
-    .eq('pharmacy_id', userId)
-    .ilike(sortColumn, `%${searchValue}%`)
-    .order(sortColumn, { ascending: sort === 'asc' })
-  const { data, error, count } = await query.range(0, -1)
-  if (error) {
-    console.log(error)
-    throw Error(error)
+
+  // Set defaults if sortModel is not provided or empty
+  const sortField = sortModel.length > 0 ? sortModel[0].field : 'name'
+  const sortOrder = sortModel.length > 0 ? sortModel[0].sort === 'asc' : true
+
+  console.log('we are sorting by', sortField, sortOrder)
+  try {
+    // Construct the query with sorting, searching, and pagination
+    let query = supabaseOrg
+      .from('shop_products')
+      .select('*', { count: 'exact' })
+      .eq('pharmacy_id', userId)
+      .ilike(searchField, `%${searchValue}%`)
+      .order(sortField, { ascending: sortOrder })
+
+    // Execute the query for all items to get total count
+    const { data, error, count } = await query.range(0, -1)
+    if (error) throw error
+
+    // Calculate the correct pagination range
+    const start = (currentPage - 1) * pageSize
+    const end = start + pageSize - 1
+    const { data: paginatedData, error: paginationError } = await query.range(start, end)
+    if (paginationError) throw paginationError
+
+    console.log('fetchInventory', paginatedData)
+    // Return the paginated data and total count
+    return { data: paginatedData, total: count }
+  } catch (error) {
+    // Handle errors like network issues, etc.
+    console.error('Error fetching inventory:', error)
+    return thunkAPI.rejectWithValue(error.message || 'Error fetching inventory')
   }
-  const totalPages = Math.ceil(count / pageSize)
-  if (page >= totalPages) {
-    page = totalPages - 1
-  }
-  const { data: paginatedData, error: paginationError } = await query.range(page * pageSize, (page + 1) * pageSize - 1)
-  if (paginationError) {
-    console.log(paginationError)
-    throw Error(paginationError)
-  }
-  return { data: paginatedData, total: count }
 })
 
 export const createItem = createAsyncThunk('inventory/createItem', async (item, thunkAPI) => {

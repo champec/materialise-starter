@@ -18,6 +18,9 @@ import {
 } from 'src/store/apps/chat'
 import { fetchUserChats, selectChat } from 'src/store/apps/chat'
 
+import withReducer from 'src/@core/HOC/withReducer'
+import chat from 'src/store/apps/chat'
+import network from 'src/store/network'
 // ** Hooks
 import { useSettings } from 'src/@core/hooks/useSettings'
 import { useRouter } from 'next/router'
@@ -180,4 +183,7 @@ const AppChat = () => {
 }
 AppChat.contentHeightFixed = true
 
-export default AppChat
+export default withReducer({
+  chat: chat,
+  network: network
+})(AppChat)

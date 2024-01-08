@@ -32,7 +32,7 @@ const ToDoAccordion = ({ tasks, handleSelectTask, selectedTasks }) => {
             expandIcon={<Icon icon='mdi:chevron-down' />}
           >
             <FormControlLabel
-              label={`${task.jobPipeline.action} for ${task.entity_type} ${task.entity.id}`}
+              label={`${task.jobPipeline.action} for ${task.entity_type} ${task.entity?.id}`}
               aria-label='Acknowledge'
               control={
                 <Checkbox

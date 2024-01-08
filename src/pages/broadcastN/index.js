@@ -1,5 +1,7 @@
 // ** React Imports
 import { Fragment, useEffect, useState } from 'react'
+import withReducer from 'src/@core/HOC/withReducer'
+import conversationsSlice from 'src/store/apps/email/conversationsSlice'
 
 // ** MUI Imports
 import Box from '@mui/material/Box'
@@ -21,7 +23,6 @@ const FAQ = ({ apiData }) => {
   const [data, setData] = useState(data2)
   const [searchTerm, setSearchTerm] = useState('')
   const [activeTab, setActiveTab] = useState('tab2')
- 
 
   const handleChange = (event, newValue) => {
     setActiveTab(newValue)
@@ -42,8 +43,6 @@ const FAQ = ({ apiData }) => {
     </Fragment>
   )
 }
-
-
 
 const data2 = {
   faqData: {
@@ -94,4 +93,4 @@ const data2 = {
   }
 }
 
-export default FAQ
+export default withReducer('conversations', conversationsSlice)(FAQ)

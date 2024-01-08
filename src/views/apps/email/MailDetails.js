@@ -84,6 +84,8 @@ const MailDetails = props => {
   // ** Hook
   const { settings } = useSettings()
 
+  console.log({ mail })
+
   const handleMoveToTrash = () => {
     dispatch(updateMail({ emailIds: [mail.id], dataToUpdate: { folder: 'trash' } }))
     setMailDetailsOpen(false)
@@ -457,14 +459,14 @@ const MailDetails = props => {
                     >
                       <Box sx={{ display: 'flex', alignItems: 'center' }}>
                         <Avatar
-                          alt={mail.profiles.organisation_name}
-                          src={mail.profiles.avatar_url}
+                          alt={mail.profiles?.organisation_name}
+                          src={mail.profiles?.avatar_url}
                           sx={{ width: '2.375rem', height: '2.375rem', mr: 3 }}
                         />
                         <Box sx={{ display: 'flex', flexDirection: 'column' }}>
-                          <Typography sx={{ color: 'text.secondary' }}>{mail.profiles.organisation_name}</Typography>
+                          <Typography sx={{ color: 'text.secondary' }}>{mail.profiles?.organisation_name}</Typography>
                           <Typography variant='body2' sx={{ color: 'text.disabled' }}>
-                            {mail.profiles.organisation_name}
+                            {mail.profiles?.organisation_name}
                           </Typography>
                         </Box>
                       </Box>

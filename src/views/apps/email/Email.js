@@ -4,6 +4,9 @@ import Inbox from 'src/pages/broadcast/inbox'
 import Sent from 'src/pages/broadcast/sent'
 import Draft from 'src/pages/broadcast/draft'
 import BroadCastComposer from '../broadcast/BroadCastComposer'
+import withReducer from 'src/@core/HOC/withReducer'
+import conversationsSlice from 'src/store/apps/email/conversationsSlice'
+import network from 'src/store/network'
 
 // ** Redux Imports
 import { useDispatch, useSelector } from 'react-redux'
@@ -161,4 +164,6 @@ const EmailAppLayout = ({ folder, label }) => {
   )
 }
 
-export default EmailAppLayout
+// export default withReducer('conversations', conversationsSlice)(EmailAppLayout)
+
+export default withReducer({ network: network, conversations: conversationsSlice })(EmailAppLayout)

@@ -20,6 +20,7 @@ import FormControl from '@mui/material/FormControl'
 import CardContent from '@mui/material/CardContent'
 import { DataGrid } from '@mui/x-data-grid'
 import Select from '@mui/material/Select'
+import dayjs from 'dayjs'
 
 // ** Icon Imports
 import Icon from 'src/@core/components/icon'
@@ -43,6 +44,7 @@ import TableHeader from 'src/views/apps/invoice/list/TableHeader'
 
 // ** Styled Components
 import DatePickerWrapper from 'src/@core/styles/libs/react-datepicker'
+import organisation from 'src/store/auth/organisation'
 
 // ** Styled component for the link in the dataTable
 const StyledLink = styled(Link)(({ theme }) => ({
@@ -71,7 +73,7 @@ const renderClient = row => {
         color={row.avatarColor || 'primary'}
         sx={{ mr: 3, fontSize: '1rem', width: 34, height: 34 }}
       >
-        {getInitials(row.name || 'John Doe')}
+        {getInitials(row.companyreceivablename || 'The Chemist')}
       </CustomAvatar>
     )
   }
@@ -88,16 +90,16 @@ const defaultColumns = [
   {
     flex: 0.1,
     minWidth: 80,
-    field: 'invoiceStatus',
+    field: 'invoiceType',
     renderHeader: () => (
       <Box sx={{ display: 'flex', color: 'action.active' }}>
-        <Icon icon='mdi:trending-up' fontSize={20} />
+        <Typography variant='body2'>Invoice Type</Typography>
       </Box>
     ),
     renderCell: ({ row }) => {
       const { dueDate, balance, invoiceStatus } = row
       const color = invoiceStatusObj[invoiceStatus] ? invoiceStatusObj[invoiceStatus].color : 'primary'
-
+      const invoiceType = (row.sending_pharmacy_id = organisation.id ? 'Sending' : 'Receiving')
       return (
         <Tooltip
           title={
@@ -118,9 +120,7 @@ const defaultColumns = [
             </div>
           }
         >
-          <CustomAvatar skin='light' color={color} sx={{ width: 34, height: 34 }}>
-            <Icon icon={invoiceStatusObj[invoiceStatus]?.icon} fontSize='1.25rem' />
-          </CustomAvatar>
+          <CustomChip size='small' color={color} label={invoiceType} />
         </Tooltip>
       )
     }
@@ -142,10 +142,10 @@ const defaultColumns = [
               variant='body2'
               sx={{ color: 'text.primary', fontWeight: 500, lineHeight: '22px', letterSpacing: '.1px' }}
             >
-              {name}
+              {row.companyreceivablename}
             </Typography>
             <Typography noWrap variant='caption'>
-              {companyEmail}
+              {row.companyreceivableemail}
             </Typography>
           </Box>
         </Box>
@@ -157,24 +157,24 @@ const defaultColumns = [
     minWidth: 90,
     field: 'total',
     headerName: 'Total',
-    renderCell: ({ row }) => <Typography variant='body2'>{`$${row.total || 0}`}</Typography>
+    renderCell: ({ row }) => <Typography variant='body2'>{`£${row.totalamount || 0}`}</Typography>
   },
   {
     flex: 0.15,
     minWidth: 125,
     field: 'issuedDate',
     headerName: 'Issued Date',
-    renderCell: ({ row }) => <Typography variant='body2'>{row.issuedDate}</Typography>
+    renderCell: ({ row }) => <Typography variant='body2'>{dayjs(row.dateissued).format('DD MMM YYYY')}</Typography>
   },
   {
     flex: 0.1,
     minWidth: 90,
-    field: 'balance',
-    headerName: 'Balance',
+    field: 'status',
+    headerName: 'Status',
     renderCell: ({ row }) => {
       return row.balance !== 0 ? (
         <Typography variant='body2' sx={{ color: 'text.primary' }}>
-          {row.balance}
+          {row.invoicestatus}
         </Typography>
       ) : (
         <CustomChip size='small' skin='light' color='success' label='Paid' />

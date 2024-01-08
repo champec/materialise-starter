@@ -59,7 +59,7 @@ function OrderDetails({ onBackClick, orderData, tasks }) {
               Seller: {orderData.seller_id.organisation_name}
             </Typography>
             <Typography variant='body2' color='text.secondary'>
-              Item: {orderData.items?.name}
+              Item: {orderData.product_id?.name}
             </Typography>
             <Typography variant='body2' color='text.secondary'>
               Job Pipeline: {orderData.job_pipeline?.order_status}
