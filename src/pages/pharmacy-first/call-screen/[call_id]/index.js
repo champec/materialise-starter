@@ -12,7 +12,7 @@ import { EditorState } from 'draft-js'
 import CustomSnackbar from 'src/views/apps/Calendar/services/pharmacy-first/CustomSnackBar'
 import NmsForm from 'src/pages/services/nms/NmsSidebar'
 import DmsForm from 'src/pages/services/dms/DmsSidebar'
-import { initialState } from 'src/pages/services/nms/initState'
+import { initialState } from 'src/views/apps/Calendar/services/nms/initState'
 
 const videoScreenStyles = {
   width: '100%',

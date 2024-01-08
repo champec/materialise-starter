@@ -11,7 +11,7 @@ import Scr from 'src/pages/pharmacy-first/call-screen/[call_id]/Scr'
 import { EditorState } from 'draft-js'
 import NmsSidebar from '../../nms/NmsSidebar'
 import DmsForm from '../../dms/DmsSidebar'
-import { initialState } from '../../nms/initState'
+import { initialState } from '../../../../views/apps/Calendar/services/nms/initState'
 
 const videoScreenStyles = {
   width: '100%',
