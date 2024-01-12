@@ -21,6 +21,7 @@ import {
   updateViewDates
 } from 'src/store/apps/calendar/pharmacyfirst/bookingsCalendarSlice'
 import { fetchSelectedBooking } from 'src/store/apps/calendar/pharmacyfirst/appointmentListSlice'
+import { setSelectedService } from 'src/store/apps/services'
 
 // ** Hooks
 import { useSettings } from 'src/@core/hooks/useSettings'
@@ -147,6 +148,7 @@ const AppCalendar = ({ addCalendarType, updateCalendarType, deleteCalendarType }
           handleAddCalendarSidebarToggle={handleAddCalendarSidebarToggle}
           handleAddBookingSidebarToggle={handleAddBookingSidebarToggle}
           fetchSelectedBooking={fetchSelectedBooking}
+          setSelectedService={setSelectedService}
           appointment
         />
       </Box>

@@ -20,7 +20,7 @@ function ServiceSelectorModal({ open, onClose, calendarTypes, dispatch, handleAd
         {calendarTypes &&
           calendarTypes.map(calendarType => (
             <MenuList sx={{ mb: 2 }}>
-              <MenuItem onClick={() => onMenuItemClick(calendarType.title)}>{calendarType.title}</MenuItem>
+              <MenuItem onClick={() => onMenuItemClick(calendarType)}>{calendarType.title}</MenuItem>
             </MenuList>
           ))}
       </Card>

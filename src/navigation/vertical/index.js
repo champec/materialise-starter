@@ -70,13 +70,31 @@ const navigation = (role, plan) => {
         },
         {
           title: 'NMS',
-          path: '/services/nms',
+          path: '/services/nms?service=NMS',
           icon: 'game-icons:medicine-pills',
           disabled: false
         },
         {
           title: 'DMS',
-          path: '/services/dms',
+          path: '/services/dms?service=DMS',
+          icon: 'bi:hospital-fill',
+          disabled: false
+        },
+        {
+          title: 'HTN',
+          path: '/services/htn?service=HTN',
+          icon: 'bi:hospital-fill',
+          disabled: false
+        },
+        {
+          title: 'PFS',
+          path: '/services/pfs?service=Pharmacy First',
+          icon: 'bi:hospital-fill',
+          disabled: false
+        },
+        {
+          title: 'FLU',
+          path: '/services/flu?service=Flu Jab',
           icon: 'bi:hospital-fill',
           disabled: false
         }

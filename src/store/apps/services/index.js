@@ -1,4 +1,5 @@
 import { createAsyncThunk, createSlice } from '@reduxjs/toolkit'
+import { supabase } from 'src/configs/supabase'
 
 export const fetchGPs = createAsyncThunk('services/fetchGPs', async (searchTerm, thunkAPI) => {
   const NHS_API_ENDPOINT = 'https://api.nhs.uk/service-search'
@@ -32,12 +33,31 @@ export const fetchGPs = createAsyncThunk('services/fetchGPs', async (searchTerm,
   }
 })
 
+export const fetchServiceTableInfo = createAsyncThunk(
+  'services/fetchServiceTableInfo',
+  async ({ consultation_id, table }, thunkAPI) => {
+    try {
+      const { data, error } = await supabase.from(table).select('*').eq('consultation_id', consultation_id)
+
+      if (error) {
+        console.error(error)
+        throw new Error(error)
+      }
+
+      return data
+    } catch (error) {
+      console.error(error)
+    }
+  }
+)
+
 const servicesSlice = createSlice({
   name: 'services',
   initialState: {
     selectedService: null,
     gps: [],
-    selectedGP: null
+    selectedGP: null,
+    selectedServiceTableInfo: null
   },
 
   // create a thunk to search nhs gps
@@ -57,6 +77,15 @@ const servicesSlice = createSlice({
     },
     [fetchGPs.pending]: (state, action) => {
       console.log('fetchGPs pending', action)
+    },
+    [fetchServiceTableInfo.fulfilled]: (state, action) => {
+      state.selectedServiceTableInfo = action.payload
+    },
+    [fetchServiceTableInfo.rejected]: (state, action) => {
+      console.log('fetchServiceTableInfo rejected', action)
+    },
+    [fetchServiceTableInfo.pending]: (state, action) => {
+      console.log('fetchServiceTableInfo pending', action)
     }
   }
 })

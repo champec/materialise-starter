@@ -6,7 +6,7 @@ const supabase = supabaseOrg
 
 export const fetchAppointments = createAsyncThunk(
   'appointmentList/fetchAppointments',
-  async ({ dateRange, type, table }, { getState }) => {
+  async ({ dateRange, type, table, service_id, service_table }, { getState }) => {
     const orgId = getState().organisation.organisation.id
 
     // Set default start and end dates to 2 weeks before and after today
@@ -14,14 +14,19 @@ export const fetchAppointments = createAsyncThunk(
     const defaultEndDate = dayjs().add(2, 'week').endOf('day').toISOString()
 
     // Extract startDate and endDate from dateRange if provided, else use defaults
-    const { startDate = defaultStartDate, endDate = defaultEndDate } = dateRange || {}
+    const { start = defaultStartDate, end = defaultEndDate } = dateRange || {}
 
     // Define the base select query
-    let selectQuery = '*, consultation_status(*), calendar_events!calendar_events_booking_id_fkey(*), sms_threads(id)'
+    let selectQuery =
+      '*, consultation_status(*), calendar_events!calendar_events_booking_id_fkey!inner(*), sms_threads(id)'
 
     // Add table to the select query if it's provided
     if (table) {
       selectQuery += `, ${table}(*)`
+    }
+
+    if (service_table) {
+      selectQuery += `, ${service_table}(*)`
     }
 
     // Initialize the query builder
@@ -29,13 +34,17 @@ export const fetchAppointments = createAsyncThunk(
       .from('consultations')
       .select(selectQuery)
       .eq('pharmacy_id', orgId)
-      .gte('calendar_events.start', startDate)
-      .lte('calendar_events.end', endDate)
+      .gte('calendar_events.start', start)
+      .lte('calendar_events.end', end)
       .order('start', { foreignTable: 'calendar_events', ascending: true })
 
     // Add service conditionally
     if (type) {
       query = query.eq('service', type)
+    }
+
+    if (service_id) {
+      query = query.eq('service_id', service_id)
     }
 
     // Execute the query
@@ -282,6 +291,25 @@ export const sendEmailThunk = createAsyncThunk(
   }
 )
 
+export const updateSelectedBookingService = createAsyncThunk(
+  'appointmentList/updateSelectedBookingService',
+  async ({ bookingId, serviceTable, serviceInfo }) => {
+    const { data, error } = await supabase
+      .from(serviceTable)
+      .update(serviceInfo)
+      .eq('consultation_id', bookingId)
+      .select('*')
+
+    if (error) {
+      console.error(error)
+      throw error // Consider throwing the error to be handled by Redux Toolkit
+    }
+
+    console.log('updateSelectedBookingService', data)
+    return { data, serviceTable, bookingId }
+  }
+)
+
 export const fetchSelectedBooking = createAsyncThunk('appointmentList/fetchSelectedBooking', async bookingId => {
   const { data, error } = await supabase
     .from('consultations')
@@ -304,7 +332,8 @@ const initialState = {
   pdsPatient: null,
   selectedPatient: null,
   selectedBooking: null,
-  loadingSelectedBooking: false
+  loadingSelectedBooking: false,
+  loadingServiceUpdate: false
 }
 
 export const appointmnetListSlice = createSlice({
@@ -337,6 +366,24 @@ export const appointmnetListSlice = createSlice({
     },
     [fetchSelectedBooking.rejected]: (state, action) => {
       state.loadingSelectedBooking = false
+    },
+    [updateSelectedBookingService.fulfilled]: (state, action) => {
+      const { data, serviceTableName, bookingId } = action.payload
+      const updatedAppointments = state.appointments.map(appointment => {
+        if (appointment.id === bookingId) {
+          appointment[serviceTableName] = data
+        }
+        return appointment
+      })
+
+      state.appointments = updatedAppointments
+      state.loadingServiceUpdate = false
+    },
+    [updateSelectedBookingService.pending]: (state, action) => {
+      state.loadingServiceUpdate = true
+    },
+    [updateSelectedBookingService.rejected]: (state, action) => {
+      state.loadingServiceUpdate = false
     }
   }
 })

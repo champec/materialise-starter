@@ -20,21 +20,13 @@ function index({
 
   console.log('serviceInfo', serviceInfo)
 
-  const handleDobChange = date => {
-    // setServiceInfo({ ...serviceInfo, dob: date })
-    const age = dayjs().diff(date, 'year')
-    console.log('age', age)
-    setServiceInfo({ ...serviceInfo, dob: date, age })
-  }
-
-  const handleTakenDateChange = date => {
-    setServiceInfo({ ...serviceInfo, taken_date: date })
+  const handleExpiryChange = date => {
+    setServiceInfo({ ...serviceInfo, expiry_date: date })
   }
 
   useEffect(() => {
     if (!serviceInfo || Object.keys(serviceInfo).length === 0) {
-      // Initialize serviceInfo with default values if it's empty
-      setServiceInfo({ dob: null, taken_date: null, age: '' })
+      setServiceInfo({ expiry_date: null, flu_jab: '', batch_number: '' })
     }
     setLoading(false)
   }, [serviceInfo, setServiceInfo])
@@ -49,15 +41,22 @@ function index({
         <Stack spacing={4}>
           <Box sx={{ mb: 4 }}>
             <Typography variant='body2' sx={{ fontWeight: 600, color: 'text.primary' }}>
-              Hypertension case finding
+              Flu Jab
             </Typography>
           </Box>
 
           <Box container spacing={5}>
+            <TextField
+              label='Flu Jab (Brand)'
+              value={serviceInfo.flu_jab}
+              onChange={e => setServiceInfo({ ...serviceInfo, flu_jab: e.target.value })}
+              fullWidth
+              style={{ marginBottom: '2rem' }}
+            />
             {/* Date of Birth Picker */}
             <TextField
-              label='Date of Birth'
-              value={serviceInfo.dob ? dayjs(serviceInfo.dob).format('YYYY-MM-DD') : ''}
+              label='Expiry Date'
+              value={serviceInfo.expiry_date ? dayjs(serviceInfo.expiry_date).format('YYYY-MM-DD') : ''}
               onClick={() => setDatePickerOpen(true)}
               fullWidth
               style={{ marginBottom: '2rem' }}
@@ -66,8 +65,8 @@ function index({
               <StaticDatePicker
                 displayStaticWrapperAs='mobile'
                 openTo='day'
-                value={serviceInfo.dob}
-                onChange={handleDobChange}
+                value={serviceInfo.expiry_date}
+                onChange={handleExpiryChange}
                 onClose={() => setDatePickerOpen(false)}
                 renderInput={params => <TextField {...params} />}
               />
@@ -75,25 +74,12 @@ function index({
 
             {/* Taken Date Picker */}
             <TextField
-              label='Taken Date'
-              value={serviceInfo.taken_date ? dayjs(serviceInfo.taken_date).format('YYYY-MM-DD') : ''}
-              onClick={() => setTakenDatePickerOpen(true)}
+              label='Batch Number'
+              value={serviceInfo.batch_number}
+              onChange={e => setServiceInfo({ ...serviceInfo, batch_number: e.target.value })}
               fullWidth
               style={{ marginBottom: '2rem' }}
             />
-            <Dialog open={takenDatePickerOpen} onClose={() => setTakenDatePickerOpen(false)}>
-              <StaticDatePicker
-                displayStaticWrapperAs='mobile'
-                openTo='day'
-                value={serviceInfo.taken_date}
-                onChange={handleTakenDateChange}
-                onClose={() => setTakenDatePickerOpen(false)}
-                renderInput={params => <TextField {...params} />}
-              />
-            </Dialog>
-
-            {/* Age */}
-            <TextField label='Age' value={serviceInfo.age} disabled fullWidth />
           </Box>
         </Stack>
 

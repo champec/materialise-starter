@@ -28,14 +28,18 @@ import { handleSelectEvent } from 'src/store/apps/calendar/pharmacyfirst/booking
 import withReducer from 'src/@core/HOC/withReducer'
 import services from 'src/store/apps/services'
 import appointmentListSlice from 'src/store/apps/calendar/pharmacyfirst/appointmentListSlice'
+import { fetchServiceTableInfo } from 'src/store/apps/services'
+import { updateSelectedBookingService } from 'src/store/apps/calendar/pharmacyfirst/appointmentListSlice'
 
 // ** Icon Imports
 import Icon from 'src/@core/components/icon'
 
 // ** import forms
-import BookDMSform from './services/dms/BookDMSform'
-import BookNMSform from './services/nms/BookNMSform'
-import BookFluform from './services/flu/BookFluform'
+import NMServiceForm from './services/nms-vf/NMServiceForm'
+import DMServiceForm from './services/dms-vf/DMServiceForm'
+import FLUServiceForm from './services/flu-vf/FLUServiceForm'
+import HTNServiceForm from './services/htn/HTNServiceForm'
+import PFSServiceForm from './services/pharmacy-first-vf/PFSServiceForm'
 
 // ** Styled Components
 import DatePickerWrapper from 'src/@core/styles/libs/react-datepicker'
@@ -55,7 +59,79 @@ const defaultState = {
   recurrenceEndDate: null // Added recurrenceEndDate to state
 }
 
-const BookCalendarSidebar = props => {
+const getSelectedForm = (
+  selectedService,
+  serviceInfo,
+  setServiceInfo,
+  onServiceSubmit,
+  onServiceUpdate,
+  loadingServiceUpdate
+) => {
+  console.log('getSelectedForm', { serviceInfo, loadingServiceUpdate })
+  // serviceInfo is an empty object the show loading
+  if (!serviceInfo || Object.keys(serviceInfo).length === 0 || loadingServiceUpdate || !selectedService) {
+    return <div>Loading...</div>
+  }
+  const title = capitalize(selectedService.title)
+  switch (title) {
+    case 'DMS':
+      return (
+        <DMServiceForm
+          onServiceUpdate={onServiceUpdate}
+          state={serviceInfo}
+          setState={setServiceInfo}
+          onSubmit={onServiceSubmit}
+        />
+      )
+    case 'NMS':
+      return (
+        <NMServiceForm
+          onServiceUpdate={onServiceUpdate}
+          state={serviceInfo}
+          setState={setServiceInfo}
+          onSubmit={onServiceSubmit}
+        />
+      )
+    case 'FLU':
+      return (
+        <FLUServiceForm
+          onServiceUpdate={onServiceUpdate}
+          state={serviceInfo}
+          setState={setServiceInfo}
+          onSubmit={onServiceSubmit}
+        />
+      )
+    case 'PFS':
+      return (
+        <PFSServiceForm
+          onServiceUpdate={onServiceUpdate}
+          state={serviceInfo}
+          setState={setServiceInfo}
+          onSubmit={onServiceSubmit}
+        />
+      )
+    case 'HTN':
+      return (
+        <HTNServiceForm
+          onServiceUpdate={onServiceUpdate}
+          state={serviceInfo}
+          setState={setServiceInfo}
+          onSubmit={onServiceSubmit}
+        />
+      )
+    default:
+      return (
+        <PFSServiceForm
+          onServiceUpdate={onServiceUpdate}
+          state={serviceInfo}
+          setState={setServiceInfo}
+          onSubmit={onServiceSubmit}
+        />
+      )
+  }
+}
+
+const ServiceFormSidebar = props => {
   // ** Props
   const {
     // store,
@@ -66,27 +142,48 @@ const BookCalendarSidebar = props => {
     calendarApi,
     deleteEvent,
     // handleSelectEvent,
-    addBookingSidebarOpen,
-    handleAddBookingSidebarToggle,
+    serviceFormSidebarOpen,
+    handleServiceFormSidebarToggle,
     // selectedService
     zIndex = 1300,
     resetToEmptyValues,
     setResetToEmptyValues,
-    refetchAppointments
+    serviceTable
   } = props
 
   // ** States
   const [values, setValues] = useState(defaultState)
   const [isRecurring, setIsRecurring] = useState(false)
   const [editAllInstances, setEditAllInstances] = useState(false)
+  const [serviceInfo, setServiceInfo] = useState({})
   const orgId = useSelector(state => state.organisation.organisation.id)
   const selectedService = useSelector(state => state.services.selectedService)
+  const initServiceInfo = useSelector(state => state.services.serviceInfo)
   const store = useSelector(state => state.appointmentListSlice)
-  const storeChecker = useSelector(state => state)
+  const loadingServiceUpdate = store?.loadingServiceUpdate
+  const selectedBooking = store?.selectedBooking
+  // const storeChecker = useSelector(state => state)
   const userId = useUserAuth()?.user?.id
 
-  console.log('storeChecker', storeChecker, { store })
-  // console.log('selectedService', selectedService)
+  console.log('serviceInfo from ServiceSidebar', selectedBooking)
+
+  const onServiceSubmit = () => {
+    console.log('onServiceSubmit', { selectedBooking })
+  }
+
+  useEffect(() => {
+    if (selectedBooking) {
+      const table = selectedBooking[serviceTable]
+      console.log('fetchServiceTableInfo', { table, serviceTable })
+      setServiceInfo(table)
+    }
+  }, [selectedBooking, selectedService])
+
+  const onServiceUpdate = (serviceObject = serviceInfo) => {
+    const bookingId = selectedBooking.id
+    console.log('onServiceUpdate', { serviceObject })
+    dispatch(updateSelectedBookingService({ bookingId, serviceTable, serviceInfo: serviceObject }))
+  }
 
   const {
     control,
@@ -97,40 +194,12 @@ const BookCalendarSidebar = props => {
   } = useForm({ defaultValues: { title: '' } })
 
   const handleSidebarClose = async () => {
+    onServiceUpdate()
     setValues(defaultState)
     clearErrors()
     dispatch(handleSelectEvent(null))
-    handleAddBookingSidebarToggle()
+    handleServiceFormSidebarToggle()
   }
-
-  // const onSubmit = (data, isRecurring) => {
-  //   const modifiedEvent = {
-  //     url: values.url,
-  //     display: 'block',
-  //     title: data.title,
-  //     end: isRecurring ? values.startDate : values.endDate,
-  //     allDay: values.allDay,
-  //     start: values.startDate,
-  //     created_by: userId,
-  //     company_id: orgId,
-  //     calendarType: values.calendar,
-  //     recurrenceFrequency: isRecurring ? values.recurrenceFrequency : null,
-  //     recurrenceEndDate: isRecurring ? values.endDate : values.startDate,
-  //     extendedProps: {
-  //       calendar: values.calendar,
-  //       guests: values.guests && values.guests.length ? values.guests : undefined,
-  //       description: values.description.length ? values.description : undefined
-  //     }
-  //   }
-
-  //   if (store.selectedbooking === null || (store.selectedbooking !== null && !store.selectedbooking.title.length)) {
-  //     dispatch(addEvent({ modifiedEvent, orgId }, 'ADD EVENT!!!'))
-  //   } else {
-  //     dispatch(updateEvent({ event: { id: store.selectedbooking.id, ...modifiedEvent }, orgId: orgId }))
-  //   }
-  //   calendarApi.refetchEvents()
-  //   handleSidebarClose()
-  // }
 
   const handleDeleteEvent = () => {
     if (store.selectedbooking) {
@@ -250,7 +319,7 @@ const BookCalendarSidebar = props => {
     <LocalizationProvider dateAdapter={AdapterDayjs}>
       <Drawer
         anchor='right'
-        open={addBookingSidebarOpen}
+        open={serviceFormSidebarOpen}
         onClose={handleSidebarClose}
         ModalProps={{ keepMounted: true }}
         sx={{ '& .MuiDrawer-paper': { width: ['100%', drawerWidth] }, zIndex: zIndex }}
@@ -284,12 +353,14 @@ const BookCalendarSidebar = props => {
         </Box>
         <Box className='sidebar-body' sx={{ p: theme => theme.spacing(5, 6) }}>
           <DatePickerWrapper>
-            <NewBookingForm
-              resetToEmptyValues={resetToEmptyValues}
-              onClose={handleSidebarClose}
-              selectedService={selectedService}
-              setResetToEmptyValues={setResetToEmptyValues}
-            />
+            {getSelectedForm(
+              selectedService,
+              serviceInfo,
+              setServiceInfo,
+              onServiceSubmit,
+              onServiceUpdate,
+              loadingServiceUpdate
+            )}
           </DatePickerWrapper>
         </Box>
       </Drawer>
@@ -298,4 +369,4 @@ const BookCalendarSidebar = props => {
 }
 
 // export default BookCalendarSidebar
-export default withReducer({ services: services, appointmentListSlice: appointmentListSlice })(BookCalendarSidebar)
+export default withReducer({ services: services, appointmentList: appointmentListSlice })(ServiceFormSidebar)

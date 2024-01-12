@@ -43,7 +43,8 @@ const Calendar = props => {
     handleAddBookingSidebarToggle,
     timeSlotType,
     appointment,
-    fetchSelectedBooking
+    fetchSelectedBooking,
+    setSelectedService
   } = props
 
   // ** Refs
@@ -102,11 +103,13 @@ const Calendar = props => {
             ? Docs: https://fullcalendar.io/docs/navLinks
           */
       navLinks: true,
-      eventClassNames({ event: calendarEvent }) {
+      eventClassNames({ event }) {
         // @ts-ignore
         // const colorName = calendarsColor[calendarEvent._def.extendedProps.calendar]
 
-        const colorName = calendarEvent._def.extendedProps.color
+        const colorName = event._def.extendedProps.calendar_types.color
+
+        console.log('colorName', colorName, event)
 
         return [
           // Background Color
@@ -116,11 +119,15 @@ const Calendar = props => {
       eventClick({ event: clickedEvent, jsEvent }) {
         jsEvent.preventDefault() // Prevents going to the URL
         const eventId = clickedEvent?._def.extendedProps?.booking_id
+        const selectedService = clickedEvent?._def.extendedProps.calendar_types
+
+        console.log('clickedEvent', clickedEvent)
         // if (eventId) {
         //   window.open(`/apps/appointment-scheduler/${eventId}`, '_blank')
         // }
         if (eventId) {
           dispatch(fetchSelectedBooking(eventId))
+          dispatch(setSelectedService(selectedService))
           handleAddBookingSidebarToggle(eventId)
         } else {
           dispatch(handleSelectEvent(clickedEvent))

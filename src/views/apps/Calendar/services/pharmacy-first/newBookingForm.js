@@ -36,7 +36,13 @@ import Icon from 'src/@core/components/icon'
 
 // RTK imports
 import { useDispatch, useSelector } from 'react-redux'
-import { createBooking, addEvent } from 'src/store/apps/calendar/pharmacyfirst/bookingsCalendarSlice'
+import {
+  createBooking,
+  addEvent,
+  updateBooking,
+  updateEvent,
+  simpleEventUpdate
+} from 'src/store/apps/calendar/pharmacyfirst/bookingsCalendarSlice'
 import {
   appendMessageToThread,
   createThreadAndSendSMS,
@@ -63,6 +69,13 @@ import CapturePersonalInfo from '../commonformelements/CapturePersonalInfo'
 // ** supabase
 import { supabase } from 'src/configs/supabase'
 import AddNewPharmacistForm from './AddNewPharmacistForm'
+
+// ** Variable form fields
+import PharmacyFirstVariableForm from '../pharmacy-first-vf'
+import NmsVariableForm from '../nms-vf'
+import DmsVariableForm from '../dms-vf'
+import BookHTNform from '../htn/BookHTNform'
+import FluVariableForm from '../flu-vf'
 
 const CustomInput = forwardRef(({ ...props }, ref) => {
   return <TextField inputRef={ref} label='Date' {...props} />
@@ -131,12 +144,12 @@ const accountSchema = yup.object().shape({
 })
 
 const bookingSchema = yup.object().shape({
-  clinicalPathway: yup.string().required(),
-  pharmacist: yup.object().required(),
-  startDate: yup.string().required(),
-  duration: yup.string().required(),
-  textMessage: yup.string().required(),
-  presentingComplaint: yup.string().required()
+  // clinicalPathway: yup.string().required(),
+  // pharmacist: yup.object().required(),
+  // startDate: yup.string().required(),
+  // duration: yup.string().required(),
+  // textMessage: yup.string().required(),
+  // presentingComplaint: yup.string().required()
 })
 
 const confirmSchema = yup.object().shape({
@@ -144,7 +157,35 @@ const confirmSchema = yup.object().shape({
   iAgree: yup.boolean().required()
 })
 
-const NewBookingForm = ({ onClose, isEditing }) => {
+const getServiceTableName = service => {
+  switch (service) {
+    case 'Pharmacy First':
+      return 'service_pharmacy_first'
+    case 'Pharmacy First Appointment':
+      return 'service_pharmacy_first'
+    case 'NMS':
+      return 'service_nms'
+    case 'DMS':
+      return 'service_dms'
+    case 'DMS S3':
+      return 'service_dms'
+    case 'HTN':
+      return 'service_htn'
+    case 'Flu':
+      return 'service_flu'
+    default:
+      return `userCustom.${service}`
+  }
+}
+
+const NewBookingForm = ({
+  onClose,
+  isEditing,
+  selectedService,
+  resetToEmptyValues,
+  setResetToEmptyValues,
+  refetchAppointments
+}) => {
   // ** States
   const [activeStep, setActiveStep] = useState(0)
   const [addNewPatientDialog, setAddNewPatientDialog] = useState(false)
@@ -156,8 +197,39 @@ const NewBookingForm = ({ onClose, isEditing }) => {
   const dispatch = useDispatch()
   const selectedBookingLoading = useSelector(state => state.appointmentListSlice.selectedBookingLoading)
   const selectedBooking = useSelector(state => state.appointmentListSlice.selectedBooking)
+  const [variableLoading, setVariableLoading] = useState(false)
 
-  console.log('selectedBooking', selectedBooking, selectedBookingLoading)
+  // console.log('selectedBooking', selectedBooking, selectedBookingLoading)
+  //fetch the variable table data
+  const fetchVariableTableData = async () => {
+    console.log('fetching variable table data', selectedService.table)
+    setVariableLoading(true)
+    const { data: serviceData, error: serviceError } = await supabase
+      .from(selectedService.table)
+      .select('*')
+      .match({ consultation_id: selectedBooking?.id })
+
+    console.log('service data', serviceData)
+    if (serviceError) {
+      console.log('service error', serviceError)
+      showMessage('error fetching service, please try again, if problem persists contact admin with code 104', 'error')
+
+      setVariableLoading(false)
+      return
+    }
+
+    console.log('service data', variableLoading)
+    setVariableLoading(false)
+    const serviceDataResponse = serviceData[0]
+    setServiceInfo(serviceDataResponse)
+    return serviceDataResponse
+  }
+
+  useEffect(() => {
+    if (selectedBooking) {
+      fetchVariableTableData()
+    }
+  }, [selectedBooking])
 
   useEffect(() => {
     if (selectedBooking) {
@@ -167,33 +239,34 @@ const NewBookingForm = ({ onClose, isEditing }) => {
       // set the selected pharmacist
       setSelectedPharmacist(selectedBooking.pharmacist_object)
       // set the form values
+      setSelectedGP(selectedBooking.gp_object)
       bookingReset({
         pharmacist: selectedBooking.pharmacist_object,
-        startDate: selectedBooking.start_date,
+        startDate: selectedBooking.calendar_events.start,
         duration: selectedBooking.duration,
         textMessage: selectedBooking.text_message,
         presentingComplaint: selectedBooking.presenting_complaint,
         clinicalPathway: selectedBooking.clinical_pathway
       })
-      patientReset({
-        fullName: selectedBooking.patient_object.full_name,
-        email: selectedBooking.patient_object.email,
-        nhsNumber: selectedBooking.patient_object.nhs_number,
-        mobileNumber: selectedBooking.patient_object.mobile_number,
-        houseNumber: selectedBooking.patient_object.house_number,
-        address: selectedBooking.patient_object.address,
-        postCode: selectedBooking.patient_object.post_code,
-        dateOfBirth: selectedBooking.patient_object.dob,
-        telephoneNumber: selectedBooking.patient_object.telephone_number,
-        surgery: selectedBooking?.surgery_object,
-        pharmacist: selectedBooking?.pharmacist_object
-      })
+      // patientReset({
+      //   fullName: selectedBooking.patient_object.full_name,
+      //   email: selectedBooking.patient_object.email,
+      //   nhsNumber: selectedBooking.patient_object.nhs_number,
+      //   mobileNumber: selectedBooking.patient_object.mobile_number,
+      //   houseNumber: selectedBooking.patient_object.house_number,
+      //   address: selectedBooking.patient_object.address,
+      //   postCode: selectedBooking.patient_object.post_code,
+      //   dateOfBirth: selectedBooking.patient_object.dob,
+      //   telephoneNumber: selectedBooking.patient_object.telephone_number,
+      //   surgery: selectedBooking?.surgery_object,
+      //   pharmacist: selectedBooking?.pharmacist_object
+      // })
     }
 
     return () => {
-      setSelectedPatient(null)
-      setSelectedPharmacist(null)
-      dispatch(setSelectedBooking(null))
+      // setSelectedPatient(null)
+      // setSelectedPharmacist(null)
+      // dispatch(setSelectedBooking(null))
       setSnackMessage('')
       setActiveStep(0)
       // patientReset(defaultAccountValues)
@@ -211,12 +284,129 @@ const NewBookingForm = ({ onClose, isEditing }) => {
     setSelectedPharmacist(value)
   }
 
+  useEffect(() => {
+    if (resetToEmptyValues) {
+      setSelectedPatient(null)
+      setSelectedPharmacist(null)
+      setSelectedGP(null)
+      // dispatch(setSelectedBooking(null))
+
+      setSnackMessage('')
+      setActiveStep(0)
+      patientReset(defaultAccountValues)
+      bookingReset(defaultBookingValues)
+      setResetToEmptyValues(false)
+    }
+  }, [resetToEmptyValues])
+
   console.log('IS EDITING', isEditing)
 
   const showMessage = (msg, sev) => {
     setSnackMessage(msg)
     setSnackSeverity(sev)
     setOpenSnack(true)
+  }
+
+  const getVariableFormFields = selectedService => {
+    console.log('Get variable form service is', selectedService == 'Pharmacy First' || 'Pharmacy First Appointment')
+    switch (selectedService) {
+      case 'Pharmacy First':
+        return (
+          <PharmacyFirstVariableForm
+            handleConfirmSubmit={handleConfirmSubmit}
+            handleBookingSubmit={handleBookingSubmit}
+            steps={steps}
+            bookingControl={bookingControl}
+            bookingErrors={bookingErrors}
+            onSubmit={onSubmit}
+            handleSelect={handleSelect}
+            setServiceInfo={setServiceInfo}
+            serviceInfo={serviceInfo}
+          />
+        )
+      case 'Pharmacy First Appointment':
+        return (
+          <PharmacyFirstVariableForm
+            handleConfirmSubmit={handleConfirmSubmit}
+            handleBookingSubmit={handleBookingSubmit}
+            steps={steps}
+            bookingControl={bookingControl}
+            bookingErrors={bookingErrors}
+            onSubmit={onSubmit}
+            handleSelect={handleSelect}
+            setServiceInfo={setServiceInfo}
+            serviceInfo={serviceInfo}
+          />
+        )
+      case 'NMS':
+        return (
+          <NmsVariableForm
+            setServiceInfo={setServiceInfo}
+            serviceInfo={serviceInfo}
+            steps={steps}
+            bookingControl={bookingControl}
+            bookingErrors={bookingErrors}
+            onSubmit={onSubmit}
+            handleSelect={handleSelect}
+            handleBookingSubmit={handleBookingSubmit}
+          />
+        )
+      case 'DMS':
+        return (
+          <DmsVariableForm
+            setServiceInfo={setServiceInfo}
+            serviceInfo={serviceInfo}
+            steps={steps}
+            bookingControl={bookingControl}
+            bookingErrors={bookingErrors}
+            onSubmit={onSubmit}
+            handleSelect={handleSelect}
+            handleBookingSubmit={handleBookingSubmit}
+          />
+        )
+      case 'DMS S3':
+        return (
+          <DmsVariableForm
+            setServiceInfo={setServiceInfo}
+            serviceInfo={serviceInfo}
+            steps={steps}
+            bookingControl={bookingControl}
+            bookingErrors={bookingErrors}
+            onSubmit={onSubmit}
+            handleSelect={handleSelect}
+            handleBookingSubmit={handleBookingSubmit}
+          />
+        )
+      case 'HTN':
+        return (
+          <BookHTNform
+            setServiceInfo={setServiceInfo}
+            serviceInfo={serviceInfo}
+            steps={steps}
+            bookingControl={bookingControl}
+            bookingErrors={bookingErrors}
+            onSubmit={onSubmit}
+            handleSelect={handleSelect}
+            handleBookingSubmit={handleBookingSubmit}
+          />
+        )
+      case 'Flu Jab':
+        return (
+          <FluVariableForm
+            setServiceInfo={setServiceInfo}
+            serviceInfo={serviceInfo}
+            steps={steps}
+            bookingControl={bookingControl}
+            bookingErrors={bookingErrors}
+            onSubmit={onSubmit}
+            handleSelect={handleSelect}
+            handleBookingSubmit={handleBookingSubmit}
+          />
+        )
+
+      default:
+        return null
+    }
   }
   const handleStepClick = async index => {
     // Check if the user is moving forward
@@ -250,6 +440,8 @@ const NewBookingForm = ({ onClose, isEditing }) => {
   const [selectedPatient, setSelectedPatient] = useState(null)
   const [selectedPharmacist, setSelectedPharmacist] = useState(null)
   const [selectedGP, setSelectedGP] = useState(null)
+  const [includeTextMessage, setIncludeTextMessage] = useState(true)
+  const [serviceInfo, setServiceInfo] = useState({})
   const [datePickerOpen, setDatePickerOpen] = useState(false)
   const orgId = useSelector(state => state.organisation.organisation.id)
   const notifyApiKey = useSelector(state => state.organisation?.organisation?.pharmacy_settings?.notify_api_key)
@@ -266,6 +458,12 @@ const NewBookingForm = ({ onClose, isEditing }) => {
     defaultValues: defaultAccountValues,
     resolver: yupResolver(accountSchema)
   })
+
+  useEffect(() => {
+    if (selectedBooking) {
+      setIncludeTextMessage(false)
+    }
+  }, [selectedBooking])
 
   const {
     reset: bookingReset,
@@ -322,23 +520,30 @@ const NewBookingForm = ({ onClose, isEditing }) => {
       // check the values have all been filled - wont see final submit unless prev is all filled in anyway
       const bookingData = bookingGetValues()
 
+      let dailyData = null
+      let newBooking = null
+
       // generate a scheduled meeting, nbf time set returns object with meeting url
-      const unixTimeStamp = bookingData?.startDate.unix()
-      const { data: dailyData, error: dailyError } = await supabase.functions.invoke('daily-scheduler', {
-        body: { scheduledTime: unixTimeStamp }
-      })
+      if (!selectedBooking) {
+        const unixTimeStamp = bookingData?.startDate.unix()
+        const { data: dailyDatar, error: dailyError } = await supabase.functions.invoke('daily-scheduler', {
+          body: { scheduledTime: unixTimeStamp }
+        })
 
-      console.log('daily data', dailyData)
+        console.log('daily data', dailyDatar)
 
-      if (dailyError) {
-        console.log('daily error', dailyError)
-        //show custom snackbar
-        showMessage(
-          'error generating video link, please try again, if problem persists contact admin with code 101',
-          'error'
-        )
-        setLoading(false)
-        return
+        if (dailyError) {
+          console.log('daily error', dailyError)
+          //show custom snackbar
+          showMessage(
+            'error generating video link, please try again, if problem persists contact admin with code 101',
+            'error'
+          )
+          setLoading(false)
+          return
+        }
+
+        dailyData = dailyDatar
       }
 
       const userData = accountGetValues()
@@ -354,6 +559,7 @@ const NewBookingForm = ({ onClose, isEditing }) => {
         clinical_pathway: bookingData?.clinicalPathway || null,
         patient_object: selectedPatient || null,
         pharmacist_object: selectedPharmacist || null,
+        gp_object: selectedGP || null,
         pharmacy_id: orgId,
         booked_by: userId,
         url: dailyUrl,
@@ -364,34 +570,57 @@ const NewBookingForm = ({ onClose, isEditing }) => {
         // event_id: newEvent?.id || null
       }
 
-      const { payload: newBooking, error: newBookingError } = await dispatch(createBooking(bookingPayload))
+      if (!selectedBooking) {
+        const { payload: newBookingr, error: newBookingError } = await dispatch(createBooking(bookingPayload))
 
-      // console.log('Booking Payload', bookingPayload)
-      // console.log('Booking Info', newBooking, newBooking.id, newBookingError)
-      // console.log('BOOKING DATA, ', bookingData)
+        // console.log('Booking Payload', bookingPayload)
+        // console.log('Booking Info', newBooking, newBooking.id, newBookingError)
+        // console.log('BOOKING DATA, ', bookingData)
 
-      if (newBookingError) {
-        console.log('new booking error', newBookingError)
-        //show custom snackbar
-        showMessage(
-          'error creating booking, please try again, if problem persists contact admin with code 102',
-          'error'
+        if (newBookingError) {
+          console.log('new booking error', newBookingError)
+          //show custom snackbar
+          showMessage(
+            'error creating booking, please try again, if problem persists contact admin with code 102',
+            'error'
+          )
+          setLoading(false)
+          return
+        }
+        newBooking = newBookingr
+      } else {
+        // update the booking
+        const { payload: updatedBooking, error: updatedBookingError } = await dispatch(
+          updateBooking({
+            booking: bookingPayload,
+            id: selectedBooking.id
+          })
         )
-        setLoading(false)
-        return
+
+        if (updatedBookingError) {
+          console.log('updated booking error', updatedBookingError)
+          //show custom snackbar
+          showMessage(
+            'error updating booking, please try again, if problem persists contact admin with code 102',
+            'error'
+          )
+          setLoading(false)
+          return
+        }
+        newBooking = updatedBooking
       }
 
       const endDateTime = dayjs(bookingData?.startDate).add(bookingData?.duration, 'minute')
-
+      console.log('start date in event payload is', bookingData?.startDate)
       const eventPayload = {
-        start: bookingData?.startDate.format() || null,
+        start: dayjs(bookingData?.startDate).format() || null,
         end: endDateTime.format() || null,
         location: 'online',
         company_id: orgId,
         created_by: userId,
         allDay: false,
-        calendarType: 14,
-        title: 'Pharmacy First Appointment',
+        calendarType: selectedService.id,
+        title: 'Pharmacy First',
         url: dailyUrl || null,
         booking_id: newBooking?.id || null
       }
@@ -402,17 +631,74 @@ const NewBookingForm = ({ onClose, isEditing }) => {
         eventPayloadpayload.end = endDate.toISOString()
       }
 
-      const { payload: newEvent, error: newEventError } = await dispatch(addEvent(eventPayload))
+      if (!selectedBooking) {
+        const { payload: newEvent, error: newEventError } = await dispatch(addEvent(eventPayload))
 
-      console.log('Event Payload', eventPayload)
-      console.log('Event Info', newEvent, newEventError)
+        console.log('Event Payload', eventPayload)
+        console.log('Event Info', newEvent, newEventError)
 
-      if (newEventError) {
-        console.log('new event error', newEventError)
-        //show custom snackbar
-        showMessage('error creating event, please try again, if problem persists contact admin with code 103', 'error')
-        setLoading(false)
-        return
+        if (newEventError) {
+          console.log('new event error', newEventError)
+          //show custom snackbar
+          showMessage(
+            'error creating event, please try again, if problem persists contact admin with code 103',
+            'error'
+          )
+          setLoading(false)
+          return
+        }
+      } else {
+        // update the event
+        const { payload: updatedEvent, error: updatedEventError } = await dispatch(simpleEventUpdate(eventPayload))
+
+        if (updatedEventError) {
+          console.log('updated event error', updatedEventError)
+          //show custom snackbar
+          showMessage(
+            'error updating event, please try again, if problem persists contact admin with code 103',
+            'error'
+          )
+          setLoading(false)
+          return
+        }
+      }
+
+      if (!selectedBooking) {
+        // upload the bookingData to the service table in supabase
+        // const serviceTableName = getServiceTableName(selectedService)
+        const { data: serviceData, error: serviceError } = await supabase
+          .from(selectedService.table)
+          .upsert({ ...serviceInfo, consultation_id: newBooking?.id }, { onConflict: 'consultation_id' })
+          .select('*')
+
+        if (serviceError) {
+          console.log('service error', serviceError)
+          showMessage(
+            'error creating service, please try again, if problem persists contact admin with code 104',
+            'error'
+          )
+
+          console.log('service data', serviceData)
+          setLoading(false)
+          return
+        }
+      } else {
+        // update the service table
+        // const serviceTableName = getServiceTableName(selectedService)
+        const { data: serviceData, error: serviceError } = await supabase
+          .from(selectedService.table)
+          .upsert({ ...serviceInfo, consultation_id: newBooking?.id }, { onConflict: 'consultation_id' })
+        // .match({ consultation_id: newBooking?.id })
+
+        if (serviceError) {
+          console.log('service error', serviceError)
+          showMessage(
+            'error updating service, please try again, if problem persists contact admin with code 104',
+            'error'
+          )
+          setLoading(false)
+          return
+        }
       }
 
       const userLink = `https://pharmex.uk/pharmacy-first/patient/${newBooking?.id}`
@@ -424,40 +710,47 @@ const NewBookingForm = ({ onClose, isEditing }) => {
       ).format('YYYY-MM-DD HH:mm')} is starting soon`
       const title = `Consultation ${selectedPatient?.full_name}`
 
-      const smsResponse = await dispatch(
-        createThreadAndSendSMS({
-          patientId: selectedPatient?.id,
-          patientName: selectedPatient.full_name,
-          message,
-          phoneNumber: userData.mobileNumber,
-          appointmentId: newBooking.id,
-          time: bookingData.startDate
-        })
-      )
-      console.log('SMS response', smsResponse)
-      // remind 30minuted before appointment
-      const reminderDate = dayjs(bookingData.startDate).subtract(30, 'minute')
-      const scheduledMeeting = await dispatch(
-        scheduleReminder({
-          phoneNumber,
-          message,
-          time: reminderDate,
-          apiKey: notifyApiKey,
-          organisation_id: orgId,
-          org_message,
-          title
-        })
-      )
-      console.log('scheduledMeeting', scheduledMeeting)
+      if (includeTextMessage) {
+        const smsResponse = await dispatch(
+          createThreadAndSendSMS({
+            patientId: selectedPatient?.id,
+            patientName: selectedPatient.full_name,
+            message,
+            phoneNumber: userData.mobileNumber,
+            appointmentId: newBooking.id,
+            time: bookingData.startDate
+          })
+        )
+        console.log('SMS response', smsResponse)
+        // remind 30minuted before appointment
+        const reminderDate = dayjs(bookingData.startDate).subtract(30, 'minute')
+        const scheduledMeeting = await dispatch(
+          scheduleReminder({
+            phoneNumber,
+            message,
+            time: reminderDate,
+            apiKey: notifyApiKey,
+            organisation_id: orgId,
+            org_message,
+            title
+          })
+        )
+        console.log('scheduledMeeting', scheduledMeeting)
+      }
       //show custom snackbar
       showMessage('Booking created successfully', 'success')
 
       setLoading(false)
       toast.success('Form Submitted Successfully!')
+      refetchAppointments()
       onClose()
       handleReset()
     }
   }
+
+  const createNewBookings = async () => {}
+
+  const updateExistingBookings = async () => {}
 
   useEffect(() => {
     // Check if a patient is selected
@@ -543,90 +836,7 @@ const NewBookingForm = ({ onClose, isEditing }) => {
           />
         )
       case 1:
-        return (
-          <form key={1} onSubmit={handleBookingSubmit(onSubmit)}>
-            <Box container spacing={5}>
-              <Box sx={{ mb: 4 }}>
-                <Typography variant='body2' sx={{ fontWeight: 600, color: 'text.primary' }}>
-                  {steps[1].title}
-                </Typography>
-                <Typography variant='caption' component='p'>
-                  {steps[1].subtitle}
-                </Typography>
-              </Box>
-
-              <Stack spacing={4}>
-                <FormControl fullWidth>
-                  <Controller
-                    name='presentingComplaint'
-                    control={bookingControl}
-                    rules={{ required: true }}
-                    render={({ field: { value, onChange } }) => (
-                      <TextField
-                        value={value}
-                        label='Presenting Complaint'
-                        multiline
-                        rows={4}
-                        onChange={onChange}
-                        autoComplete='off'
-                        error={Boolean(bookingErrors.presentingComplaint)}
-                        placeholder='What is wrong with the patient'
-                        aria-describedby='stepper-linear-booking-presentingComplain'
-                      />
-                    )}
-                  />
-                  {bookingErrors.presentingComplaint && (
-                    <FormHelperText sx={{ color: 'error.main' }} id='stepper-linear-booking-presentingComplaint'>
-                      This field is required
-                    </FormHelperText>
-                  )}
-                </FormControl>
-
-                <FormControl fullWidth>
-                  <Controller
-                    name='clinicalPathway'
-                    control={bookingControl}
-                    rules={{ required: true }}
-                    render={({ field: { value, onChange } }) => (
-                      <Select
-                        value={value}
-                        onChange={onChange}
-                        error={Boolean(bookingErrors.clinicalPathway)}
-                        aria-describedby='stepper-linear-booking-clinicalPathway'
-                        defaultValue=''
-                      >
-                        <MenuItem value=''>
-                          <em>None</em>
-                        </MenuItem>
-                        <MenuItem value='Sinusitis'>Sinusitis</MenuItem>
-                        <MenuItem value='Sore Throat'>Sore Throat</MenuItem>
-                        <MenuItem value='Earache'>Earache (none DSP)</MenuItem>
-                        <MenuItem value='Infected Insect Bites'>Infected Insect Bites</MenuItem>
-                        <MenuItem value='Impetigo'>Impetigo</MenuItem>
-                        <MenuItem value='Shingles'>Shingles</MenuItem>
-                        <MenuItem value='UTI'>Simple UTI in women</MenuItem>
-                      </Select>
-                    )}
-                  />
-                  {bookingErrors.clinicalPathway && (
-                    <FormHelperText sx={{ color: 'error.main' }} id='stepper-linear-booking-clinicalPathway'>
-                      This field is required
-                    </FormHelperText>
-                  )}
-                </FormControl>
-              </Stack>
-
-              <Box item xs={12} sx={{ mt: 4, display: 'flex', justifyContent: 'space-between' }}>
-                <Button size='large' variant='outlined' color='secondary' onClick={handleBack}>
-                  Back
-                </Button>
-                <Button size='large' type='submit' variant='contained'>
-                  Next
-                </Button>
-              </Box>
-            </Box>
-          </form>
-        )
+        return !variableLoading ? getVariableFormFields(selectedService.title) : <CircularProgress />
       case 2:
         return (
           <form key={2} onSubmit={handleConfirmSubmit(onSubmit)}>
@@ -736,6 +946,32 @@ const NewBookingForm = ({ onClose, isEditing }) => {
                           />
                         }
                         label='I agree to the terms and conditions'
+                      />
+                    )}
+                  />
+                  {confirmErrors.twitter && (
+                    <FormHelperText sx={{ color: 'error.main' }} id='stepper-linear-confirm-iagree'>
+                      This field is required
+                    </FormHelperText>
+                  )}
+                </FormControl>
+                <FormControl fullWidth>
+                  <Controller
+                    name='includeTextMessage'
+                    control={confirmControl}
+                    rules={{ required: true }}
+                    render={({ field: { value, onChange } }) => (
+                      <FormControlLabel
+                        control={
+                          <Checkbox
+                            checked={value}
+                            onChange={() => setIncludeTextMessage(!includeTextMessage)}
+                            name='includeTextMessage'
+                            color='primary'
+                            sx={{ '& .MuiSvgIcon-root': { fontSize: '1.3rem' } }}
+                          />
+                        }
+                        label='Do not send text message'
                       />
                     )}
                   />

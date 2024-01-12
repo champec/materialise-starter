@@ -226,9 +226,9 @@ const conversationsSlice = createSlice({
 export const selectAllConversations = state => {
   console.log('state.conversations', state)
   return {
-    inbox: state.conversations.inbox || [],
-    sent: state.conversations.sent || [],
-    starred: state.conversations.starred || [],
+    inbox: state.conversations?.inbox || [],
+    sent: state.conversations?.sent || [],
+    starred: state.conversations?.starred || [],
     spam: state.conversations.spam || [],
     deleted: state.conversations.deleted || []
   }

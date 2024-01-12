@@ -14,7 +14,11 @@ export const login = createAsyncThunk('user/login', async (params, thunkAPI) => 
 
   console.log('RTK user auth', data)
   // Fetch corresponding record from the public.users table
-  const { data: authUser, error: userError } = await supabase.from('users').select('*').eq('id', data.user.id).single()
+  const { data: authUser, error: userError } = await supabase
+    .from('profiles')
+    .select('*, users(*)')
+    .eq('id', data.user.id)
+    .single()
 
   if (userError) {
     console.log('user data fetch RTK', { userError })

@@ -12,7 +12,7 @@ export const fetchEvents = createAsyncThunk('appCalendar/fetchEvents', async (or
   // }
   const { data, error } = await supabase
     .from('calendar_events')
-    .select('*, consultations!calendar_events_booking_id_fkey(*)')
+    .select('*, consultations!calendar_events_booking_id_fkey(*), calendar_types(*)')
     .eq('company_id', orgId)
   if (error) {
     console.log(error)
@@ -51,7 +51,7 @@ export const updateEvent = createAsyncThunk(
       return data
     } else {
       //find old event
-      const oldEvent = getState().bookingsCalendar.events.find(calEvent => calEvent.id == event._def.publicId)
+      const oldEvent = getState().bookingsCalendar.events.find(calEvent => calEvent.id == event?._def?.publicId)
       console.log('OldEvent', oldEvent, 'bookingId', bookingId, 'EVENT', event)
       const oldEventStart = new Date(oldEvent.start)
       const newEventStart = new Date(event._instance.range.start)
@@ -81,6 +81,21 @@ export const updateEvent = createAsyncThunk(
     }
   }
 )
+
+export const simpleEventUpdate = createAsyncThunk('appCalendar/simpleEventUpdate', async event => {
+  console.log('simpleEventUpdate is being called', { event })
+  try {
+    const { data, error } = await supabase.from('calendar_events').update(event).eq('id', event.id)
+    if (error) {
+      console.log(error)
+    }
+    console.log(data)
+    return data
+  } catch (error) {
+    console.log(error)
+    return error
+  }
+})
 
 // ** Delete Event
 export const deleteEvent = createAsyncThunk('appCalendar/deleteEvent', async ({ id, orgId }, { dispatch }) => {
@@ -116,16 +131,20 @@ export const createNMSServiceBooking = createAsyncThunk(
 )
 
 // ** Update a booking
-export const updateBooking = createAsyncThunk('appCalendar/updateBooking', async ({ booking, id }, { dispatch }) => {
-  const { data, error } = await supabase.from('consultations').update(booking).eq('id', id).select('*').single()
-  if (error) {
-    console.log(error)
-    throw error
+export const updateBooking = createAsyncThunk(
+  'appCalendar/updateBooking',
+  async ({ booking, id }, { dispatch, getState }) => {
+    const orgId = getState().organisation.organisation.id
+    const { data, error } = await supabase.from('consultations').update(booking).eq('id', id).select('*').single()
+    if (error) {
+      console.log(error)
+      throw error
+    }
+    console.log('update booking success', data)
+    dispatch(fetchEvents(orgId))
+    return data
   }
-  console.log('update booking success', data)
-  dispatch(fetchEvents(orgId))
-  return data
-})
+)
 
 // ** Delete a booking
 export const deleteBooking = createAsyncThunk('appCalendar/deleteBooking', async ({ id }, { dispatch }) => {
@@ -171,6 +190,7 @@ export const bookingsCalendarSlice = createSlice({
   },
   reducers: {
     handleSelectEvent: (state, action) => {
+      console.log('handleSelectEvent from THUNK', action.payload)
       state.selectedEvent = action.payload
     },
     handleSelectCalendar: (state, action) => {

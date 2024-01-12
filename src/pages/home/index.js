@@ -141,7 +141,7 @@ const Home = () => {
         <Card>
           <CardHeader title='Kick start your project 🚀'></CardHeader>
           <CardHeader title={process}></CardHeader>
-          <CardContent>
+          {/* <CardContent>
             <Button variant='contained' color='primary' onClick={updatePharmacies}>
               Update Pharmacies
             </Button>
@@ -154,19 +154,19 @@ const Home = () => {
               Please make sure to read our Template Documentation to understand where to go from here and how to use our
               template.
             </Typography>
-          </CardContent>
+          </CardContent> */}
         </Card>
       </Grid>
       <Grid item xs={12}>
         <Card>
           <CardHeader title='ACL and JWT 🔒'></CardHeader>
-          <CardContent>
+          {/* <CardContent>
             <Typography sx={{ mb: 2 }}>
               Access Control (ACL) and Authentication (JWT) are the two main security features of our template and are
               implemented in the starter-kit as well.
             </Typography>
             <Typography>Please read our Authentication and ACL Documentations to get more out of them.</Typography>
-          </CardContent>
+          </CardContent> */}
         </Card>
       </Grid>
     </Grid>
