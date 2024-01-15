@@ -9,6 +9,14 @@ import { styled, useTheme } from '@mui/material/styles'
 import { hexToRGBA } from 'src/@core/utils/hex-to-rgba'
 import ModalManager from 'src/views/apps/drugdash/ModalManager'
 import { openModal, closeModal } from 'src/store/apps/drugdash/ddModals'
+import withReducer from 'src/@core/HOC/withReducer'
+import drugdash from 'src/store/apps/drugdash'
+import ddBags from 'src/store/apps/drugdash/ddBags'
+import ddDelivery from 'src/store/apps/drugdash/ddDelivery'
+import ddModals from 'src/store/apps/drugdash/ddModals'
+import ddDrivers from 'src/store/apps/drugdash/ddDrivers'
+import ddPatients from 'src/store/apps/drugdash/ddPatients'
+import ddDrugs from 'src/store/apps/drugdash/ddDrugs'
 
 const Settings = () => {
   return (
@@ -115,4 +123,13 @@ const Index = () => {
   )
 }
 
-export default Index
+// export default Index
+export default withReducer({
+  drugdash: drugdash,
+  ddBags: ddBags,
+  ddDelivery: ddDelivery,
+  ddModals: ddModals,
+  ddDrivers: ddDrivers,
+  ddPatients: ddPatients,
+  ddDrugs: ddDrugs
+})(Index)

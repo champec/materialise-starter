@@ -48,13 +48,25 @@ export const initializeSession = createAsyncThunk('user/initializeSession', asyn
   try {
     const { data, error } = await supabase.auth.getSession()
 
-    if (error) throw error
+    if (error) {
+      console.log('user session RTK', { error })
+      throw error
+    }
 
     const user = data?.session?.user
 
+    console.log('INIT USER SESSION GET SESSION RESULT IS..', user)
+
     if (user && user.id) {
-      const { data: userData, error: userError } = await supabase.from('users').select('*').eq('id', user.id).single()
-      if (userError) throw userError
+      const { data: userData, error: userError } = await supabase
+        .from('profiles')
+        .select('*, users(*)')
+        .eq('id', user.id)
+        .single()
+      if (userError) {
+        console.log('user data fetch RTK', { userError })
+        throw userError
+      }
 
       return { user: userData, loading: false }
     } else {

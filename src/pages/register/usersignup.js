@@ -25,7 +25,16 @@ import Typography from '@mui/material/Typography'
 import MuiFormControlLabel from '@mui/material/FormControlLabel'
 import DatePickerWrapper from 'src/@core/styles/libs/react-datepicker'
 import DatePicker from 'react-datepicker'
-import { Snackbar, Autocomplete, Dialog, DialogContent, DialogTitle, DialogActions, MenuItem } from '@mui/material'
+import {
+  Snackbar,
+  Autocomplete,
+  Dialog,
+  DialogContent,
+  DialogTitle,
+  DialogActions,
+  MenuItem,
+  CircularProgress
+} from '@mui/material'
 import CustomSnackbar from 'src/views/apps/Calendar/services/pharmacy-first/CustomSnackBar'
 // ** Icon Imports
 import Icon from 'src/@core/components/icon'
@@ -144,6 +153,7 @@ const Register = () => {
   const [confirmemail, setConfirmEmail] = useState('')
   const [confirmfirstName, setConfirmFirstName] = useState('')
   const [confirmorg, setConfirmOrg] = useState('')
+  const [loading, setLoading] = useState(false)
 
   // ** Hooks
   const theme = useTheme()
@@ -241,31 +251,34 @@ const Register = () => {
     // console.log('SUBMITTING', data)
 
     // check if the email already exists
-    const emailExists = await checkIfEmailExists(data.email)
+    // const emailExists = await checkIfEmailExists(data.email)
 
-    if (emailExists) {
-      console.log('email already exists')
-      showSnackbar('Email already exists', 'error')
-      return
-    }
+    // if (emailExists) {
+    //   console.log('email already exists')
+    //   showSnackbar('Email already exists', 'error')
+    //   return
+    // }
+    setLoading(true)
+    console.log('attempting to sign up', data)
 
     // try to register the user
     const { data: newUser, error: signUpError } = await supabase.auth.signUp({
       email: data.email,
-      password: data.newPassword
-      // options: {
-      //   data: {
-      //     first_name: data.firstName,
-      //     last_name: data.lastName,
-      //     date_of_birth: data.dateOfBirth,
-      //     username: data.username
-      //   }
-      // }
+      password: data.newPassword,
+      options: {
+        data: {
+          // first_name: data.firstName,
+          // last_name: data.lastName,
+          // date_of_birth: data.dateOfBirth,
+          username: data.username
+        }
+      }
     })
 
     if (signUpError) {
       console.log('error auth.signup', signUpError.message)
       showSnackbar(signUpError.message, 'error')
+      setLoading(false)
       return
     }
 
@@ -279,7 +292,10 @@ const Register = () => {
       .update({
         first_name: data.firstName,
         last_name: data.lastName,
-        dob: data.dateOfBirth
+        dob: data.dateOfBirth,
+        username: data.username,
+        full_name: `${data.firstName} ${data.lastName}`,
+        type: 'user'
       })
       .eq('id', userId)
       .select('*')
@@ -289,10 +305,22 @@ const Register = () => {
       console.log('error profile', profileError)
       showSnackbar(profileError.message, 'error')
       deleteProfile(userId)
+      setLoading(false)
       throw profileError
     }
 
     console.log('recently added profile', profile)
+
+    // update the users table with the new users profile
+    const { error: userError } = await supabase.from('users').insert({
+      id: userId,
+      username: data.username,
+      first_name: data.firstName,
+      role: 'user',
+      email: data.email,
+      last_name: data.lastName,
+      date_of_birth: data.dateOfBirth
+    })
 
     // Fetch the organisation ID based on the ods_code
     const { data: organisationData, error: organisationError } = await supabase
@@ -306,6 +334,7 @@ const Register = () => {
       showSnackbar('Organisation not found', 'error')
       console.log('error fetching organisation', organisationError)
       deleteProfile(userId)
+      setLoading(false)
       return
     }
 
@@ -320,6 +349,7 @@ const Register = () => {
       console.log('error users_organisation', userOrgError)
       showSnackbar(userOrgError.message, 'error')
       deleteProfile(userId)
+      setLoading(false)
       return
     }
 
@@ -332,6 +362,7 @@ const Register = () => {
       setConfirmEmail(data.email)
       setConfirmFirstName(data.firstName)
       setConfirmSignup(true)
+      setLoading(false)
     }
 
     gotoSignupConfirm()
@@ -362,6 +393,26 @@ const Register = () => {
 
   const imageSource = skin === 'bordered' ? 'auth-v2-register-illustration-bordered' : 'auth-v2-register-illustration'
 
+  if (loading) {
+    // show a full screen spinner loader in place of where the form is
+    return (
+      <Box
+        sx={{
+          position: 'absolute',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          backgroundColor: 'background.paper'
+        }}
+      >
+        <CircularProgress />
+      </Box>
+    )
+  }
   if (confirmSignup) {
     return <SignUpConfirm org={confirmorg} email={confirmemail} firstName={confirmfirstName} />
   }

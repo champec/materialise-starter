@@ -29,13 +29,14 @@ const navigation = (role, plan) => {
         {
           title: 'My Account',
           path: '/pharmacy/settings',
-          icon: 'solar:settings-outline'
+          icon: 'solar:settings-outline',
+          disabled: plan === 'free'
         },
         {
           title: 'Drug Dash',
           path: '/pharmacy/drugdash',
-          icon: 'fluent-emoji-high-contrast:man-running',
-          disabled: plan === 'free'
+          icon: 'fluent-emoji-high-contrast:man-running'
+          // disabled: plan === 'free'
         }
       ]
     },

@@ -247,6 +247,25 @@ const Register = () => {
         userId = user.id
       }
 
+      // insert data into profiles table
+
+      const { error: profileTableError } = await supabase
+        .from('profiles')
+        .insert({
+          id: userId,
+          organisation_name: data.username,
+          ods: data.organisation.toUpperCase(),
+          type: 'organisation'
+        })
+        .eq('id', userId)
+
+      if (profileTableError) {
+        console.log('error profile table', profileTableError)
+        setSnackbarSeverity('error')
+        setSnackbarMessage(profileTableError.message)
+        throw profileTableError
+      }
+
       const { data: profile, error: profileError } = await supabase
         .from('organisations')
         .insert({
