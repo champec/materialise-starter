@@ -1,16 +1,20 @@
-import React, { useRef, useState } from 'react'
+import React, { useEffect, useRef, useState } from 'react'
 import { useRouter } from 'next/router'
 import PatientCallScreen from '../../call-screen/PatientCallScreen'
 import BlankLayout from 'src/@core/layouts/BlankLayout'
 import { supabase } from 'src/configs/supabase'
 import { TextField, Button, CircularProgress, Box, Typography } from '@mui/material'
 import CustomSnackbar from 'src/views/apps/Calendar/services/pharmacy-first/CustomSnackBar'
+import dayjs from 'dayjs'
+
+const advancedFormat = require('dayjs/plugin/advancedFormat')
+dayjs.extend(advancedFormat)
 
 function PatientCall() {
   const router = useRouter()
   const { id } = router.query || {}
   const containerRef = useRef()
-  const [loading, setLoading] = useState(true)
+  const [loading, setLoading] = useState(false)
   const [error, setError] = useState(null)
   const [consultation, setConsultation] = useState(null)
   const [consultationState, setConsultationState] = useState(null)
@@ -19,6 +23,7 @@ function PatientCall() {
   const [openSnack, setOpenSnack] = useState(false)
   const [snackMessage, setSnackMessage] = useState('')
   const [snackSeverity, setSnackSeverity] = useState('success')
+  const [consultationStateCount, setConsultationStateCount] = useState(0)
 
   const showMessages = (message, severity) => {
     setSnackMessage(message)
@@ -40,7 +45,7 @@ function PatientCall() {
         },
         payload => {
           console.log('New status update:', payload)
-          setConsultationState(payload.clinician_status)
+          setConsultationState(payload.new.clinician_status)
         }
       )
       .subscribe()
@@ -56,13 +61,14 @@ function PatientCall() {
       .maybeSingle()
 
     if (error) {
-      setError(error)
+      setError({ message: `consultation table: ${error.message}` })
       console.log(error)
       showMessages(error.message, 'error')
       setLoading(false)
     }
     if (data) {
-      console.log(data?.calendar_events)
+      // console.log('patient call initial fetch data', data)
+      console.log('patient call initial fetch data', data.clinician_status)
       setConsultation(data)
       setConsultationState(data.clinician_status)
       setLoading(false)
@@ -73,45 +79,38 @@ function PatientCall() {
     }
   }
 
+  const updateStatus = async status => {
+    // setLoading(true)
+    const { data, error } = await supabase.from('consultations').update({ patient_status: status }).eq('id', id)
+    //   .single()
+
+    // if (error) {
+    //   setError(error)
+    //   console.log(error)
+    //   showMessages(error.message, 'error')
+    //   setLoading(false)
+    //   return
+    // }
+    // if (data) {
+    //   setConsultation(...consultation, data)
+    //   setLoading(false)
+    //   return
+    // }
+    // setLoading(false)
+  }
+
   React.useEffect(() => {
     if (!id) {
       console.log('No id', id)
-      return
+    } else {
+      fetchConsultation()
+      setupConsultationListener(id)
     }
-    fetchConsultation()
-    setupConsultationListener(id)
+    return () => {
+      // supabase.removeChannel('consultation')
+      updateStatus(null)
+    }
   }, [id])
-
-  if (loading) {
-    return <div>Loading...</div>
-  }
-
-  if (error) {
-    return <div>An error has occured {error.message}</div>
-  }
-
-  const updateStatus = async status => {
-    setLoading(true)
-    const { data, error } = await supabase
-      .from('consultations')
-      .update({ patient_status: status })
-      .eq('id', id)
-      .single()
-
-    if (error) {
-      setError(error)
-      console.log(error)
-      showMessages(error.message, 'error')
-      setLoading(false)
-      return
-    }
-    if (data) {
-      setConsultation(...consultation, data)
-      setLoading(false)
-      return
-    }
-    setLoading(false)
-  }
 
   const handleNameSubmit = () => {
     // Retrieve and format the patient's first name from the data
@@ -127,6 +126,19 @@ function PatientCall() {
     } else {
       showMessages("That's not the name we are expecting here in this meeting.", 'error')
     }
+  }
+
+  const joinedMeeting = () => {
+    console.log('Patient joined meeting')
+    updateStatus('patientJoined')
+  }
+
+  if (loading) {
+    return <div>Loading...</div>
+  }
+
+  if (error) {
+    return <div>An error has occured {error.message}</div>
   }
 
   if (!nameVerified) {
@@ -164,14 +176,18 @@ function PatientCall() {
   }
 
   console.log({ url })
+  console.log('Clinician Status', { consultationState })
   let content
-  if (consultationState !== 'clinicianInRoom') {
+  if (!consultationState) {
     content = (
-      <Typography>Your meeting is at {consultation?.calendar_events?.start} - No clinician in the room yet.</Typography>
+      <Typography>
+        Your meeting is on {dayjs(consultation?.calendar_events?.start).format('Do MMM YYYY hh:mm A')} - No clinician in
+        the room yet.
+      </Typography>
     )
   } else if (consultationState === 'clinicianInRoom') {
     content = <Typography>Your clinician knows you are here and will let you in soon.</Typography>
-  } else if (consultationState === 'ready') {
+  } else if (consultationState === 'patientAllowedIn' || consultationState === 'patientJoined') {
     let url = consultation?.url
     if (consultation?.patient_token) {
       url = `${url}?token=${consultation?.patient_token}`
@@ -179,7 +195,7 @@ function PatientCall() {
     content = (
       <Box sx={{ height: '100vh' }}>
         <Typography variant='h4'>Video Call</Typography>
-        <PatientCallScreen url={url} containerRef={containerRef} />
+        <PatientCallScreen joinedMeeting={joinedMeeting} url={url} containerRef={containerRef} />
       </Box>
     )
   }

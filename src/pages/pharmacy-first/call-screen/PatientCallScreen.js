@@ -1,7 +1,7 @@
 import React, { useEffect } from 'react'
 import DailyIframe from '@daily-co/daily-js'
 
-const PatientCallScreen = ({ containerRef, url }) => {
+const PatientCallScreen = ({ containerRef, url, joinedMeeting }) => {
   useEffect(() => {
     if (!containerRef.current) return
     const callFrame = DailyIframe.createFrame(containerRef.current, {
@@ -26,7 +26,13 @@ const PatientCallScreen = ({ containerRef, url }) => {
       }
     })
 
-    return () => callFrame.destroy()
+    callFrame.on('joined-meeting', () => {
+      joinedMeeting()
+    })
+
+    return () => {
+      callFrame.destroy()
+    }
   }, [containerRef])
 
   return null // The iframe is attached to the ref's current element

@@ -43,6 +43,7 @@ function index() {
   const [dms, setDms] = React.useState(false)
   const [nmsData, setNmsData] = React.useState(initialState)
   const [dmsData, setDmsData] = React.useState(initialState)
+  const [pendingPatientAcess, setPendingPatientAcess] = React.useState(false)
 
   const showMessages = (message, severity) => {
     setSnackMessage(message)
@@ -90,12 +91,17 @@ function index() {
   }
 
   const fetchConsultation = async () => {
-    const { data, error } = await supabase.from('consultations').select('*').eq('id', call_id).maybeSingle()
+    const { data, error } = await supabase
+      .from('consultations')
+      .select('*, calendar_events!calendar_events_booking_id_fkey(*)')
+      .eq('id', call_id)
+      .maybeSingle()
     if (error) {
       setError(error)
       setLoading(false)
     }
     if (data) {
+      console.log('data', data)
       setConsultationState(data.patient_status)
       setConsultation(data)
       updateStatus('clinicianInRoom')
@@ -109,31 +115,31 @@ function index() {
   }
 
   const updateStatus = async status => {
-    setLoading(true)
-    const { data, error } = await supabase
-      .from('consultations')
-      .update({ clinician_status: status })
-      .eq('id', call_id)
-      .single()
+    const { data, error } = await supabase.from('consultations').update({ clinician_status: status }).eq('id', call_id)
+    // .single()
 
     if (error) {
       setError(error)
       console.log(error)
       showMessages(error.message, 'error')
-      setLoading(false)
+
       return
     }
-    if (data) {
-      setConsultation(...consultation, data)
-      setLoading(false)
-      return
-    }
-    setLoading(false)
+    // if (data) {
+    //   setConsultation({...consultation, ...data})
+    //   setLoading(false)
+    //   return
+    // }
   }
 
   React.useEffect(() => {
     fetchConsultation()
     setupConsultationListener(call_id)
+
+    return () => {
+      // supabase.removeChannel('consultation')
+      updateStatus(null)
+    }
   }, [])
 
   if (loading) {
@@ -146,8 +152,13 @@ function index() {
 
   console.log({ consultation })
 
-  const { patient_object: patient, start_date, hcp_token } = consultation
-  const formattedDate = dayjs(start_date).format('DD/MM/YYYY HH:mm')
+  const {
+    patient_object: patient,
+    calendar_events: { start },
+    hcp_token
+  } = consultation
+  const formattedDate = dayjs(start).format('DD/MM/YYYY HH:mm')
+  console.log('consultation start', start)
 
   let url = consultation.url
   if (hcp_token) {
@@ -175,9 +186,32 @@ function index() {
 
   if (consultationState === 'patientInRoom') {
     statusMessage = 'Patient is waiting in the room.'
-    allowPatientButton = <Button onClick={() => updateStatus('patientAllowedIn')}>Allow Patient In</Button>
+    allowPatientButton = !pendingPatientAcess ? (
+      <Button
+        onClick={e => {
+          e.preventDefault()
+          setPendingPatientAcess(true)
+          updateStatus('patientAllowedIn')
+        }}
+      >
+        Allow Patient In
+      </Button>
+    ) : (
+      <Button
+        onClick={e => {
+          e.preventDefault()
+          setPendingPatientAcess(false)
+          updateStatus('clinicianInRoom')
+        }}
+      >
+        Waiting For Patient, Click To Cancel
+      </Button>
+    )
   } else if (consultationState === 'patientLeftMeeting') {
     statusMessage = 'Patient has left the meeting.'
+  } else if (consultationState === 'patientJoined') {
+    statusMessage = 'Patient has joined the meeting.'
+    allowPatientButton = null
   } else {
     statusMessage = 'Patient is not in the meeting.'
   }
