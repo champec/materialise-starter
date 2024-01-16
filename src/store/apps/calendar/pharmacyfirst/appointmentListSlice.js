@@ -47,6 +47,8 @@ export const fetchAppointments = createAsyncThunk(
       query = query.eq('service_id', service_id)
     }
 
+    console.log('final fetch apppointments query', query, 'and selectquery', selectQuery, 'selectQuery')
+
     // Execute the query
     const { data, error } = await query
 

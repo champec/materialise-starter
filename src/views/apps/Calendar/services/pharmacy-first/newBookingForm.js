@@ -138,7 +138,7 @@ const accountSchema = yup.object().shape({
   address: yup.string().required(),
   postCode: yup.string().required(),
   dateOfBirth: yup.string().required(),
-  telephoneNumber: yup.number().required(),
+  // telephoneNumber: yup.number().required(),
   // surgery: yup.object().required(),
   pharmacist: yup.object().required()
 })
@@ -307,7 +307,7 @@ const NewBookingForm = ({
     setOpenSnack(true)
   }
 
-  const getVariableFormFields = selectedService => {
+  const getVariableFormFields = (selectedService, handleBack) => {
     console.log('Get variable form service is', selectedService == 'Pharmacy First' || 'Pharmacy First Appointment')
     switch (selectedService) {
       case 'Pharmacy First':
@@ -322,6 +322,7 @@ const NewBookingForm = ({
             handleSelect={handleSelect}
             setServiceInfo={setServiceInfo}
             serviceInfo={serviceInfo}
+            handleBack={handleBack}
           />
         )
       case 'Pharmacy First Appointment':
@@ -566,7 +567,8 @@ const NewBookingForm = ({
         hcp_token: dailyData?.hcpToken || null,
         patient_token: dailyData?.patientToken || null,
         duration: bookingData?.duration || null,
-        service: 'pharmacy_first'
+        service: 'pharmacy_first',
+        service_id: selectedService.id
         // event_id: newEvent?.id || null
       }
 
@@ -666,6 +668,7 @@ const NewBookingForm = ({
       if (!selectedBooking) {
         // upload the bookingData to the service table in supabase
         // const serviceTableName = getServiceTableName(selectedService)
+        console.log('Creating NEw Service Row in supabase', serviceInfo)
         const { data: serviceData, error: serviceError } = await supabase
           .from(selectedService.table)
           .upsert({ ...serviceInfo, consultation_id: newBooking?.id }, { onConflict: 'consultation_id' })
@@ -810,6 +813,32 @@ const NewBookingForm = ({
     setSelectedGP(value)
   }
 
+  const findFirstErrorMessage = errorObject => {
+    for (let key in errorObject) {
+      if (errorObject[key].message) {
+        return errorObject[key].message
+      }
+    }
+    return ''
+  }
+
+  // log out any form error
+  useEffect(() => {
+    console.log('form errors', selectedPatient?.dob, typeof selectedPatient?.dob)
+    console.log('account errors', accountErrors)
+    console.log('booking errors', bookingErrors)
+    console.log('confirm errors', confirmErrors)
+
+    // show message if any error are present and show the actual error
+    const firstErrorMessage =
+      findFirstErrorMessage(accountErrors) ||
+      findFirstErrorMessage(bookingErrors) ||
+      findFirstErrorMessage(confirmErrors)
+    if (firstErrorMessage) {
+      showMessage(firstErrorMessage, 'error')
+    }
+  }, [accountErrors, bookingErrors, confirmErrors])
+
   const getStepContent = step => {
     switch (step) {
       case 0:
@@ -836,7 +865,7 @@ const NewBookingForm = ({
           />
         )
       case 1:
-        return !variableLoading ? getVariableFormFields(selectedService.title) : <CircularProgress />
+        return !variableLoading ? getVariableFormFields(selectedService.title, handleBack) : <CircularProgress />
       case 2:
         return (
           <form key={2} onSubmit={handleConfirmSubmit(onSubmit)}>
@@ -1119,7 +1148,7 @@ const NewBookingForm = ({
         setOpen={setOpenSnack}
         message={snackMessage}
         severity={snackSeverity}
-        duration={6000}
+        duration={15000}
       />
     </Card>
   )

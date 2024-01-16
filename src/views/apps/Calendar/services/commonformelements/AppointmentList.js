@@ -129,58 +129,58 @@ const defaultColumns = [
       )
     }
   },
-  {
-    flex: 0.1,
-    minWidth: 80,
-    field: 'invoiceStatus',
-    renderHeader: () => (
-      <Box sx={{ display: 'flex', color: 'action.active' }}>
-        <Icon icon='mdi:trending-up' fontSize={20} />
-        <Typography variant='body2' sx={{ ml: 1 }}>
-          Status
-        </Typography>
-      </Box>
-    ),
-    renderCell: ({ row }) => {
-      const { consultation_status: status } = row
-      const title = status?.title
+  // {
+  //   flex: 0.1,
+  //   minWidth: 80,
+  //   field: 'invoiceStatus',
+  //   renderHeader: () => (
+  //     <Box sx={{ display: 'flex', color: 'action.active' }}>
+  //       <Icon icon='mdi:trending-up' fontSize={20} />
+  //       <Typography variant='body2' sx={{ ml: 1 }}>
+  //         Status
+  //       </Typography>
+  //     </Box>
+  //   ),
+  //   renderCell: ({ row }) => {
+  //     const { consultation_status: status } = row
+  //     const title = status?.title
 
-      const dueDate = 'destructured from row'
-      const balance = 'destructured from row'
-      const color = invoiceStatusObj[title] ? invoiceStatusObj[title]?.color : 'primary'
+  //     const dueDate = 'destructured from row'
+  //     const balance = 'destructured from row'
+  //     const color = invoiceStatusObj[title] ? invoiceStatusObj[title]?.color : 'primary'
 
-      return (
-        <Box style={{ display: 'flex', flexDirection: 'row', alignItems: 'center' }}>
-          <Tooltip
-            title={
-              <Box>
-                <Typography variant='caption' sx={{ color: 'common.white', fontWeight: 600 }}>
-                  {title}
-                </Typography>
-                <br />
-                <Typography variant='caption' sx={{ color: 'common.white', fontWeight: 600 }}>
-                  Balance:
-                </Typography>{' '}
-                {balance}
-                <br />
-                <Typography variant='caption' sx={{ color: 'common.white', fontWeight: 600 }}>
-                  Due Date:
-                </Typography>{' '}
-                {dueDate}
-              </Box>
-            }
-          >
-            <CustomAvatar skin='light' color={color} sx={{ width: 34, height: 34 }}>
-              <Icon icon={invoiceStatusObj[title]?.icon || 'ri:question-line'} fontSize='1.25rem' />
-            </CustomAvatar>
-          </Tooltip>
-          <Typography variant='caption' sx={{ color: 'common.white', fontWeight: 600 }}>
-            {title}
-          </Typography>
-        </Box>
-      )
-    }
-  },
+  //     return (
+  //       <Box style={{ display: 'flex', flexDirection: 'row', alignItems: 'center' }}>
+  //         <Tooltip
+  //           title={
+  //             <Box>
+  //               <Typography variant='caption' sx={{ color: 'common.white', fontWeight: 600 }}>
+  //                 {title}
+  //               </Typography>
+  //               <br />
+  //               <Typography variant='caption' sx={{ color: 'common.white', fontWeight: 600 }}>
+  //                 Balance:
+  //               </Typography>{' '}
+  //               {balance}
+  //               <br />
+  //               <Typography variant='caption' sx={{ color: 'common.white', fontWeight: 600 }}>
+  //                 Due Date:
+  //               </Typography>{' '}
+  //               {dueDate}
+  //             </Box>
+  //           }
+  //         >
+  //           <CustomAvatar skin='light' color={color} sx={{ width: 34, height: 34 }}>
+  //             <Icon icon={invoiceStatusObj[title]?.icon || 'ri:question-line'} fontSize='1.25rem' />
+  //           </CustomAvatar>
+  //         </Tooltip>
+  //         <Typography variant='caption' sx={{ color: 'common.white', fontWeight: 600 }}>
+  //           {title}
+  //         </Typography>
+  //       </Box>
+  //     )
+  //   }
+  // },
   // {
   //   flex: 0.1,
   //   minWidth: 90,
@@ -211,20 +211,20 @@ const defaultColumns = [
         </Typography>
       )
     }
-  },
-  {
-    flex: 0.1,
-    minWidth: 90,
-    field: 'balance',
-    headerName: 'Type',
-    renderCell: ({ row }) => {
-      return row.balance !== 'PFS' ? (
-        <CustomChip size='small' skin='light' color='warning' label={row.type} />
-      ) : (
-        <CustomChip size='small' skin='light' color='success' label={row.type} />
-      )
-    }
   }
+  // {
+  //   flex: 0.1,
+  //   minWidth: 90,
+  //   field: 'balance',
+  //   headerName: 'Type',
+  //   renderCell: ({ row }) => {
+  //     return row.balance !== 'PFS' ? (
+  //       <CustomChip size='small' skin='light' color='warning' label={row.type} />
+  //     ) : (
+  //       <CustomChip size='small' skin='light' color='success' label={row.type} />
+  //     )
+  //   }
+  // }
 ]
 /* eslint-disable */
 const CustomInput = forwardRef((props, ref) => {
@@ -238,7 +238,7 @@ const CustomInput = forwardRef((props, ref) => {
 })
 
 /* eslint-enable */
-const ServiceAppointmentList = ({ locallySelectedService }) => {
+const ServiceAppointmentList = ({ locallySelectedService, customColumns }) => {
   // ** State
   const dispatch = useDispatch()
   const [dates, setDates] = useState([])
@@ -446,6 +446,7 @@ const ServiceAppointmentList = ({ locallySelectedService }) => {
 
   const columns = [
     ...defaultColumns,
+    ...customColumns,
     {
       flex: 0.1,
       minWidth: 130,
@@ -600,6 +601,8 @@ const ServiceAppointmentList = ({ locallySelectedService }) => {
               toggleBookingSideBar={toggleBookingSideBar}
               toggleServiceFormSideBar={toggleServiceFormSideBar}
               appointment={appointment}
+              serviceTable={locallySelectedService?.table}
+              serviceInfo={locallySelectedService}
             />
           </DialogContent>
         </Dialog>

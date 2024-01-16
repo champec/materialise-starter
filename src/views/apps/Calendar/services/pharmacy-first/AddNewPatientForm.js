@@ -1,7 +1,6 @@
 // ** React Imports
 import { forwardRef, useState, useEffect } from 'react'
 
-
 import { supabase } from 'src/configs/supabase'
 
 // ** MUI Imports
@@ -42,7 +41,7 @@ const CustomInput = forwardRef((props, ref) => {
 })
 
 const AddNewPatientForm = ({ patient, onClose, onSelect, selectedPatient, setSelectedPatient }) => {
-  console.log('add new patient form', selectedPatient, "PATIENT", patient)
+  console.log('add new patient form', selectedPatient, 'PATIENT', patient)
   // ** States
   const [date, setDate] = useState(null)
   const [language, setLanguage] = useState([])
@@ -115,39 +114,40 @@ const AddNewPatientForm = ({ patient, onClose, onSelect, selectedPatient, setSel
 
     console.log('selected patient', selectedPatient)
 
-    if(savePermanently) {
-    const formData = new FormData(event.target)
-    const formFields = Object.fromEntries(formData.entries())
-    // enrich the form field with the date after converting it from dayjs object to string
-    patientWithoutFullName.dob = date?.format('YYYY-MM-DD')
+    if (savePermanently) {
+      const formData = new FormData(event.target)
+      const formFields = Object.fromEntries(formData.entries())
 
-    const { full_name, ...patientWithoutFullName } = selectedPatient;
+      const { full_name, ...patientWithoutFullName } = selectedPatient
 
-    // ** Add new patient to database
-    const { data, error } = await supabase
-      .from('patients')
-      .upsert({ ...patientWithoutFullName, pharmacy_id: orgId, created_by: userId }, {onConflict: 'id'})
-      .select('*')
-      .single()
+      // enrich the form field with the date after converting it from dayjs object to string
+      // patientWithoutFullName.dob = patientWithoutFullName.dob?.format('YYYY-MM-DD')
 
-    if (error) {
-      showMessage(error.message, 'error')
-      setLoading(false)
-      return
-    }
+      // ** Add new patient to database
+      const { data, error } = await supabase
+        .from('patients')
+        .upsert({ ...patientWithoutFullName, pharmacy_id: orgId, created_by: userId }, { onConflict: 'id' })
+        .select('*')
+        .single()
 
-    showMessage('Patient added successfully', 'success')
+      if (error) {
+        showMessage(error.message, 'error')
+        setLoading(false)
+        return
+      }
 
-    console.log(data)
-    onSelect(data)
-    setTimeout(() => {
+      showMessage('Patient added successfully', 'success')
+
+      console.log(data)
+      onSelect(data)
+      setTimeout(() => {
+        onClose()
+        setLoading(false)
+      }, 2000)
+    } else {
+      onSelect(selectedPatient)
       onClose()
-      setLoading(false)
-    }, 2000)
-  } else {
-    onSelect(selectedPatient)
-    onClose()
-  }
+    }
   }
 
   const handleFirstNameChange = event => {

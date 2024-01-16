@@ -43,13 +43,34 @@ function index() {
     }
   }, [service])
 
+  const customColumns = [
+    {
+      flex: 0.1,
+      minWidth: 90,
+      field: 'taken_date',
+      headerName: 'Date Taken',
+      renderCell: ({ row }) => {
+        return row.service_htn.taken_date
+      }
+    },
+    {
+      flex: 0.1,
+      minWidth: 90,
+      field: 'Age',
+      headerName: 'Age',
+      renderCell: ({ row }) => {
+        return row.service_htn.age
+      }
+    }
+  ]
+
   if (loading || !locallySelectedService) {
     return <CircularProgress />
   }
 
   return (
     <div>
-      <ServiceAppointmentList locallySelectedService={locallySelectedService} />
+      <ServiceAppointmentList customColumns={customColumns} locallySelectedService={locallySelectedService} />
     </div>
   )
 }

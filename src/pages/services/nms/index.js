@@ -47,9 +47,21 @@ function index() {
     return <CircularProgress />
   }
 
+  const customColumns = [
+    {
+      flex: 0.1,
+      minWidth: 90,
+      field: 'Next Due',
+      headerName: 'Awaiting',
+      renderCell: ({ row }) => {
+        return row.service_nms?.next_due_type
+      }
+    }
+  ]
+
   return (
     <div>
-      <ServiceAppointmentList locallySelectedService={locallySelectedService} />
+      <ServiceAppointmentList customColumns={customColumns} locallySelectedService={locallySelectedService} />
     </div>
   )
 }

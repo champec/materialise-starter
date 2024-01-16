@@ -24,7 +24,14 @@ import AddPaymentDrawer from 'src/views/apps/invoice/shared-drawer/AddPaymentDra
 import SendInvoiceDrawer from 'src/views/apps/invoice/shared-drawer/SendInvoiceDrawer'
 import PreviewCardBooking from './PreviewCardBooking'
 import AppointMentChat from './AppointmentChat'
-const AppointmentView = ({ appointment, toggleBookingSideBar, zIndex, toggleServiceFormSideBar }) => {
+const AppointmentView = ({
+  appointment,
+  toggleBookingSideBar,
+  zIndex,
+  toggleServiceFormSideBar,
+  serviceTable,
+  serviceInfo
+}) => {
   // ** State
   const [error, setError] = useState(false)
   const [data, setData] = useState(null)
@@ -41,7 +48,11 @@ const AppointmentView = ({ appointment, toggleBookingSideBar, zIndex, toggleServ
       <>
         <Grid container spacing={6}>
           <Grid item xl={9} md={8} xs={12}>
-            {showChat ? <AppointMentChat appointment={appointment} /> : <PreviewCardBooking booking={appointment} />}
+            {showChat ? (
+              <AppointMentChat appointment={appointment} />
+            ) : (
+              <PreviewCardBooking serviceTable={serviceTable} serviceInfo={serviceInfo} booking={appointment} />
+            )}
           </Grid>
           <Grid item xl={3} md={4} xs={12}>
             <Card>

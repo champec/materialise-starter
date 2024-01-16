@@ -289,6 +289,7 @@ const BookCalendarSidebar = props => {
               onClose={handleSidebarClose}
               selectedService={selectedService}
               setResetToEmptyValues={setResetToEmptyValues}
+              refetchAppointments={refetchAppointments}
             />
           </DatePickerWrapper>
         </Box>

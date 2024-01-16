@@ -43,13 +43,34 @@ function index() {
     }
   }, [service])
 
+  const customColumns = [
+    {
+      flex: 0.1,
+      minWidth: 90,
+      field: 'Stage',
+      headerName: 'Booking Stage',
+      renderCell: ({ row }) => {
+        return row.service_dms.booking_stage
+      }
+    }
+    // {
+    //   flex: 0.1,
+    //   minWidth: 90,
+    //   field: 'Next Due',
+    //   headerName: 'Awaiting',
+    //   renderCell: ({ row }) => {
+    //     return row.service_htn.age
+    //   }
+    // }
+  ]
+
   if (loading || !locallySelectedService) {
     return <CircularProgress />
   }
 
   return (
     <div>
-      <ServiceAppointmentList locallySelectedService={locallySelectedService} />
+      <ServiceAppointmentList customColumns={customColumns} locallySelectedService={locallySelectedService} />
     </div>
   )
 }

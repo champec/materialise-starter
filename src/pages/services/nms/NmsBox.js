@@ -3,8 +3,8 @@ import { Accordion, AccordionSummary, AccordionDetails, Typography, Box } from '
 import IconifyIcon from 'src/@core/components/icon'
 // import ExpandMoreIcon from '@mui/icons-material/ExpandMore'
 
-function NmsBox({ nms }) {
-  const nmsData = nms?.service_nms?.[0]
+function NmsBox({ nmsData }) {
+  // const nmsData = nms?.service_nms?.[0]
 
   const ExpandMoreIcon = () => <IconifyIcon icon='mdi:chevron-down' />
 
