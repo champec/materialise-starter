@@ -59,7 +59,7 @@ const navigation = (role, plan) => {
         },
         {
           title: 'Service Stats',
-          path: '/pharmacy-first/appointment-list',
+          path: '/services/service-stats',
           icon: 'bi:file-medical-fill',
           disabled: false
         },
