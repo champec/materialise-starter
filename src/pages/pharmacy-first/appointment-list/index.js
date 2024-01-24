@@ -139,8 +139,9 @@ const defaultColumns = [
       </Box>
     ),
     renderCell: ({ row }) => {
-      const { consultation_status: status } = row
+      const { consultation_status: status, calendar_events } = row
       const title = status?.title
+      const serviceTitle = calendar_events?.title
 
       const dueDate = 'destructured from row'
       const balance = 'destructured from row'
@@ -167,13 +168,16 @@ const defaultColumns = [
               </Box>
             }
           >
-            <CustomAvatar skin='light' color={color} sx={{ width: 34, height: 34 }}>
+            <Typography variant='body2' sx={{ color: 'common.white', fontWeight: 600 }}>
+              {serviceTitle}
+            </Typography>
+            {/* <CustomAvatar skin='light' color={color} sx={{ width: 34, height: 34 }}>
               <Icon icon={invoiceStatusObj[title]?.icon || 'ri:question-line'} fontSize='1.25rem' />
-            </CustomAvatar>
+            </CustomAvatar> */}
           </Tooltip>
-          <Typography variant='caption' sx={{ color: 'common.white', fontWeight: 600 }}>
+          {/* <Typography variant='caption' sx={{ color: 'common.white', fontWeight: 600 }}>
             {title}
-          </Typography>
+          </Typography> */}
         </Box>
       )
     }
@@ -263,7 +267,24 @@ const AppointmentList = () => {
   }, [appointments, selectedRowIds])
 
   useEffect(() => {
-    dispatch(fetchAppointments())
+    const startDate = new Date()
+    const endDate = new Date()
+    startDate.setDate(startDate.getDate() - 14)
+    endDate.setDate(endDate.getDate() + 14)
+    const formattedStartDate = startDate.toISOString()
+    const formattedEndDate = endDate.toISOString()
+
+    setStartDateRange(startDate)
+    setEndDateRange(endDate)
+
+    dispatch(
+      fetchAppointments({
+        dateRange: {
+          start: formattedStartDate,
+          end: formattedEndDate
+        }
+      })
+    )
   }, [])
 
   useEffect(() => {
@@ -280,8 +301,10 @@ const AppointmentList = () => {
 
       dispatch(
         fetchAppointments({
-          startDate: formattedStartDate,
-          endDate: formattedEndDate
+          dateRange: {
+            start: formattedStartDate,
+            end: formattedEndDate
+          }
         })
       )
     }
@@ -289,9 +312,17 @@ const AppointmentList = () => {
 
   const reFetchAppointments = async () => {
     setFilteredAppointments([])
-    const response = await dispatch(fetchAppointments())
+    const response = await dispatch(
+      fetchAppointments({
+        dateRange: {
+          start: formattedStartDate,
+          end: formattedEndDate
+        }
+      })
+    )
     if (response.error) {
       console.log('ERROR', response.error)
+      return
     }
 
     setFilteredAppointments(response.payload)
