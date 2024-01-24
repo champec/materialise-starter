@@ -150,7 +150,7 @@ const NotificationDropdown = props => {
   }
 
   const handleReadAllNotifications = async () => {
-    playNotificationSound()
+    //playNotificationSound()
     console.log('READ ALL NOTIFICATIONS')
     setIsLoading(true)
     const { data, error } = await supabase

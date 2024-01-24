@@ -26,12 +26,15 @@ const SidebarLeft = props => {
     handleAddEventSidebarToggle,
     handleAddCalendarSidebarToggle,
     handleAddBookingSidebarToggle,
-    appointment
+    appointment,
+    handleBookCalendarSidebar,
+    openServiceSelectorModal,
+    setOpenServiceSelectorModal
   } = props
   const colorsArr = calendarsColor ? Object.entries(calendarsColor) : []
 
   const [isEditing, setIsEditing] = useState(false)
-  const [openServiceSelectorModal, setOpenServiceSelectorModal] = useState(false)
+  // const [openServiceSelectorModal, setOpenServiceSelectorModal] = useState(false)
 
   const handleAddCalendarSidebarToggleSidebar = () => {
     handleAddCalendarSidebarToggle()
@@ -99,12 +102,6 @@ const SidebarLeft = props => {
     dispatch(handleSelectEvent(null))
   }
 
-  const handleBookCalendarSidebar = () => {
-    setOpenServiceSelectorModal(true)
-    // handleAddBookingSidebarToggle()
-    // dispatch(handleSelectEvent(null))
-  }
-
   const handleEditCalendarItem = calendarType => {
     dispatch(handleSelectCalendar(calendarType))
     handleAddCalendarSidebarToggleSidebar()
@@ -170,7 +167,7 @@ const SidebarLeft = props => {
         <ServiceSelectorModal
           calendarTypes={calendarTypes}
           open={openServiceSelectorModal}
-          onClose={() => setOpenServiceSelectorModal(false)}
+          onClose={handleBookCalendarSidebar}
           dispatch={dispatch}
           handleAddBookingSidebarToggle={handleAddBookingSidebarToggle}
         />

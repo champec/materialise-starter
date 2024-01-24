@@ -44,7 +44,8 @@ const Calendar = props => {
     timeSlotType,
     appointment,
     fetchSelectedBooking,
-    setSelectedService
+    setSelectedService,
+    handleBookCalendarSidebar
   } = props
 
   // ** Refs
@@ -154,7 +155,8 @@ const Calendar = props => {
 
         // @ts-ignore
         dispatch(handleSelectEvent(ev))
-        handleAddEventSidebarToggle()
+        console.log('DATE CLICKED ')
+        appointment ? handleBookCalendarSidebar() : handleAddEventSidebarToggle()
       },
 
       /*

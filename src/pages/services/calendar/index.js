@@ -37,6 +37,7 @@ import CalendarWrapper from 'src/@core/styles/libs/fullcalendar'
 import AddEventSidebar from 'src/views/apps/Calendar/AddEventSidebar'
 import AddCalendarSidebar from 'src/views/apps/Calendar/AddCalendarSidebar'
 import BookCalendarSidebar from 'src/views/apps/Calendar/BookCalendarSidebar'
+import ServiceSelectorModal from 'src/views/apps/services/ServiceSelectorModal'
 
 // ** Actions
 // import {
@@ -64,6 +65,7 @@ const AppCalendar = ({ addCalendarType, updateCalendarType, deleteCalendarType }
   const [addBookingSidebarOpen, setAddBookingSidebarOpen] = useState(false)
   const [addCalendarSidebarOpen, setAddCalendarSidebarOpen] = useState(false)
   const [bookCalendarSidebarOpen, setBookCalendarSidebarOpen] = useState(false)
+  const [openServiceSelectorModal, setOpenServiceSelectorModal] = useState(false)
 
   // ** Hooks
   const { settings } = useSettings()
@@ -99,6 +101,12 @@ const AppCalendar = ({ addCalendarType, updateCalendarType, deleteCalendarType }
 
   console.log('selectedService', selectedService)
 
+  const handleBookCalendarSidebar = event => {
+    setOpenServiceSelectorModal(true)
+    // handleAddBookingSidebarToggle()
+    // dispatch(handleSelectEvent(null))
+  }
+
   return (
     <CalendarWrapper
       className='app-calendar'
@@ -123,6 +131,8 @@ const AppCalendar = ({ addCalendarType, updateCalendarType, deleteCalendarType }
         handleAddCalendarSidebarToggle={handleAddCalendarSidebarToggle}
         handleAddBookingSidebarToggle={handleAddBookingSidebarToggle}
         appointment
+        handleBookCalendarSidebar={handleBookCalendarSidebar}
+        openServiceSelectorModal={openServiceSelectorModal}
       />
       <Box
         sx={{
@@ -147,7 +157,7 @@ const AppCalendar = ({ addCalendarType, updateCalendarType, deleteCalendarType }
           updateViewDates={updateViewDates}
           handleSelectEvent={handleSelectEvent}
           handleLeftSidebarToggle={handleLeftSidebarToggle}
-          handleAddEventSidebarToggle={handleAddEventSidebarToggle}
+          handleAddEventSidebarToggle={handleBookCalendarSidebar}
           handleAddCalendarSidebarToggle={handleAddCalendarSidebarToggle}
           handleAddBookingSidebarToggle={handleAddBookingSidebarToggle}
           fetchSelectedBooking={fetchSelectedBooking}
@@ -163,7 +173,8 @@ const AppCalendar = ({ addCalendarType, updateCalendarType, deleteCalendarType }
         calendarApi={calendarApi}
         drawerWidth={addEventSidebarWidth}
         handleSelectEvent={handleSelectEvent}
-        addEventSidebarOpen={addEventSidebarOpen}
+        // addEventSidebarOpen={addEventSidebarOpen}
+        addEventSidebarOpen={false}
         handleAddEventSidebarToggle={handleAddEventSidebarToggle}
         appointment
       />

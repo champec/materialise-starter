@@ -64,6 +64,7 @@ const AppCalendar = ({ addCalendarType, updateCalendarType, deleteCalendarType }
   const [addBookingSidebarOpen, setAddBookingSidebarOpen] = useState(false)
   const [addCalendarSidebarOpen, setAddCalendarSidebarOpen] = useState(false)
   const [bookCalendarSidebarOpen, setBookCalendarSidebarOpen] = useState(false)
+  const [openServiceSelectorModal, setOpenServiceSelectorModal] = useState(false)
 
   // ** Hooks
   const { settings } = useSettings()
@@ -87,6 +88,8 @@ const AppCalendar = ({ addCalendarType, updateCalendarType, deleteCalendarType }
     // felt like all calendar events are fetched for the view anyway not point refetch when calendar changed
     //also view state should trigger fetch event not just autotomatically by useEffect
   }, [dispatch, orgId])
+
+  const handleBookCalendarSidebar = () => setOpenServiceSelectorModal(!openServiceSelectorModal)
 
   useEffect(() => {
     dispatch(fetchCalendarTypes())
@@ -119,6 +122,8 @@ const AppCalendar = ({ addCalendarType, updateCalendarType, deleteCalendarType }
         handleAddEventSidebarToggle={handleAddEventSidebarToggle}
         handleAddCalendarSidebarToggle={handleAddCalendarSidebarToggle}
         handleAddBookingSidebarToggle={handleAddBookingSidebarToggle}
+        handleBookCalendarSidebar={handleBookCalendarSidebar}
+        openServiceSelectorModal={openServiceSelectorModal}
         appointment
       />
       <Box
@@ -147,6 +152,7 @@ const AppCalendar = ({ addCalendarType, updateCalendarType, deleteCalendarType }
           handleAddEventSidebarToggle={handleAddEventSidebarToggle}
           handleAddCalendarSidebarToggle={handleAddCalendarSidebarToggle}
           handleAddBookingSidebarToggle={handleAddBookingSidebarToggle}
+          handleBookCalendarSidebar={handleBookCalendarSidebar}
           fetchSelectedBooking={fetchSelectedBooking}
           setSelectedService={setSelectedService}
           appointment
@@ -163,6 +169,7 @@ const AppCalendar = ({ addCalendarType, updateCalendarType, deleteCalendarType }
         handleSelectEvent={handleSelectEvent}
         addEventSidebarOpen={addEventSidebarOpen}
         handleAddEventSidebarToggle={handleAddEventSidebarToggle}
+        handleBookCalendarSidebar={handleBookCalendarSidebar}
         appointment
       />
       <AddCalendarSidebar

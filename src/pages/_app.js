@@ -116,7 +116,7 @@ const Guard = ({ children, authGuard, guestGuard, orgGuard }) => {
       })
       .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'notifications' }, payload => {
         console.log('Updated notification:', payload)
-        playNotificationSound()
+        //playNotificationSound()
         dispatch(updateNotification(payload.new))
       })
       .subscribe()
