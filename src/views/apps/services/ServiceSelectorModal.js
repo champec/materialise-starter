@@ -1,9 +1,19 @@
 import React from 'react'
 import { Card, Dialog, DialogActions, MenuItem, MenuList, Typography } from '@mui/material'
 import { setSelectedService } from 'src/store/apps/services'
+import { fetchCalendarTypes } from 'src/store/apps/calendar'
+import { useDispatch, useSelector } from 'react-redux'
 
-function ServiceSelectorModal({ open, onClose, calendarTypes, dispatch, handleAddBookingSidebarToggle }) {
+function ServiceSelectorModal({ open, onClose, handleAddBookingSidebarToggle }) {
   // console.log('calendarTypes', calendarTypes)
+  const dispatch = useDispatch()
+  const calendarTypes = useSelector(state => state.bookingsCalendar.calendarTypes)
+
+  console.log('calendarTypes', calendarTypes)
+
+  React.useEffect(() => {
+    dispatch(fetchCalendarTypes())
+  }, [])
 
   const onMenuItemClick = item => {
     dispatch(setSelectedService(item))

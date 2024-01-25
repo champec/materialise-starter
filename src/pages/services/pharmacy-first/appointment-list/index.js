@@ -52,6 +52,7 @@ import BatchActionsModal from './BatchActionsModal'
 import DatePickerWrapper from 'src/@core/styles/libs/react-datepicker'
 import BookCalendarSidebar from 'src/views/apps/Calendar/BookCalendarSidebar'
 import bookingsCalendarSlice from 'src/store/apps/calendar/pharmacyfirst/bookingsCalendarSlice'
+import DeleteCancelModal from 'src/views/apps/services/DeleteCancelModal'
 
 const now = new Date()
 const currentMonth = now.toLocaleString('default', { month: 'short' })
@@ -74,7 +75,7 @@ const invoiceStatusObj = {
   6: { name: 'completed', color: 'primary', icon: 'mdi:content-save-outline' },
   7: { name: 'gp_submitted', color: 'warning', icon: 'mdi:chart-pie' },
   8: { name: 'mys_submitted', color: 'error', icon: 'mdi:information-outline' },
-  9: { name: 'failed', color: 'error', icon: 'mdi:close-circle' },
+  9: { name: 'Expired', color: 'error', icon: 'mdi:close-circle' },
   10: { name: 'cancelled', color: 'error', icon: 'mdi:close-circle' },
   11: { name: 'unattended', color: 'info', icon: 'mdi:arrow-down' }
 }
@@ -278,6 +279,7 @@ const AppointmentList = () => {
   const [batchModalOpen, setBatchModalOpen] = useState(false)
   const [currentAction, setCurrentAction] = useState('')
   const [refetching, setRefetching] = useState(false)
+  const [openDeleteModal, setOpenDeleteModal] = useState(false)
   const [sortModel, setSortModel] = useState([
     {
       field: 'calendar_events.start',
@@ -409,6 +411,12 @@ const AppointmentList = () => {
     setValue(val)
   }
 
+  const handleDeleteAppointment = row => {
+    // the row as the selectedRow and then open the modal
+    setSelectedRowIds([row.id])
+    setOpenDeleteModal(true)
+  }
+
   useEffect(() => {
     // Perform filtering whenever the input value changes
     if (!value.trim()) {
@@ -480,7 +488,7 @@ const AppointmentList = () => {
       renderCell: ({ row }) => (
         <Box sx={{ display: 'flex', alignItems: 'center' }}>
           <Tooltip title='Delete Invoice'>
-            <IconButton size='small' sx={{ mr: 0.5 }} onClick={() => dispatch(deleteInvoice(row.id))}>
+            <IconButton size='small' sx={{ mr: 0.5 }} onClick={() => handleDeleteAppointment(row)}>
               <Icon icon='mdi:delete-outline' />
             </IconButton>
           </Tooltip>
@@ -519,7 +527,7 @@ const AppointmentList = () => {
       <Grid container spacing={6}>
         <Grid item xs={12}>
           <Card>
-            <CardHeader title='Filters' />
+            <CardHeader title='All Appointments' />
             <CardContent>
               <Grid container spacing={6}>
                 <Grid item xs={12} sm={6}>
@@ -640,6 +648,11 @@ const AppointmentList = () => {
         handleAddBookingSidebarToggle={toggleBookingSideBar}
         addBookingSidebarOpen={bookingSideBarOpen}
         handleSelectEvent={() => {}}
+      />
+      <DeleteCancelModal
+        open={openDeleteModal}
+        onClose={() => setOpenDeleteModal(false)}
+        consultations={selectedRows}
       />
     </DatePickerWrapper>
   )

@@ -28,6 +28,7 @@ import { handleSelectEvent } from 'src/store/apps/calendar/pharmacyfirst/booking
 import withReducer from 'src/@core/HOC/withReducer'
 import services from 'src/store/apps/services'
 import appointmentListSlice from 'src/store/apps/calendar/pharmacyfirst/appointmentListSlice'
+import { useDispatch } from 'react-redux'
 
 // ** Icon Imports
 import Icon from 'src/@core/components/icon'
@@ -59,7 +60,6 @@ const BookCalendarSidebar = props => {
   // ** Props
   const {
     // store,
-    dispatch,
     addEvent,
     updateEvent,
     drawerWidth,
@@ -74,6 +74,8 @@ const BookCalendarSidebar = props => {
     setResetToEmptyValues,
     refetchAppointments
   } = props
+
+  const dispatch = useDispatch()
 
   // ** States
   const [values, setValues] = useState(defaultState)

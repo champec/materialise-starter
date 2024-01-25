@@ -48,8 +48,13 @@ export const deleteEvent = createAsyncThunk('appCalendar/deleteEvent', async ({ 
 })
 
 //** Fetch Calendar types
-export const fetchCalendarTypes = createAsyncThunk('appCalendar/fetchCalendarTypes', async () => {
-  const { data, error } = await supabase.from('calendar_types').select('*')
+export const fetchCalendarTypes = createAsyncThunk('appCalendar/fetchCalendarTypes', async (_, { getState }) => {
+  const orgId = getState().organisation.organisation.id
+
+  const { data, error } = await supabase
+    .from('calendar_types')
+    .select('*')
+    .or(`company_id.eq.${orgId},id.in.(14,15,16,17,18)`)
   if (error) {
     console.log(error)
   }
