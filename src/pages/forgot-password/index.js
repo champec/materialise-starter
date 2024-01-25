@@ -1,5 +1,6 @@
 // ** Next Import
 import Link from 'next/link'
+import { useState } from 'react'
 
 // ** MUI Components
 import Button from '@mui/material/Button'
@@ -8,6 +9,8 @@ import Box from '@mui/material/Box'
 import useMediaQuery from '@mui/material/useMediaQuery'
 import { styled, useTheme } from '@mui/material/styles'
 import Typography from '@mui/material/Typography'
+import CustomSnackbar from 'src/views/apps/Calendar/services/pharmacy-first/CustomSnackBar'
+import { CircularProgress } from '@mui/material'
 
 import { supabase } from 'src/configs/supabase'
 
@@ -82,6 +85,14 @@ const ForgotPassword = () => {
   // ** Hooks
   const theme = useTheme()
   const { settings } = useSettings()
+  const [showPasswordSentScreen, setShowPasswordSentScreen] = useState(false)
+  const [email, setEmail] = useState('')
+  const [error, setError] = useState(null)
+  const [loading, setLoading] = useState(false)
+  const [openSnackbar, setOpenSnackbar] = useState(false)
+  const [snackbarSeverity, setSnackbarSeverity] = useState('success')
+  const [snackbarMessage, setSnackbarMessage] = useState('')
+  const [snackbarDuration, setSnackbarDuration] = useState(10000)
 
   // ** Vars
   const { skin } = settings
@@ -89,14 +100,89 @@ const ForgotPassword = () => {
 
   const handleSubmit = async e => {
     e.preventDefault()
+    const email = e.target.elements.email?.value
+    console.log('Email Submitted:', email)
+    setLoading(true)
+    setEmail(email)
+
     // send a password reset to supabase
-    const { error, data } = await supabase.auth.resetPasswordForEmail(e.target.value, {
+    const { error, data } = await supabase.auth.resetPasswordForEmail(email, {
       redirectTo: 'https://pharmex.app/reset-password'
     })
+
+    if (error) {
+      setSnackbarSeverity('error')
+      setSnackbarMessage(error.message)
+      setOpenSnackbar(true)
+      setLoading(false)
+      return
+    }
+
+    setSnackbarSeverity('success')
+    setSnackbarMessage('Password reset email sent')
+    setOpenSnackbar(true)
+    setLoading(false)
+    setShowPasswordSentScreen(true)
+  }
+
+  const resetForm = () => {
+    setShowPasswordSentScreen(false)
+    setEmail('')
   }
 
   const imageSource =
     skin === 'bordered' ? 'auth-v2-forgot-password-illustration-bordered' : 'auth-v2-forgot-password-illustration'
+
+  if (showPasswordSentScreen) {
+    return (
+      <Box className='content-right'>
+        {!hidden ? (
+          <Box sx={{ flex: 1, display: 'flex', position: 'relative', alignItems: 'center', justifyContent: 'center' }}>
+            <ForgotPasswordIllustrationWrapper>
+              <ForgotPasswordIllustration
+                alt='forgot-password-illustration'
+                src={`/images/pages/${imageSource}-${theme.palette.mode}.png`}
+              />
+            </ForgotPasswordIllustrationWrapper>
+            <FooterIllustrationsV2 image={`/images/pages/auth-v2-forgot-password-mask-${theme.palette.mode}.png`} />
+          </Box>
+        ) : null}
+        <RightWrapper sx={skin === 'bordered' && !hidden ? { borderLeft: `1px solid ${theme.palette.divider}` } : {}}>
+          <Box
+            sx={{
+              p: 7,
+              height: '100%',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              backgroundColor: 'background.paper'
+            }}
+          >
+            <BoxWrapper>
+              <Box sx={{ mb: 6 }}>
+                <TypographyStyled variant='h5'>Password Reset Email Sent</TypographyStyled>
+                <Typography variant='body2'>{`We've sent a password reset link to ${email}.`}</Typography>
+                <Typography variant='body2'>
+                  Please check your email for a link to reset your password. If it doesn't appear within a few minutes,
+                  check your spam folder.
+                </Typography>
+              </Box>
+
+              <Button fullWidth size='large' onClick={resetForm} variant='contained' sx={{ mb: 5.25 }}>
+                Resend Email?
+              </Button>
+              <Typography sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <LinkStyled href='/login'>
+                  <Icon icon='mdi:chevron-left' fontSize='2rem' />
+                  <span>Back to login</span>
+                </LinkStyled>
+              </Typography>
+            </BoxWrapper>
+          </Box>
+        </RightWrapper>
+      </Box>
+    )
+  }
 
   return (
     <Box className='content-right'>
@@ -133,76 +219,6 @@ const ForgotPassword = () => {
                 justifyContent: 'center'
               }}
             >
-              <svg width={47} fill='none' height={26} viewBox='0 0 268 150' xmlns='http://www.w3.org/2000/svg'>
-                <rect
-                  rx='25.1443'
-                  width='50.2886'
-                  height='143.953'
-                  fill={theme.palette.primary.main}
-                  transform='matrix(-0.865206 0.501417 0.498585 0.866841 195.571 0)'
-                />
-                <rect
-                  rx='25.1443'
-                  width='50.2886'
-                  height='143.953'
-                  fillOpacity='0.4'
-                  fill='url(#paint0_linear_7821_79167)'
-                  transform='matrix(-0.865206 0.501417 0.498585 0.866841 196.084 0)'
-                />
-                <rect
-                  rx='25.1443'
-                  width='50.2886'
-                  height='143.953'
-                  fill={theme.palette.primary.main}
-                  transform='matrix(0.865206 0.501417 -0.498585 0.866841 173.147 0)'
-                />
-                <rect
-                  rx='25.1443'
-                  width='50.2886'
-                  height='143.953'
-                  fill={theme.palette.primary.main}
-                  transform='matrix(-0.865206 0.501417 0.498585 0.866841 94.1973 0)'
-                />
-                <rect
-                  rx='25.1443'
-                  width='50.2886'
-                  height='143.953'
-                  fillOpacity='0.4'
-                  fill='url(#paint1_linear_7821_79167)'
-                  transform='matrix(-0.865206 0.501417 0.498585 0.866841 94.1973 0)'
-                />
-                <rect
-                  rx='25.1443'
-                  width='50.2886'
-                  height='143.953'
-                  fill={theme.palette.primary.main}
-                  transform='matrix(0.865206 0.501417 -0.498585 0.866841 71.7728 0)'
-                />
-                <defs>
-                  <linearGradient
-                    y1='0'
-                    x1='25.1443'
-                    x2='25.1443'
-                    y2='143.953'
-                    id='paint0_linear_7821_79167'
-                    gradientUnits='userSpaceOnUse'
-                  >
-                    <stop />
-                    <stop offset='1' stopOpacity='0' />
-                  </linearGradient>
-                  <linearGradient
-                    y1='0'
-                    x1='25.1443'
-                    x2='25.1443'
-                    y2='143.953'
-                    id='paint1_linear_7821_79167'
-                    gradientUnits='userSpaceOnUse'
-                  >
-                    <stop />
-                    <stop offset='1' stopOpacity='0' />
-                  </linearGradient>
-                </defs>
-              </svg>
               <Typography variant='h6' sx={{ ml: 2, lineHeight: 1, fontWeight: 700, fontSize: '1.5rem !important' }}>
                 {themeConfig.templateName}
               </Typography>
@@ -213,10 +229,17 @@ const ForgotPassword = () => {
                 Enter your email and we&prime;ll send you instructions to reset your password
               </Typography>
             </Box>
-            <form noValidate autoComplete='off' onSubmit={handleSubmit}>
-              <TextField autoFocus type='email' label='Email' sx={{ display: 'flex', mb: 4 }} />
+            <form noValidate onSubmit={handleSubmit}>
+              <TextField
+                autoFocus
+                autoComplete='email'
+                type='email'
+                name='email'
+                label='Email'
+                sx={{ display: 'flex', mb: 4 }}
+              />
               <Button fullWidth size='large' type='submit' variant='contained' sx={{ mb: 5.25 }}>
-                Send reset link
+                {loading ? <CircularProgress size={24} /> : 'Send reset link'}
               </Button>
               <Typography sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                 <LinkStyled href='/login'>
@@ -228,6 +251,15 @@ const ForgotPassword = () => {
           </BoxWrapper>
         </Box>
       </RightWrapper>
+      <CustomSnackbar
+        open={openSnackbar}
+        setOpen={setOpenSnackbar}
+        vertical={'top'}
+        horizontal={'center'}
+        severity={snackbarSeverity}
+        message={snackbarMessage}
+        duration={snackbarDuration}
+      />
     </Box>
   )
 }
