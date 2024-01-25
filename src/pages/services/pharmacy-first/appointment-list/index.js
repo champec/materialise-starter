@@ -68,14 +68,14 @@ const Transition = forwardRef(function Transition(props, ref) {
 
 // ** Vars
 const invoiceStatusObj = {
-  Booked: { color: 'secondary', icon: 'mdi:send' },
-  Rescheduled: { color: 'warning', icon: 'mdi:send' },
-  live: { color: 'success', icon: 'mdi:check' },
-  completed: { color: 'primary', icon: 'mdi:content-save-outline' },
-  gp_submitted: { color: 'warning', icon: 'mdi:chart-pie' },
-  mys_submitted: { color: 'error', icon: 'mdi:information-outline' },
-  unattended: { color: 'info', icon: 'mdi:arrow-down' },
-  cancelled: { color: 'error', icon: 'mdi:close-circle' }
+  1: { name: 'scheduled', color: 'secondary', icon: 'mdi:send' },
+  2: { name: 'rescheduled', color: 'warning', icon: 'mdi:send' },
+  5: { name: 'live', color: 'success', icon: 'mdi:check' },
+  6: { name: 'completed', color: 'primary', icon: 'mdi:content-save-outline' },
+  7: { name: 'gp_submitted', color: 'warning', icon: 'mdi:chart-pie' },
+  8: { name: 'mys_submitted', color: 'error', icon: 'mdi:information-outline' },
+  10: { name: 'cancelled', color: 'error', icon: 'mdi:close-circle' },
+  11: { name: 'unattended', color: 'info', icon: 'mdi:arrow-down' }
 }
 
 // ** renders client column
@@ -134,13 +134,14 @@ const defaultColumns = [
       <Box sx={{ display: 'flex', color: 'action.active' }}>
         <Icon icon='mdi:trending-up' fontSize={20} />
         <Typography variant='body2' sx={{ ml: 1 }}>
-          Status
+          Service Type
         </Typography>
       </Box>
     ),
     renderCell: ({ row }) => {
-      const { consultation_status: status } = row
+      const { consultation_status: status, calendar_events } = row
       const title = status?.title
+      const serviceTitle = calendar_events?.title
 
       const dueDate = 'destructured from row'
       const balance = 'destructured from row'
@@ -167,13 +168,16 @@ const defaultColumns = [
               </Box>
             }
           >
-            <CustomAvatar skin='light' color={color} sx={{ width: 34, height: 34 }}>
+            <Typography variant='body2' sx={{ color: 'common.white', fontWeight: 600 }}>
+              {serviceTitle}
+            </Typography>
+            {/* <CustomAvatar skin='light' color={color} sx={{ width: 34, height: 34 }}>
               <Icon icon={invoiceStatusObj[title]?.icon || 'ri:question-line'} fontSize='1.25rem' />
-            </CustomAvatar>
+            </CustomAvatar> */}
           </Tooltip>
-          <Typography variant='caption' sx={{ color: 'common.white', fontWeight: 600 }}>
+          {/* <Typography variant='caption' sx={{ color: 'common.white', fontWeight: 600 }}>
             {title}
-          </Typography>
+          </Typography> */}
         </Box>
       )
     }
@@ -188,7 +192,7 @@ const defaultColumns = [
   {
     flex: 0.15,
     minWidth: 125,
-    field: 'issuedDate',
+    field: 'calendar_events.start',
     headerName: 'Booking Date',
     renderCell: ({ row }) => {
       const { calendar_events: event } = row
@@ -212,14 +216,24 @@ const defaultColumns = [
   {
     flex: 0.1,
     minWidth: 90,
-    field: 'balance',
-    headerName: 'Type',
+    field: 'status',
+    headerName: 'Status',
     renderCell: ({ row }) => {
-      return row.balance !== 'PFS' ? (
-        <CustomChip size='small' skin='light' color='warning' label={row.type} />
-      ) : (
-        <CustomChip size='small' skin='light' color='success' label={row.type} />
-      )
+      const status = invoiceStatusObj[row.status]
+      if (status) {
+        return (
+          <CustomChip
+            size='small'
+            skin='light'
+            color={status.color}
+            label={status.name}
+            //icon={<YourIconComponent name={status.icon} />} // Replace 'YourIconComponent' with your actual icon component
+          />
+        )
+      } else {
+        // Handle unknown status
+        return <span>Unknown Status</span>
+      }
     }
   }
 ]
@@ -228,7 +242,7 @@ const CustomInput = forwardRef((props, ref) => {
   const startDate = props.start !== null ? format(props.start, 'MM/dd/yyyy') : ''
   const endDate = props.end !== null ? ` - ${format(props.end, 'MM/dd/yyyy')}` : null
   const value = `${startDate}${endDate !== null ? endDate : ''}`
-  props.start === null && props.dates.length && props.setDates ? props.setDates([]) : null
+  props.start === null && props.dates?.length && props.setDates ? props.setDates([]) : null
   const updatedProps = { ...props }
   delete updatedProps.setDates
   return <TextField fullWidth inputRef={ref} {...updatedProps} label={props.label || ''} value={value} />
@@ -262,8 +276,29 @@ const AppointmentList = () => {
     return appointments.filter(row => selectedRowIds.includes(row.id))
   }, [appointments, selectedRowIds])
 
+  const fetchAppointmentsWithDateRange = async => {
+    const startDate = new Date()
+    const endDate = new Date()
+    startDate.setDate(startDate.getDate() - 14)
+    endDate.setDate(endDate.getDate() + 14)
+    const formattedStartDate = startDate.toISOString()
+    const formattedEndDate = endDate.toISOString()
+
+    setStartDateRange(startDate)
+    setEndDateRange(endDate)
+
+    dispatch(
+      fetchAppointments({
+        dateRange: {
+          start: formattedStartDate,
+          end: formattedEndDate
+        }
+      })
+    )
+  }
+
   useEffect(() => {
-    dispatch(fetchAppointments())
+    fetchAppointmentsWithDateRange()
   }, [])
 
   useEffect(() => {
@@ -288,13 +323,14 @@ const AppointmentList = () => {
   }, [startDateRange, endDateRange])
 
   const reFetchAppointments = async () => {
-    setFilteredAppointments([])
-    const response = await dispatch(fetchAppointments())
-    if (response.error) {
-      console.log('ERROR', response.error)
-    }
+    fetchAppointmentsWithDateRange()
+    // setFilteredAppointments([])
+    // const response = await dispatch(fetchAppointments())
+    // if (response.error) {
+    //   console.log('ERROR', response.error)
+    // }
 
-    setFilteredAppointments(response.payload)
+    // setFilteredAppointments(response.payload)
   }
 
   // console.log('APPOINTMENTS', appointments)
@@ -308,11 +344,18 @@ const AppointmentList = () => {
   const store = useSelector(state => state.invoice)
 
   const applyFilter = () => {
-    if (statusValue == 'all') {
+    if (statusValue === 'all') {
       setFilteredAppointments(appointments)
     } else {
+      // Find the status value corresponding to the selected status name
+      const selectedStatusValue = Object.keys(invoiceStatusObj).find(key => invoiceStatusObj[key].name === statusValue)
+
       setFilteredAppointments(
-        appointments.filter(appointment => appointment.consultation_status?.title === statusValue)
+        appointments.filter(appointment => {
+          // Assuming the appointment's status is stored in a field like `status`
+          // and it's a number corresponding to the value in `invoiceStatusObj`
+          return appointment.status === parseInt(selectedStatusValue, 10)
+        })
       )
     }
   }
@@ -441,7 +484,6 @@ const AppointmentList = () => {
                 <Grid item xs={12} sm={6}>
                   <FormControl fullWidth>
                     <InputLabel id='invoice-status-select'>Status</InputLabel>
-
                     <Select
                       fullWidth
                       value={statusValue}
@@ -451,13 +493,11 @@ const AppointmentList = () => {
                       labelId='invoice-status-select'
                     >
                       <MenuItem value='all'>All</MenuItem>
-                      <MenuItem value='Booked'>Booked</MenuItem>
-                      <MenuItem value='Rescheduled'>Reschedules</MenuItem>
-                      {/* <MenuItem value='draft'>Draft</MenuItem>
-                      <MenuItem value='paid'>Paid</MenuItem>
-                      <MenuItem value='partial payment'>Partial Payment</MenuItem>
-                      <MenuItem value='past due'>Past Due</MenuItem>
-                      <MenuItem value='sent'>Sent</MenuItem> */}
+                      {Object.entries(invoiceStatusObj).map(([key, value]) => (
+                        <MenuItem key={key} value={value.name}>
+                          {value.name.charAt(0).toUpperCase() + value.name.slice(1).replace(/_/g, ' ')}
+                        </MenuItem>
+                      ))}
                     </Select>
                   </FormControl>
                 </Grid>
@@ -507,6 +547,12 @@ const AppointmentList = () => {
               disableSelectionOnClick
               pageSizeOptions={[10, 25, 50]}
               paginationModel={paginationModel}
+              sortModel={[
+                {
+                  field: 'issuedDate',
+                  sort: 'desc'
+                }
+              ]}
               onPaginationModelChange={setPaginationModel}
               onSelectionModelChange={rows => setSelectedRowIds(rows)}
               onRowDoubleClick={appointment => window.open(`/pharmacy-first/appointment-list/${appointment.id}`)}

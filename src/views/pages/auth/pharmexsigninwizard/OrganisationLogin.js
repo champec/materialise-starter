@@ -89,8 +89,7 @@ const StepAccountDetails = ({ handleNext, authOrg, authUser }) => {
   // ** Hooks
   const theme = useTheme()
   const name = useSelector(state => state.organisation.organisation?.organisation_name)
-  const username = useSelector(state => state?.user?.user?.username)
-
+  const username = useSelector(state => state?.user?.user?.users?.username)
 
   const { settings } = useSettings()
 
@@ -191,7 +190,7 @@ const StepAccountDetails = ({ handleNext, authOrg, authUser }) => {
               </Box>
             ) : (
               <Box sx={{ mb: 6 }}>
-                <TypographyStyled variant='h5'>{`Welcome to ${username}! 👋🏻`}</TypographyStyled>
+                <TypographyStyled variant='h5'>{`Welcome ${username}! 👋🏻`}</TypographyStyled>
                 <Typography variant='body2'>Please sign-in to the Pharmacy Account</Typography>
               </Box>
             )}

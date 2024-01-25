@@ -36,7 +36,7 @@ export const fetchAppointments = createAsyncThunk(
       .eq('pharmacy_id', orgId)
       .gte('calendar_events.start', start)
       .lte('calendar_events.end', end)
-      .order('start', { foreignTable: 'calendar_events', ascending: true })
+    // .order('calendar_events', { ascending: true }) // or { ascending: false } for descending order
 
     // Add service conditionally
     if (type) {
