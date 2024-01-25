@@ -74,6 +74,7 @@ const invoiceStatusObj = {
   6: { name: 'completed', color: 'primary', icon: 'mdi:content-save-outline' },
   7: { name: 'gp_submitted', color: 'warning', icon: 'mdi:chart-pie' },
   8: { name: 'mys_submitted', color: 'error', icon: 'mdi:information-outline' },
+  9: { name: 'failed', color: 'error', icon: 'mdi:close-circle' },
   10: { name: 'cancelled', color: 'error', icon: 'mdi:close-circle' },
   11: { name: 'unattended', color: 'info', icon: 'mdi:arrow-down' }
 }
@@ -105,9 +106,13 @@ const defaultColumns = [
   // },
   {
     flex: 0.25,
-    field: 'name',
+    field: 'patient_object.full_name',
     minWidth: 300,
     headerName: 'Client',
+    valueGetter: params => {
+      const { patient_object: patient } = params.row
+      return patient?.full_name
+    },
     renderCell: ({ row }) => {
       const { patient_object: patient } = row
       const formatedDob = dayjs(patient?.dob).format('D MMM YYYY')
@@ -194,6 +199,11 @@ const defaultColumns = [
     minWidth: 125,
     field: 'calendar_events.start',
     headerName: 'Booking Date',
+    valueGetter: params => {
+      const { calendar_events: event } = params.row
+      const eventDateTime = event?.start
+      return eventDateTime
+    },
     renderCell: ({ row }) => {
       const { calendar_events: event } = row
       //if an event doesnt have a calendar event.created_at then log it to the console
@@ -227,7 +237,7 @@ const defaultColumns = [
             skin='light'
             color={status.color}
             label={status.name}
-            //icon={<YourIconComponent name={status.icon} />} // Replace 'YourIconComponent' with your actual icon component
+            icon={<Icon icon={status.icon} />} // Replace 'YourIconComponent' with your actual icon component
           />
         )
       } else {
@@ -268,6 +278,12 @@ const AppointmentList = () => {
   const [batchModalOpen, setBatchModalOpen] = useState(false)
   const [currentAction, setCurrentAction] = useState('')
   const [refetching, setRefetching] = useState(false)
+  const [sortModel, setSortModel] = useState([
+    {
+      field: 'calendar_events.start',
+      sort: 'desc'
+    }
+  ])
   const appointments = appointmentsSlice?.appointments
   const loading = appointmentsSlice?.loading
   dayjs.extend(advancedFormat)
@@ -359,6 +375,31 @@ const AppointmentList = () => {
       )
     }
   }
+
+  // Function to handle sort model change
+  const handleSortModelChange = model => {
+    setSortModel(model)
+  }
+
+  // Sort the data based on the sort model
+  const sortedAppointments = useMemo(() => {
+    if (sortModel.length === 0) return filteredAppointments
+
+    const sorter = (a, b) => {
+      const field = sortModel[0].field
+      const sort = sortModel[0].sort
+
+      if (a[field] < b[field]) {
+        return sort === 'asc' ? -1 : 1
+      }
+      if (a[field] > b[field]) {
+        return sort === 'asc' ? 1 : -1
+      }
+      return 0
+    }
+
+    return [...filteredAppointments].sort(sorter)
+  }, [filteredAppointments, sortModel])
 
   useEffect(() => {
     applyFilter()
@@ -547,12 +588,8 @@ const AppointmentList = () => {
               disableSelectionOnClick
               pageSizeOptions={[10, 25, 50]}
               paginationModel={paginationModel}
-              sortModel={[
-                {
-                  field: 'issuedDate',
-                  sort: 'desc'
-                }
-              ]}
+              onSortModelChange={handleSortModelChange}
+              sortModel={sortModel}
               onPaginationModelChange={setPaginationModel}
               onSelectionModelChange={rows => setSelectedRowIds(rows)}
               onRowDoubleClick={appointment => window.open(`/pharmacy-first/appointment-list/${appointment.id}`)}
