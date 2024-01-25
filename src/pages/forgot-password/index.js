@@ -132,55 +132,28 @@ const ForgotPassword = () => {
 
   const imageSource =
     skin === 'bordered' ? 'auth-v2-forgot-password-illustration-bordered' : 'auth-v2-forgot-password-illustration'
-
-  if (showPasswordSentScreen) {
+  const EmailSentScreen = () => {
     return (
-      <Box className='content-right'>
-        {!hidden ? (
-          <Box sx={{ flex: 1, display: 'flex', position: 'relative', alignItems: 'center', justifyContent: 'center' }}>
-            <ForgotPasswordIllustrationWrapper>
-              <ForgotPasswordIllustration
-                alt='forgot-password-illustration'
-                src={`/images/pages/${imageSource}-${theme.palette.mode}.png`}
-              />
-            </ForgotPasswordIllustrationWrapper>
-            <FooterIllustrationsV2 image={`/images/pages/auth-v2-forgot-password-mask-${theme.palette.mode}.png`} />
-          </Box>
-        ) : null}
-        <RightWrapper sx={skin === 'bordered' && !hidden ? { borderLeft: `1px solid ${theme.palette.divider}` } : {}}>
-          <Box
-            sx={{
-              p: 7,
-              height: '100%',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              backgroundColor: 'background.paper'
-            }}
-          >
-            <BoxWrapper>
-              <Box sx={{ mb: 6 }}>
-                <TypographyStyled variant='h5'>Password Reset Email Sent</TypographyStyled>
-                <Typography variant='body2'>{`We've sent a password reset link to ${email}.`}</Typography>
-                <Typography variant='body2'>
-                  Please check your email for a link to reset your password. If it doesn't appear within a few minutes,
-                  check your spam folder.
-                </Typography>
-              </Box>
+      <BoxWrapper>
+        <Box sx={{ mb: 6 }}>
+          <TypographyStyled variant='h5'>Password Reset Email Sent</TypographyStyled>
+          <Typography variant='body2'>{`We've sent a password reset link to ${email}.`}</Typography>
+          <Typography variant='body2'>
+            Please check your email for a link to reset your password. If it doesn't appear within a few minutes, check
+            your spam folder.
+          </Typography>
+        </Box>
 
-              <Button fullWidth size='large' onClick={resetForm} variant='contained' sx={{ mb: 5.25 }}>
-                Resend Email?
-              </Button>
-              <Typography sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                <LinkStyled href='/login'>
-                  <Icon icon='mdi:chevron-left' fontSize='2rem' />
-                  <span>Back to login</span>
-                </LinkStyled>
-              </Typography>
-            </BoxWrapper>
-          </Box>
-        </RightWrapper>
-      </Box>
+        <Button fullWidth size='large' onClick={resetForm} variant='contained' sx={{ mb: 5.25 }}>
+          Resend Email?
+        </Button>
+        <Typography sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <LinkStyled href='/login'>
+            <Icon icon='mdi:chevron-left' fontSize='2rem' />
+            <span>Back to login</span>
+          </LinkStyled>
+        </Typography>
+      </BoxWrapper>
     )
   }
 
@@ -208,47 +181,51 @@ const ForgotPassword = () => {
             backgroundColor: 'background.paper'
           }}
         >
-          <BoxWrapper>
-            <Box
-              sx={{
-                top: 30,
-                left: 40,
-                display: 'flex',
-                position: 'absolute',
-                alignItems: 'center',
-                justifyContent: 'center'
-              }}
-            >
-              <Typography variant='h6' sx={{ ml: 2, lineHeight: 1, fontWeight: 700, fontSize: '1.5rem !important' }}>
-                {themeConfig.templateName}
-              </Typography>
-            </Box>
-            <Box sx={{ mb: 6 }}>
-              <TypographyStyled variant='h5'>Forgot Password? 🔒</TypographyStyled>
-              <Typography variant='body2'>
-                Enter your email and we&prime;ll send you instructions to reset your password
-              </Typography>
-            </Box>
-            <form noValidate onSubmit={handleSubmit}>
-              <TextField
-                autoFocus
-                autoComplete='email'
-                type='email'
-                name='email'
-                label='Email'
-                sx={{ display: 'flex', mb: 4 }}
-              />
-              <Button fullWidth size='large' type='submit' variant='contained' sx={{ mb: 5.25 }}>
-                {loading ? <CircularProgress size={24} /> : 'Send reset link'}
-              </Button>
-              <Typography sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                <LinkStyled href='/login'>
-                  <Icon icon='mdi:chevron-left' fontSize='2rem' />
-                  <span>Back to login</span>
-                </LinkStyled>
-              </Typography>
-            </form>
-          </BoxWrapper>
+          {showPasswordSentScreen ? (
+            <EmailSentScreen />
+          ) : (
+            <BoxWrapper>
+              <Box
+                sx={{
+                  top: 30,
+                  left: 40,
+                  display: 'flex',
+                  position: 'absolute',
+                  alignItems: 'center',
+                  justifyContent: 'center'
+                }}
+              >
+                <Typography variant='h6' sx={{ ml: 2, lineHeight: 1, fontWeight: 700, fontSize: '1.5rem !important' }}>
+                  {themeConfig.templateName}
+                </Typography>
+              </Box>
+              <Box sx={{ mb: 6 }}>
+                <TypographyStyled variant='h5'>Forgot Password? 🔒</TypographyStyled>
+                <Typography variant='body2'>
+                  Enter your email and we&prime;ll send you instructions to reset your password
+                </Typography>
+              </Box>
+              <form noValidate onSubmit={handleSubmit}>
+                <TextField
+                  autoFocus
+                  autoComplete='email'
+                  type='email'
+                  name='email'
+                  label='Email'
+                  sx={{ display: 'flex', mb: 4 }}
+                />
+                <Button fullWidth size='large' type='submit' variant='contained' sx={{ mb: 5.25 }}>
+                  {loading ? <CircularProgress size={24} /> : 'Send reset link'}
+                </Button>
+                <Typography sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <LinkStyled href='/login'>
+                    <Icon icon='mdi:chevron-left' fontSize='2rem' />
+                    <span>Back to login</span>
+                  </LinkStyled>
+                </Typography>
+              </form>
+            </BoxWrapper>
+          )}
         </Box>
       </RightWrapper>
       <CustomSnackbar
