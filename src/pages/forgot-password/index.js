@@ -9,6 +9,8 @@ import useMediaQuery from '@mui/material/useMediaQuery'
 import { styled, useTheme } from '@mui/material/styles'
 import Typography from '@mui/material/Typography'
 
+import { supabase } from 'src/configs/supabase'
+
 // ** Icon Imports
 import Icon from 'src/@core/components/icon'
 
@@ -85,8 +87,12 @@ const ForgotPassword = () => {
   const { skin } = settings
   const hidden = useMediaQuery(theme.breakpoints.down('md'))
 
-  const handleSubmit = e => {
+  const handleSubmit = async e => {
     e.preventDefault()
+    // send a password reset to supabase
+    const { error, data } = await supabase.auth.resetPasswordForEmail(e.target.value, {
+      redirectTo: 'https://pharmex.app/reset-password'
+    })
   }
 
   const imageSource =
@@ -226,6 +232,8 @@ const ForgotPassword = () => {
   )
 }
 ForgotPassword.guestGuard = true
+ForgotPassword.authGuard = false
+ForgotPassword.orgGuard = false
 ForgotPassword.getLayout = page => <BlankLayout>{page}</BlankLayout>
 
 export default ForgotPassword
