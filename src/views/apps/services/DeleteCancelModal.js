@@ -6,7 +6,7 @@ import { useSelector } from 'react-redux'
 import { deleteBooking } from 'src/store/apps/calendar/pharmacyfirst/bookingsCalendarSlice'
 import { appendMessageToThread } from 'src/store/apps/calendar/pharmacyfirst/appointmentListSlice'
 
-const DeleteCancelModal = ({ open, onClose, consultations }) => {
+const DeleteCancelModal = ({ open, onClose, consultations, refetchAppointments }) => {
   const dispatch = useDispatch()
   const organisation = useSelector(state => state.organisation?.organisation)
   const [step, setStep] = useState(1)
@@ -33,21 +33,23 @@ const DeleteCancelModal = ({ open, onClose, consultations }) => {
     setStep(1) // Reset to initial step
   }
 
-  const handleDeleteConfirm = () => {
+  const handleDeleteConfirm = async () => {
     if (step === 1) {
       // Move to next step (send message or not)
       setStep(2)
     } else {
       // Perform delete action
-      consultations.forEach(consultation => {
-        dispatch(deleteBooking(consultation?.sms_threads[0]?.id))
+      for (const consultation of consultations) {
         if (step === 3) {
           const customMessage = formatMessage(consultation)
-          dispatch(appendMessageToThread({ threadId: consultation.patientId, message: customMessage }))
+          await dispatch(appendMessageToThread({ threadId: consultation?.sms_threads[0]?.id, message: customMessage }))
         }
-      })
+        dispatch(deleteBooking(consultation?.id))
+      }
+
       onClose()
       setStep(1)
+      refetchAppointments()
     }
   }
 

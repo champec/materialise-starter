@@ -70,7 +70,11 @@ function index() {
 
   return (
     <div>
-      <ServiceAppointmentList customColumns={customColumns} locallySelectedService={locallySelectedService} />
+      <ServiceAppointmentList
+        customColumns={customColumns}
+        locallySelectedService={locallySelectedService}
+        setLocallySelectedService={setLocallySelectedService}
+      />
     </div>
   )
 }

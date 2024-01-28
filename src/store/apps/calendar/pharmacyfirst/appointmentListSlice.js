@@ -85,7 +85,10 @@ export const fetchPatientData = createAsyncThunk('appointmentList/fetchPatientDa
 
 export const createThreadAndSendSMS = createAsyncThunk(
   'appointmentList/createThreadAndSendSMS',
-  async ({ patientId, patientName, message, phoneNumber, time, appointmentId }, { getState }) => {
+  async (
+    { patientId, patientName, message, phoneNumber, time, appointmentId, doNotIncludeTextMessage },
+    { getState }
+  ) => {
     const orgId = getState().organisation.organisation.id
     const notifyApiKey = getState().organisation?.organisation?.pharmacy_settings?.notify_api_key
 
@@ -123,13 +126,15 @@ export const createThreadAndSendSMS = createAsyncThunk(
     // console.log(response, 'response')
 
     // create message and append to thread
-    const { data: messageData, error: messageError } = await supabase
-      .from('sms_messages')
-      .insert({ thread_id: data.id, message: message, sender_id: orgId })
+    if (!doNotIncludeTextMessage) {
+      const { data: messageData, error: messageError } = await supabase
+        .from('sms_messages')
+        .insert({ thread_id: data.id, message: message, sender_id: orgId })
 
-    if (messageError) {
-      console.error(messageError)
-      throw messageError // Consider throwing the error to be handled by Redux Toolkit
+      if (messageError) {
+        console.error(messageError)
+        throw messageError // Consider throwing the error to be handled by Redux Toolkit
+      }
     }
 
     return response
@@ -298,7 +303,7 @@ export const updateSelectedBookingService = createAsyncThunk(
   async ({ bookingId, serviceTable, serviceInfo }) => {
     const { data, error } = await supabase
       .from(serviceTable)
-      .update(serviceInfo)
+      .update({ pathwayform: serviceInfo })
       .eq('consultation_id', bookingId)
       .select('*')
 

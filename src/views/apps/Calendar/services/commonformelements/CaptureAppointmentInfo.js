@@ -22,20 +22,20 @@ function AppointInfo({
       <Box container spacing={5}>
         <Box sx={{ mb: 4 }}>
           <Typography variant='body2' sx={{ fontWeight: 600, color: 'text.primary' }}>
-            {"Booking Information"}
+            {'Booking Information'}
           </Typography>
           <Typography variant='caption' component='p'>
-            {"Please enter the booking information below"}
+            {'Please enter the booking information below'}
           </Typography>
         </Box>
 
         <Stack spacing={4}>
-
           <FormControl fullWidth>
             <Controller
               name='startDate'
               control={bookingControl}
               rules={{ required: true }}
+              defaultValue={dayjs(new Date()).format('DD/MMM/YYYY h:mm A')}
               render={({ field: { value, onChange } }) => (
                 <>
                   <TextField

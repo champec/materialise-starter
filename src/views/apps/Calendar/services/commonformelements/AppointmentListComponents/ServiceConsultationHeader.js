@@ -1,4 +1,3 @@
-import { useState } from 'react'
 // ** Next Import
 import Link from 'next/link'
 import FallbackSpinner from 'src/@core/components/spinner'
@@ -11,22 +10,10 @@ import TextField from '@mui/material/TextField'
 import { IconButton, Tooltip } from '@mui/material'
 import Icon from 'src/@core/components/icon'
 import CircularProgress from '@mui/material/CircularProgress'
-import BookCalendarSidebar from '../../Calendar/BookCalendarSidebar'
 
-//custom components
-import ServiceSelectorModal from '../../services/ServiceSelectorModal'
-
-const ConsultationHeader = props => {
+const ServiceConsultationHeader = props => {
   // ** Props
   const { value, selectedRows, handleFilter, onBook, handleBatchAction, reFetching, reFetchAppointments } = props
-  const [openServiceSelectorModal, setOpenServiceSelectorModal] = useState(false)
-  const [openBookCalendarSidebar, setOpenBookCalendarSidebar] = useState(false)
-
-  const handleAddBookingSidebarToggle = () => {
-    setOpenBookCalendarSidebar(!openBookCalendarSidebar)
-  }
-
-  console.log('typef of refetchAppointments in header', typeof reFetchAppointments)
 
   console.log({ reFetching })
   return (
@@ -69,22 +56,12 @@ const ConsultationHeader = props => {
           sx={{ mr: 4, mb: 2, maxWidth: '180px' }}
           onChange={e => handleFilter(e.target.value)}
         />
-        <Button sx={{ mb: 2 }} variant='contained' onClick={() => setOpenServiceSelectorModal(true)}>
+        <Button sx={{ mb: 2 }} variant='contained' onClick={onBook}>
           New Consultation
         </Button>
       </Box>
-      <ServiceSelectorModal
-        open={openServiceSelectorModal}
-        onClose={() => setOpenServiceSelectorModal(false)}
-        handleAddBookingSidebarToggle={handleAddBookingSidebarToggle}
-      />
-      <BookCalendarSidebar
-        addBookingSidebarOpen={openBookCalendarSidebar}
-        handleAddBookingSidebarToggle={handleAddBookingSidebarToggle}
-        refetchAppointments={reFetchAppointments}
-      />
     </Box>
   )
 }
 
-export default ConsultationHeader
+export default ServiceConsultationHeader

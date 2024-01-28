@@ -504,16 +504,19 @@ const AppointmentList = () => {
             options={[
               {
                 text: 'Submit To GP',
-                icon: <Icon icon='mdi:download' fontSize={20} />
+                icon: <Icon icon='mdi:download' fontSize={20} />,
+                disabled: true
               },
               {
                 text: 'Edit',
                 href: `/apps/invoice/edit/${row.id}`,
-                icon: <Icon icon='mdi:pencil-outline' fontSize={20} />
+                icon: <Icon icon='mdi:pencil-outline' fontSize={20} />,
+                disabled: false
               },
               {
                 text: 'Duplicate',
-                icon: <Icon icon='mdi:content-copy' fontSize={20} />
+                icon: <Icon icon='mdi:content-copy' fontSize={20} />,
+                disabled: true
               }
             ]}
           />
@@ -653,6 +656,7 @@ const AppointmentList = () => {
         open={openDeleteModal}
         onClose={() => setOpenDeleteModal(false)}
         consultations={selectedRows}
+        refetchAppointments={reFetchAppointments}
       />
     </DatePickerWrapper>
   )

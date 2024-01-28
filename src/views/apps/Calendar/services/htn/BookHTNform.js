@@ -34,7 +34,7 @@ function index({
   useEffect(() => {
     if (!serviceInfo || Object.keys(serviceInfo).length === 0) {
       // Initialize serviceInfo with default values if it's empty
-      setServiceInfo({ dob: null, taken_date: null, age: '' })
+      setServiceInfo({ dob: null, taken_date: dayjs().format('YYYY-MM-DD'), age: 0 })
     }
     setLoading(false)
   }, [serviceInfo, setServiceInfo])
@@ -76,7 +76,11 @@ function index({
             {/* Taken Date Picker */}
             <TextField
               label='Taken Date'
-              value={serviceInfo.taken_date ? dayjs(serviceInfo.taken_date).format('YYYY-MM-DD') : ''}
+              value={
+                serviceInfo.taken_date
+                  ? dayjs(serviceInfo.taken_date).format('YYYY-MM-DD')
+                  : dayjs().format('YYYY-MM-DD')
+              }
               onClick={() => setTakenDatePickerOpen(true)}
               fullWidth
               style={{ marginBottom: '2rem' }}

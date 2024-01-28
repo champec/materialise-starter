@@ -117,7 +117,7 @@ const defaultAccountValues = {
 
 const defaultBookingValues = {
   pharmacist: {},
-  startDate: '',
+  startDate: dayjs(),
   duration: 15,
   textMessage: '',
   presentingComplaint: '',
@@ -184,7 +184,8 @@ const NewBookingForm = ({
   selectedService,
   resetToEmptyValues,
   setResetToEmptyValues,
-  refetchAppointments
+  refetchAppointments,
+  addBookingSidebarOpen
 }) => {
   // ** States
   const [activeStep, setActiveStep] = useState(0)
@@ -198,6 +199,8 @@ const NewBookingForm = ({
   const selectedBookingLoading = useSelector(state => state.appointmentListSlice.selectedBookingLoading)
   const selectedBooking = useSelector(state => state.appointmentListSlice.selectedBooking)
   const [variableLoading, setVariableLoading] = useState(false)
+
+  console.log('typeof refetchAppointments', typeof refetchAppointments)
 
   // console.log('selectedBooking', selectedBooking, selectedBookingLoading)
   //fetch the variable table data
@@ -230,6 +233,13 @@ const NewBookingForm = ({
       fetchVariableTableData()
     }
   }, [selectedBooking])
+
+  // ** Effects
+  useEffect(() => {
+    if (addBookingSidebarOpen == false) {
+      handleReset()
+    }
+  }, [addBookingSidebarOpen])
 
   useEffect(() => {
     if (selectedBooking) {
@@ -269,6 +279,7 @@ const NewBookingForm = ({
       // dispatch(setSelectedBooking(null))
       setSnackMessage('')
       setActiveStep(0)
+
       // patientReset(defaultAccountValues)
       // bookingReset(defaultBookingValues)
     }
@@ -441,8 +452,8 @@ const NewBookingForm = ({
   const [selectedPatient, setSelectedPatient] = useState(null)
   const [selectedPharmacist, setSelectedPharmacist] = useState(null)
   const [selectedGP, setSelectedGP] = useState(null)
-  const [includeTextMessage, setIncludeTextMessage] = useState(true)
   const [serviceInfo, setServiceInfo] = useState({})
+  const [doNotIncludeTextMessage, setdoNotIncludeTextMessage] = useState(false)
   const [datePickerOpen, setDatePickerOpen] = useState(false)
   const orgId = useSelector(state => state.organisation.organisation.id)
   const notifyApiKey = useSelector(state => state.organisation?.organisation?.pharmacy_settings?.notify_api_key)
@@ -462,7 +473,7 @@ const NewBookingForm = ({
 
   useEffect(() => {
     if (selectedBooking) {
-      setIncludeTextMessage(false)
+      setdoNotIncludeTextMessage(true)
     }
   }, [selectedBooking])
 
@@ -501,16 +512,23 @@ const NewBookingForm = ({
 
   const handleReset = () => {
     setActiveStep(0)
-    confirmReset({ iAgree: false })
-    patientReset({ fullName: '', email: '', nhsNumber: '', password: '', 'confirm-password': '' })
-    bookingReset({
-      pharmacist: '',
-      startDate: '',
-      duration: 15,
-      textMessage: '',
-      presentingComplaint: '',
-      clinicalPathway: ''
-    })
+    setServiceInfo({})
+    setSelectedPatient(null)
+    setSelectedPharmacist(null)
+    setSelectedGP(null)
+    setdoNotIncludeTextMessage(false)
+
+    // confirmReset({ iAgree: false })
+    // patientReset({ fullName: '', email: '', nhsNumber: '', password: '', 'confirm-password': '' })
+
+    // bookingReset({
+    //   pharmacist: '',
+    //   startDate: '',
+    //   duration: 15,
+    //   textMessage: '',
+    //   presentingComplaint: '',
+    //   clinicalPathway: ''
+    // })
   }
 
   const onSubmit = async data => {
@@ -526,7 +544,8 @@ const NewBookingForm = ({
 
       // generate a scheduled meeting, nbf time set returns object with meeting url
       if (!selectedBooking) {
-        const unixTimeStamp = bookingData?.startDate.unix()
+        console.log('booking data', bookingData)
+        const unixTimeStamp = dayjs(bookingData?.startDate).unix()
         const { data: dailyDatar, error: dailyError } = await supabase.functions.invoke('daily-scheduler', {
           body: { scheduledTime: unixTimeStamp }
         })
@@ -713,33 +732,33 @@ const NewBookingForm = ({
       ).format('YYYY-MM-DD HH:mm')} is starting soon`
       const title = `Consultation ${selectedPatient?.full_name}`
 
-      if (includeTextMessage) {
-        const smsResponse = await dispatch(
-          createThreadAndSendSMS({
-            patientId: selectedPatient?.id,
-            patientName: selectedPatient.full_name,
-            message,
-            phoneNumber: userData.mobileNumber,
-            appointmentId: newBooking.id,
-            time: bookingData.startDate
-          })
-        )
-        console.log('SMS response', smsResponse)
-        // remind 30minuted before appointment
-        const reminderDate = dayjs(bookingData.startDate).subtract(30, 'minute')
-        const scheduledMeeting = await dispatch(
-          scheduleReminder({
-            phoneNumber,
-            message,
-            time: reminderDate,
-            apiKey: notifyApiKey,
-            organisation_id: orgId,
-            org_message,
-            title
-          })
-        )
-        console.log('scheduledMeeting', scheduledMeeting)
-      }
+      const smsResponse = await dispatch(
+        createThreadAndSendSMS({
+          patientId: selectedPatient?.id,
+          patientName: selectedPatient.full_name,
+          message,
+          phoneNumber: userData.mobileNumber,
+          appointmentId: newBooking.id,
+          time: bookingData.startDate,
+          doNotIncludeTextMessage
+        })
+      )
+      console.log('SMS response', smsResponse)
+      // remind 30minuted before appointment
+      const reminderDate = dayjs(bookingData.startDate).subtract(30, 'minute')
+      const scheduledMeeting = await dispatch(
+        scheduleReminder({
+          phoneNumber,
+          message,
+          time: reminderDate,
+          apiKey: notifyApiKey,
+          organisation_id: orgId,
+          org_message,
+          title
+        })
+      )
+      console.log('scheduledMeeting', scheduledMeeting)
+
       //show custom snackbar
       showMessage('Booking created successfully', 'success')
 
@@ -986,7 +1005,7 @@ const NewBookingForm = ({
                 </FormControl>
                 <FormControl fullWidth>
                   <Controller
-                    name='includeTextMessage'
+                    name='doNotIncludeTextMessage'
                     control={confirmControl}
                     rules={{ required: true }}
                     render={({ field: { value, onChange } }) => (
@@ -994,8 +1013,8 @@ const NewBookingForm = ({
                         control={
                           <Checkbox
                             checked={value}
-                            onChange={() => setIncludeTextMessage(!includeTextMessage)}
-                            name='includeTextMessage'
+                            onChange={() => setdoNotIncludeTextMessage(!doNotIncludeTextMessage)}
+                            name='doNotIncludeTextMessage'
                             color='primary'
                             sx={{ '& .MuiSvgIcon-root': { fontSize: '1.3rem' } }}
                           />

@@ -90,9 +90,9 @@ function index({
                     <em>None</em>
                   </MenuItem>
                   <MenuItem value='Sinusitis'>Sinusitis</MenuItem>
-                  <MenuItem value='Sore Throat'>Sore Throat</MenuItem>
+                  <MenuItem value='Sore_Throat'>Sore Throat</MenuItem>
                   <MenuItem value='Earache'>Earache (none DSP)</MenuItem>
-                  <MenuItem value='Infected Insect Bites'>Infected Insect Bites</MenuItem>
+                  <MenuItem value='Infected_Insect_Bites'>Infected Insect Bites</MenuItem>
                   <MenuItem value='Impetigo'>Impetigo</MenuItem>
                   <MenuItem value='Shingles'>Shingles</MenuItem>
                   <MenuItem value='UTI'>Simple UTI in women</MenuItem>

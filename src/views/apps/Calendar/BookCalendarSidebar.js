@@ -134,6 +134,8 @@ const BookCalendarSidebar = props => {
   //   handleSidebarClose()
   // }
 
+  console.log('type of refetchAppointments in booking side bar', refetchAppointments)
+
   const handleDeleteEvent = () => {
     if (store.selectedbooking) {
       dispatch(deleteEvent({ id: store.selectedbooking.id, orgId }))
@@ -292,6 +294,7 @@ const BookCalendarSidebar = props => {
               selectedService={selectedService}
               setResetToEmptyValues={setResetToEmptyValues}
               refetchAppointments={refetchAppointments}
+              addBookingSidebarOpen={addBookingSidebarOpen}
             />
           </DatePickerWrapper>
         </Box>

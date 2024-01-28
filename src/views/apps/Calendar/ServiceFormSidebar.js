@@ -41,6 +41,8 @@ import FLUServiceForm from './services/flu-vf/FLUServiceForm'
 import HTNServiceForm from './services/htn/HTNServiceForm'
 import PFSServiceForm from './services/pharmacy-first-vf/PFSServiceForm'
 
+import { setSelectedBooking } from 'src/store/apps/calendar/pharmacyfirst/appointmentListSlice'
+
 // ** Styled Components
 import DatePickerWrapper from 'src/@core/styles/libs/react-datepicker'
 import NewBookingForm from './services/pharmacy-first/newBookingForm'
@@ -148,7 +150,8 @@ const ServiceFormSidebar = props => {
     zIndex = 1300,
     resetToEmptyValues,
     setResetToEmptyValues,
-    serviceTable
+    serviceTable,
+    setLocallySelectedService
   } = props
 
   // ** States
@@ -194,8 +197,10 @@ const ServiceFormSidebar = props => {
   } = useForm({ defaultValues: { title: '' } })
 
   const handleSidebarClose = async () => {
-    onServiceUpdate()
+    // onServiceUpdate()
     setValues(defaultState)
+    // setLocallySelectedService(null)
+    dispatch(setSelectedBooking(null))
     clearErrors()
     dispatch(handleSelectEvent(null))
     handleServiceFormSidebarToggle()
@@ -317,42 +322,54 @@ const ServiceFormSidebar = props => {
 
   return (
     <LocalizationProvider dateAdapter={AdapterDayjs}>
-      <Drawer
-        anchor='right'
-        open={serviceFormSidebarOpen}
-        onClose={handleSidebarClose}
-        ModalProps={{ keepMounted: true }}
-        sx={{ '& .MuiDrawer-paper': { width: ['100%', drawerWidth] }, zIndex: zIndex }}
-      >
-        <Box
-          className='sidebar-header'
-          sx={{
-            display: 'flex',
-            justifyContent: 'space-between',
-            backgroundColor: 'background.default',
-            p: theme => theme.spacing(3, 3.255, 3, 5.255)
-          }}
+      <DatePickerWrapper>
+        <Drawer
+          anchor='right'
+          open={serviceFormSidebarOpen}
+          onClose={handleSidebarClose}
+          ModalProps={{ keepMounted: true }}
+          sx={{ '& .MuiDrawer-paper': { width: ['100%', drawerWidth] }, zIndex: zIndex }}
         >
-          <Typography variant='h6'>
-            {store.selectedbooking !== null && store.selectedbooking?.title?.length ? 'Update Booking' : 'New Booking'}
-          </Typography>
-          <Box sx={{ display: 'flex', alignItems: 'center' }}>
-            {store.selectedbooking !== null && store.selectedbooking?.title?.length ? (
-              <IconButton
-                size='small'
-                onClick={handleDeleteEvent}
-                sx={{ color: 'text.primary', mr: store.selectedbooking !== null ? 1 : 0 }}
-              >
-                <Icon icon='mdi:delete-outline' fontSize={20} />
+          <Box
+            className='sidebar-header'
+            sx={{
+              display: 'flex',
+              justifyContent: 'space-between',
+              backgroundColor: 'background.default',
+              p: theme => theme.spacing(3, 3.255, 3, 5.255)
+            }}
+          >
+            <Typography variant='h6'>
+              {store.selectedbooking !== null && store.selectedbooking?.title?.length
+                ? 'Update Booking'
+                : 'New Booking'}
+            </Typography>
+            <Box sx={{ display: 'flex', alignItems: 'center' }}>
+              {store.selectedbooking !== null && store.selectedbooking?.title?.length ? (
+                <IconButton
+                  size='small'
+                  onClick={handleDeleteEvent}
+                  sx={{ color: 'text.primary', mr: store.selectedbooking !== null ? 1 : 0 }}
+                >
+                  <Icon icon='mdi:delete-outline' fontSize={20} />
+                </IconButton>
+              ) : null}
+              <IconButton size='small' onClick={handleSidebarClose} sx={{ color: 'text.primary' }}>
+                <Icon icon='mdi:close' fontSize={20} />
               </IconButton>
-            ) : null}
-            <IconButton size='small' onClick={handleSidebarClose} sx={{ color: 'text.primary' }}>
-              <Icon icon='mdi:close' fontSize={20} />
-            </IconButton>
+            </Box>
           </Box>
-        </Box>
-        <Box className='sidebar-body' sx={{ p: theme => theme.spacing(5, 6) }}>
-          <DatePickerWrapper>
+          <Box
+            className='sidebar-body'
+            sx={{
+              p: theme => theme.spacing(5, 6),
+              display: 'flex',
+              flexDirection: 'column',
+              flex: 1,
+
+              flexDirection: 'column'
+            }}
+          >
             {getSelectedForm(
               selectedService,
               serviceInfo,
@@ -361,9 +378,9 @@ const ServiceFormSidebar = props => {
               onServiceUpdate,
               loadingServiceUpdate
             )}
-          </DatePickerWrapper>
-        </Box>
-      </Drawer>
+          </Box>
+        </Drawer>
+      </DatePickerWrapper>
     </LocalizationProvider>
   )
 }

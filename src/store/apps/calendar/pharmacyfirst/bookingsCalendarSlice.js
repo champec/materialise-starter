@@ -147,14 +147,14 @@ export const updateBooking = createAsyncThunk(
 )
 
 // ** Delete a booking
-export const deleteBooking = createAsyncThunk('appCalendar/deleteBooking', async ({ id }, { dispatch }) => {
+export const deleteBooking = createAsyncThunk('appCalendar/deleteBooking', async (id, { dispatch }) => {
   const { data, error } = await supabase.from('consultations').delete().eq('id', id).select('id').single()
   if (error) {
     console.log(error)
     throw error
   }
   console.log('delete booking success', data)
-  dispatch(fetchEvents(orgId))
+  // dispatch(fetchEvents(orgId))
   return data
 })
 
