@@ -444,19 +444,20 @@ acuteSinusitisDecisionTree.nodes = {
 
 export const acuteSoreThroatDecisionTree = {
   id: 'root',
-  type: 'criteria',
+  type: 'information',
   content: 'Acute Sore Throat Decision Tree',
   criteria: ['For adults and children aged 5 years and over', 'Exclude: pregnant individuals under 16 years'],
   information:
     'Consider the risk of deterioration or serious illness, including suspected Epiglottitis, severe complications, and stridor. Use the FeverPAIN score to guide management.',
   nextNodeIdIfTrue: 'risk_assessment',
   nextNodeIdIfFalse: 'exclusion_criteria_met',
-  previousNodeId: null
+  previousNodeId: null,
+  nextNodeId: 'risk_assessment'
 }
 
 acuteSoreThroatDecisionTree.nodes = {
   root: {
-    /* Same as the initial object defined above */
+    ...acuteSoreThroatDecisionTree
   },
   exclusion_criteria_met: {
     id: 'exclusion_criteria_met',
