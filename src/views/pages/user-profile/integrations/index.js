@@ -20,6 +20,12 @@ const integrationData = [
     name: 'NHS Mail',
     status: 'Active',
     configureUrl: 'mypharmacy/integratemail'
+  },
+  {
+    id: 2,
+    name: 'Gov Notificaitons',
+    status: 'Active',
+    configureUrl: 'mypharmacy/integratenotifications'
   }
   // Add more integrations as needed
 ]
