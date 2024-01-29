@@ -1,38 +1,60 @@
 export const acuteOtitisMediaDecisionTree = {
   id: 'root',
-  type: 'criteria',
-  content: 'Acute Otitis Media Decision Tree',
+  type: 'opening',
+  // content: 'Acute Otitis Media Decision Tree',
+  title: 'Acute Otitis Media',
+  icon: 'openmoji:ear',
+  notices: [
+    {
+      text: 'Individuals operating under this PGD must be assessed as competent or complete a self-declaration of competence to operate under this PGD'
+    },
+    {
+      text: 'The decision to supply any medication rests with the individual registered health professional who must abide by the PGD and any associated organisational policies.'
+    }
+  ],
+  clinical_situations: `Local symptomatic relief of pain from acute otitis media (AOM) in
+  children aged 1 year and over and young people (under 18 years of
+  age).`,
+  useful_links: [
+    {
+      text: 'NICE Clinical Knowledge Summary',
+      link: 'https://cks.nice.org.uk/topics/otitis-media-acute/diagnosis/diagnosis/'
+    },
+    {
+      text: 'Supply of Amoxicillin',
+      link: 'https://www.england.nhs.uk/wp-content/uploads/2023/11/PRN01010-7b.-Acute-otitis-media-amoxicillin-patient-group-direction-Pharmacy-First.pdf'
+    },
+    {
+      text: 'Supply of Clarithromycin',
+      link: 'https://www.england.nhs.uk/wp-content/uploads/2023/11/PRN01010-7c.-Acute-otitis-media-clarithromycin-patient-group-direction-Pharmacy-First.pdf'
+    },
+    {
+      text: 'Supply of Erythromycin',
+      link: 'https://www.england.nhs.uk/wp-content/uploads/2023/11/PRN01010-7d.-Acute-otitis-media-erythromycin-patient-group-direction-Pharmacy-First.pdf'
+    },
+    {
+      text: 'Supply of Otigo',
+      link: 'https://www.england.nhs.uk/wp-content/uploads/2023/11/PRN01010-7a.-Acute-otitis-media-phenazone-lidocaine-ear-drops-patient-group-direction-Pharmacy-First.pdf'
+    }
+  ],
+  dates_of_validity: '31/01/2024 to 30/01/2027',
   criteria: [
     'For children aged 1 to 17 years',
     'Exclude: recurrent acute otitis media (3 or more episodes in 6 months or four or more episodes in 12 months), pregnant individuals under 16 years'
   ],
-  information:
-    'Acute otitis media mainly affects children, can last for around 1 week and over 80% of children recover spontaneously without antibiotics 2-3 days from presentation',
-  nextNodeIdIfTrue: 'criteria_confirmation',
-  nextNodeIdIfFalse: 'age_criteria_not_met',
-  previousNodeId: null
+  previousNodeId: null,
+  nextNodeId: 'criteria_confirmation'
 }
 
 acuteOtitisMediaDecisionTree.nodes = {
   root: {
-    id: 'root',
-    type: 'criteria',
-    content: 'Acute Otitis Media Decision Tree',
-    criteria: [
-      'For children aged 1 to 17 years',
-      'Exclude: recurrent acute otitis media (3 or more episodes in 6 months or four or more episodes in 12 months), pregnant individuals under 16 years'
-    ],
-    information:
-      'Acute otitis media mainly affects children, can last for around 1 week and over 80% of children recover spontaneously without antibiotics 2-3 days from presentation',
-    nextNodeIdIfTrue: 'criteria_confirmation',
-    nextNodeIdIfFalse: 'criteria_not_met_stop',
-    previousNodeId: null
+    ...acuteOtitisMediaDecisionTree
   },
   criteria_confirmation: {
     id: 'criteria_confirmation',
-    type: 'component',
-    componentType: 'criteriaChecklist',
-    content: 'Please confirm the following criteria for the Acute Otitis Media pathway:',
+    type: 'criteriaCheck',
+    icon: 'oui:list-add',
+    content: 'Please confirm the patient meets the criteria for inclusion to the Acute Otitis Media pathway:',
     criteria: [
       { text: 'The patient is aged 1 to 17 years.', required: true },
       {
@@ -41,6 +63,10 @@ acuteOtitisMediaDecisionTree.nodes = {
       },
       { text: 'The patient is not a pregnant individual under 16 years.', required: true }
     ],
+    allOption: {
+      text: 'All of the above', // This option, when selected, will select all other options and vice versa
+      action: 'tickAll' // Indicates the action to be taken when this option is selected
+    },
     noneOption: {
       text: 'None of the above', // This option, when selected, will deselect all other options and vice versa
       action: 'untickAll' // Indicates the action to be taken when this option is selected
@@ -63,6 +89,7 @@ acuteOtitisMediaDecisionTree.nodes = {
   initial_information: {
     id: 'initial_information',
     type: 'information',
+    icon: 'icon-park:info',
     content:
       'Acute otitis media mainly affects children, can last for around 1 week, and over 80% of children recover spontaneously without antibiotics 2-3 days from presentation.',
     nextNodeId: 'deterioration_check',
@@ -71,6 +98,7 @@ acuteOtitisMediaDecisionTree.nodes = {
   deterioration_check: {
     id: 'deterioration_check',
     type: 'symptoms',
+    icon: 'ic:sharp-sick',
     content: 'Does the patient risk deterioration?:',
     symptoms: [
       'Meningitis (neck stiffness, photophobia, mottled skin)',
@@ -95,6 +123,7 @@ acuteOtitisMediaDecisionTree.nodes = {
   gateway_point: {
     id: 'gateway_point',
     type: 'gateway',
+    icon: 'mdi:arrow-right-bold',
     content: 'Begin detailed consultation process.',
     nextNodeId: 'acute_symptoms_check',
     previousNodeId: 'deterioration_check'
@@ -125,6 +154,11 @@ acuteOtitisMediaDecisionTree.nodes = {
     type: 'question',
     content: 'Does the patient have an otoscopic examination showing:',
     answers: [
+      'A distinctly red, yellow, or cloudy tympanic membrane',
+      'Moderate to severe bulging of the tympanic membrane, with loss of normal landmarks and an air-fluid level behind the tympanic membrane',
+      'Perforation of the tympanic membrane and/or sticky discharge in the external auditory canal'
+    ],
+    context_list: [
       'A distinctly red, yellow, or cloudy tympanic membrane',
       'Moderate to severe bulging of the tympanic membrane, with loss of normal landmarks and an air-fluid level behind the tympanic membrane',
       'Perforation of the tympanic membrane and/or sticky discharge in the external auditory canal'
@@ -218,7 +252,7 @@ acuteOtitisMediaDecisionTree.nodes = {
       { id: 'pregnancyTest', label: 'Pregnancy Test Completed' }
     ],
     nextNodeId: 'consultation_summary',
-    previousNodeId: 'shared_decision_making'
+    previousNodeId: 'root'
   },
   safety_netting: {
     id: 'safety_netting',
@@ -229,7 +263,7 @@ acuteOtitisMediaDecisionTree.nodes = {
     id: 'consultation_summary',
     type: 'summary',
     content: 'Consultation summary.',
-    previousNodeId: 'treatment_decision'
+    previousNodeId: 'root'
   }
 }
 

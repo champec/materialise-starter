@@ -30,6 +30,7 @@ import services from 'src/store/apps/services'
 import appointmentListSlice from 'src/store/apps/calendar/pharmacyfirst/appointmentListSlice'
 import { fetchServiceTableInfo } from 'src/store/apps/services'
 import { updateSelectedBookingService } from 'src/store/apps/calendar/pharmacyfirst/appointmentListSlice'
+import CustomSnackbar from './services/pharmacy-first/CustomSnackBar'
 
 // ** Icon Imports
 import Icon from 'src/@core/components/icon'
@@ -159,6 +160,10 @@ const ServiceFormSidebar = props => {
   const [isRecurring, setIsRecurring] = useState(false)
   const [editAllInstances, setEditAllInstances] = useState(false)
   const [serviceInfo, setServiceInfo] = useState({})
+  const [openSnack, setOpenSnack] = useState(false)
+  const [snackMessage, setSnackMessage] = useState('')
+  const [snackSeverity, setSnackSeverity] = useState('success')
+  const [snackDuration, setSnackDuration] = useState(7000)
   const orgId = useSelector(state => state.organisation.organisation.id)
   const selectedService = useSelector(state => state.services.selectedService)
   const initServiceInfo = useSelector(state => state.services.serviceInfo)
@@ -174,6 +179,13 @@ const ServiceFormSidebar = props => {
     console.log('onServiceSubmit', { selectedBooking })
   }
 
+  const showSnackMessage = (message, severity = 'success', duration = 7000) => {
+    setSnackMessage(message)
+    setSnackSeverity(severity)
+    setSnackDuration(duration)
+    setOpenSnack(true)
+  }
+
   useEffect(() => {
     if (selectedBooking) {
       const table = selectedBooking[serviceTable]
@@ -182,10 +194,23 @@ const ServiceFormSidebar = props => {
     }
   }, [selectedBooking, selectedService])
 
-  const onServiceUpdate = (serviceObject = serviceInfo) => {
+  const onServiceUpdate = async (serviceObject = serviceInfo) => {
     const bookingId = selectedBooking.id
     console.log('onServiceUpdate', { serviceObject })
-    dispatch(updateSelectedBookingService({ bookingId, serviceTable, serviceInfo: serviceObject }))
+    const response = await dispatch(
+      updateSelectedBookingService({ bookingId, serviceTable, serviceInfo: serviceObject })
+    )
+
+    // const response = await dispatch(updateSelectedBookingService({ bookingId, serviceTable, serviceInfo: serviceObject }))
+    console.log('onServiceUpdate', { response })
+    if (response?.error) {
+      showSnackMessage('Error Updating Service', 'error', 7000)
+      console.log('error', response.error)
+    }
+    if (response) {
+      handleSidebarClose()
+      showSnackMessage('Service Updated Successfully', 'success', 7000)
+    }
   }
 
   const {
@@ -200,7 +225,7 @@ const ServiceFormSidebar = props => {
     // onServiceUpdate()
     setValues(defaultState)
     // setLocallySelectedService(null)
-    dispatch(setSelectedBooking(null))
+    // dispatch(setSelectedBooking(null))
     clearErrors()
     dispatch(handleSelectEvent(null))
     handleServiceFormSidebarToggle()
@@ -380,6 +405,15 @@ const ServiceFormSidebar = props => {
             )}
           </Box>
         </Drawer>
+        <CustomSnackbar
+          open={openSnack}
+          setOpen={setOpenSnack}
+          message={snackMessage}
+          severity={snackSeverity}
+          duration={snackDuration}
+          vertical={'top'}
+          horizontal={'center'}
+        />
       </DatePickerWrapper>
     </LocalizationProvider>
   )

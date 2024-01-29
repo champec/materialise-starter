@@ -36,6 +36,7 @@ import AppointmentView from './AppointmentView'
 import { useDispatch, useSelector } from 'react-redux'
 import { fetchData, deleteInvoice } from 'src/store/apps/invoice'
 import { appointmnetListSlice, fetchAppointments } from 'src/store/apps/calendar/pharmacyfirst/appointmentListSlice'
+import { setSelectedBooking } from 'src/store/apps/calendar/pharmacyfirst/appointmentListSlice'
 
 // ** Utils Import
 import { getInitials } from 'src/@core/utils/get-initials'
@@ -407,6 +408,11 @@ const AppointmentList = () => {
     setAppointmentView(true)
   }
 
+  const handleViewClose = () => {
+    setAppointmentView(false)
+    dispatch(setSelectedBooking(null))
+  }
+
   const handleOnChangeRange = dates => {
     const [start, end] = dates
     if (start !== null && end !== null) {
@@ -550,7 +556,7 @@ const AppointmentList = () => {
           scroll='body'
           TransitionComponent={Transition}
           open={appointmentView}
-          onClose={() => setAppointmentView(false)}
+          onClose={handleViewClose}
         >
           <DialogContent
             sx={{

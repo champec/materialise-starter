@@ -10,8 +10,13 @@ import {
   TextField,
   List,
   ListItem,
-  ListItemText
+  ListItemText,
+  CardHeader,
+  Card,
+  CardContent,
+  CardActions
 } from '@mui/material'
+import IconifyIcon from 'src/@core/components/icon'
 
 function PathwayForm({ onServiceUpdate, state, ServiceTree }) {
   const decisionData = state?.pathwayform
@@ -20,7 +25,7 @@ function PathwayForm({ onServiceUpdate, state, ServiceTree }) {
   // Initialize an object to keep track of checkbox states for each node
   const [nodeStates, setNodeStates] = useState({})
 
-  console.log('PathwayForm node', currentNode, ServiceTree)
+  console.log('PathwayForm node', nodeStates, currentNode, ServiceTree)
 
   useEffect(() => {
     // Check if ServiceTree.nodes?.root is valid before trying to update currentNode
@@ -92,6 +97,13 @@ function PathwayForm({ onServiceUpdate, state, ServiceTree }) {
   const generateSummaryText = (node, state) => {
     let summaryText = ''
     if (node.type === 'component' && node.componentType === 'criteriaChecklist') {
+      const decisions = Object.keys(state.checkedCriteria || {})
+        .map(criterion => criterion)
+        .join(', ')
+      summaryText += decisions ? `Selected Criteria: ${decisions}` : 'No Criteria Selected'
+    }
+
+    if (node.type === 'criteriaCheck') {
       const decisions = Object.keys(state.checkedCriteria || {})
         .map(criterion => criterion)
         .join(', ')
@@ -244,6 +256,9 @@ function PathwayForm({ onServiceUpdate, state, ServiceTree }) {
       case 'information':
         return renderInformationNode(node)
 
+      case 'criteriaCheck':
+        return renderCriteriaCheckNode(node)
+
       case 'symptoms':
         return renderSymptomsNode(node)
 
@@ -270,7 +285,75 @@ function PathwayForm({ onServiceUpdate, state, ServiceTree }) {
         return renderTreatmentNode(node)
       case 'multiple_choice_question':
         return renderMultipleChoiceQuestionNode(node)
+      case 'opening':
+        return renderOpeningNode(node)
     }
+  }
+
+  const renderOpeningNode = node => {
+    return (
+      <Card>
+        <CardContent>
+          <Typography variant='h5' style={{ fontWeight: 'bold', marginBottom: '15px' }}>
+            {node.title}
+          </Typography>
+
+          <IconifyIcon
+            icon={node.icon || 'noto-v1:hospital'}
+            alt='Icon'
+            style={{ width: '50px', height: '50px', marginBottom: '15px' }}
+          />
+
+          {node.clinical_situations && (
+            <Typography variant='body1' style={{ marginBottom: '15px' }}>
+              {node.clinical_situations}
+            </Typography>
+          )}
+          {node.notices &&
+            node.notices.map((notice, index) => (
+              <Typography key={index} variant='body2' style={{ marginTop: '10px', color: '#666' }}>
+                {notice.text}
+              </Typography>
+            ))}
+          {node.useful_links && node.useful_links.length > 0 && (
+            <div style={{ marginTop: '20px' }}>
+              <Typography variant='h6' style={{ marginBottom: '10px' }}>
+                Useful Links:
+              </Typography>
+              {node.useful_links.map((link, index) => (
+                <Typography key={index} variant='body2'>
+                  <a
+                    href={link.link}
+                    target='_blank'
+                    rel='noopener noreferrer'
+                    style={{ textDecoration: 'none', color: '#3f51b5' }}
+                  >
+                    {link.text}
+                  </a>
+                </Typography>
+              ))}
+            </div>
+          )}
+          {node.dates_of_validity && (
+            <Typography variant='body2' style={{ marginTop: '20px', fontStyle: 'italic', color: '#666' }}>
+              Valid from: {node.dates_of_validity.split(' to ')[0]} to {node.dates_of_validity.split(' to ')[1]}
+            </Typography>
+          )}
+        </CardContent>
+        {node.nextNodeId && (
+          <CardActions style={{ justifyContent: 'center', padding: '20px' }}>
+            <Button
+              variant='contained'
+              color='primary'
+              onClick={() => handleNextNode(node.nextNodeId)}
+              style={{ width: '200px' }}
+            >
+              Begin Assessment
+            </Button>
+          </CardActions>
+        )}
+      </Card>
+    )
   }
 
   const renderMultipleChoiceQuestionNode = node => {
@@ -317,58 +400,96 @@ function PathwayForm({ onServiceUpdate, state, ServiceTree }) {
     setCurrentNode(ServiceTree.nodes[action])
   }
 
-  const renderInformationNode = node => (
-    <Box>
-      <Typography variant='body1'>{node.content}</Typography>
-      {node.nextNodeId && (
-        <Button
-          variant='contained'
-          onClick={() => {
-            handleInformationAcknowledged(node.id) // Mark the information as acknowledged
-            handleNextNode(node.nextNodeId) // Navigate to the next node
-          }}
-        >
-          Continue
-        </Button>
-      )}
-    </Box>
-  )
-
-  const renderSymptomsNode = node => (
-    <Box>
-      <Typography variant='h6'>{node.content}</Typography>
-      {node.symptoms.map((symptom, index) => (
-        <FormControlLabel
-          key={index}
-          control={
-            <Checkbox
-              onChange={e => handleSymptomChange(node.id, symptom, e.target.checked)}
-              checked={nodeStates[node.id]?.selectedSymptoms?.includes(symptom) ?? false}
-            />
+  const renderInformationNode = node => {
+    return (
+      <Card sx={{ m: 2, boxShadow: 3 }}>
+        <CardHeader
+          avatar={<IconifyIcon icon={node.icon || 'icon-park:info'} style={{ fontSize: '40px' }} />}
+          title={
+            <Typography variant='h6' style={{ fontWeight: 'bold' }}>
+              {node.title || 'Information'}
+            </Typography>
           }
-          label={symptom}
+          titleTypographyProps={{ variant: 'h6' }}
+          sx={{ backgroundColor: 'info.main', color: 'info.contrastText' }}
         />
-      ))}
-      <Button
-        variant='contained'
-        onClick={() => {
-          handleSymptomDecision(node.id, 'Yes') // 'Yes' decision
-          handleNextNode(node.nextNodeIdIfYes)
-        }}
-      >
-        Yes
-      </Button>
-      <Button
-        variant='contained'
-        onClick={() => {
-          handleSymptomDecision(node.id, 'No') // 'No' decision
-          handleNextNode(node.nextNodeIdIfNo)
-        }}
-      >
-        No
-      </Button>
-    </Box>
-  )
+        <CardContent sx={{ mt: 4 }}>
+          <Typography variant='body1' style={{ marginBottom: '20px' }}>
+            {node.content}
+          </Typography>
+        </CardContent>
+        {node.nextNodeId && (
+          <CardActions style={{ justifyContent: 'flex-end' }}>
+            <Button
+              variant='contained'
+              color='primary'
+              onClick={() => {
+                handleInformationAcknowledged(node.id) // Mark the information as acknowledged
+                handleNextNode(node.nextNodeId) // Navigate to the next node
+              }}
+              style={{ fontWeight: 'bold' }}
+            >
+              Continue
+            </Button>
+          </CardActions>
+        )}
+      </Card>
+    )
+  }
+
+  const renderSymptomsNode = node => {
+    return (
+      <Card sx={{ m: 2, boxShadow: 3 }}>
+        <CardHeader
+          avatar={<IconifyIcon icon={node.icon || 'healthicons:symptom'} style={{ fontSize: '40px' }} />}
+          title={<Typography variant='h6'>{node.content}</Typography>}
+          titleTypographyProps={{ variant: 'h6' }}
+          sx={{ backgroundColor: 'primary.main', color: 'primary.contrastText', '& .MuiCardHeader-avatar': { mr: 2 } }}
+        />
+        <CardContent sx={{ pt: 0 }}>
+          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1, mt: 3 }}>
+            {node.symptoms.map((symptom, index) => (
+              <FormControlLabel
+                key={index}
+                control={
+                  <Checkbox
+                    onChange={e => handleSymptomChange(node.id, symptom, e.target.checked)}
+                    checked={nodeStates[node.id]?.selectedSymptoms?.includes(symptom) ?? false}
+                    color='primary'
+                  />
+                }
+                label={symptom}
+                sx={{ alignItems: 'center' }} // Ensures text is aligned with the checkbox
+              />
+            ))}
+          </Box>
+        </CardContent>
+        <CardActions sx={{ justifyContent: 'flex-end', p: 2 }}>
+          <Button
+            variant='contained'
+            color='primary'
+            onClick={() => {
+              handleSymptomDecision(node.id, 'Yes') // 'Yes' decision
+              handleNextNode(node.nextNodeIdIfYes)
+            }}
+            sx={{ mr: 1 }}
+          >
+            Yes
+          </Button>
+          <Button
+            variant='outlined'
+            color='secondary'
+            onClick={() => {
+              handleSymptomDecision(node.id, 'No') // 'No' decision
+              handleNextNode(node.nextNodeIdIfNo)
+            }}
+          >
+            No
+          </Button>
+        </CardActions>
+      </Card>
+    )
+  }
 
   const handleStopDecision = (nodeId, decision) => {
     const updatedState = { ...nodeStates }
@@ -380,50 +501,84 @@ function PathwayForm({ onServiceUpdate, state, ServiceTree }) {
     setNodeStates(updatedState)
   }
 
-  const renderStopNode = node => (
-    <Box>
-      <Typography variant='body1' color='error'>
-        {node.content}
-      </Typography>
+  const renderStopNode = node => {
+    console.log('nodeifyes', node.nextNodeIdIfYes)
+    return (
+      <Card sx={{ m: 2, boxShadow: 3, borderColor: 'error.main' }}>
+        <CardHeader
+          avatar={<IconifyIcon icon={node?.icon || 'openmoji:stop-sign'} style={{ fontSize: '40px' }} />}
+          title={<Typography variant='h6'>{node.title || 'Warning'}</Typography>}
+          titleTypographyProps={{ variant: 'h6' }}
+          sx={{ backgroundColor: 'warning.main', color: 'secondary.contrastText', mb: 3 }}
+        />
+        <CardContent>
+          <Typography variant='h6' sx={{ fontWeight: 'bold', color: 'error.main', mb: 2 }}>
+            Attention Needed
+          </Typography>
+          <Typography variant='body1' sx={{ mb: 3 }}>
+            {node.content}
+          </Typography>
+        </CardContent>
+        <CardActions sx={{ justifyContent: 'space-around' }}>
+          <Button
+            variant='contained'
+            color='error'
+            onClick={() => {
+              handleStopDecision(node.id, 'End Consultation')
+              handleNextNode(node.nextNodeIdIfYes) // Assuming this leads to the end or a summary
+            }}
+            sx={{ fontWeight: 'bold' }}
+          >
+            End Consultation
+          </Button>
+          <Button
+            variant='outlined'
+            color='warning'
+            onClick={() => {
+              handleStopDecision(node.id, 'Treat Anyway')
+              handlePreviousNode(node.nextNodeIdIfNo) // Assuming this takes the user back to a previous step
+            }}
+            sx={{ fontWeight: 'bold', color: 'warning.dark' }}
+          >
+            Treat Anyway
+          </Button>
+        </CardActions>
+      </Card>
+    )
+  }
 
-      <Box sx={{ mb: 4, justifyContent: 'space-between', alignContent: 'space-between' }} />
-      <Button
-        variant='contained'
-        onClick={() => {
-          handleStopDecision(node.id, 'End Consultation')
-          handleNextNode(node.nextNodeIdIfYes) // Assuming this leads to the end or a summary
-        }}
-      >
-        End Consultation
-      </Button>
-      <Button
-        variant='outlined'
-        onClick={() => {
-          handleStopDecision(node.id, 'Treat Anyway')
-          handlePreviousNode(node.nextNodeIdIfNo) // Assuming this takes the user back to a previous step
-        }}
-      >
-        Treat Anyway
-      </Button>
-    </Box>
-  )
-
-  const renderGatewayNode = node => (
-    <Box>
-      <Typography variant='body1'>{node.content}</Typography>
-      {node.nextNodeId && (
-        <Button
-          variant='contained'
-          onClick={() => {
-            handleGatewayAcknowledged(node.id)
-            handleNextNode(node.nextNodeId)
-          }}
-        >
-          Enter
-        </Button>
-      )}
-    </Box>
-  )
+  const renderGatewayNode = node => {
+    return (
+      <Card sx={{ m: 2, boxShadow: 3 }}>
+        <CardHeader
+          avatar={node.icon ? <IconifyIcon icon={node.icon} style={{ fontSize: '40px' }} /> : null}
+          title={<Typography variant='h6'>{node.title || 'Gateway Point'}</Typography>}
+          titleTypographyProps={{ variant: 'h6' }}
+          sx={{ backgroundColor: 'secondary.main', color: 'secondary.contrastText', mb: 3 }}
+        />
+        <CardContent>
+          <Typography variant='body1' sx={{ mb: 2 }}>
+            {node.content}
+          </Typography>
+        </CardContent>
+        {node.nextNodeId && (
+          <CardActions sx={{ justifyContent: 'flex-end', p: 2 }}>
+            <Button
+              variant='contained'
+              color='primary'
+              onClick={() => {
+                handleGatewayAcknowledged(node.id)
+                handleNextNode(node.nextNodeId)
+              }}
+              sx={{ fontWeight: 'bold' }}
+            >
+              Enter
+            </Button>
+          </CardActions>
+        )}
+      </Card>
+    )
+  }
 
   const handleGatewayAcknowledged = nodeId => {
     const updatedState = { ...nodeStates }
@@ -549,12 +704,11 @@ function PathwayForm({ onServiceUpdate, state, ServiceTree }) {
     <Box>
       <Typography variant='h6'>{node.content}</Typography>
       <Box style={{ display: 'flex', flexDirection: 'column', justifyContent: 'space-between', width: '100%' }}>
-        {node.context_list &&
-          node.context_list.map((context, index) => (
-            <Typography key={index} variant='subtitle2'>
-              {context.text}
-            </Typography>
-          ))}
+        {node.context_list.map((context, index) => (
+          <Typography key={index} variant='subtitle2'>
+            {`${index + 1}) ${context}`}
+          </Typography>
+        ))}
         <Box style={{ display: 'flex', flexDirection: 'column', justifyContent: 'space-between', width: '100%' }}>
           <Button
             sx={{ mb: 4, mt: 3 }}
@@ -587,8 +741,10 @@ function PathwayForm({ onServiceUpdate, state, ServiceTree }) {
     <Box>
       <Typography variant='h6'>Summary of Decisions and Actions</Typography>
       <List>
+        {console.log('NodeId state', nodeStates)}
         {Object.keys(nodeStates).map(nodeId => {
           const node = ServiceTree.nodes[nodeId]
+          console.log('NodeId', nodeId)
           const state = nodeStates[nodeId]
           if (node.type === 'stop' && state.treatAnyway) {
             return (
@@ -766,6 +922,100 @@ function PathwayForm({ onServiceUpdate, state, ServiceTree }) {
           Next
         </Button>
       </Box>
+    )
+  }
+
+  const renderCriteriaCheckNode = node => {
+    const nodeState = nodeStates[node.id] || {}
+    const checkedCriteria = nodeState.checkedCriteria || {}
+    const noneChecked = nodeState.noneChecked || false
+
+    const handleAllChange = nodeId => {
+      const updatedState = { ...nodeStates }
+      const nodeState = updatedState[nodeId] || {}
+      const allChecked = !Object.keys(nodeState.checkedCriteria || {}).length // If no criteria are checked, checking "All"
+
+      // If "All" is being checked, select all criteria, otherwise clear selection
+      const checkedCriteria = allChecked
+        ? node.criteria.reduce((acc, criterion) => {
+            acc[criterion.text] = true
+            return acc
+          }, {})
+        : {}
+
+      updatedState[nodeId] = {
+        ...nodeState,
+        checkedCriteria,
+        noneChecked: false // Deselect "None" when "All" is selected
+      }
+
+      setNodeStates(updatedState)
+    }
+
+    // Function to determine the next node based on the criteria met
+    const handleNext = () => {
+      // Check if the "None" option is selected or if the minimum required checkboxes are checked
+      const isRequirementMet = Object.keys(checkedCriteria).length >= node.minRequired
+
+      // Determine the next node based on whether the requirement is met
+      const nextNodeId = isRequirementMet ? node.nextNodeIdIfPassed : node.nextNodeIdIfFailed
+
+      // Update the current node to the next node based on the decision
+      handleNextNode(nextNodeId)
+    }
+
+    return (
+      <Card sx={{ m: 2 }}>
+        <CardHeader
+          avatar={node.icon ? <IconifyIcon icon={node.icon} style={{ width: '50px', height: '50px' }} /> : null}
+          title={
+            <Typography variant='p' style={{ fontWeight: 'bold' }}>
+              {node.content}
+            </Typography>
+          }
+          titleTypographyProps={{ variant: 'h6' }}
+          sx={{ backgroundColor: 'primary.main', color: 'primary.contrastText' }}
+        />
+        <CardContent>
+          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, mt: 4 }}>
+            {node.criteria.map((criterion, index) => (
+              <FormControlLabel
+                key={index}
+                control={
+                  <Checkbox
+                    checked={!!checkedCriteria[criterion.text]}
+                    onChange={() => handleCheckboxChange(node.id, index, criterion.text)}
+                    disabled={noneChecked && index !== node.criteria.length} // Disable if "None" is checked, except the "None" checkbox itself
+                  />
+                }
+                label={criterion.text}
+              />
+            ))}
+            {node.allOption && (
+              <FormControlLabel
+                control={
+                  <Checkbox
+                    checked={node.criteria.every(criterion => checkedCriteria[criterion.text]) && !noneChecked}
+                    onChange={() => handleAllChange(node.id)}
+                  />
+                }
+                label={node.allOption.text}
+              />
+            )}
+            {node.noneOption && (
+              <FormControlLabel
+                control={<Checkbox checked={noneChecked} onChange={() => handleNoneChange(node.id)} color='warning' />}
+                label={<Typography color='warning'>{node.noneOption.text}</Typography>}
+              />
+            )}
+          </Box>
+          <Box sx={{ display: 'flex', justifyContent: 'flex-end', mt: 2 }}>
+            <Button variant='contained' color='success' onClick={handleNext}>
+              Next
+            </Button>
+          </Box>
+        </CardContent>
+      </Card>
     )
   }
 

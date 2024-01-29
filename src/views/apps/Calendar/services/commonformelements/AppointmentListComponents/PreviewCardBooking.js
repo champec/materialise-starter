@@ -51,6 +51,7 @@ const PreviewCardBooking = ({ booking, serviceTable }) => {
   const serviceInfo = selectedBooking ? selectedBooking[serviceTable] : null
   // const service_table = booking.service_table
   // const serviceInfo = booking.service_info
+  console.log('selectedBooking', selectedBooking)
 
   const nodeStates = serviceInfo?.pathwayform || {}
   const pathway = serviceInfo?.clinical_pathway
