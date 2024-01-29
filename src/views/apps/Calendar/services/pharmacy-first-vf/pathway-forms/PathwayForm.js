@@ -590,35 +590,40 @@ function PathwayForm({ onServiceUpdate, state, ServiceTree }) {
     setNodeStates(updatedState)
   }
 
-  const renderAdviceNode = node => (
-    <Box>
-      <Typography variant='body1'>{node.content}</Typography>
-      <Box sx={{ mb: 4, justifyContent: 'space-between', alignContent: 'space-between' }}>
-        <Button
-          sx={{ ml: 1, padding: 2, fontSize: 14 }}
-          variant='contained'
-          onClick={() => {
-            handleAdviceDecision(node.id, 'End Consultation')
-            handleNextNode(node.nextNodeIdIfYes)
-          }}
-        >
-          End Consultation
-        </Button>
-        <Button
-          variant='outlined'
-          sx={{ ml: 1, padding: 2, fontSize: 14 }}
-          onClick={() => {
-            handleAdviceDecision(node.id, 'Proceed Anyway')
-            handlePreviousNode(node.nextNodeIdIfNo)
-          }}
-        >
-          Proceed Anyway
-        </Button>
-      </Box>
-    </Box>
-  )
+  const renderAdviceNode = node => {
+    return (
+      <Card sx={{ m: 2, boxShadow: 3 }}>
+        <CardHeader
+          avatar={<IconifyIcon icon={node.icon || 'healthicons:ui-consultation'} style={{ fontSize: '40px' }} />}
+          title={<Typography variant='h6'>{node.title || 'Important Advice'}</Typography>}
+          titleTypographyProps={{ variant: 'h6' }}
+          sx={{ backgroundColor: 'secondary.main', color: 'secondary.contrastText' }}
+        />
+        <CardContent>
+          <Typography variant='body1' sx={{ mb: 2 }}>
+            {node.content}
+          </Typography>
+        </CardContent>
+        <CardActions sx={{ justifyContent: 'space-between', p: 2 }}>
+          <Button
+            variant='contained'
+            color='error' // Emphasize the significance of ending the consultation
+            onClick={() => handleAdviceDecision(node.id, 'End Consultation', node.nextNodeIdIfYes)}
+          >
+            End Consultation
+          </Button>
+          <Button
+            variant='outlined'
+            onClick={() => handleAdviceDecision(node.id, 'Proceed Anyway', node.nextNodeIdIfNo)}
+          >
+            Proceed Anyway
+          </Button>
+        </CardActions>
+      </Card>
+    )
+  }
 
-  const handleAdviceDecision = (nodeId, decision) => {
+  const handleAdviceDecision = (nodeId, decision, nextNode) => {
     const updatedState = { ...nodeStates }
     updatedState[nodeId] = {
       ...updatedState[nodeId],
@@ -626,31 +631,51 @@ function PathwayForm({ onServiceUpdate, state, ServiceTree }) {
     }
 
     setNodeStates(updatedState)
+    if (decision === 'End Consultation') {
+      handleNextNode(nextNode) // Proceed to end the consultation
+    } else {
+      handlePreviousNode(nextNode) // Go back for treatment despite advice
+    }
   }
 
-  const renderReferralNode = node => (
-    <Box>
-      <Typography variant='body1'>{node.content}</Typography>
-      <Box sx={{ mt: 4, justifyContent: 'space-between', alignContent: 'space-between' }}>
-        <Button
-          sx={{ ml: 1, padding: 2, fontSize: 14 }}
-          variant='contained'
-          onClick={() => handleReferralDecision(node.id, 'End Consultation')}
-        >
-          End Consultation
-        </Button>
-        <Button
-          variant='outlined'
-          sx={{ ml: 1, padding: 2, fontSize: 14 }}
-          onClick={() => handleReferralDecision(node.id, 'Proceed with Treatment')}
-        >
-          Proceed with Treatment
-        </Button>
-      </Box>
-    </Box>
-  )
+  const renderReferralNode = node => {
+    return (
+      <Card sx={{ m: 2, boxShadow: 3 }}>
+        <CardHeader
+          avatar={<IconifyIcon icon={node.icon || 'openmoji:female-doctor'} style={{ fontSize: '40px' }} />}
+          title={<Typography variant='h6'>{node.title || 'Referral Needed'}</Typography>}
+          titleTypographyProps={{ variant: 'h6' }}
+          sx={{ backgroundColor: 'warning.main', color: 'warning.contrastText', mb: 4 }}
+        />
+        <CardContent sx={{ pt: 3 }}>
+          {' '}
+          {/* Increased padding-top for more space between header and content */}
+          <Typography variant='body1' sx={{ mb: 2 }}>
+            {node.content}
+          </Typography>
+        </CardContent>
+        <CardActions sx={{ justifyContent: 'flex-end', p: 2 }}>
+          <Button
+            sx={{ mr: 1 }}
+            variant='contained'
+            color='error' // Use error color to emphasize ending the consultation
+            onClick={() => handleReferralDecision(node.id, 'End Consultation', node.nextNodeIdIfYes)}
+          >
+            End Consultation
+          </Button>
+          <Button
+            variant='outlined'
+            color='primary' // Use primary color to encourage proceeding with treatment
+            onClick={() => handleReferralDecision(node.id, 'Proceed with Treatment', node.nextNodeIdIfNo)}
+          >
+            Proceed with Treatment
+          </Button>
+        </CardActions>
+      </Card>
+    )
+  }
 
-  const handleReferralDecision = (nodeId, decision) => {
+  const handleReferralDecision = (nodeId, decision, nextNode) => {
     const updatedState = { ...nodeStates }
     updatedState[nodeId] = {
       ...updatedState[nodeId],
@@ -659,36 +684,49 @@ function PathwayForm({ onServiceUpdate, state, ServiceTree }) {
 
     setNodeStates(updatedState)
     if (decision === 'End Consultation') {
-      handleNextNode(node.nextNodeIdIfYes) // Proceed to end the consultation
+      handleNextNode(nextNode) // Proceed to end the consultation
     } else {
-      handlePreviousNode(node.nextNodeIdIfNo) // Go back for treatment despite referral
+      handlePreviousNode(nextNode) // Go back for treatment despite referral
     }
   }
 
-  const renderPlanNode = node => (
-    <Box>
-      <Typography sx={{ mb: 4 }} variant='body1'>
-        {node.content}
-      </Typography>
-      <TextField
-        id={`plan-${node.id}`}
-        label='Decision made for patient'
-        multiline
-        rows={4}
-        defaultValue=''
-        variant='outlined'
-        sx={{ width: '100%', mb: 4 }}
-        onBlur={e => handlePlanInput(node.id, e.target.value)} // Capture the input when the user navigates away from the TextField
-      />
-
-      <Button variant='contained' onClick={() => handleNextNode(node.nextNodeId)}>
-        Treatment options
-      </Button>
-      <Button variant='outlined' onClick={() => handleNextNode(node.nextNodeIdIfYes)}>
-        End consultation
-      </Button>
-    </Box>
-  )
+  const renderPlanNode = node => {
+    return (
+      <Card sx={{ m: 2, boxShadow: 3 }}>
+        <CardHeader
+          avatar={<IconifyIcon icon={node.icon || 'mdi:clipboard-text-outline'} style={{ fontSize: '40px' }} />}
+          title={<Typography variant='h6'>{node.title || 'Patient Plan'}</Typography>}
+          titleTypographyProps={{ variant: 'h6' }}
+          sx={{ backgroundColor: 'primary.main', color: 'primary.contrastText' }}
+        />
+        <CardContent>
+          <Typography variant='body1' sx={{ mb: 2 }}>
+            {node.content}
+          </Typography>
+          <TextField
+            id={`plan-${node.id}`}
+            label='Decision made for patient'
+            multiline
+            rows={4}
+            defaultValue=''
+            variant='outlined'
+            fullWidth
+            margin='normal'
+            onBlur={e => handlePlanInput(node.id, e.target.value)} // Capture the input when the user navigates away from the TextField
+            sx={{ mb: 2 }} // Adjust bottom margin for spacing
+          />
+        </CardContent>
+        <CardActions sx={{ justifyContent: 'flex-end', p: 2 }}>
+          <Button sx={{ mr: 1 }} variant='contained' color='primary' onClick={() => handleNextNode(node.nextNodeId)}>
+            Treatment options
+          </Button>
+          <Button variant='outlined' color='secondary' onClick={() => handleNextNode(node.nextNodeIdIfYes)}>
+            End consultation
+          </Button>
+        </CardActions>
+      </Card>
+    )
+  }
 
   const handlePlanInput = (nodeId, planText) => {
     const updatedState = { ...nodeStates }
@@ -700,30 +738,43 @@ function PathwayForm({ onServiceUpdate, state, ServiceTree }) {
     setNodeStates(updatedState)
   }
 
-  const renderQuestionNode = node => (
-    <Box>
-      <Typography variant='h6'>{node.content}</Typography>
-      <Box style={{ display: 'flex', flexDirection: 'column', justifyContent: 'space-between', width: '100%' }}>
-        {node.context_list.map((context, index) => (
-          <Typography key={index} variant='subtitle2'>
-            {`${index + 1}) ${context}`}
-          </Typography>
-        ))}
-        <Box style={{ display: 'flex', flexDirection: 'column', justifyContent: 'space-between', width: '100%' }}>
+  const renderQuestionNode = node => {
+    return (
+      <Card sx={{ m: 2, boxShadow: 3 }}>
+        <CardHeader
+          avatar={<IconifyIcon icon={node.icon || 'mdi:chat-question'} style={{ fontSize: '40px' }} />}
+          title={<Typography variant='h6'>{node.content}</Typography>}
+          titleTypographyProps={{ variant: 'h6' }}
+          sx={{ backgroundColor: 'info.main', color: 'info.contrastText', mb: 3 }}
+        />
+        <CardContent>
+          {node.context_list &&
+            node.context_list.map((context, index) => (
+              <Typography key={index} variant='body1' sx={{ mt: 1 }}>
+                {`${index + 1}) ${context}`}
+              </Typography>
+            ))}
+        </CardContent>
+        <CardActions sx={{ justifyContent: 'flex-end', p: 2 }}>
           <Button
-            sx={{ mb: 4, mt: 3 }}
+            sx={{ mr: 1 }}
             variant='contained'
+            color='primary'
             onClick={() => handleQuestionAnswer(node.id, 'Yes', node.nextNodeIdIfYes)}
           >
             Yes
           </Button>
-          <Button variant='contained' onClick={() => handleQuestionAnswer(node.id, 'No', node.nextNodeIdIfNo)}>
+          <Button
+            variant='outlined'
+            color='secondary'
+            onClick={() => handleQuestionAnswer(node.id, 'No', node.nextNodeIdIfNo)}
+          >
             No
           </Button>
-        </Box>
-      </Box>
-    </Box>
-  )
+        </CardActions>
+      </Card>
+    )
+  }
 
   const handleQuestionAnswer = (nodeId, answer, nextNodeId) => {
     const updatedState = { ...nodeStates }

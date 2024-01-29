@@ -210,9 +210,10 @@ acuteOtitisMediaDecisionTree.nodes = {
     id: 'shared_decision_making',
     type: 'plan',
     content: 'Shared decision-making approach and clinician global impression.',
-    nextNodeId: 'consultation_summary',
+    nextNodeId: 'treatment_decision',
     nextNodeIdIfNo: 'treatment_decision',
-    nextNodeIdIfYes: 'consultation_summary'
+    nextNodeIdIfYes: 'consultation_summary',
+    previousNodeId: 'age_and_infection_check'
   },
   mild_symptoms_advice: {
     id: 'mild_symptoms_advice',
@@ -249,15 +250,18 @@ acuteOtitisMediaDecisionTree.nodes = {
     ],
     actions: [
       { id: 'allergyCheck', label: 'Reported penicillin allergy (Via National Care Record or Patient/Carer)' },
-      { id: 'pregnancyTest', label: 'Pregnancy Test Completed' }
+      { id: 'otoscopyCarried', label: 'Otoscopic examination carried out' }
     ],
-    nextNodeId: 'consultation_summary',
+    nextNodeId: 'safe_netting',
     previousNodeId: 'root'
   },
   safety_netting: {
     id: 'safety_netting',
     type: 'information',
-    content: 'Share self-care and safety-netting information, and evidence on antibiotic use following NICE guidelines.'
+    content:
+      'Share self-care and safety-netting information, and evidence on antibiotic use following NICE guidelines.',
+    nextNodeId: 'consultation_summary',
+    previousNodeId: 'treatment_decision'
   },
   consultation_summary: {
     id: 'consultation_summary',
