@@ -273,33 +273,62 @@ acuteOtitisMediaDecisionTree.nodes = {
 
 export const acuteSinusitisDecisionTree = {
   id: 'root',
-  type: 'criteria',
-  content: 'Acute Sinusitis Decision Tree',
-  criteria: [
-    'For adults and children aged 12 years and over',
-    'Exclude: immunosuppressed individuals, chronic sinusitis (sinusitis causing symptoms for more than 12 weeks), pregnant individuals under 16 years'
+  type: 'opening',
+  // content: 'Acute Otitis Media Decision Tree',
+  title: 'Acute Sinusitis',
+  icon: 'twemoji:nose-medium-light-skin-tone',
+  notices: [
+    {
+      text: 'Individuals operating under this PGD must be assessed as competent or complete a self-declaration of competence to operate under this PGD'
+    },
+    {
+      text: 'The decision to supply any medication rests with the individual registered health professional who must abide by the PGD and any associated organisational policies.'
+    }
   ],
-  information:
-    'Acute sinusitis is usually caused by a virus and is only complicated by bacterial infection in about 2 in 100 cases. It takes 2–3 weeks to resolve, and most people will get better without antibiotics. Please share NICE information for the public.',
-  nextNodeIdIfTrue: 'deterioration_risk_check',
-  nextNodeIdIfFalse: 'criteria_not_met',
-  previousNodeId: null
+  clinical_situations: `Acute sinusitis (rhinosinusitis) in children aged 12 years and over and
+  adults. `,
+  useful_links: [
+    {
+      text: 'NICE Clinical Knowledge Summary',
+      link: 'https://cks.nice.org.uk/topics/sinusitis/diagnosis/diagnosis-acute-sinusitis/'
+    },
+    {
+      text: 'Supply of flutiason fuorate 27.5mcg',
+      link: 'https://www.england.nhs.uk/wp-content/uploads/2023/11/PRN01010-6a.-Sinusitis-fluticasone-nasal-spray-patient-group-direction-Pharmacy-First.pdf'
+    },
+    {
+      text: 'Supply of Momestasone 50mcg',
+      link: 'https://www.england.nhs.uk/wp-content/uploads/2023/11/PRN01010-6b.-Sinusitis-mometasone-nasal-spray-patient-group-direction-Pharmacy-First.pdf'
+    },
+    {
+      text: 'Supply of Phenoxymethylpenicillin',
+      link: 'https://www.england.nhs.uk/wp-content/uploads/2023/11/PRN01010-6c.-Sinusitis-phenoxymethylpenicillin-patient-group-direction-Pharmacy-First.pdf'
+    },
+    {
+      text: 'Supply of Clarithromycin',
+      link: 'https://www.england.nhs.uk/wp-content/uploads/2023/11/PRN01010-6d.-Sinusitis-clairthromycin-patient-group-direction-Pharmacy-First.pdf'
+    },
+    {
+      text: 'Supply of Doxycycline',
+      link: 'https://www.england.nhs.uk/wp-content/uploads/2023/11/PRN01010-6e.-Sinusitis-doxycycline-patient-group-direction-Pharmacy-First.pdf'
+    },
+    {
+      text: 'Supply of Erythromycin',
+      link: 'https://www.england.nhs.uk/wp-content/uploads/2023/11/PRN01010-6f.-Sinusitis-erythromycin-patient-group-direction-Pharmacy-First.pdf'
+    }
+  ],
+  dates_of_validity: '31/01/2024 to 30/01/2027',
+  criteria: [
+    'For children aged 1 to 17 years',
+    'Exclude: recurrent acute otitis media (3 or more episodes in 6 months or four or more episodes in 12 months), pregnant individuals under 16 years'
+  ],
+  previousNodeId: null,
+  nextNodeId: 'criteria_confirmation'
 }
 
 acuteSinusitisDecisionTree.nodes = {
   root: {
-    id: 'root',
-    type: 'criteria',
-    content: 'Acute Sinusitis Decision Tree',
-    criteria: [
-      'For adults and children aged 12 years and over',
-      'Exclude: immunosuppressed individuals, chronic sinusitis (sinusitis causing symptoms for more than 12 weeks), pregnant individuals under 16 years'
-    ],
-    information:
-      'Acute sinusitis is usually caused by a virus and is only complicated by bacterial infection in about 2 in 100 cases. It takes 2–3 weeks to resolve, and most people will get better without antibiotics. Please share NICE information for the public.',
-    nextNodeIdIfTrue: 'deterioration_risk_check',
-    nextNodeIdIfFalse: 'criteria_not_met',
-    previousNodeId: null
+    ...acuteSinusitisDecisionTree
   },
   criteria_not_met: {
     id: 'criteria_not_met',
@@ -482,20 +511,72 @@ acuteSinusitisDecisionTree.nodes = {
 
 export const acuteSoreThroatDecisionTree = {
   id: 'root',
-  type: 'information',
-  content: 'Acute Sore Throat Decision Tree',
-  criteria: ['For adults and children aged 5 years and over', 'Exclude: pregnant individuals under 16 years'],
-  information:
-    'Consider the risk of deterioration or serious illness, including suspected Epiglottitis, severe complications, and stridor. Use the FeverPAIN score to guide management.',
-  nextNodeIdIfTrue: 'risk_assessment',
-  nextNodeIdIfFalse: 'exclusion_criteria_met',
+  type: 'opening',
+  // content: 'Acute Otitis Media Decision Tree',
+  title: 'Sore Throat',
+  icon: 'medical-icon:i-ear-nose-throat',
+  notices: [
+    {
+      text: 'Individuals operating under this PGD must be assessed as competent or complete a self-declaration of competence to operate under this PGD'
+    },
+    {
+      text: 'The decision to supply any medication rests with the individual registered health professional who must abide by the PGD and any associated organisational policies.'
+    }
+  ],
+  clinical_situations: `Acute sore throat due to suspected streptococcal infection in children aged
+  5 years and over and adults. `,
+  useful_links: [
+    {
+      text: 'NICE Clinical Knowledge Summary',
+      link: 'https://www.nice.org.uk/guidance/ng84/'
+    },
+    {
+      text: 'Fever pain score',
+      link: 'https://www.mdcalc.com/calc/3316/feverpain-score-strep-pharyngitis'
+    },
+    {
+      text: 'Supply of Clarithromycin',
+      link: 'https://www.england.nhs.uk/wp-content/uploads/2023/11/PRN01010-5b.-Sore-throat-clarithromycin-patient-group-direction-Pharmacy-First.pdf'
+    },
+    {
+      text: 'Supply of Erythromycin',
+      link: 'https://www.england.nhs.uk/wp-content/uploads/2023/11/PRN01010-5c.-Sore-throat-erythromycin-patient-group-direction-Pharmacy-First.pdf'
+    }
+  ],
+  dates_of_validity: '31/01/2024 to 30/01/2027',
   previousNodeId: null,
-  nextNodeId: 'risk_assessment'
+  nextNodeId: 'criteria_confirmation'
 }
 
 acuteSoreThroatDecisionTree.nodes = {
   root: {
     ...acuteSoreThroatDecisionTree
+  },
+  criteria_confirmation: {
+    id: 'criteria_confirmation',
+    type: 'criteriaCheck',
+    icon: 'oui:list-add',
+    content: 'Please confirm the patient meets the criteria for inclusion to the Acute Sore Throat pathway:',
+    criteria: [
+      { text: 'The patient is aged 5 years or older.', required: true },
+      { text: 'Informed consent ', required: true },
+      {
+        text: 'You will: Diagnose sore throat using the appropriate NICE guidance and FeverPAIN score.',
+        required: true
+      }
+    ],
+    allOption: {
+      text: 'All of the above', // This option, when selected, will select all other options and vice versa
+      action: 'tickAll' // Indicates the action to be taken when this option is selected
+    },
+    noneOption: {
+      text: 'None of the above', // This option, when selected, will deselect all other options and vice versa
+      action: 'untickAll' // Indicates the action to be taken when this option is selected
+    },
+    minRequired: 3, // Specifies the minimum number of checkboxes (excluding the 'None' option) that need to be ticked to proceed
+    nextNodeIdIfPassed: 'initial_information',
+    nextNodeIdIfFailed: 'criteria_not_met_stop',
+    previousNodeId: 'root' // Assuming the root node is the direct predecessor
   },
   exclusion_criteria_met: {
     id: 'exclusion_criteria_met',
@@ -575,11 +656,15 @@ acuteSoreThroatDecisionTree.nodes = {
   self_care_2_3: {
     id: 'self_care_2_3',
     type: 'advice',
+    title: 'Self-care and pain relief',
+    context:
+      'For FeverPAIN score of 2 or 3: Self-care and pain relief. Antibiotics make little difference. Withholding antibiotics is unlikely to lead to complications. Ask the patient to return if no improvement within 3-5 days for pharmacist reassessment.',
     content:
       'For FeverPAIN score of 2 or 3: Self-care and pain relief. Antibiotics make little difference. Withholding antibiotics is unlikely to lead to complications. Ask the patient to return if no improvement within 3-5 days for pharmacist reassessment.',
     nextNodeIdIfYes: 'consultation_summary',
     nextNodeIdIfNo: 'treatment_decision',
-    previousNodeId: 'feverpain_score'
+    previousNodeId: 'decision_4_5',
+    nextNodeId: 'consultation_summary'
   },
   decision_4_5: {
     id: 'decision_4_5',
@@ -656,17 +741,49 @@ acuteSoreThroatDecisionTree.nodes = {
 
 export const impetigoDecisionTree = {
   id: 'root',
-  type: 'criteria',
-  content: 'Impetigo Decision Tree',
-  criteria: [
-    'Non-bullous impetigo, for adults and children aged 1 year and over',
-    'Exclude: bullous impetigo, recurrent impetigo (2 or more episodes in the same year), pregnant individuals under 16 years'
+  type: 'opening',
+  // content: 'Acute Otitis Media Decision Tree',
+  title: 'Impetigo',
+  icon: 'mdi:rash',
+  notices: [
+    {
+      text: 'Individuals operating under this PGD must be assessed as competent or complete a self-declaration of competence to operate under this PGD'
+    },
+    {
+      text: 'The decision to supply any medication rests with the individual registered health professional who must abide by the PGD and any associated organisational policies.'
+    }
   ],
-  information:
-    'Diagnose Impetigo based on typical clinical features. Consider the risk of deterioration and serious complications.',
-  nextNodeIdIfTrue: 'risk_assessment',
-  nextNodeIdIfFalse: 'exclusion_criteria_met',
-  previousNodeId: null
+  clinical_situations: `Localised non-bullous impetigo in children over 1 year and adults
+  who are systemically well and not at high risk of complications.  `,
+  useful_links: [
+    {
+      text: 'NICE Clinical Knowledge Summary',
+      link: 'https://cks.nice.org.uk/topics/impetigo/diagnosis/diagnosis/'
+    },
+    {
+      text: 'Supply of Hydrogen Peroxide',
+      link: 'https://www.england.nhs.uk/wp-content/uploads/2023/11/PRN01010-3a.-Impetigo-hydrogen-peroxide-cream-protocol-Pharmacy-First.pdf'
+    },
+    {
+      text: 'Supply of Fusidic Acid',
+      link: 'https://www.england.nhs.uk/wp-content/uploads/2023/11/PRN01010-3b.-Impetigo-fusidic-acid-cream-patient-group-direction-Pharmacy-First.pdf'
+    },
+    {
+      text: 'Supply of Flucloxacillin',
+      link: 'https://www.england.nhs.uk/wp-content/uploads/2023/11/PRN01010-3c.-Impetigo-flucloxacillin-patient-group-direction-Pharmacy-First.pdf'
+    },
+    {
+      text: 'Supply of Clarithromycin',
+      link: 'https://www.england.nhs.uk/wp-content/uploads/2023/11/PRN01010-3d.-Impetigo-clarithromycin-patient-group-direction-Pharmacy-First.pdf'
+    },
+    {
+      text: 'Supply of Erythromycin',
+      link: 'https://www.england.nhs.uk/wp-content/uploads/2023/11/PRN01010-3e.-Impetigo-erythromycin-patient-group-direction-Pharmacy-First.pdf'
+    }
+  ],
+  dates_of_validity: '31/01/2024 to 30/01/2027',
+  previousNodeId: null,
+  nextNodeId: 'criteria_confirmation'
 }
 
 impetigoDecisionTree.nodes = {
@@ -829,20 +946,68 @@ impetigoDecisionTree.nodes = {
 
 export const shinglesDecisionTree = {
   id: 'root',
-  type: 'criteria',
-  content: 'Shingles Decision Tree',
-  criteria: ['For adults aged 18 years and over', 'Exclude: pregnant individuals'],
-  information:
-    'Consider the risk of deterioration or serious illness. Assess for typical clinical features of Shingles.',
-  nextNodeIdIfTrue: 'criteria_confirmation',
-  nextNodeIdIfFalse: 'exclusion_criteria_met',
-  previousNodeId: null
+  type: 'opening',
+  // content: 'Acute Otitis Media Decision Tree',
+  title: 'Shingles',
+  icon: 'medical-icon:i-internal-medicine',
+  notices: [
+    {
+      text: 'Individuals operating under this PGD must be assessed as competent or complete a self-declaration of competence to operate under this PGD'
+    },
+    {
+      text: 'The decision to supply any medication rests with the individual registered health professional who must abide by the PGD and any associated organisational policies.'
+    }
+  ],
+  clinical_situations: `Shingles (herpes zoster) infection in adults aged 18 years and over.`,
+  useful_links: [
+    {
+      text: 'NICE Clinical Knowledge Summary',
+      link: 'https://cks.nice.org.uk/topics/shingles/diagnosis/diagnosis/'
+    },
+    {
+      text: 'Supply of Aciclovir',
+      link: 'https://www.england.nhs.uk/wp-content/uploads/2023/11/PRN01010-2a.-Shingles-aciclovir-patient-group-direction-Pharmacy-First.pdf'
+    },
+    {
+      text: 'Supply of valaciclovir',
+      link: 'https://www.england.nhs.uk/wp-content/uploads/2023/11/PRN01010-2b.-Shingles-valaciclovir-patient-group-direction-Pharmacy-First.pdf'
+    }
+  ],
+  dates_of_validity: '31/01/2024 to 30/01/2027',
+  previousNodeId: null,
+  nextNodeId: 'criteria_confirmation'
 }
 
 shinglesDecisionTree.nodes = {
   root: {
     /* Same as the initial object defined above */
     ...shinglesDecisionTree
+  },
+  criteria_confirmation: {
+    id: 'criteria_confirmation',
+    type: 'criteriaCheck',
+    icon: 'oui:list-add',
+    content: 'Please confirm the patient meets the criteria for inclusion to the Shingles pathway:',
+    criteria: [
+      { text: 'The patient is aged 18 years or older.', required: true },
+      { text: 'Informed consent ', required: true },
+      {
+        text: 'You will: Diagnose shingles using the appropriate NICE guidance.',
+        required: true
+      }
+    ],
+    allOption: {
+      text: 'All of the above', // This option, when selected, will select all other options and vice versa
+      action: 'tickAll' // Indicates the action to be taken when this option is selected
+    },
+    noneOption: {
+      text: 'None of the above', // This option, when selected, will deselect all other options and vice versa
+      action: 'untickAll' // Indicates the action to be taken when this option is selected
+    },
+    minRequired: 3, // Specifies the minimum number of checkboxes (excluding the 'None' option) that need to be ticked to proceed
+    nextNodeIdIfPassed: 'risk_assessment',
+    nextNodeIdIfFailed: 'exclusion_criteria_met',
+    previousNodeId: 'root' // Assuming the root node is the direct predecessor
   },
   exclusion_criteria_met: {
     id: 'exclusion_criteria_met',
@@ -1008,14 +1173,34 @@ shinglesDecisionTree.nodes = {
 
 const uncomplicatedUrinaryTractInfectionDecisionTree = {
   id: 'root',
-  type: 'information',
-  content: 'Uncomplicated Urinary Tract Infection Decision Tree',
-  // criteria: ['For adults aged 16-65 years', 'Exclude: pregnant individuals, immunosuppressed individuals'],
-  information: 'Consider the risk of deterioration or serious illness. Assess for typical clinical features of UTI.',
-  nextNodeIdIfTrue: 'criteria_met',
-  nextNodeIdIfFalse: 'exclusion_criteria_met',
-  nextNodeId: 'criteria_met',
-  previousNodeId: null
+  type: 'opening',
+  // content: 'Acute Otitis Media Decision Tree',
+  title: 'Uncomplicated Urinary Tract Infection',
+  icon: 'noto:test-tube',
+  notices: [
+    {
+      text: 'Individuals operating under this PGD must be assessed as competent or complete a self-declaration of competence to operate under this PGD'
+    },
+    {
+      text: 'The decision to supply any medication rests with the individual registered health professional who must abide by the PGD and any associated organisational policies.'
+    }
+  ],
+  clinical_situations: `Lower urinary tract infection (UTI) in non-pregnant women aged 16
+  years to 64 years in the absence of current or recent fever (within past
+  48 hours)`,
+  useful_links: [
+    {
+      text: 'Urinary tract infection diagnosis',
+      link: 'https://www.gov.uk/government/publications/urinary-tract-infection-diagnosis'
+    },
+    {
+      text: 'Supply of Nitrofurantoin',
+      link: 'https://www.england.nhs.uk/wp-content/uploads/2023/11/PRN01010-1a.-Urinary-tract-infection-nitrofurantoin-patient-group-direction-Pharmacy-First.pdf'
+    }
+  ],
+  dates_of_validity: '31/01/2024 to 30/01/2027',
+  previousNodeId: null,
+  nextNodeId: 'criteria_met'
 }
 
 uncomplicatedUrinaryTractInfectionDecisionTree.nodes = {
@@ -1048,7 +1233,9 @@ uncomplicatedUrinaryTractInfectionDecisionTree.nodes = {
   risk_assessment: {
     id: 'risk_assessment',
     type: 'question',
-    content: 'Consider the risk of deterioration or serious illness. Assess for typical clinical features of UTI.',
+    title: 'Risk Assessment',
+    context:
+      'Consider the risk of deterioration or serious illness. Assess for typical clinical features of UTI. Is there a risk of deterioration or serious illness?',
     answers: ['Yes', 'No'],
     nextNodeIdIfYes: 'NEWS2_check',
     nextNodeIdIfNo: 'risk_assessment_pylonephritis',
@@ -1056,22 +1243,22 @@ uncomplicatedUrinaryTractInfectionDecisionTree.nodes = {
   },
   risk_assessment_pylonephritis: {
     id: 'risk_assessment_pylonephritis',
-    type: 'component',
-    componentType: 'criteriaChecklist',
+    type: 'symptoms',
+    // componentType: 'criteriaChecklist',
     content: 'Consider the risk of deterioration or serious illness. Check for signs of pyelonephritis.',
-    criteria: [
-      { text: 'Kidney pain/tenderness in back under ribs', required: false },
-      { text: 'New/different myalgia, flu like illness', required: false },
-      { text: 'Shaking chills (rigors) or temperature 37.9°C or above', required: false },
-      { text: 'Nausea/vomiting', required: false }
+    symptoms: [
+      'Kidney pain/tenderness in back under ribs',
+      'New/different myalgia, flu like illness',
+      'Shaking chills (rigors) or temperature 37.9°C or above',
+      'Nausea/vomiting'
     ],
     noneOption: {
       text: 'None of the above',
       action: 'untickAll'
     },
-    minRequired: 1,
-    nextNodeIdIfPassed: 'emergency_referral',
-    nextNodeIdIfFailed: 'risk_assessment_other'
+    // minRequired: 1,
+    nextNodeIdIfYes: 'emergency_referral',
+    nextNodeIdIfNo: 'risk_assessment_other'
   },
   emergency_referral: {
     id: 'emergency_referral',
@@ -1082,7 +1269,7 @@ uncomplicatedUrinaryTractInfectionDecisionTree.nodes = {
     nextNodeIdIfNo: 'treatment_decision',
     previousNodeId: 'risk_assessment_pylonephritis'
   },
-  NEWS_2_check: {
+  NEWS2_check: {
     id: 'NEWS_2_check',
     type: 'stop',
     content:
@@ -1093,7 +1280,7 @@ uncomplicatedUrinaryTractInfectionDecisionTree.nodes = {
   },
   risk_assessment_other: {
     id: 'risk_assessment_other',
-    type: 'component',
+    type: 'criteriaCheck',
     componentType: 'criteriaChecklist',
     content: 'Consider the risk of deterioration or serious illness. Check for signs of pyelonephritis.',
 

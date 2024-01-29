@@ -358,28 +358,33 @@ function PathwayForm({ onServiceUpdate, state, ServiceTree }) {
 
   const renderMultipleChoiceQuestionNode = node => {
     return (
-      <Box>
-        <Typography variant='h6'>{node.content}</Typography>
-        <Box
-          style={{
-            display: 'flex',
-            flexDirection: 'column',
-            justifyContent: 'space-between',
-            width: '100%'
-          }}
-        >
-          {node.answers.map((answer, index) => (
-            <Button
-              key={index}
-              variant='contained'
-              sx={{ mb: 1, padding: 2, fontSize: 14 }}
-              onClick={() => handleMultipleChoiceSelection(node.id, answer.text, answer.action)}
-            >
-              {answer.text}
-            </Button>
-          ))}
-        </Box>
-      </Box>
+      <Card sx={{ m: 2, boxShadow: 3 }}>
+        <CardHeader
+          avatar={
+            <IconifyIcon icon={node.icon || 'fluent:task-list-square-ltr-20-filled'} style={{ fontSize: '40px' }} />
+          }
+          title={<Typography variant='h6'>{node.title || 'Multiple Choice Question'}</Typography>}
+          titleTypographyProps={{ variant: 'h6' }}
+          sx={{ backgroundColor: 'primary.main', color: 'primary.contrastText', mb: 4 }}
+        />
+        <CardContent>
+          <Typography variant='body1' sx={{ mb: 2 }}>
+            {node.content}
+          </Typography>
+          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1, mt: 3, alignItems: 'flex-start' }}>
+            {node.answers.map((answer, index) => (
+              <Button
+                key={index}
+                variant='contained'
+                sx={{ mb: 1, padding: 2, fontSize: 14, width: 'auto', alignSelf: 'center' }} // Adjust the width and alignment for better visual structure
+                onClick={() => handleMultipleChoiceSelection(node.id, answer.text, answer.action)}
+              >
+                {answer.text}
+              </Button>
+            ))}
+          </Box>
+        </CardContent>
+      </Card>
     )
   }
 
@@ -743,10 +748,11 @@ function PathwayForm({ onServiceUpdate, state, ServiceTree }) {
       <Card sx={{ m: 2, boxShadow: 3 }}>
         <CardHeader
           avatar={<IconifyIcon icon={node.icon || 'mdi:chat-question'} style={{ fontSize: '40px' }} />}
-          title={<Typography variant='h6'>{node.content}</Typography>}
+          title={<Typography variant='h6'>{node.title || node.content}</Typography>}
           titleTypographyProps={{ variant: 'h6' }}
           sx={{ backgroundColor: 'info.main', color: 'info.contrastText', mb: 3 }}
         />
+
         <CardContent>
           {node.context_list &&
             node.context_list.map((context, index) => (
@@ -754,6 +760,11 @@ function PathwayForm({ onServiceUpdate, state, ServiceTree }) {
                 {`${index + 1}) ${context}`}
               </Typography>
             ))}
+          {node.context && (
+            <Typography variant='body1' sx={{ mt: 1 }}>
+              {node.context}
+            </Typography>
+          )}
         </CardContent>
         <CardActions sx={{ justifyContent: 'flex-end', p: 2 }}>
           <Button
@@ -898,37 +909,68 @@ function PathwayForm({ onServiceUpdate, state, ServiceTree }) {
     )
   }
 
-  const renderCriteriaNode = node => (
-    <Box>
-      <Typography variant='h6'>{node.content}</Typography>
-      {node?.criteria && node.criteria.map((criterion, index) => <Typography key={index}>{criterion}</Typography>)}
-      <Box sx={{ mt: 3, mb: 3 }}>
-        {node?.inclusion && (
-          <Box>
-            <Typography sx={{ color: 'success' }}>Inclusion Criteria</Typography>
-            {node.inclusion.map((criterion, index) => (
-              <Typography color={'green'} key={index}>
+  const renderCriteriaNode = node => {
+    return (
+      <Card sx={{ m: 2, boxShadow: 3 }}>
+        <CardHeader
+          avatar={<IconifyIcon icon={node.icon || 'mdi:format-list-checks'} style={{ fontSize: '40px' }} />}
+          title={<Typography variant='h6'>{node.title || 'Criteria Check'}</Typography>}
+          titleTypographyProps={{ variant: 'h6' }}
+          sx={{ backgroundColor: 'info.main', color: 'info.contrastText' }}
+        />
+        <CardContent>
+          <Typography variant='body1' sx={{ mb: 2 }}>
+            {node.content}
+          </Typography>
+          {node.criteria &&
+            node.criteria.map((criterion, index) => (
+              <Typography key={index} sx={{ mb: 1 }}>
                 {criterion}
               </Typography>
             ))}
-          </Box>
-        )}
-
-        {node?.exclusion && (
-          <Box>
-            <Typography sx={{ color: 'success' }}>Exclusion Criteria</Typography>
-            {node.exclusion.map((criterion, index) => (
-              <Typography color={'red'} key={index}>
-                {criterion}
+          {node.inclusion && (
+            <Box sx={{ mt: 2 }}>
+              <Typography variant='subtitle1' sx={{ color: 'success.main' }}>
+                Inclusion Criteria:
               </Typography>
-            ))}
-          </Box>
-        )}
-      </Box>
-      <Button onClick={() => handleNextNode(node.nextNodeIdIfTrue)}>Yes</Button>
-      <Button onClick={() => handleNextNode(node.nextNodeIdIfFalse)}>No</Button>
-    </Box>
-  )
+              <Divider sx={{ mb: 1 }} />
+              {node.inclusion.map((criterion, index) => (
+                <Typography key={index} sx={{ color: 'success.dark', ml: 2 }}>
+                  {`${index + 1}) ${criterion}`}
+                </Typography>
+              ))}
+            </Box>
+          )}
+          {node.exclusion && (
+            <Box sx={{ mt: 2 }}>
+              <Typography variant='subtitle1' sx={{ color: 'error.main' }}>
+                Exclusion Criteria:
+              </Typography>
+              <Divider sx={{ mb: 1 }} />
+              {node.exclusion.map((criterion, index) => (
+                <Typography key={index} sx={{ color: 'error.dark', ml: 2 }}>
+                  {`${index + 1}) ${criterion}`}
+                </Typography>
+              ))}
+            </Box>
+          )}
+        </CardContent>
+        <CardActions sx={{ justifyContent: 'flex-end', p: 2 }}>
+          <Button
+            variant='outlined'
+            color='primary'
+            sx={{ mr: 1 }}
+            onClick={() => handleNextNode(node.nextNodeIdIfTrue)}
+          >
+            Yes
+          </Button>
+          <Button variant='contained' color='secondary' onClick={() => handleNextNode(node.nextNodeIdIfFalse)}>
+            No
+          </Button>
+        </CardActions>
+      </Card>
+    )
+  }
 
   const renderCriteriaChecklistNode = node => {
     const nodeState = nodeStates[node.id] || {}
