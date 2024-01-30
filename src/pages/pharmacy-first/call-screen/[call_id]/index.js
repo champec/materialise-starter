@@ -13,6 +13,7 @@ import CustomSnackbar from 'src/views/apps/Calendar/services/pharmacy-first/Cust
 import NmsForm from 'src/pages/services/nms/NmsSidebar'
 import DmsForm from 'src/pages/services/dms/DmsSidebar'
 import { initialState } from 'src/views/apps/Calendar/services/nms/initState'
+import ServiceFormSidebar from 'src/views/apps/Calendar/ServiceFormSidebar'
 
 const videoScreenStyles = {
   width: '100%',
@@ -39,10 +40,7 @@ function index() {
   const [openSnack, setOpenSnack] = React.useState(false)
   const [snackMessage, setSnackMessage] = React.useState('')
   const [snackSeverity, setSnackSeverity] = React.useState('success')
-  const [nms, setNms] = React.useState(false)
-  const [dms, setDms] = React.useState(false)
-  const [nmsData, setNmsData] = React.useState(initialState)
-  const [dmsData, setDmsData] = React.useState(initialState)
+  const [serviceForm, setServiceForm] = React.useState(false)
   const [pendingPatientAcess, setPendingPatientAcess] = React.useState(false)
 
   const showMessages = (message, severity) => {
@@ -58,14 +56,6 @@ function index() {
       console.log(error)
       alert('Error updating NMS data')
     }
-  }
-
-  const handleNmsButton = () => {
-    setNms(prev => !prev)
-  }
-
-  const handleDmsButton = () => {
-    setDms(prev => !prev)
   }
 
   const setupConsultationListener = async consultationId => {
@@ -181,6 +171,13 @@ function index() {
     setOpenNotesSidebar(prev => !prev)
   }
 
+  const handleServiceButton = () => {
+    console.log('service button clicked')
+    setServiceForm(prev => !prev)
+  }
+
+  console.log('call screen index.js', typeof handleServiceButton)
+
   let statusMessage
   let allowPatientButton
 
@@ -231,8 +228,8 @@ function index() {
           handleScrButton={handleScrButton}
           handlePrescriptionButton={handlePrescriptionButton}
           handleNotesButton={handleNotesButton}
-          handleNmsButton={handleNmsButton}
-          handleDmsButton={handleDmsButton}
+          handleServiceButton={() => console.log('service button clicked')}
+          test={'test'}
         />
       </div>
       <Drawer anchor='right' open={openBookingSidebar} onClose={() => setOpenBookingSidebar(false)} hideBackdrop={true}>
@@ -266,9 +263,9 @@ function index() {
         vertical={'top'}
         duration={3000}
       />
-      <Drawer anchor='right' open={nms} onClose={() => setNms(false)}>
+      <Drawer anchor='right' open={serviceForm} onClose={() => setServiceForm(false)}>
         <Box sx={{ width: 400 }}>
-          <NmsForm
+          {/* <NmsForm
             state={nmsData}
             setState={setNmsData}
             booking={consultation}
@@ -276,20 +273,8 @@ function index() {
             setValue={setNotesValue}
             EditorState={EditorState}
             onSubmit={updateNMSData}
-          />
-        </Box>
-      </Drawer>
-      <Drawer anchor='right' open={dms} onClose={() => setDms(false)}>
-        <Box sx={{ width: 400 }}>
-          <DmsForm
-            state={dmsData}
-            setState={setDmsData}
-            booking={consultation}
-            value={notesValue}
-            setValue={setNotesValue}
-            EditorState={EditorState}
-            onSubmit={updateNMSData}
-          />
+          /> */}
+          <ServiceFormSidebar />
         </Box>
       </Drawer>
     </div>

@@ -12,6 +12,17 @@ import { EditorState } from 'draft-js'
 import NmsSidebar from '../../nms/NmsSidebar'
 import DmsForm from '../../dms/DmsSidebar'
 import { initialState } from '../../../../views/apps/Calendar/services/nms/initState'
+import ServiceFormSidebar from 'src/views/apps/Calendar/ServiceFormSidebar'
+import withReducer from 'src/@core/HOC/withReducer'
+import appointmentListSlice from 'src/store/apps/calendar/pharmacyfirst/appointmentListSlice'
+import bookingsCalendarSlice from 'src/store/apps/calendar/pharmacyfirst/bookingsCalendarSlice'
+import services from 'src/store/apps/services'
+import CustomSnackbar from 'src/views/apps/Calendar/services/pharmacy-first/CustomSnackBar'
+
+// Redux
+import { setSelectedBooking } from 'src/store/apps/calendar/pharmacyfirst/appointmentListSlice'
+import { setSelectedService } from 'src/store/apps/services'
+import { useDispatch } from 'react-redux'
 
 const videoScreenStyles = {
   width: '100%',
@@ -33,29 +44,69 @@ function index() {
   const [openNotesSidebar, setOpenNotesSidebar] = React.useState(false)
   const [notesValue, setNotesValue] = React.useState(EditorState.createEmpty())
   const [prescription, setPrescription] = React.useState([])
-  const [nms, setNms] = React.useState(false)
-  const [dms, setDms] = React.useState(false)
-  const [nmsData, setNmsData] = React.useState(initialState)
-  const [dmsData, setDmsData] = React.useState(initialState)
+  const [serviceForm, setServiceForm] = React.useState(false)
+  const [serviceInfo, setServiceInfo] = React.useState({})
+  const [snackbarOpen, setSnackbarOpen] = React.useState(false)
+  const [snackbarMessage, setSnackbarMessage] = React.useState('')
+  const [snackbarSeverity, setSnackbarSeverity] = React.useState('success')
+  // const [serviceType, setServiceType] = React.useState(null)
+  const [serviceTable, setServiceTable] = React.useState(null)
   const videoContainerRef = React.useRef(null)
+  const dispatch = useDispatch()
 
-  const updateNMSData = async () => {
-    console.log({ nmsData })
-    const { error } = await supabase.from('service_nms').update(nmsData).eq('consultation_id', id)
-    if (error) {
-      console.log(error)
-      alert('Error updating NMS data')
-    }
+  const showMessage = (message, severity) => {
+    setSnackbarMessage(message)
+    setSnackbarSeverity(severity)
+    setSnackbarOpen(true)
   }
+
+  // const updateNMSData = async () => {
+  //   console.log({ nmsData })
+  //   const { error } = await supabase.from('service_nms').update(nmsData).eq('consultation_id', id)
+  //   if (error) {
+  //     console.log(error)
+  //     alert('Error updating NMS data')
+  //   }
+  // }
   const fetchConsultation = async () => {
-    const { data, error } = await supabase.from('consultations').select('*').eq('id', id).single()
+    const { data, error } = await supabase.from('consultations').select('*, service_id(table)').eq('id', id).single()
     console.log({ data, error })
     if (error) {
       setError(error)
+      showMessage(error.message, 'error')
       setLoading(false)
     }
     if (data) {
       setConsultation(data)
+      dispatch(setSelectedBooking(data))
+      console.log('Call screen consultaiton data', data)
+      if (data.service_id?.table) {
+        console.log('service table', data.service_id?.table)
+        setServiceTable(data.service_id?.table)
+        // fetch the data from the service table matching the consultation id
+        dispatch(setSelectedService(data.service_id?.table))
+        const { data: serviceData, error: serviceError } = await supabase
+          .from(data.service_id?.table)
+          .select('*')
+          .eq('consultation_id', id)
+          .single()
+
+        if (serviceError) {
+          console.log(serviceError)
+          setError(serviceError)
+          setLoading(false)
+          showMessage(serviceError.message, 'error')
+          return
+        }
+
+        if (serviceData) {
+          console.log('service data', serviceData)
+          setConsultation(prev => ({ ...prev, [data.service_id?.table]: serviceData }))
+          dispatch(setSelectedBooking({ ...data, [data.service_id?.table]: serviceData }))
+          setLoading(false)
+          return
+        }
+      }
       setLoading(false)
     }
 
@@ -64,6 +115,8 @@ function index() {
       setLoading(false)
     }
   }
+
+  console.log('FINAL CONSULTATION', consultation)
 
   React.useEffect(() => {
     if (id) {
@@ -98,6 +151,10 @@ function index() {
     setOpenScrSidebar(prev => !prev)
   }
 
+  const toggleServiceForm = () => {
+    setServiceForm(prev => !prev)
+  }
+
   const handlePrescriptionButton = () => {
     setOpenPrescriptionSidebar(prev => !prev)
   }
@@ -106,12 +163,18 @@ function index() {
     setOpenNotesSidebar(prev => !prev)
   }
 
-  const handleNmsButton = () => {
-    setNms(prev => !prev)
+  const handleServiceButton = () => {
+    setServiceForm(prev => !prev)
   }
 
-  const handleDmsButton = () => {
-    setDms(prev => !prev)
+  const hideBackdrop = {
+    slotProps: {
+      backdrop: {
+        style: {
+          backgroundColor: 'transparent'
+        }
+      }
+    }
   }
 
   return (
@@ -127,60 +190,70 @@ function index() {
           handleScrButton={handleScrButton}
           handlePrescriptionButton={handlePrescriptionButton}
           handleNotesButton={handleNotesButton}
-          handleNmsButton={handleNmsButton}
-          handleDmsButton={handleDmsButton}
+          handleServiceButton={handleServiceButton}
         />
       </div>
-      <Drawer anchor='right' open={openBookingSidebar} onClose={() => setOpenBookingSidebar(false)} hideBackdrop={true}>
+      <Drawer
+        anchor='right'
+        open={openBookingSidebar}
+        onClose={() => setOpenBookingSidebar(false)}
+        ModalProps={hideBackdrop}
+      >
         <Box sx={{ width: 300, paddingTop: 1, paddingRight: 1, display: 'flex', justifyContent: 'flex-end' }}>
           {/* Close Button */}
           <IconButton onClick={() => setOpenBookingSidebar(false)}>{/* <CloseIcon /> */}X</IconButton>
         </Box>
         <BookingInfor booking={consultation} />
       </Drawer>
-      <Drawer anchor='right' open={openPrescriptionSidebar} onClose={() => setOpenPrescriptionSidebar(false)}>
+      <Drawer
+        anchor='right'
+        open={openPrescriptionSidebar}
+        onClose={() => setOpenPrescriptionSidebar(false)}
+        ModalProps={hideBackdrop}
+      >
         <Box sx={{ width: 300 }}>
           <PrescriptionWrite booking={consultation} prescription={prescription} setPrescription={setPrescription} />
         </Box>
       </Drawer>
-      <Drawer anchor='right' open={openScrSidebar} onClose={() => setOpenScrSidebar(false)}>
+      <Drawer anchor='right' open={openScrSidebar} onClose={() => setOpenScrSidebar(false)} ModalProps={hideBackdrop}>
         <Box sx={{ width: 300 }}>
           <Scr booking={consultation} />
         </Box>
       </Drawer>
-      <Drawer anchor='right' open={openNotesSidebar} onClose={() => setOpenNotesSidebar(false)}>
+      <Drawer
+        anchor='right'
+        open={openNotesSidebar}
+        onClose={() => setOpenNotesSidebar(false)}
+        ModalProps={hideBackdrop}
+      >
         <Box sx={{ width: 400 }}>
           <Notes booking={consultation} value={notesValue} setValue={setNotesValue} EditorState={EditorState} />
         </Box>
       </Drawer>
-      <Drawer anchor='right' open={nms} onClose={() => setNms(false)}>
-        <Box sx={{ width: 400 }}>
-          <NmsSidebar
-            state={nmsData}
-            setState={setNmsData}
-            booking={consultation}
-            value={notesValue}
-            setValue={setNotesValue}
-            EditorState={EditorState}
-            onSubmit={updateNMSData}
-          />
-        </Box>
-      </Drawer>
-      <Drawer anchor='right' open={dms} onClose={() => setDms(false)}>
-        <Box sx={{ width: 400 }}>
-          <DmsForm
-            state={dmsData}
-            setState={setDmsData}
-            booking={consultation}
-            value={notesValue}
-            setValue={setNotesValue}
-            EditorState={EditorState}
-            onSubmit={updateNMSData}
-          />
-        </Box>
-      </Drawer>
+
+      <ServiceFormSidebar
+        serviceFormSidebarOpen={serviceForm}
+        handleServiceFormSidebarToggle={toggleServiceForm}
+        serviceTable={serviceTable}
+        dispatch={dispatch}
+        drawerWidth={400}
+        hideBackdrop={hideBackdrop}
+      />
+
+      <CustomSnackbar
+        open={snackbarOpen}
+        setOpen={setSnackbarOpen}
+        message={snackbarMessage}
+        severity={snackbarSeverity}
+        vertical={'top'}
+        horizontal={'center'}
+      />
     </div>
   )
 }
 
-export default index
+export default withReducer({
+  appointmentListSlice: appointmentListSlice,
+  bookingsCalendar: bookingsCalendarSlice,
+  services: services
+})(index)

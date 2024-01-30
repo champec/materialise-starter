@@ -330,6 +330,33 @@ acuteSinusitisDecisionTree.nodes = {
   root: {
     ...acuteSinusitisDecisionTree
   },
+  criteria_confirmation: {
+    id: 'criteria_confirmation',
+    type: 'criteriaCheck',
+    icon: 'oui:list-add',
+    content: 'Please confirm the patient meets the criteria for inclusion to the Acute Sinusitis pathway:',
+
+    criteria: [
+      { text: 'The patient is aged 12 years or older.', required: true },
+      { text: 'Informed consent ', required: true },
+      {
+        text: 'You will: Diagnose acute sinusitis by the presence of ONE or more of: Nasal blockage or discharge, with ONE or more of: Facial pain/pressure, reduction or loss of sense of smell (in adults), or cough (in children).',
+        required: true
+      }
+    ],
+    allOption: {
+      text: 'All of the above', // This option, when selected, will select all other options and vice versa
+      action: 'tickAll' // Indicates the action to be taken when this option is selected
+    },
+    noneOption: {
+      text: 'None of the above', // This option, when selected, will deselect all other options and vice versa
+      action: 'untickAll' // Indicates the action to be taken when this option is selected
+    },
+    minRequired: 3, // Specifies the minimum number of checkboxes (excluding the 'None' option) that need to be ticked to proceed
+    nextNodeIdIfPassed: 'initial_information',
+    nextNodeIdIfFailed: 'criteria_not_met',
+    previousNodeId: 'root' // Assuming the root node is the direct predecessor
+  },
   criteria_not_met: {
     id: 'criteria_not_met',
     type: 'stop',
@@ -598,7 +625,7 @@ acuteSoreThroatDecisionTree.nodes = {
     ],
     nextNodeIdIfYes: 'emergency_referral',
     nextNodeIdIfNo: 'further_assessment',
-    previousNodeId: 'root'
+    previousNodeId: 'criteria_confirmation'
   },
   emergency_referral: {
     id: 'emergency_referral',
@@ -684,6 +711,15 @@ acuteSoreThroatDecisionTree.nodes = {
     nextNodeIdIfYes: 'consultation_summary',
     nextNodeIdIfNo: 'treatment_decision',
     previousNodeId: 'feverpain_score'
+  },
+  self_care_2_3: {
+    id: 'self_care_2_3',
+    type: 'advice',
+    content: 'Ask patient to return to Pharmacy if no improvement in 48 hours for pharmacist reassessment',
+    nextNodeIdIfYes: 'consultation_summary',
+    nextNodeIdIfNo: 'treatment_decision',
+    previousNodeId: 'decision_4_5',
+    nextNodeId: 'consultation_summary'
   },
   treatment_decision: {
     id: 'treatment_decision',
@@ -1227,7 +1263,7 @@ uncomplicatedUrinaryTractInfectionDecisionTree.nodes = {
   criteria_met: {
     id: 'criteria_met',
     type: 'criteria',
-    content: 'The patient meets the inclusion criteria for the Uncomplicated Urinary Tract Infection pathway.',
+    content: 'Does the patient meets the inclusion criteria for the Uncomplicated Urinary Tract Infection pathway?',
     inclusion: ['women aged 16 to 64 years with suspected lower UTIs'],
     exclusion: [
       'pregnant individuals',
@@ -1245,23 +1281,28 @@ uncomplicatedUrinaryTractInfectionDecisionTree.nodes = {
     content: 'The patient does not meet the inclusion criteria for the Uncomplicated Urinary Tract Infection pathway.',
     nextNodeIdIfYes: 'consultation_summary',
     nextNodeIdIfNo: 'treatment_decision',
-    previousNodeId: 'criteria_confirmation'
+    previousNodeId: 'criteria_met'
   },
   risk_assessment: {
     id: 'risk_assessment',
-    type: 'question',
-    title: 'Risk Assessment',
+    type: 'information',
+    title: 'General Risk Assessment',
+    content:
+      'The next set of question consider the risk of deterioration or serious illness. Assess for typical clinical features of UTI. Is there a risk of deterioration or serious illness',
     context:
       'Consider the risk of deterioration or serious illness. Assess for typical clinical features of UTI. Is there a risk of deterioration or serious illness?',
-    answers: ['Yes', 'No'],
+    symptoms: [],
+    // answers: ['Yes', 'No'],
     nextNodeIdIfYes: 'NEWS2_check',
     nextNodeIdIfNo: 'risk_assessment_pylonephritis',
-    previousNodeId: 'criteria_met'
+    previousNodeId: 'criteria_met',
+    nextNodeId: 'risk_assessment_pylonephritis'
   },
   risk_assessment_pylonephritis: {
     id: 'risk_assessment_pylonephritis',
     type: 'symptoms',
     // componentType: 'criteriaChecklist',
+    title: 'Pyelonephritis Risk Assessment',
     content: 'Consider the risk of deterioration or serious illness. Check for signs of pyelonephritis.',
     symptoms: [
       'Kidney pain/tenderness in back under ribs',
@@ -1275,7 +1316,8 @@ uncomplicatedUrinaryTractInfectionDecisionTree.nodes = {
     },
     // minRequired: 1,
     nextNodeIdIfYes: 'emergency_referral',
-    nextNodeIdIfNo: 'risk_assessment_other'
+    nextNodeIdIfNo: 'risk_assessment_other',
+    previousNodeId: 'risk_assessment'
   },
   emergency_referral: {
     id: 'emergency_referral',
@@ -1284,10 +1326,10 @@ uncomplicatedUrinaryTractInfectionDecisionTree.nodes = {
       'Consider calculating NEWS2 Score ahead of signposting patient to A&E or calling 999 in a life-threatening emergency.',
     nextNodeIdIfYes: 'consultation_summary',
     nextNodeIdIfNo: 'treatment_decision',
-    previousNodeId: 'risk_assessment_pylonephritis'
+    previousNodeId: 'risk_assessment'
   },
   NEWS2_check: {
-    id: 'NEWS_2_check',
+    id: 'NEWS2_check',
     type: 'stop',
     content:
       'Consider calculating NEWS2 Score ahead of signposting patient to A&E or calling 999 in a life-threatening emergency.',
@@ -1297,31 +1339,27 @@ uncomplicatedUrinaryTractInfectionDecisionTree.nodes = {
   },
   risk_assessment_other: {
     id: 'risk_assessment_other',
-    type: 'criteriaCheck',
+    type: 'symptoms',
     componentType: 'criteriaChecklist',
-    content: 'Consider the risk of deterioration or serious illness. Check for signs of pyelonephritis.',
+    title: 'Additional Risk Assessment',
+    content: 'Does the patient have ANY of the following:',
 
-    criteria: [
-      {
-        text: 'Vaginal discharge: 80% do not have UTI (treat over the counter if signs and symptoms of thrush)',
-        required: false
-      },
-      { text: 'Urethritis: inflammation post sexual intercourse, irritants', required: false },
-      { text: 'Check sexual history to exclude sexually transmitted infections', required: false },
-      {
-        text: 'Check for signs and symptoms of pregnancy- ask about missed or lighter periods- carry out a pregnancy test if unsure',
-        required: false
-      },
-      { text: 'Genitourinary syndrome of menopause (vulvovaginal atrophy)', required: false },
-      { text: 'Is the patient immunosuppressed?', required: false }
+    symptoms: [
+      'Vaginal discharge: 80% do not have UTI (treat over the counter if signs and symptoms of thrush)',
+      'Urethritis: inflammation post sexual intercourse, irritants',
+      'Check sexual history to exclude sexually transmitted infections',
+      'Check for signs and symptoms of pregnancy- ask about missed or lighter periods- carry out a pregnancy test if unsure',
+      'Genitourinary syndrome of menopause (vulvovaginal atrophy)',
+      'Is the patient immunosuppressed?'
     ],
     noneOption: {
       text: 'None of the above',
       action: 'untickAll'
     },
     minRequired: 1,
-    nextNodeIdIfPassed: 'onward_referral',
-    nextNodeIdIfFailed: 'gateway_point'
+    nextNodeIdIfYes: 'onward_referral',
+    nextNodeIdIfNo: 'gateway_point',
+    previousNodeId: 'risk_assessment_pylonephritis'
   },
   onward_referral: {
     id: 'onward_referral',
@@ -1337,15 +1375,20 @@ uncomplicatedUrinaryTractInfectionDecisionTree.nodes = {
     type: 'gateway',
     content: 'You have reached the gateway point. Now you can assess the patient for treatment.',
     nextNodeIdIfYes: 'treatment_criteria_check',
-    nextNodeId: 'symptoms_check'
+    nextNodeId: 'symptoms_check',
+    previousNodeId: 'risk_assessment_other'
   },
   symptoms_check: {
     id: 'symptoms_check',
     type: 'multiple_choice_question',
-    content: `Does the patient have any of the 3 key diagnostic signs/symptoms
-        ☐ Dysuria (burning pain when passing urine)
-        ☐ New nocturia (needing to pass urine in the night)
-        ☐ Urine cloudy to the naked eye (visual inspection by pharmacist if practicable)`,
+    title: 'Symptoms Check',
+    content: 'Does the patient have any of the following symptoms?',
+    context_list: [
+      'Dysuria (burning pain when passing urine)',
+      'New nocturia (needing to pass urine in the night)',
+      'Urine cloudy to the naked eye (visual inspection by pharmacist if practicable)'
+    ],
+
     answers: [
       { text: 'No symptoms', action: 'other_symptoms_check' },
       { text: '1 symptom', action: 'uti_unclear' },
@@ -1366,25 +1409,36 @@ uncomplicatedUrinaryTractInfectionDecisionTree.nodes = {
       'Flank pain (pain in the back, below the ribs)'
     ],
     nextNodeIdIfYes: 'uti_unclear',
-    nextNodeIdIfNo: 'uti_unlikely'
+    nextNodeIdIfNo: 'uti_unlikely',
+    previousNodeId: 'symptoms_check'
   },
   uti_unclear: {
     id: 'uti_unclear',
     type: 'information',
     content: 'UTI is unclear. Consider other causes of symptoms and proceed appropriately.',
-    nextNodeId: 'onward_referral',
-    previousNodeId: 'gateway_point'
+    nextNodeId: 'onward_referral_2',
+    previousNodeId: 'symptoms_check'
+  },
+  onward_referral_2: {
+    id: 'onward_referral_2',
+    type: 'stop',
+    content:
+      'If symptoms worsen rapidly or significantly at any time, or do not improve after completion of treatment course, consider onward referral to General Practice or other provider as appropriate.',
+    nextNodeIdIfYes: 'consultation_summary',
+    nextNodeIdIfNo: 'treatment_decision',
+    previousNodeId: 'uti_unclear'
   },
   uti_unlikely: {
     id: 'uti_unlikely',
     type: 'information',
     content: 'UTI is unlikely. Consider other causes of symptoms and proceed appropriately.',
     nextNodeId: 'self_care_advice',
-    previousNodeId: 'gateway_point'
+    previousNodeId: 'symptoms_check'
   },
   self_care_advice: {
     id: 'self_care_advice',
     type: 'advice',
+    title: 'Self-care Advice',
     content: 'Share self-care and safety-netting advice. Recommend pain management and inform about UTI.',
     nextNodeId: 'consultation_summary',
     previousNodeId: 'uti_unlikely'
@@ -1396,8 +1450,8 @@ uncomplicatedUrinaryTractInfectionDecisionTree.nodes = {
       'Shared decision making approach using TARGET UTI resources, in patients that describe their symptoms  as mild consider paint relief and self care as first line, as paitnet to return to pharmacy if no improvement after 48 hours.',
     answers: [
       {
-        text: 'Mild symptoms: Self-care and pain relief. Ask patient to return if no improvement within 3-5 days.',
-        action: 'self_care_advice'
+        text: 'Mild symptoms: Self-care and pain relief. Ask patient to return if no improvement within 3-5 days. t',
+        action: 'self_care_advice_mild'
       },
       { text: 'Severe symptoms: Offer immediate antibiotic treatment.', action: 'treatment_decision' }
     ],
@@ -1417,12 +1471,13 @@ uncomplicatedUrinaryTractInfectionDecisionTree.nodes = {
     ],
     nextNodeIdIfYes: 'consultation_summary',
     nextNodeIdIfNo: 'onward_referral_after_treatment',
-    previousNodeId: 'shared_decision_making',
+    previousNodeId: 'root',
     nextNodeId: 'self_care_advice'
   },
-  self_care_advice: {
-    id: 'self_care_advice',
-    type: 'Information',
+  self_care_advice_mild: {
+    id: 'self_care_advice_mild',
+    type: 'information',
+    title: 'Self-care Advice',
     content:
       'FOR ALL PATIENTS: If symptoms worsen rapidly or significantly at any time, OR do not improve in 48 hours of taking antibiotics. Use TARGET UTI leaflet',
     nextNodeId: 'consultation_summary',
@@ -1432,7 +1487,7 @@ uncomplicatedUrinaryTractInfectionDecisionTree.nodes = {
     id: 'consultation_summary',
     type: 'summary',
     content: 'This concludes the UTI pathway.',
-    previousNodeId: 'self_care_advice' // This should be dynamic based on the actual flow
+    previousNodeId: 'root' // This should be dynamic based on the actual flow
     // No nextNodeId needed as this is a terminal node.
   }
 }

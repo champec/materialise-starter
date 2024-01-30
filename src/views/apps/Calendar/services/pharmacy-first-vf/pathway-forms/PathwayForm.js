@@ -25,6 +25,7 @@ function PathwayForm({ onServiceUpdate, state, ServiceTree }) {
   const [currentNode, setCurrentNode] = useState(ServiceTree.nodes?.root)
   // Initialize an object to keep track of checkbox states for each node
   const [nodeStates, setNodeStates] = useState({})
+  const [navigationHistory, setNavigationHistory] = useState([])
 
   console.log('PathwayForm node', nodeStates, currentNode, ServiceTree)
 
@@ -42,11 +43,21 @@ function PathwayForm({ onServiceUpdate, state, ServiceTree }) {
   }, [decisionData]) // Dependency array ensures effect runs when decisionData changes
 
   const handleNextNode = nextNodeId => {
+    setNavigationHistory(history => [...history, currentNode.id]) // Push current node ID onto the stac
     setCurrentNode(ServiceTree.nodes[nextNodeId])
   }
 
-  const handlePreviousNode = previousNodeId => {
-    setCurrentNode(ServiceTree.nodes[previousNodeId])
+  //   const handlePreviousNode = previousNodeId => {
+  //     setCurrentNode(ServiceTree.nodes[previousNodeId])
+  //   }
+
+  const handlePreviousNode = () => {
+    setNavigationHistory(history => {
+      const updatedHistory = [...history]
+      const previousNodeId = updatedHistory.pop() // Remove the last node from the stack
+      setCurrentNode(ServiceTree.nodes[previousNodeId] || ServiceTree.nodes.root)
+      return updatedHistory // Return the updated history
+    })
   }
 
   const handleSymptomChange = (nodeId, symptom, isChecked) => {
@@ -244,6 +255,7 @@ function PathwayForm({ onServiceUpdate, state, ServiceTree }) {
   }
 
   const renderNode = node => {
+    console.log('renderNode', node)
     switch (node.type) {
       case 'criteria':
         return renderCriteriaNode(node)
@@ -369,9 +381,19 @@ function PathwayForm({ onServiceUpdate, state, ServiceTree }) {
           sx={{ backgroundColor: 'primary.main', color: 'primary.contrastText', mb: 4 }}
         />
         <CardContent>
-          <Typography variant='body1' sx={{ mb: 2 }}>
-            {node.content}
-          </Typography>
+          {node.content && (
+            <Typography variant='body1' sx={{ mb: 2 }}>
+              {node.content}
+            </Typography>
+          )}
+          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1, mt: 3, alignItems: 'flex-start' }}>
+            {node.context_list &&
+              node.context_list.map((context, index) => (
+                <Typography key={index} variant='body2' sx={{ mb: 1 }}>
+                  {`${index + 1}) ${context}`}
+                </Typography>
+              ))}
+          </Box>
           <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
             {node?.links &&
               node.links.map((link, index) => (
@@ -388,15 +410,22 @@ function PathwayForm({ onServiceUpdate, state, ServiceTree }) {
                 </Link>
               ))}
           </Box>
-          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1, mt: 3, alignItems: 'flex-start' }}>
+          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1, mt: 3, alignItems: 'stretch' }}>
             {node.answers.map((answer, index) => (
               <Button
                 key={index}
                 variant='contained'
-                sx={{ mb: 1, padding: 2, fontSize: 14, width: 'auto', alignSelf: 'center' }}
+                sx={{
+                  mb: 1,
+                  padding: 2,
+                  fontSize: 14,
+                  width: '100%', // Changed to '100%' for full width
+                  textAlign: 'right', // Added textAlign for text alignment,
+                  justifyContent: 'flex-start' // Added justifyContent for text alignment
+                }}
                 onClick={() => handleMultipleChoiceSelection(node.id, answer.text, answer.action)}
               >
-                {answer.text}
+                {`${index + 1}) ${answer.text}`}
               </Button>
             ))}
           </Box>
@@ -1163,9 +1192,7 @@ function PathwayForm({ onServiceUpdate, state, ServiceTree }) {
           }}
         >
           {/* <Button onClick={() => handleNextNode(currentNode.nextNodeId)}>Next</Button> */}
-          {currentNode.previousNodeId && (
-            <Button onClick={() => handlePreviousNode(currentNode.previousNodeId)}>Back</Button>
-          )}
+          {currentNode.id !== 'root' && <Button onClick={() => handlePreviousNode()}>Back</Button>}
         </Box>
       </Box>
     </Box>

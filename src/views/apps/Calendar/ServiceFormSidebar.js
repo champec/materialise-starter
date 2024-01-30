@@ -152,7 +152,8 @@ const ServiceFormSidebar = props => {
     resetToEmptyValues,
     setResetToEmptyValues,
     serviceTable,
-    setLocallySelectedService
+    setLocallySelectedService,
+    hideBackdrop
   } = props
 
   // ** States
@@ -352,7 +353,7 @@ const ServiceFormSidebar = props => {
           anchor='right'
           open={serviceFormSidebarOpen}
           onClose={handleSidebarClose}
-          ModalProps={{ keepMounted: true }}
+          ModalProps={({ keepMounted: true }, hideBackdrop)}
           sx={{ '& .MuiDrawer-paper': { width: ['100%', drawerWidth] }, zIndex: zIndex }}
         >
           <Box
