@@ -17,6 +17,7 @@ import {
   CardActions
 } from '@mui/material'
 import IconifyIcon from 'src/@core/components/icon'
+import Link from 'next/link'
 
 function PathwayForm({ onServiceUpdate, state, ServiceTree }) {
   const decisionData = state?.pathwayform
@@ -116,7 +117,7 @@ function PathwayForm({ onServiceUpdate, state, ServiceTree }) {
         : 'No Symptoms Reported'
       // Use the node's content or a generic term for the decision summary
       const decisionSummary = nodeStates[node.id]?.decision
-        ? `Decision: '${nodeStates[node.id].decision}' for '${node.content}'`
+        ? `Decision: '${nodeStates[node.id].decision} ${node?.content ? ' for ' + node.content : ''}'`
         : `Decision for '${node.content}': Not Made`
       summaryText += `${symptomsSummary}; ${decisionSummary}`
     } else if (node.type === 'gateway' && state.acknowledged) {
@@ -371,12 +372,28 @@ function PathwayForm({ onServiceUpdate, state, ServiceTree }) {
           <Typography variant='body1' sx={{ mb: 2 }}>
             {node.content}
           </Typography>
+          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+            {node?.links &&
+              node.links.map((link, index) => (
+                <Link
+                  key={index}
+                  href={link.link}
+                  target='_blank'
+                  rel='noopener noreferrer'
+                  sx={{ color: 'secondary.main' }} // Use MUI color for better visibility
+                >
+                  <Typography variant='body2' sx={{ mb: 1 }}>
+                    {`${index + 1}) ${link.text}`}
+                  </Typography>
+                </Link>
+              ))}
+          </Box>
           <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1, mt: 3, alignItems: 'flex-start' }}>
             {node.answers.map((answer, index) => (
               <Button
                 key={index}
                 variant='contained'
-                sx={{ mb: 1, padding: 2, fontSize: 14, width: 'auto', alignSelf: 'center' }} // Adjust the width and alignment for better visual structure
+                sx={{ mb: 1, padding: 2, fontSize: 14, width: 'auto', alignSelf: 'center' }}
                 onClick={() => handleMultipleChoiceSelection(node.id, answer.text, answer.action)}
               >
                 {answer.text}
@@ -447,12 +464,17 @@ function PathwayForm({ onServiceUpdate, state, ServiceTree }) {
       <Card sx={{ m: 2, boxShadow: 3 }}>
         <CardHeader
           avatar={<IconifyIcon icon={node.icon || 'healthicons:symptom'} style={{ fontSize: '40px' }} />}
-          title={<Typography variant='h6'>{node.content}</Typography>}
+          title={<Typography variant='h6'>{node.title || node.content}</Typography>}
           titleTypographyProps={{ variant: 'h6' }}
           sx={{ backgroundColor: 'primary.main', color: 'primary.contrastText', '& .MuiCardHeader-avatar': { mr: 2 } }}
         />
         <CardContent sx={{ pt: 0 }}>
           <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1, mt: 3 }}>
+            {node?.context && (
+              <Typography variant='p' sx={{ mb: 2 }}>
+                {node.context}
+              </Typography>
+            )}
             {node.symptoms.map((symptom, index) => (
               <FormControlLabel
                 key={index}

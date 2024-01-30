@@ -792,7 +792,7 @@ impetigoDecisionTree.nodes = {
   },
   criteria_confirmation: {
     id: 'criteria_confirmation',
-    type: 'component',
+    type: 'criteriaCheck',
     componentType: 'criteriaChecklist',
     content: 'Please confirm the following criteria for the Impetigo pathway:',
     criteria: [
@@ -802,6 +802,10 @@ impetigoDecisionTree.nodes = {
       { text: 'The patient does not have recurrent impetigo.', required: true },
       { text: 'The patient is not a pregnant individual under 16 years.', required: true }
     ],
+    allOption: {
+      text: 'All of the above',
+      action: 'tickAll'
+    },
     noneOption: {
       text: 'None of the above',
       action: 'untickAll'
@@ -811,34 +815,37 @@ impetigoDecisionTree.nodes = {
     nextNodeIdIfFailed: 'exclusion_criteria_met',
     previousNodeId: 'root'
   },
+  exclusion_criteria_met: {
+    id: 'exclusion_criteria_met',
+    type: 'stop',
+    content: 'The patient does not meet the inclusion criteria for the Impetigo pathway.',
+    nextNodeIdIfYes: 'consultation_summary',
+    nextNodeIdIfNo: 'treatment_decision',
+    previousNodeId: 'criteria_confirmation'
+  },
   risk_assessment: {
     id: 'risk_assessment',
-    type: 'component',
+    type: 'symptoms',
+    title: 'Risk Assessment',
+    context:
+      'Consider the risk of deterioration. Check for serious complications such as Meningitis, Encephalitis, Myelitis, Facial nerve paralysis, or Shingles in specific conditions. Select "No" if no serious complications are suspected.',
     componentType: 'criteriaChecklist',
-    content:
-      'Consider the risk of deterioration. Check for serious complications such as Meningitis, Encephalitis, Myelitis, Facial nerve paralysis, or Shingles in specific conditions. Select "None" if no serious complications are suspected.',
-    criteria: [
-      { text: 'Meningitis (neck stiffness, photophobia, mottled skin)', required: false },
-      { text: 'Encephalitis (disorientation, changes in behaviour)', required: false },
-      { text: 'Myelitis (muscle weakness, loss of bladder or bowel control)', required: false },
-      { text: 'Facial nerve paralysis (typically unilateral) (Ramsay Hunt)', required: false },
-      {
-        text: "Shingles in the ophthalmic distribution (Hutchinson's sign, visual symptoms, unexplained red eye)",
-        required: false
-      },
-      { text: 'Shingles in severely immunosuppressed patient', required: false },
-      {
-        text: 'Shingles in immunosuppressed patient where the rash is severe, widespread or patient is systemically unwell',
-        required: false
-      }
+    symptoms: [
+      'Meningitis (neck stiffness, photophobia, mottled skin)',
+      'Encephalitis (disorientation, changes in behaviour)',
+      'Myelitis (muscle weakness, loss of bladder or bowel control)',
+      'Facial nerve paralysis (typically unilateral) (Ramsay Hunt)',
+      "Shingles in the ophthalmic distribution (Hutchinson's sign, visual symptoms, unexplained red eye)",
+      'Shingles in severely immunosuppressed patient',
+      'Shingles in immunosuppressed patient where the rash is severe, widespread or patient is systemically unwell'
     ],
     noneOption: {
       text: 'None of the above', // This option, when selected, will deselect all other options and vice versa
       action: 'untickAll' // Indicates the action to be taken when this option is selected
     },
     minRequired: 0, // Minimum number of criteria that must be selected for the node to be considered passed
-    nextNodeIdIfPassed: 'clinical_features_check',
-    nextNodeIdIfFailed: 'emergency_referral',
+    nextNodeIdIfNo: 'clinical_features_check',
+    nextNodeIdIfYes: 'emergency_referral',
     previousNodeId: 'criteria_confirmation'
   },
 
@@ -854,11 +861,19 @@ impetigoDecisionTree.nodes = {
   clinical_features_check: {
     id: 'clinical_features_check',
     type: 'multiple_choice_question',
+    title: 'Clinical Features Check',
     content:
       'Does the patient follow the typical progression of Impetigo clinical features? Refer to NHS.UK for images of Impetigo.',
     answers: [
       { text: 'Yes, typical features of Impetigo', action: 'lesion_count_check' },
       { text: 'No, Impetigo less likely', action: 'alternative_diagnosis' }
+    ],
+    links: [
+      { text: 'NHS.UK', link: 'https://www.nhs.uk/conditions/impetigo/' },
+      {
+        text: 'DermNet Impetigo images',
+        link: 'https://dermnetnz.org/images/impetigo-images'
+      }
     ],
     previousNodeId: 'risk_assessment'
   },
@@ -872,6 +887,8 @@ impetigoDecisionTree.nodes = {
   },
   lesion_count_check: {
     id: 'lesion_count_check',
+    title: 'Lesion Count Check',
+
     type: 'multiple_choice_question',
     content: 'Does the patient have ≤3 lesions/clusters present, or ≥4 lesions/clusters present?',
     answers: [

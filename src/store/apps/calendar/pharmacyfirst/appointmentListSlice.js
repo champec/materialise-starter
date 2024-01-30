@@ -301,7 +301,7 @@ export const sendEmailThunk = createAsyncThunk(
 export const updateSelectedBookingService = createAsyncThunk(
   'appointmentList/updateSelectedBookingService',
   async ({ bookingId, serviceTable, serviceInfo }) => {
-    const { data, error } = await supabase
+    const { data: dataArray, error } = await supabase
       .from(serviceTable)
       .update({ pathwayform: serviceInfo })
       .eq('consultation_id', bookingId)
@@ -312,6 +312,7 @@ export const updateSelectedBookingService = createAsyncThunk(
       throw error // Consider throwing the error to be handled by Redux Toolkit
     }
 
+    const data = dataArray[0]
     console.log('updateSelectedBookingService', data)
     return { data, serviceTable, bookingId }
   }
@@ -375,11 +376,16 @@ export const appointmnetListSlice = createSlice({
       state.loadingSelectedBooking = false
     },
     [updateSelectedBookingService.fulfilled]: (state, action) => {
-      const { data, serviceTableName, bookingId } = action.payload
+      const { data, serviceTable, bookingId } = action.payload
       const updatedAppointments = state.appointments.map(appointment => {
         if (appointment.id === bookingId) {
-          appointment[serviceTableName] = data
+          appointment[serviceTable] = data
         }
+
+        if (state.selectedBooking && state.selectedBooking.id === bookingId) {
+          state.selectedBooking[serviceTable] = data
+        }
+
         return appointment
       })
 
