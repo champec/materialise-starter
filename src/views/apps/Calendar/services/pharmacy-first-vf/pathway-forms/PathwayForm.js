@@ -1206,6 +1206,7 @@ function PathwayForm({ onServiceUpdate, state, ServiceTree }) {
         >
           {/* <Button onClick={() => handleNextNode(currentNode.nextNodeId)}>Next</Button> */}
           {currentNode.id !== 'root' && <Button onClick={() => handlePreviousNode()}>Back</Button>}
+          <Button onClick={() => handleNextNode('consultation_summary')}>Review</Button>
         </Box>
       </Box>
     </Box>
