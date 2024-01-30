@@ -318,10 +318,7 @@ export const acuteSinusitisDecisionTree = {
     }
   ],
   dates_of_validity: '31/01/2024 to 30/01/2027',
-  criteria: [
-    'For children aged 1 to 17 years',
-    'Exclude: recurrent acute otitis media (3 or more episodes in 6 months or four or more episodes in 12 months), pregnant individuals under 16 years'
-  ],
+
   previousNodeId: null,
   nextNodeId: 'criteria_confirmation'
 }
@@ -340,7 +337,7 @@ acuteSinusitisDecisionTree.nodes = {
       { text: 'The patient is aged 12 years or older.', required: true },
       { text: 'Informed consent ', required: true },
       {
-        text: 'You will: Diagnose acute sinusitis by the presence of ONE or more of: Nasal blockage or discharge, with ONE or more of: Facial pain/pressure, reduction or loss of sense of smell (in adults), or cough (in children).',
+        text: 'You will: Diagnose acute sinusitis by the CKS guidelines',
         required: true
       }
     ],
@@ -353,7 +350,7 @@ acuteSinusitisDecisionTree.nodes = {
       action: 'untickAll' // Indicates the action to be taken when this option is selected
     },
     minRequired: 3, // Specifies the minimum number of checkboxes (excluding the 'None' option) that need to be ticked to proceed
-    nextNodeIdIfPassed: 'initial_information',
+    nextNodeIdIfPassed: 'deterioration_risk_check',
     nextNodeIdIfFailed: 'criteria_not_met',
     previousNodeId: 'root' // Assuming the root node is the direct predecessor
   },
@@ -368,7 +365,8 @@ acuteSinusitisDecisionTree.nodes = {
   deterioration_risk_check: {
     id: 'deterioration_risk_check',
     type: 'symptoms',
-    content:
+    title: 'Risk of deterioration or serious illness?',
+    context:
       'Is there a risk of deterioration or serious illness? Check for signs including intraorbital or periorbital complications, intracranial complications, signs of meningitis, severe frontal headache, or focal neurological signs.',
     symptoms: [
       'Intraorbital or periorbital complications (orbital cellulitis, displaced eyeball, reduced vision)',
@@ -393,7 +391,9 @@ acuteSinusitisDecisionTree.nodes = {
   diagnosis_check: {
     id: 'diagnosis_check',
     type: 'symptoms',
-    content:
+    title: 'Risk of deterioration or serious illness?',
+
+    context:
       'Diagnose acute sinusitis by the presence of ONE or more of: Nasal blockage or discharge, with ONE or more of: Facial pain/pressure, reduction or loss of sense of smell (in adults), or cough (in children).',
     symptoms: [
       'Nasal blockage (obstruction/congestion)',

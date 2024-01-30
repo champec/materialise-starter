@@ -592,7 +592,7 @@ function PathwayForm({ onServiceUpdate, state, ServiceTree }) {
             color='warning'
             onClick={() => {
               handleStopDecision(node.id, 'Treat Anyway')
-              handlePreviousNode(node.nextNodeIdIfNo) // Assuming this takes the user back to a previous step
+              handleNextNode(node.nextNodeIdIfNo) // Assuming this takes the user back to a previous step
             }}
             sx={{ fontWeight: 'bold', color: 'warning.dark' }}
           >
@@ -891,71 +891,84 @@ function PathwayForm({ onServiceUpdate, state, ServiceTree }) {
 
     return (
       <Box>
-        <Typography variant='h6'>{node.content}</Typography>
+        <Card sx={{ m: 2, boxShadow: 3 }}>
+          <CardHeader
+            avatar={<IconifyIcon icon={node.icon || 'mdi:format-list-checks'} style={{ fontSize: '40px' }} />}
+            title={<Typography variant='h6'>{node.title || 'Treatment decision'}</Typography>}
+            titleTypographyProps={{ variant: 'h6' }}
+            sx={{ backgroundColor: 'info.main', color: 'info.contrastText' }}
+          />
 
-        {/* Treatment Selection with Numbers and Subtext for Contraindications */}
-        {node.treatments.map((treatment, index) => (
-          <Box key={treatment.id} sx={{ display: 'flex', flexDirection: 'column', mb: 1 }}>
-            <Box sx={{ display: 'flex', alignItems: 'center' }}>
-              <Typography sx={{ width: '30px' }}>{index + 1}.</Typography>
-              <FormControlLabel
-                control={
-                  <Checkbox
-                    checked={selectedTreatments.includes(treatment.id)}
-                    onChange={e => handleTreatmentChange(node.id, treatment.id, e.target.checked)}
-                    disabled={treatment.contraindications?.some(cond => patientCriteria[cond])}
-                  />
-                }
-                label={
-                  <Box>
-                    <Typography component='span'>{treatment.name}</Typography>
-                    {treatment.info && (
-                      <Typography component='span' variant='caption' sx={{ display: 'block', color: 'text.secondary' }}>
-                        {treatment.info}
-                      </Typography>
-                    )}
-                  </Box>
-                }
-              />
-            </Box>
-            {treatment.contraindications?.some(cond => patientCriteria[cond]) && (
-              <Typography variant='caption' sx={{ ml: '30px', color: 'text.secondary' }}>
-                Contraindicated
-              </Typography>
-            )}
-          </Box>
-        ))}
+          <Typography variant='p'>{node.content}</Typography>
 
-        {/* Actions Checklist */}
-        {node?.actions &&
-          node.actions.map(action => (
-            <FormControlLabel
-              key={action.id}
-              control={
-                <Checkbox
-                  checked={!!actionsTaken[action.id]}
-                  onChange={e => handleActionChange(node.id, action.id, e.target.checked)}
+          {/* Treatment Selection with Numbers and Subtext for Contraindications */}
+          {node.treatments.map((treatment, index) => (
+            <Box key={treatment.id} sx={{ display: 'flex', flexDirection: 'column', mb: 1 }}>
+              <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                <Typography sx={{ width: '30px' }}>{index + 1}.</Typography>
+                <FormControlLabel
+                  control={
+                    <Checkbox
+                      checked={selectedTreatments.includes(treatment.id)}
+                      onChange={e => handleTreatmentChange(node.id, treatment.id, e.target.checked)}
+                      disabled={treatment.contraindications?.some(cond => patientCriteria[cond])}
+                    />
+                  }
+                  label={
+                    <Box>
+                      <Typography component='span'>{treatment.name}</Typography>
+                      {treatment.info && (
+                        <Typography
+                          component='span'
+                          variant='caption'
+                          sx={{ display: 'block', color: 'text.secondary' }}
+                        >
+                          {treatment.info}
+                        </Typography>
+                      )}
+                    </Box>
+                  }
                 />
-              }
-              label={action.label}
-            />
+              </Box>
+              {treatment.contraindications?.some(cond => patientCriteria[cond]) && (
+                <Typography variant='caption' sx={{ ml: '30px', color: 'text.secondary' }}>
+                  Contraindicated
+                </Typography>
+              )}
+            </Box>
           ))}
 
-        {/* Additional Comments */}
-        <TextField
-          label='Additional Comments'
-          multiline
-          rows={4}
-          value={additionalComments}
-          onChange={e => handleCommentsChange(node.id, e.target.value)}
-          fullWidth
-          margin='normal'
-        />
+          {/* Actions Checklist */}
+          {node?.actions &&
+            node.actions.map(action => (
+              <FormControlLabel
+                key={action.id}
+                control={
+                  <Checkbox
+                    checked={!!actionsTaken[action.id]}
+                    onChange={e => handleActionChange(node.id, action.id, e.target.checked)}
+                  />
+                }
+                label={action.label}
+              />
+            ))}
 
-        {/* Navigation Buttons */}
-        <Button variant='contained' onClick={() => handleNextNode(node.nextNodeId)}>
-          Next
-        </Button>
+          {/* Additional Comments */}
+          <TextField
+            label='Additional Comments'
+            multiline
+            rows={4}
+            value={additionalComments}
+            onChange={e => handleCommentsChange(node.id, e.target.value)}
+            fullWidth
+            margin='normal'
+          />
+
+          {/* Navigation Buttons */}
+          <Button variant='contained' onClick={() => handleNextNode(node.nextNodeId)}>
+            Next
+          </Button>
+        </Card>
       </Box>
     )
   }
