@@ -3,7 +3,7 @@ import { useRouter } from 'next/router'
 import { supabase } from 'src/configs/supabase'
 import dayjs from 'dayjs'
 import VideoCallComponent from 'src/pages/pharmacy-first/call-screen/CallScreen'
-import { Box, Drawer, IconButton } from '@mui/material'
+import { Box, Drawer, IconButton, Button } from '@mui/material'
 import BookingInfor from 'src/pages/pharmacy-first/call-screen/[call_id]/BookingInfor'
 import Notes from 'src/pages/pharmacy-first/call-screen/[call_id]/Notes'
 import PrescriptionWrite from 'src/pages/pharmacy-first/call-screen/[call_id]/PrescriptionWrite'
@@ -49,6 +49,8 @@ function index() {
   const [snackbarOpen, setSnackbarOpen] = React.useState(false)
   const [snackbarMessage, setSnackbarMessage] = React.useState('')
   const [snackbarSeverity, setSnackbarSeverity] = React.useState('success')
+  const [consultationState, setConsultationState] = React.useState(null)
+  const [pendingPatientAcess, setPendingPatientAcess] = React.useState(false)
   // const [serviceType, setServiceType] = React.useState(null)
   const [serviceTable, setServiceTable] = React.useState(null)
   const videoContainerRef = React.useRef(null)
@@ -60,16 +62,46 @@ function index() {
     setSnackbarOpen(true)
   }
 
-  // const updateNMSData = async () => {
-  //   console.log({ nmsData })
-  //   const { error } = await supabase.from('service_nms').update(nmsData).eq('consultation_id', id)
-  //   if (error) {
-  //     console.log(error)
-  //     alert('Error updating NMS data')
-  //   }
-  // }
+  const setupConsultationListener = async consultationId => {
+    // filter: `or.organisation_id=eq${orgId}, user_id=eq${userId} `
+    const response = await supabase
+      .channel('consultation')
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'consultations',
+          filter: `id=eq.${consultationId}`
+        },
+        payload => {
+          console.log('New status update:', payload)
+          setConsultationState(payload?.new?.patient_status)
+        }
+      )
+      .subscribe()
+
+    console.log('RESPONSE', response)
+  }
+
+  const updateStatus = async status => {
+    const { data, error } = await supabase.from('consultations').update({ clinician_status: status }).eq('id', id)
+    // .single()
+
+    if (error) {
+      setError(error)
+      console.log(error)
+      showMessage(error.message, 'error')
+      return
+    }
+  }
+
   const fetchConsultation = async () => {
-    const { data, error } = await supabase.from('consultations').select('*, service_id(table)').eq('id', id).single()
+    const { data, error } = await supabase
+      .from('consultations')
+      .select('*, service_id(table), calendar_events(*)')
+      .eq('id', id)
+      .single()
     console.log({ data, error })
     if (error) {
       setError(error)
@@ -121,6 +153,7 @@ function index() {
   React.useEffect(() => {
     if (id) {
       fetchConsultation()
+      setupConsultationListener(id)
     }
     console.log({ id })
   }, [id])
@@ -135,8 +168,33 @@ function index() {
 
   console.log({ consultation })
 
-  const { patient_object: patient, start_date, hcp_token } = consultation
-  const formattedDate = dayjs(start_date).format('DD/MM/YYYY HH:mm')
+  const updateMeetingStatus = async status => {
+    const { data, error } = await supabase.from('consultations').update({ status }).eq('id', id)
+
+    if (error) {
+      setError(error)
+      console.log(error)
+      showMessage(error.message, 'error')
+      return
+    }
+  }
+
+  const handleJoinedMeeting = async () => {
+    // check if current consultation status if 4, if so update to 5 else update to 3
+    const { status } = consultation
+    if (status === 4) {
+      updateMeetingStatus(5)
+    } else {
+      updateMeetingStatus(3)
+    }
+  }
+
+  const {
+    patient_object: patient,
+    calendar_events: { start },
+    hcp_token
+  } = consultation
+  const formattedDate = dayjs(start).format('DD/MM/YYYY HH:mm')
 
   let url = consultation.url
   if (hcp_token) {
@@ -167,6 +225,41 @@ function index() {
     setServiceForm(prev => !prev)
   }
 
+  let statusMessage
+  let allowPatientButton
+
+  if (consultationState === 'patientInRoom') {
+    statusMessage = 'Patient is waiting in the room.'
+    allowPatientButton = !pendingPatientAcess ? (
+      <Button
+        onClick={e => {
+          e.preventDefault()
+          setPendingPatientAcess(true)
+          updateStatus('patientAllowedIn')
+        }}
+      >
+        Allow Patient In
+      </Button>
+    ) : (
+      <Button
+        onClick={e => {
+          e.preventDefault()
+          setPendingPatientAcess(false)
+          updateStatus('clinicianInRoom')
+        }}
+      >
+        Waiting For Patient, Click To Cancel
+      </Button>
+    )
+  } else if (consultationState === 'patientLeftMeeting') {
+    statusMessage = 'Patient has left the meeting.'
+  } else if (consultationState === 'patientJoined') {
+    statusMessage = 'Patient has joined the meeting.'
+    allowPatientButton = null
+  } else {
+    statusMessage = 'Patient is not in the meeting.'
+  }
+
   const hideBackdrop = {
     slotProps: {
       backdrop: {
@@ -182,6 +275,8 @@ function index() {
       <h1>Call Screen</h1>
       <h3>Patient: {patient.full_name}</h3>
       <h3>Start Date: {formattedDate}</h3>
+      <h3>Status: {statusMessage}</h3>
+      {allowPatientButton}
       <div ref={videoContainerRef} style={videoScreenStyles}>
         <VideoCallComponent
           url={url}
@@ -191,6 +286,7 @@ function index() {
           handlePrescriptionButton={handlePrescriptionButton}
           handleNotesButton={handleNotesButton}
           handleServiceButton={handleServiceButton}
+          joinedMeeting={handleJoinedMeeting}
         />
       </div>
       <Drawer

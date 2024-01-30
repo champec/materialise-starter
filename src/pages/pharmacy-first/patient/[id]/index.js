@@ -123,8 +123,26 @@ function PatientCall() {
       // update the consultation patient status to 'ready'
       updateStatus('patientInRoom')
       setNameVerified(true)
+
+      console.log('Consultation State', consultation?.status)
+      // check if the current consultation state is 3 update to 5 else update to 4
+      if (consultation?.status == 3) {
+        updateConsultationState(5)
+      } else {
+        updateConsultationState(4)
+      }
     } else {
       showMessages("That's not the name we are expecting here in this meeting.", 'error')
+    }
+  }
+
+  const updateConsultationState = async state => {
+    console.log('Updating consultation state to', state)
+    const { data, error } = await supabase.from('consultations').update({ status: state }).eq('id', id)
+    if (error) {
+      console.log(error)
+      showMessages(error.message, 'error')
+      return
     }
   }
 
@@ -178,7 +196,15 @@ function PatientCall() {
   console.log({ url })
   console.log('Clinician Status', { consultationState })
   let content
-  if (!consultationState) {
+  if (consultationState === 'patientAllowedIn' || consultationState === 'patientJoined') {
+    // Directly render PatientCallScreen when conditions are met
+    content = (
+      <Box ref={containerRef} sx={{ height: '100vh' }}>
+        <Typography variant='h4'>Video Call</Typography>
+        <PatientCallScreen joinedMeeting={joinedMeeting} url={url} containerRef={containerRef} />
+      </Box>
+    )
+  } else if (!consultationState) {
     content = (
       <Typography>
         Your meeting is on {dayjs(consultation?.calendar_events?.start).format('Do MMM YYYY hh:mm A')} - No clinician in
@@ -187,26 +213,11 @@ function PatientCall() {
     )
   } else if (consultationState === 'clinicianInRoom') {
     content = <Typography>Your clinician knows you are here and will let you in soon.</Typography>
-  } else if (consultationState === 'patientAllowedIn' || consultationState === 'patientJoined') {
-    let url = consultation?.url
-    if (consultation?.patient_token) {
-      url = `${url}?token=${consultation?.patient_token}`
-    }
-    content = (
-      <Box sx={{ height: '100vh' }}>
-        <Typography variant='h4'>Video Call</Typography>
-        <PatientCallScreen joinedMeeting={joinedMeeting} url={url} containerRef={containerRef} />
-      </Box>
-    )
   }
 
   console.log('CONTENT', content)
 
-  return (
-    <Box ref={containerRef} sx={{ height: '100vh' }}>
-      {content}
-    </Box>
-  )
+  return <Box>{content}</Box>
 }
 
 PatientCall.getLayout = page => <BlankLayout>{page}</BlankLayout>

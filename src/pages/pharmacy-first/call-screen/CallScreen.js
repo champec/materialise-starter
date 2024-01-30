@@ -8,7 +8,8 @@ const VideoCallComponent = ({
   handleScrButton,
   handleNotesButton,
   handlePrescriptionButton,
-  handleServiceButton
+  handleServiceButton,
+  joinedMeeting
 }) => {
   useEffect(() => {
     if (!containerRef.current) return
@@ -59,10 +60,16 @@ const VideoCallComponent = ({
           tooltip: 'Write notes here'
         },
         serviceButton: {
-          iconPath: 'https://xsqwpmqfbirqdncoephf.supabase.co/storage/v1/object/public/icons/nmslight.png',
-          iconPathDarkMode: 'https://xsqwpmqfbirqdncoephf.supabase.co/storage/v1/object/public/icons/nmsdark.png',
+          iconPath: 'https://xsqwpmqfbirqdncoephf.supabase.co/storage/v1/object/public/icons/serviceWhite.png',
+          iconPathDarkMode: 'https://xsqwpmqfbirqdncoephf.supabase.co/storage/v1/object/public/icons/serviceDark.png',
           label: 'Service Form',
           tooltip: 'Fill in Service details form here'
+        },
+        leaveButton: {
+          iconPath: 'https://xsqwpmqfbirqdncoephf.supabase.co/storage/v1/object/public/icons/leaveLight.png',
+          iconPathDarkMode: 'https://xsqwpmqfbirqdncoephf.supabase.co/storage/v1/object/public/icons/leaveDark.png',
+          label: 'Leave',
+          tooltip: 'Leave the call'
         }
       }
     })
@@ -83,7 +90,14 @@ const VideoCallComponent = ({
       } else if (event.button_id === 'serviceButton') {
         console.log('customButtonFive')
         handleServiceButton()
+      } else if (event.button_id === 'leaveButton') {
+        console.log('leaveButton')
+        callFrame.leave()
       }
+    })
+
+    callFrame.on('joined-meeting', () => {
+      joinedMeeting()
     })
 
     return () => callFrame.destroy()

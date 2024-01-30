@@ -23,6 +23,20 @@ const PatientCallScreen = ({ containerRef, url, joinedMeeting }) => {
           backgroundAccent: '#282A42',
           baseText: '#FFFFFF'
         }
+      },
+      customTrayButtons: {
+        leaveButton: {
+          iconPath: 'https://xsqwpmqfbirqdncoephf.supabase.co/storage/v1/object/public/icons/leaveLight.png',
+          iconPathDarkMode: 'https://xsqwpmqfbirqdncoephf.supabase.co/storage/v1/object/public/icons/leaveDark.png',
+          label: 'Leave',
+          tooltip: 'Leave the call'
+        }
+      }
+    })
+
+    callFrame.on('custom-button-click', event => {
+      if (event.button_id === 'leaveButton') {
+        callFrame.leave()
       }
     })
 
