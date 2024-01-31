@@ -50,7 +50,7 @@ function index() {
       field: 'Stage',
       headerName: 'Booking Stage',
       renderCell: ({ row }) => {
-        return row.service_dms.booking_stage
+        return row.service_dms?.booking_stage
       }
     }
     // {

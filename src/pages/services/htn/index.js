@@ -50,6 +50,7 @@ function index() {
       field: 'taken_date',
       headerName: 'Date Taken',
       renderCell: ({ row }) => {
+        console.log('HTN ROW', row)
         return row.service_htn.taken_date
       }
     },

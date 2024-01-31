@@ -95,7 +95,7 @@ const navigation = (role, plan) => {
         },
         {
           title: 'FLU',
-          path: '/services/flu?service=Flu Jab',
+          path: '/services/flu?service=FLU',
           icon: 'bi:hospital-fill',
           disabled: false
         }
