@@ -68,14 +68,17 @@ const getSelectedForm = (
   setServiceInfo,
   onServiceSubmit,
   onServiceUpdate,
-  loadingServiceUpdate
+  loadingServiceUpdate,
+  nodeStates,
+  setNodeStates
 ) => {
-  console.log('getSelectedForm', { serviceInfo, loadingServiceUpdate })
+  console.log('getSelectedForm', { serviceInfo, loadingServiceUpdate }, typeof setNodeStates)
   // serviceInfo is an empty object the show loading
   if (!serviceInfo || Object.keys(serviceInfo).length === 0 || loadingServiceUpdate || !selectedService) {
     return <div>Loading...</div>
   }
   const title = capitalize(selectedService.title)
+  console.log('getSelectedForm', { title })
   switch (title) {
     case 'DMS':
       return (
@@ -111,6 +114,8 @@ const getSelectedForm = (
           state={serviceInfo}
           setState={setServiceInfo}
           onSubmit={onServiceSubmit}
+          nodeStates={nodeStates}
+          setNodeStates={setNodeStates}
         />
       )
     case 'HTN':
@@ -153,7 +158,8 @@ const ServiceFormSidebar = props => {
     setResetToEmptyValues,
     serviceTable,
     setLocallySelectedService,
-    hideBackdrop
+    hideBackdrop,
+    autoSave = false
   } = props
 
   // ** States
@@ -165,6 +171,7 @@ const ServiceFormSidebar = props => {
   const [snackMessage, setSnackMessage] = useState('')
   const [snackSeverity, setSnackSeverity] = useState('success')
   const [snackDuration, setSnackDuration] = useState(7000)
+  const [nodeStates, setNodeStates] = useState({})
   const orgId = useSelector(state => state.organisation.organisation.id)
   const selectedService = useSelector(state => state.services.selectedService)
   const initServiceInfo = useSelector(state => state.services.serviceInfo)
@@ -195,7 +202,7 @@ const ServiceFormSidebar = props => {
     }
   }, [selectedBooking, selectedService])
 
-  const onServiceUpdate = async (serviceObject = serviceInfo) => {
+  const onServiceUpdate = async (serviceObject = serviceInfo, oneTime) => {
     const bookingId = selectedBooking.id
     console.log('onServiceUpdate', { serviceObject })
     const response = await dispatch(
@@ -205,12 +212,12 @@ const ServiceFormSidebar = props => {
     // const response = await dispatch(updateSelectedBookingService({ bookingId, serviceTable, serviceInfo: serviceObject }))
     console.log('onServiceUpdate', { response })
     if (response?.error) {
-      showSnackMessage('Error Updating Service', 'error', 7000)
+      showSnackMessage('Error Updating Service', 'error', 4000)
       console.log('error', response.error)
     }
     if (response) {
-      handleSidebarClose()
-      showSnackMessage('Service Updated Successfully', 'success', 7000)
+      oneTime ? null : handleSidebarClose()
+      showSnackMessage('Service Updated Successfully', 'success', 4000)
     }
   }
 
@@ -227,6 +234,9 @@ const ServiceFormSidebar = props => {
     setValues(defaultState)
     // setLocallySelectedService(null)
     // dispatch(setSelectedBooking(null))
+    if (autoSave) {
+      onServiceUpdate(nodeStates, true)
+    }
     clearErrors()
     dispatch(handleSelectEvent(null))
     handleServiceFormSidebarToggle()
@@ -240,77 +250,6 @@ const ServiceFormSidebar = props => {
     // calendarApi.getEventById(store.selectedEvent.id).remove()
     handleSidebarClose()
   }
-
-  // const handleStartDate = date => {
-  //   if (date > values.endDate) {
-  //     setValues({ ...values, startDate: new Date(date), endDate: new Date(date) })
-  //   }
-  // }
-
-  // const resetToStoredValues = useCallback(() => {
-  //   if (store.selectedbooking !== null) {
-  //     const event = store.selectedbooking
-  //     console.log(event, 'EVENTTT')
-  //     // setValue('title', event.title || '')
-  //     // setValues({
-  //     //   url: event.url || '',
-  //     //   title: event.title || '',
-  //     //   allDay: event.allDay,
-  //     //   guests: event.extendedProps.guests || [],
-  //     //   description: event.extendedProps.description || '',
-  //     //   calendar: event.extendedProps.calendarType || '',
-  //     //   endDate: event.end !== null ? event.end : event.start,
-  //     //   startDate: event.start !== null ? event.start : new Date(),
-  //     //   recurrenceFrequency: event.recurrenceFrequency || '', // Added recurrenceFrequency to state
-  //     //   recurrenceEndDate: event.end !== null ? event.end : event.start // Added recurrenceEndDate to state
-  //     // })
-  //   }
-  // }, [setValue, store.selectedbooking])
-
-  // console.log(store.selectedEvent?.extendedProps?.recurrencefrequency, 'check is true or false')
-
-  // const resetToEmptyValues = useCallback(() => {
-  //   setValue('title', '')
-  //   setValues(defaultState)
-  // }, [setValue])
-
-  // useEffect(() => {
-  //   console.log('store.selectedEvent', store)
-  //   if (store?.selectedEvent !== null) {
-  //     resetToStoredValues()
-  //   } else {
-  //     resetToEmptyValues()
-  //   }
-  // }, [addBookingSidebarOpen, resetToStoredValues, resetToEmptyValues, store?.selectedEvent])
-
-  // const PickersComponent = forwardRef(({ ...props }, ref) => {
-  //   return (
-  //     <TextField
-  //       inputRef={ref}
-  //       fullWidth
-  //       {...props}
-  //       label={props.label || ''}
-  //       sx={{ width: '100%' }}
-  //       error={props.error}
-  //     />
-  //   )
-  // })
-
-  // const formToUse = () => {
-  //   // console.log('selectedService', selectedService)
-  //   switch (selectedService) {
-  //     case 'DMS S3':
-  //       return <BookDMSform onClose={handleSidebarClose} />
-  //     case 'NMS':
-  //       return <BookNMSform onClose={handleSidebarClose} />
-  //     case 'Flu':
-  //       return <BookFluform onClose={handleSidebarClose} />
-  //     case 'Pharmacy First':
-  //       return <NewBookingForm onClose={handleSidebarClose} />
-  //     default:
-  //       return <NewBookingForm onClose={handleSidebarClose} />
-  //   }
-  // }
 
   const RenderSidebarFooter = () => {
     if (store.selectedEvent === null || (store.selectedEvent !== null && !store.selectedEvent?.title?.length)) {
@@ -402,7 +341,9 @@ const ServiceFormSidebar = props => {
               setServiceInfo,
               onServiceSubmit,
               onServiceUpdate,
-              loadingServiceUpdate
+              loadingServiceUpdate,
+              nodeStates,
+              setNodeStates
             )}
           </Box>
         </Drawer>

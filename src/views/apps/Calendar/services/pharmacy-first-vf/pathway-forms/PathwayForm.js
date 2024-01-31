@@ -19,12 +19,12 @@ import {
 import IconifyIcon from 'src/@core/components/icon'
 import Link from 'next/link'
 
-function PathwayForm({ onServiceUpdate, state, ServiceTree }) {
+function PathwayForm({ onServiceUpdate, state, ServiceTree, nodeStates, setNodeStates }) {
   const decisionData = state?.pathwayform
   console.log('PathwayForm', decisionData, ServiceTree)
   const [currentNode, setCurrentNode] = useState(ServiceTree.nodes?.root)
   // Initialize an object to keep track of checkbox states for each node
-  const [nodeStates, setNodeStates] = useState({})
+  //   const [nodeStates, setNodeStates] = useState({})
   const [navigationHistory, setNavigationHistory] = useState([])
 
   console.log('PathwayForm node', nodeStates, currentNode, ServiceTree)

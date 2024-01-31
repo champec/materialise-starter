@@ -22,7 +22,7 @@ const getPathwayForm = (clinicalPathway, state, setState, onServiceUpdate) => {
   }
 }
 
-function PFSServiceForm({ onServiceUpdate, state, setState, onSubmit }) {
+function PFSServiceForm({ onServiceUpdate, state, setState, onSubmit, nodeStates, setNodeStates }) {
   console.log('PFS STATE', state)
   const [loading, setLoading] = useState(false)
   const [ServiceTree, setServiceTree] = useState(null)
@@ -36,7 +36,7 @@ function PFSServiceForm({ onServiceUpdate, state, setState, onSubmit }) {
     }
   }, [clinicalPathway])
 
-  console.log('PFSSERVICE FORM', ServiceTree)
+  console.log('PFSSERVICE FORM', ServiceTree, typeof setNodeStates)
   if (loading || !ServiceTree) {
     return <div>Loading...</div>
   }
@@ -51,6 +51,8 @@ function PFSServiceForm({ onServiceUpdate, state, setState, onSubmit }) {
         loading={loading}
         setLoading={setLoading}
         ServiceTree={ServiceTree}
+        nodeStates={nodeStates}
+        setNodeStates={setNodeStates}
       />
     </Box>
   )

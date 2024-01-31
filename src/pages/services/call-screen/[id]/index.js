@@ -99,7 +99,7 @@ function index() {
   const fetchConsultation = async () => {
     const { data, error } = await supabase
       .from('consultations')
-      .select('*, service_id(table), calendar_events(*)')
+      .select('*, service_id(*), calendar_events(*)')
       .eq('id', id)
       .single()
     console.log({ data, error })
@@ -116,7 +116,7 @@ function index() {
         console.log('service table', data.service_id?.table)
         setServiceTable(data.service_id?.table)
         // fetch the data from the service table matching the consultation id
-        dispatch(setSelectedService(data.service_id?.table))
+        dispatch(setSelectedService(data.service_id))
         const { data: serviceData, error: serviceError } = await supabase
           .from(data.service_id?.table)
           .select('*')
@@ -334,6 +334,7 @@ function index() {
         dispatch={dispatch}
         drawerWidth={400}
         hideBackdrop={hideBackdrop}
+        autoSave={true}
       />
 
       <CustomSnackbar

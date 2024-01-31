@@ -209,7 +209,7 @@ const ResetPassword = () => {
               <form noValidate autoComplete='off' onSubmit={handleSubmit}>
                 <TextField
                   autoFocus
-                  type='search'
+                  type='password'
                   label='New Password'
                   autoComplete='off'
                   value={newPassword}
@@ -217,7 +217,7 @@ const ResetPassword = () => {
                   sx={{ display: 'flex', mb: 4 }}
                 />
                 <TextField
-                  type='search'
+                  type='password'
                   label='Confirm Password'
                   autoComplete='off'
                   value={confirmPassword}
