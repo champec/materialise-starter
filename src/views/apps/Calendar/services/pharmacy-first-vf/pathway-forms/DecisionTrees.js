@@ -225,8 +225,8 @@ acuteOtitisMediaDecisionTree.nodes = {
     previousNodeId: 'age_and_infection_check'
   },
   comments: {
-    id:'comments',
-    type:'comments',
+    id: 'comments',
+    type: 'comments',
     title: 'Additional comments about actions taken',
     nextNodeId: 'consultation_summary'
   },
@@ -459,8 +459,8 @@ acuteSinusitisDecisionTree.nodes = {
     previousNodeId: 'bacterial_infection_check'
   },
   comments: {
-    id:'comments',
-    type:'comments',
+    id: 'comments',
+    type: 'comments',
     title: 'Additional comments about actions taken',
     nextNodeId: 'consultation_summary'
   },
@@ -613,8 +613,8 @@ acuteSoreThroatDecisionTree.nodes = {
       action: 'untickAll' // Indicates the action to be taken when this option is selected
     },
     minRequired: 3, // Specifies the minimum number of checkboxes (excluding the 'None' option) that need to be ticked to proceed
-    nextNodeIdIfPassed: 'initial_information',
-    nextNodeIdIfFailed: 'criteria_not_met_stop',
+    nextNodeIdIfPassed: 'risk_assessment',
+    nextNodeIdIfFailed: 'exclusion_criteria_met',
     previousNodeId: 'root' // Assuming the root node is the direct predecessor
   },
   exclusion_criteria_met: {
@@ -628,7 +628,8 @@ acuteSoreThroatDecisionTree.nodes = {
   risk_assessment: {
     id: 'risk_assessment',
     type: 'symptoms',
-    content:
+    title:'Assess the risk of deterioration',
+    context:
       'Consider the risk of deterioration or serious illness. Check for suspected Epiglottitis (4Ds: dysphagia, dysphonia, drooling, distress), severe complications (like clinical dehydration, pharyngeal abscess), and stridor.',
     symptoms: [
       'Suspected Epiglottitis (4Ds: dysphagia, dysphonia, drooling, distress)',
@@ -651,7 +652,8 @@ acuteSoreThroatDecisionTree.nodes = {
   further_assessment: {
     id: 'further_assessment',
     type: 'symptoms',
-    content:
+    title:'Differential diagnosis',
+    context:
       'Check for signs or symptoms indicating possible scarlet fever, quinsy, glandular fever, suspected cancer, or if the patient is immunosuppressed.',
     symptoms: [
       'Signs or symptoms indicating possible scarlet fever, quinsy or glandular fever',
@@ -734,8 +736,8 @@ acuteSoreThroatDecisionTree.nodes = {
     nextNodeId: 'comments'
   },
   comments: {
-    id:'comments',
-    type:'comments',
+    id: 'comments',
+    type: 'comments',
     title: 'Additional comments about actions taken',
     nextNodeId: 'consultation_summary'
   },
@@ -951,6 +953,12 @@ impetigoDecisionTree.nodes = {
     ],
     previousNodeId: 'clinical_features_check'
   },
+  comments: {
+    id: 'comments',
+    type: 'comments',
+    title: 'Additional comments about actions taken',
+    nextNodeId: 'consultation_summary'
+  },
   localized_treatment: {
     id: 'localized_treatment',
     type: 'treatment',
@@ -1085,7 +1093,7 @@ shinglesDecisionTree.nodes = {
     type: 'stop',
     content: 'The patient does not meet the inclusion criteria for the Shingles pathway.',
     nextNodeIdIfYes: 'comments',
-    nextNodeIdIfNo: 'treatment_decision',
+    nextNodeIdIfNo: 'treatment_options',
     previousNodeId: 'criteria_confirmation'
   },
   criteria_confirmation: {
@@ -1134,7 +1142,7 @@ shinglesDecisionTree.nodes = {
     content:
       'Consider calculating NEWS2 Score ahead of signposting patient to A&E or calling 999 in a life-threatening emergency.',
     nextNodeIdIfYes: 'comments',
-    nextNodeIdIfNo: 'treatment_decision',
+    nextNodeIdIfNo: 'treatment_options',
     previousNodeId: 'risk_assessment'
   },
   clinical_features_check: {
@@ -1168,7 +1176,7 @@ shinglesDecisionTree.nodes = {
     type: 'stop',
     content: 'Shingles less likely. Consider alternative diagnosis and proceed appropriately.',
     nextNodeIdIfYes: 'comments',
-    nextNodeIdIfNo: 'treatment_decision',
+    nextNodeIdIfNo: 'treatment_options',
     previousNodeId: 'clinical_features_check'
   },
   treatment_criteria_check: {
@@ -1198,6 +1206,12 @@ shinglesDecisionTree.nodes = {
     nextNodeIdIfFailed: 'self_care_advice',
     previousNodeId: 'clinical_features_check'
   },
+  comments: {
+    id: 'comments',
+    type: 'comments',
+    title: 'Additional comments about actions taken',
+    nextNodeId: 'consultation_summary'
+  },
   treatment_options: {
     id: 'treatment_options',
     type: 'treatment',
@@ -1220,7 +1234,7 @@ shinglesDecisionTree.nodes = {
     content:
       'Share self-care and safety-netting advice. Recommend pain management and inform about the shingles vaccine.',
     nextNodeIdIfYes: 'comments',
-    nextNodeIdIfNo: 'treatment_decision',
+    nextNodeIdIfNo: 'treatment_options',
     previousNodeId: 'treatment_criteria_check'
   },
   onward_referral: {
@@ -1229,7 +1243,7 @@ shinglesDecisionTree.nodes = {
     content:
       'If symptoms worsen or do not improve, consider onward referral. For immunosuppressed patients, notify the GP.',
     nextNodeIdIfYes: 'comments',
-    nextNodeIdIfNo: 'treatment_decision',
+    nextNodeIdIfNo: 'treatment_options',
     previousNodeId: 'treatment_options'
   },
   consultation_summary: {
@@ -1476,8 +1490,8 @@ uncomplicatedUrinaryTractInfectionDecisionTree.nodes = {
     previousNodeId: 'symptoms_check'
   },
   comments: {
-    id:'comments',
-    type:'comments',
+    id: 'comments',
+    type: 'comments',
     title: 'Additional comments about actions taken',
     nextNodeId: 'consultation_summary'
   },
@@ -1517,14 +1531,50 @@ uncomplicatedUrinaryTractInfectionDecisionTree.nodes = {
 }
 
 export const infectedInsectBitesDecisionTree = {
+  // id: 'root',
+  // type: 'information',
+  // content: 'Infected Insect Bites Decision Tree',
+  // information: 'Consider the risk of deterioration or serious illness. Assess for typical clinical features of UTI.',
+  // nextNodeIdIfTrue: 'criteria_met',
+  // nextNodeIdIfFalse: 'exclusion_criteria_met',
+  // nextNodeId: 'criteria_confirmation',
+  // previousNodeId: null
   id: 'root',
-  type: 'information',
-  content: 'Infected Insect Bites Decision Tree',
-  information: 'Consider the risk of deterioration or serious illness. Assess for typical clinical features of UTI.',
-  nextNodeIdIfTrue: 'criteria_met',
-  nextNodeIdIfFalse: 'exclusion_criteria_met',
-  nextNodeId: 'criteria_confirmation',
-  previousNodeId: null
+  type: 'opening',
+  // content: 'Acute Otitis Media Decision Tree',
+  title: 'Infected Insect Bites',
+  icon: 'mdi:insect',
+  notices: [
+    {
+      text: 'Individuals operating under this PGD must be assessed as competent or complete a self-declaration of competence to operate under this PGD'
+    },
+    {
+      text: 'The decision to supply any medication rests with the individual registered health professional who must abide by the PGD and any associated organisational policies.'
+    }
+  ],
+  clinical_situations: `Infected insect bite(s) and sting(s) in children aged 1 year and over and
+  adults.`,
+  useful_links: [
+    {
+      text: 'NICE CKS',
+      link: 'https://cks.nice.org.uk/topics/insect-bites-stings/diagnosis/assessment/'
+    },
+    {
+      text: 'Supply of Flucloxacillin',
+      link: 'https://www.england.nhs.uk/wp-content/uploads/2023/11/PRN01010-4a.-Infected-insect-bites-flucloxacillin-patient-group-direction-Pharmacy-First.pdf'
+    },
+    {
+      text: 'Supply of Clarithromycin',
+      link: 'https://www.england.nhs.uk/wp-content/uploads/2023/11/PRN01010-4b.-Infected-insect-bites-clarithromycin-patient-group-direction-Pharmacy-First.pdf'
+    },
+    {
+      text: 'Supply of Erythromycin',
+      link: 'https://www.england.nhs.uk/wp-content/uploads/2023/11/PRN01010-4c.-Infected-insect-bites-erythromycin-patient-group-direction-Pharmacy-First.pdf'
+    }
+  ],
+  dates_of_validity: '31/01/2024 to 30/01/2027',
+  previousNodeId: null,
+  nextNodeId: 'criteria_confirmation'
 }
 
 infectedInsectBitesDecisionTree.nodes = {
@@ -1536,7 +1586,7 @@ infectedInsectBitesDecisionTree.nodes = {
     type: 'stop',
     content: 'The patient does not meet the inclusion criteria for the Infected Insect Bites pathway.',
     nextNodeIdIfYes: 'comments',
-    nextNodeIdIfNo: 'treatment_decision',
+    nextNodeIdIfNo: 'antibiotic_treatment_options',
     previousNodeId: 'root'
   },
   criteria_confirmation: {
@@ -1576,7 +1626,7 @@ infectedInsectBitesDecisionTree.nodes = {
     content:
       'Consider calculating NEWS2 Score ahead of signposting patient to A&E or calling 999 in a life-threatening emergency.',
     nextNodeIdIfYes: 'comments',
-    nextNodeIdIfNo: 'treatment_decision',
+    nextNodeIdIfNo: 'antibiotic_treatment_options',
     previousNodeId: 'risk_assessment'
   },
   clinical_features_check: {
@@ -1642,7 +1692,7 @@ infectedInsectBitesDecisionTree.nodes = {
     content:
       'Infected insect bite less likely. Recommend self-care, oral antihistamine, and/or topical steroids over the counter and safety netting advice.',
     nextNodeIdIfYes: 'comments',
-    nextNodeIdIfNo: 'treatment_decision',
+    nextNodeIdIfNo: 'antibiotic_treatment_options',
     previousNodeId: 'itch_principal_symptom_check'
   },
   acute_symptoms_check: {
@@ -1704,6 +1754,12 @@ infectedInsectBitesDecisionTree.nodes = {
     nextNodeIdIfPassed: 'antibiotic_treatment_options',
     nextNodeIdIfFailed: 'recommend_self_care',
     previousNodeId: 'further_infection_criteria_check'
+  },
+  comments: {
+    id: 'comments',
+    type: 'comments',
+    title: 'Additional comments about actions taken',
+    nextNodeId: 'consultation_summary'
   },
   antibiotic_treatment_options: {
     id: 'antibiotic_treatment_options',
