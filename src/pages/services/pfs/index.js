@@ -65,6 +65,7 @@ function index() {
   ]
 
   if (loading || !locallySelectedService) {
+    console.log('LOADING', loading, locallySelectedService)
     return <CircularProgress />
   }
 

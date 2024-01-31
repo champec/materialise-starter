@@ -89,7 +89,7 @@ const navigation = (role, plan) => {
         },
         {
           title: 'PFS',
-          path: '/services/pfs?service=Pharmacy First',
+          path: '/services/pfs?service=PFS',
           icon: 'bi:hospital-fill',
           disabled: false
         },

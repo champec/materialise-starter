@@ -164,6 +164,9 @@ function PathwayForm({ onServiceUpdate, state, ServiceTree, nodeStates, setNodeS
     } else if (node.type === 'multiple_choice_question') {
       const selectedOption = nodeStates[node.id]?.selectedOption || 'No option selected'
       summaryText += `${node.content}: ${selectedOption}`
+    } else if (node.type === 'comments') {
+      const commentsText = state.comment ? `Comments: ${state.comment}` : 'No Comments Provided';
+      summaryText += commentsText;
     }
 
     return summaryText
@@ -300,8 +303,60 @@ function PathwayForm({ onServiceUpdate, state, ServiceTree, nodeStates, setNodeS
         return renderMultipleChoiceQuestionNode(node)
       case 'opening':
         return renderOpeningNode(node)
+      case 'comments':
+        return renderCommentsNode(node)
     }
   }
+
+  const renderCommentsNode = node => {
+    console.log('renderCommentsNode', node)
+    const handleCommentChange = (nodeId, value) => {
+      const updatedState = { ...nodeStates };
+      const currentNodeState = updatedState[nodeId] || {};
+
+      updatedState[nodeId] = {
+        ...currentNodeState,
+        comment: value
+      };
+
+      setNodeStates(updatedState);
+    };
+
+    const handleContinue = () => {
+      // Proceed to the next node if defined
+      if (node.nextNodeId) {
+        handleNextNode(node.nextNodeId);
+      }
+    };
+
+    return (
+      <Card sx={{ m: 2, boxShadow: 3 }}>
+        <CardHeader
+          title={<Typography variant="h6">{node.title}</Typography>}
+          sx={{ backgroundColor: 'primary.main', color: 'primary.contrastText' }}
+        />
+        <CardContent>
+          <TextField
+            id={`comment-${node.id}`}
+            label="Comments"
+            multiline
+            rows={4}
+            value={nodeStates[node.id]?.comment || ''}
+            onChange={e => handleCommentChange(node.id, e.target.value)}
+            variant="outlined"
+            fullWidth
+            margin="normal"
+          />
+        </CardContent>
+        <CardActions sx={{ justifyContent: 'flex-end', p: 2 }}>
+          <Button variant="contained" color="primary" onClick={handleContinue}>
+            Continue
+          </Button>
+        </CardActions>
+      </Card>
+    );
+  };
+
 
   const renderOpeningNode = node => {
     return (

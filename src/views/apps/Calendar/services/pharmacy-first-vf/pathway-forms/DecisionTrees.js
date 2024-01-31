@@ -82,7 +82,7 @@ acuteOtitisMediaDecisionTree.nodes = {
     type: 'stop',
     content: 'The patient does not meet the necessary criteria for proceeding with the Acute Otitis Media pathway.',
     previousNodeId: 'criteria_confirmation',
-    nextNodeIdIfYes: 'consultation_summary',
+    nextNodeIdIfYes: 'comments',
     nextNodeIdIfNo: 'treatment_decision'
   },
 
@@ -117,7 +117,7 @@ acuteOtitisMediaDecisionTree.nodes = {
     content:
       'Signpost patient to A&E or calling 999 in a life threatening emergency. Cannot continue with consultation.',
     previousNodeId: 'deterioration_check',
-    nextNodeIdIfYes: 'consultation_summary',
+    nextNodeIdIfYes: 'comments',
     nextNodeIdIfNo: 'treatment_decision'
   },
   gateway_point: {
@@ -146,7 +146,7 @@ acuteOtitisMediaDecisionTree.nodes = {
     type: 'stop',
     content: 'Acute otitis media less likely. Consider alternative diagnosis and proceed appropriately.',
     previousNodeId: 'acute_symptoms_check',
-    nextNodeIdIfYes: 'consultation_summary',
+    nextNodeIdIfYes: 'comments',
     nextNodeIdIfNo: 'treatment_decision'
   },
   otoscopic_examination: {
@@ -184,7 +184,7 @@ acuteOtitisMediaDecisionTree.nodes = {
     id: 'onward_referral',
     type: 'referral',
     content: 'Onward referral to General Practice or other provider as appropriate.',
-    nextNodeIdIfYes: 'consultation_summary',
+    nextNodeIdIfYes: 'comments',
     nextNodeIdIfNo: 'treatment_decision',
     previousNodeId: 'high_risk_criteria_check'
   },
@@ -212,7 +212,7 @@ acuteOtitisMediaDecisionTree.nodes = {
     content: 'Shared decision-making approach and clinician global impression.',
     nextNodeId: 'treatment_decision',
     nextNodeIdIfNo: 'treatment_decision',
-    nextNodeIdIfYes: 'consultation_summary',
+    nextNodeIdIfYes: 'comments',
     previousNodeId: 'age_and_infection_check'
   },
   mild_symptoms_advice: {
@@ -220,9 +220,15 @@ acuteOtitisMediaDecisionTree.nodes = {
     type: 'advice',
     content:
       'In patients with mild symptoms offer self-care and pain relief. For moderate and severe symptoms, consider phenazone 40 mg/g with lidocaine 10 mg/g ear drops for up to 7 days plus self-care. Ask patient to return if no improvement within 3-5 days.',
-    nextNodeIdIfYes: 'consultation_summary',
+    nextNodeIdIfYes: 'comments',
     nextNodeIdIfNo: 'treatment_decision',
     previousNodeId: 'age_and_infection_check'
+  },
+  comments: {
+    id:'comments',
+    type:'comments',
+    title: 'Additional comments about actions taken',
+    nextNodeId: 'consultation_summary'
   },
   treatment_decision: {
     id: 'treatment_decision',
@@ -260,7 +266,7 @@ acuteOtitisMediaDecisionTree.nodes = {
     type: 'information',
     content:
       'Share self-care and safety-netting information, and evidence on antibiotic use following NICE guidelines.',
-    nextNodeId: 'consultation_summary',
+    nextNodeId: 'comments',
     previousNodeId: 'treatment_decision'
   },
   consultation_summary: {
@@ -359,7 +365,7 @@ acuteSinusitisDecisionTree.nodes = {
     type: 'stop',
     content: 'The patient does not meet the necessary criteria for proceeding with the Acute Sinusitis pathway.',
     previousNodeId: 'root',
-    nextNodeIdIfYes: 'consultation_summary',
+    nextNodeIdIfYes: 'comments',
     nextNodeIdIfNo: 'treatment_decision'
   },
   deterioration_risk_check: {
@@ -385,7 +391,7 @@ acuteSinusitisDecisionTree.nodes = {
     content:
       'Consider calculating NEWS2 Score ahead of signposting patient to A&E or calling 999 in a life-threatening emergency.',
     previousNodeId: 'deterioration_risk_check',
-    nextNodeIdIfYes: 'consultation_summary',
+    nextNodeIdIfYes: 'comments',
     nextNodeIdIfNo: 'treatment_decision'
   },
   diagnosis_check: {
@@ -411,7 +417,7 @@ acuteSinusitisDecisionTree.nodes = {
     type: 'stop',
     content: 'Acute sinusitis is less likely. Consider alternative diagnosis and proceed appropriately.',
     previousNodeId: 'diagnosis_check',
-    nextNodeIdIfYes: 'consultation_summary',
+    nextNodeIdIfYes: 'comments',
     nextNodeIdIfNo: 'treatment_decision'
   },
   symptom_duration_check: {
@@ -451,6 +457,12 @@ acuteSinusitisDecisionTree.nodes = {
     content:
       'Offer self-care and pain relief. Consider high dose nasal corticosteroid (off-label) for 14 days for patients with non-bacterial acute sinusitis. Antibiotics make little difference to how long symptoms last or the number of people whose symptoms improve. Advise patient to return to Community Pharmacy if symptoms do not improve in 7 days.',
     previousNodeId: 'bacterial_infection_check'
+  },
+  comments: {
+    id:'comments',
+    type:'comments',
+    title: 'Additional comments about actions taken',
+    nextNodeId: 'consultation_summary'
   },
   treatment_decision: {
     id: 'treatment_decision',
@@ -499,7 +511,7 @@ acuteSinusitisDecisionTree.nodes = {
     content:
       'Share self-care and safety-netting advice using Target respiratory tract Infection leaflets. Inform the patient about the signs of potential complications and advise on when to seek further medical attention.',
     previousNodeId: 'treatment_decision',
-    nextNodeId: 'consultation_summary'
+    nextNodeId: 'comments'
   },
   consultation_summary: {
     id: 'consultation_summary',
@@ -515,7 +527,7 @@ acuteSinusitisDecisionTree.nodes = {
     content:
       'If symptoms worsen rapidly or significantly at any time, or do not improve after completion of the treatment course, consider the need for onward referral to General Practice or other provider as appropriate.',
     answers: ['Yes', 'No'],
-    previousNodeId: 'consultation_summary',
+    previousNodeId: 'comments',
     nextNodeIdIfYes: 'onward_referral',
     nextNodeIdIfNo: 'pathway_conclusion'
   },
@@ -609,7 +621,7 @@ acuteSoreThroatDecisionTree.nodes = {
     id: 'exclusion_criteria_met',
     type: 'stop',
     content: 'The patient does not meet the inclusion criteria for the Acute Sore Throat pathway.',
-    nextNodeIdIfYes: 'consultation_summary',
+    nextNodeIdIfYes: 'comments',
     nextNodeIdIfNo: 'treatment_decision',
     previousNodeId: 'root'
   },
@@ -632,7 +644,7 @@ acuteSoreThroatDecisionTree.nodes = {
     type: 'stop',
     content:
       'Consider calculating NEWS2 Score ahead of signposting patient to A&E or calling 999 in a life-threatening emergency.',
-    nextNodeIdIfYes: 'consultation_summary',
+    nextNodeIdIfYes: 'comments',
     nextNodeIdIfNo: 'treatment_decision',
     previousNodeId: 'risk_assessment'
   },
@@ -655,7 +667,7 @@ acuteSoreThroatDecisionTree.nodes = {
     type: 'stop',
     content:
       'Onward referral to General Practice or other provider as appropriate based on the presence of concerning signs or symptoms.',
-    nextNodeIdIfYes: 'consultation_summary',
+    nextNodeIdIfYes: 'comments',
     nextNodeIdIfNo: 'treatment_decision',
     previousNodeId: 'further_assessment'
   },
@@ -676,7 +688,7 @@ acuteSoreThroatDecisionTree.nodes = {
     type: 'advice',
     content:
       'For FeverPAIN score of 0 or 1: Self-care and pain relief. Antibiotics are not needed. Offer over-the-counter treatment for symptomatic relief and advise drinking adequate fluids. Ask the patient to return to Community Pharmacy after 1 week if no improvement.',
-    nextNodeIdIfYes: 'consultation_summary',
+    nextNodeIdIfYes: 'comments',
     nextNodeIdIfNo: 'treatment_decision',
     previousNodeId: 'feverpain_score'
   },
@@ -688,10 +700,10 @@ acuteSoreThroatDecisionTree.nodes = {
       'For FeverPAIN score of 2 or 3: Self-care and pain relief. Antibiotics make little difference. Withholding antibiotics is unlikely to lead to complications. Ask the patient to return if no improvement within 3-5 days for pharmacist reassessment.',
     content:
       'For FeverPAIN score of 2 or 3: Self-care and pain relief. Antibiotics make little difference. Withholding antibiotics is unlikely to lead to complications. Ask the patient to return if no improvement within 3-5 days for pharmacist reassessment.',
-    nextNodeIdIfYes: 'consultation_summary',
+    nextNodeIdIfYes: 'comments',
     nextNodeIdIfNo: 'treatment_decision',
     previousNodeId: 'decision_4_5',
-    nextNodeId: 'consultation_summary'
+    nextNodeId: 'comments'
   },
   decision_4_5: {
     id: 'decision_4_5',
@@ -708,7 +720,7 @@ acuteSoreThroatDecisionTree.nodes = {
         action: 'treatment_decision'
       }
     ],
-    nextNodeIdIfYes: 'consultation_summary',
+    nextNodeIdIfYes: 'comments',
     nextNodeIdIfNo: 'treatment_decision',
     previousNodeId: 'feverpain_score'
   },
@@ -716,9 +728,15 @@ acuteSoreThroatDecisionTree.nodes = {
     id: 'self_care_2_3',
     type: 'advice',
     content: 'Ask patient to return to Pharmacy if no improvement in 48 hours for pharmacist reassessment',
-    nextNodeIdIfYes: 'consultation_summary',
+    nextNodeIdIfYes: 'comments',
     nextNodeIdIfNo: 'treatment_decision',
     previousNodeId: 'decision_4_5',
+    nextNodeId: 'comments'
+  },
+  comments: {
+    id:'comments',
+    type:'comments',
+    title: 'Additional comments about actions taken',
     nextNodeId: 'consultation_summary'
   },
   treatment_decision: {
@@ -760,7 +778,7 @@ acuteSoreThroatDecisionTree.nodes = {
     type: 'stop',
     content:
       'If symptoms do not improve after completion of the treatment course, consider onward referral to General Practice or other provider as appropriate.',
-    nextNodeIdIfYes: 'consultation_summary',
+    nextNodeIdIfYes: 'comments',
     nextNodeIdIfNo: 'treatment_decision',
     previousNodeId: 'treatment_decision'
   },
@@ -855,7 +873,7 @@ impetigoDecisionTree.nodes = {
     id: 'exclusion_criteria_met',
     type: 'stop',
     content: 'The patient does not meet the inclusion criteria for the Impetigo pathway.',
-    nextNodeIdIfYes: 'consultation_summary',
+    nextNodeIdIfYes: 'comments',
     nextNodeIdIfNo: 'treatment_decision',
     previousNodeId: 'criteria_confirmation'
   },
@@ -890,7 +908,7 @@ impetigoDecisionTree.nodes = {
     type: 'stop',
     content:
       'Consider calculating NEWS2 Score ahead of signposting patient to A&E or calling 999 in a life-threatening emergency.',
-    nextNodeIdIfYes: 'consultation_summary',
+    nextNodeIdIfYes: 'comments',
     nextNodeIdIfNo: 'treatment_decision',
     previousNodeId: 'risk_assessment'
   },
@@ -917,7 +935,7 @@ impetigoDecisionTree.nodes = {
     id: 'alternative_diagnosis',
     type: 'stop',
     content: 'Impetigo less likely. Consider alternative diagnosis and proceed appropriately.',
-    nextNodeIdIfYes: 'consultation_summary',
+    nextNodeIdIfYes: 'comments',
     nextNodeIdIfNo: 'treatment_decision',
     previousNodeId: 'clinical_features_check'
   },
@@ -982,7 +1000,7 @@ impetigoDecisionTree.nodes = {
     type: 'stop',
     content:
       'If symptoms worsen rapidly or significantly at any time, or do not improve after completion of treatment course, consider onward referral to General Practice or other provider as appropriate.',
-    nextNodeIdIfYes: 'consultation_summary',
+    nextNodeIdIfYes: 'comments',
     nextNodeIdIfNo: 'treatment_decision',
     previousNodeId: 'localized_treatment' // This should be dynamic based on the actual flow
   },
@@ -1066,7 +1084,7 @@ shinglesDecisionTree.nodes = {
     id: 'exclusion_criteria_met',
     type: 'stop',
     content: 'The patient does not meet the inclusion criteria for the Shingles pathway.',
-    nextNodeIdIfYes: 'consultation_summary',
+    nextNodeIdIfYes: 'comments',
     nextNodeIdIfNo: 'treatment_decision',
     previousNodeId: 'criteria_confirmation'
   },
@@ -1115,7 +1133,7 @@ shinglesDecisionTree.nodes = {
     type: 'stop',
     content:
       'Consider calculating NEWS2 Score ahead of signposting patient to A&E or calling 999 in a life-threatening emergency.',
-    nextNodeIdIfYes: 'consultation_summary',
+    nextNodeIdIfYes: 'comments',
     nextNodeIdIfNo: 'treatment_decision',
     previousNodeId: 'risk_assessment'
   },
@@ -1149,7 +1167,7 @@ shinglesDecisionTree.nodes = {
     id: 'alternative_diagnosis',
     type: 'stop',
     content: 'Shingles less likely. Consider alternative diagnosis and proceed appropriately.',
-    nextNodeIdIfYes: 'consultation_summary',
+    nextNodeIdIfYes: 'comments',
     nextNodeIdIfNo: 'treatment_decision',
     previousNodeId: 'clinical_features_check'
   },
@@ -1201,7 +1219,7 @@ shinglesDecisionTree.nodes = {
     type: 'advice',
     content:
       'Share self-care and safety-netting advice. Recommend pain management and inform about the shingles vaccine.',
-    nextNodeIdIfYes: 'consultation_summary',
+    nextNodeIdIfYes: 'comments',
     nextNodeIdIfNo: 'treatment_decision',
     previousNodeId: 'treatment_criteria_check'
   },
@@ -1210,7 +1228,7 @@ shinglesDecisionTree.nodes = {
     type: 'stop',
     content:
       'If symptoms worsen or do not improve, consider onward referral. For immunosuppressed patients, notify the GP.',
-    nextNodeIdIfYes: 'consultation_summary',
+    nextNodeIdIfYes: 'comments',
     nextNodeIdIfNo: 'treatment_decision',
     previousNodeId: 'treatment_options'
   },
@@ -1279,7 +1297,7 @@ uncomplicatedUrinaryTractInfectionDecisionTree.nodes = {
     id: 'exclusion_criteria_met',
     type: 'stop',
     content: 'The patient does not meet the inclusion criteria for the Uncomplicated Urinary Tract Infection pathway.',
-    nextNodeIdIfYes: 'consultation_summary',
+    nextNodeIdIfYes: 'comments',
     nextNodeIdIfNo: 'treatment_decision',
     previousNodeId: 'criteria_met'
   },
@@ -1324,7 +1342,7 @@ uncomplicatedUrinaryTractInfectionDecisionTree.nodes = {
     type: 'stop',
     content:
       'Consider calculating NEWS2 Score ahead of signposting patient to A&E or calling 999 in a life-threatening emergency.',
-    nextNodeIdIfYes: 'consultation_summary',
+    nextNodeIdIfYes: 'comments',
     nextNodeIdIfNo: 'treatment_decision',
     previousNodeId: 'risk_assessment'
   },
@@ -1333,7 +1351,7 @@ uncomplicatedUrinaryTractInfectionDecisionTree.nodes = {
     type: 'stop',
     content:
       'Consider calculating NEWS2 Score ahead of signposting patient to A&E or calling 999 in a life-threatening emergency.',
-    nextNodeIdIfYes: 'consultation_summary',
+    nextNodeIdIfYes: 'comments',
     nextNodeIdIfNo: 'treatment_decision',
     previousNodeId: 'risk_assessment'
   },
@@ -1366,7 +1384,7 @@ uncomplicatedUrinaryTractInfectionDecisionTree.nodes = {
     type: 'stop',
     content:
       'If symptoms worsen rapidly or significantly at any time, or do not improve after completion of treatment course, consider onward referral to General Practice or other provider as appropriate.',
-    nextNodeIdIfYes: 'consultation_summary',
+    nextNodeIdIfYes: 'comments',
     nextNodeIdIfNo: 'treatment_decision',
     previousNodeId: 'risk_assessment_other'
   },
@@ -1424,7 +1442,7 @@ uncomplicatedUrinaryTractInfectionDecisionTree.nodes = {
     type: 'stop',
     content:
       'If symptoms worsen rapidly or significantly at any time, or do not improve after completion of treatment course, consider onward referral to General Practice or other provider as appropriate.',
-    nextNodeIdIfYes: 'consultation_summary',
+    nextNodeIdIfYes: 'comments',
     nextNodeIdIfNo: 'treatment_decision',
     previousNodeId: 'uti_unclear'
   },
@@ -1440,7 +1458,7 @@ uncomplicatedUrinaryTractInfectionDecisionTree.nodes = {
     type: 'advice',
     title: 'Self-care Advice',
     content: 'Share self-care and safety-netting advice. Recommend pain management and inform about UTI.',
-    nextNodeId: 'consultation_summary',
+    nextNodeId: 'comments',
     previousNodeId: 'uti_unlikely'
   },
   shared_decision_making: {
@@ -1456,6 +1474,12 @@ uncomplicatedUrinaryTractInfectionDecisionTree.nodes = {
       { text: 'Severe symptoms: Offer immediate antibiotic treatment.', action: 'treatment_decision' }
     ],
     previousNodeId: 'symptoms_check'
+  },
+  comments: {
+    id:'comments',
+    type:'comments',
+    title: 'Additional comments about actions taken',
+    nextNodeId: 'consultation_summary'
   },
   treatment_decision: {
     id: 'treatment_decision',
@@ -1480,7 +1504,7 @@ uncomplicatedUrinaryTractInfectionDecisionTree.nodes = {
     title: 'Self-care Advice',
     content:
       'FOR ALL PATIENTS: If symptoms worsen rapidly or significantly at any time, OR do not improve in 48 hours of taking antibiotics. Use TARGET UTI leaflet',
-    nextNodeId: 'consultation_summary',
+    nextNodeId: 'comments',
     previousNodeId: 'uti_unlikely'
   },
   consultation_summary: {
@@ -1511,7 +1535,7 @@ infectedInsectBitesDecisionTree.nodes = {
     id: 'exclusion_criteria_met',
     type: 'stop',
     content: 'The patient does not meet the inclusion criteria for the Infected Insect Bites pathway.',
-    nextNodeIdIfYes: 'consultation_summary',
+    nextNodeIdIfYes: 'comments',
     nextNodeIdIfNo: 'treatment_decision',
     previousNodeId: 'root'
   },
@@ -1551,7 +1575,7 @@ infectedInsectBitesDecisionTree.nodes = {
     type: 'stop',
     content:
       'Consider calculating NEWS2 Score ahead of signposting patient to A&E or calling 999 in a life-threatening emergency.',
-    nextNodeIdIfYes: 'consultation_summary',
+    nextNodeIdIfYes: 'comments',
     nextNodeIdIfNo: 'treatment_decision',
     previousNodeId: 'risk_assessment'
   },
@@ -1581,7 +1605,7 @@ infectedInsectBitesDecisionTree.nodes = {
     id: 'onward_referral',
     type: 'stop',
     content: 'Onward referral to General Practice or other provider as appropriate.',
-    nextNodeIdIfYes: 'consultation_summary',
+    nextNodeIdIfYes: 'comments',
     nextNodeIdIfNo: 'treatment_decision',
     previousNodeId: 'clinical_features_check'
   },
@@ -1599,7 +1623,7 @@ infectedInsectBitesDecisionTree.nodes = {
     type: 'advice',
     content:
       'Recommend self-care, oral antihistamine, and/or topical steroids over the counter and safety netting advice.',
-    nextNodeIdIfYes: 'consultation_summary',
+    nextNodeIdIfYes: 'comments',
     nextNodeIdIfNo: 'treatment_decision',
     previousNodeId: 'post_48_hours_check'
   },
@@ -1617,7 +1641,7 @@ infectedInsectBitesDecisionTree.nodes = {
     type: 'advice',
     content:
       'Infected insect bite less likely. Recommend self-care, oral antihistamine, and/or topical steroids over the counter and safety netting advice.',
-    nextNodeIdIfYes: 'consultation_summary',
+    nextNodeIdIfYes: 'comments',
     nextNodeIdIfNo: 'treatment_decision',
     previousNodeId: 'itch_principal_symptom_check'
   },
@@ -1731,7 +1755,7 @@ infectedInsectBitesDecisionTree.nodes = {
     type: 'stop',
     content:
       'If symptoms worsen rapidly or significantly at any time, or do not improve after completion of 5 days treatment course, consider onward referral to General Practice or other provider as appropriate.',
-    nextNodeIdIfYes: 'consultation_summary',
+    nextNodeIdIfYes: 'comments',
     nextNodeIdIfNo: 'treatment_decision',
     previousNodeId: 'antibiotic_treatment_options' // This needs to dynamically change based on the flow
   },
