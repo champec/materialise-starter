@@ -64,7 +64,9 @@ function CaptureConsultant({
           <Box sx={{ p: 2, border: '1px solid grey', borderRadius: '4px' }}>
             <Typography variant='h6'>Pharmacist</Typography>
             {/* Displaying a few key pieces of patient information */}
-            <Typography variant='body1'>Name: {pharmacistData?.full_name}</Typography>
+            <Typography variant='body1'>
+              Name: {`${pharmacistData?.first_name || ''} ${pharmacistData?.last_name || ''}`}
+            </Typography>
             <Typography variant='body1'>NHS Number: {pharmacistData?.gphc_number}</Typography>
             <Typography variant='body1'>Email: {pharmacistData?.email}</Typography>
             {/* ... include other relevant patient details ... */}

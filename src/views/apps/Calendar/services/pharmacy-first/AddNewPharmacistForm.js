@@ -54,7 +54,8 @@ const AddNewPharmacistForm = ({ patient, onClose, onSelect, selectedPharmacist, 
   const [lastName, setLastName] = useState('')
   const [savePermanently, setSavePermanently] = useState(false)
   const orgId = useSelector(state => state.organisation.organisation.id)
-  const userId = useSelector(state => state.user.user.id)
+  const user = useSelector(state => state.user.user)
+  const userId = user?.id
 
   const showMessage = (msg, sev) => {
     setSnackMessage(msg)
@@ -114,41 +115,48 @@ const AddNewPharmacistForm = ({ patient, onClose, onSelect, selectedPharmacist, 
 
     console.log('selected pharmacist', selectedPharmacist)
 
-    if(savePermanently) {
-    // const formData = new FormData(event.target)
-    // const formFields = Object.fromEntries(formData.entries())
-    // // enrich the form field with the date after converting it from dayjs object to string
-    // formFields.dob = date?.format('YYYY-MM-DD')
+    if (savePermanently) {
+      // const formData = new FormData(event.target)
+      // const formFields = Object.fromEntries(formData.entries())
+      // // enrich the form field with the date after converting it from dayjs object to string
+      // formFields.dob = date?.format('YYYY-MM-DD')
 
-    const { full_name, ...pharmacistWithoutFullName } = selectedPharmacist;
+      const { full_name, ...pharmacistWithoutFullName } = selectedPharmacist
 
-    console.log('pharmacist without full name', pharmacistWithoutFullName)
+      console.log('pharmacist without full name', pharmacistWithoutFullName)
 
-    // ** Add new patient to database
-    const { data, error } = await supabase
-      .from('pharmacists')
-      .upsert({ ...pharmacistWithoutFullName}, {onConflict: 'id'})
-      .select('*')
-      .single()
+      // ** Add new patient to database
+      const { data, error } = await supabase
+        .from('pharmacists')
+        .upsert(
+          {
+            ...pharmacistWithoutFullName,
+            profile_id: userId,
+            full_name: `${selectedPharmacist.first_name} ${selectedPharmacist.last_name}`
+          },
+          { onConflict: 'id' }
+        )
+        .select('*')
+        .single()
 
-    if (error) {
-      showMessage(error.message, 'error')
-      setLoading(false)
-      return
-    }
+      if (error) {
+        showMessage(error.message, 'error')
+        setLoading(false)
+        return
+      }
 
-    showMessage('Pharmacist added successfully', 'success')
+      showMessage('Pharmacist added successfully', 'success')
 
-    console.log(data)
-    onSelect(data)
-    setTimeout(() => {
+      console.log(data)
+      onSelect(data)
+      setTimeout(() => {
+        onClose()
+        setLoading(false)
+      }, 2000)
+    } else {
+      onSelect(selectedPharmacist)
       onClose()
-      setLoading(false)
-    }, 2000)
-  } else {
-    onSelect(selectedPharmacist)
-    onClose()
-  }
+    }
   }
 
   const handleFirstNameChange = event => {
@@ -176,6 +184,12 @@ const AddNewPharmacistForm = ({ patient, onClose, onSelect, selectedPharmacist, 
         severity={snackSeverity}
       />
       <CardHeader title='Add New Pharmacist' />
+      <Typography variant='caption' sx={{ px: 2, pb: 2 }}>
+        {`You can only add or edit the currently logged in user ( ${
+          user.username || user.users.username
+        } ) as a pharmacist by clicking the button below , you wont be
+        able to permanently save another pharmacists details`}
+      </Typography>
       <Divider sx={{ m: '0 !important' }} />
       <form onSubmit={handleSubmit}>
         <CardContent>
@@ -334,7 +348,7 @@ const AddNewPharmacistForm = ({ patient, onClose, onSelect, selectedPharmacist, 
               <TextField
                 disabled={loading}
                 fullWidth
-                value={selectedPharmacist?.modible_number || ''}
+                value={selectedPharmacist?.mobile_number || ''}
                 onChange={handleChange}
                 label='Mobile No.'
                 name='mobile_number'
@@ -375,7 +389,7 @@ const AddNewPharmacistForm = ({ patient, onClose, onSelect, selectedPharmacist, 
             <FormControlLabel
               control={
                 <Checkbox
-                disabled={loading || (selectedPharmacist && userId !== selectedPharmacist.profile_id)}
+                  disabled={loading || (selectedPharmacist?.id && userId !== selectedPharmacist.profile_id)}
                   checked={savePermanently}
                   onChange={e => setSavePermanently(savePermanently => !savePermanently)}
                   inputProps={{ 'aria-label': 'controlled' }}
@@ -384,9 +398,9 @@ const AddNewPharmacistForm = ({ patient, onClose, onSelect, selectedPharmacist, 
               label='Save Permanently'
             />
 
-          <Button disabled={loading} size='large' type='submit' sx={{ mr: 2 }} variant='contained'>
-            {loading ? <CircularProgress size={20} /> : 'Add Pharmacist'}
-          </Button>
+            <Button disabled={loading} size='large' type='submit' sx={{ mr: 2 }} variant='contained'>
+              {loading ? <CircularProgress size={20} /> : 'Add Pharmacist'}
+            </Button>
           </div>
         </CardActions>
       </form>
