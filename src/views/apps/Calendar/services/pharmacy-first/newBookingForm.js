@@ -159,7 +159,7 @@ const confirmSchema = yup.object().shape({
 
 const getServiceTableName = service => {
   switch (service) {
-    case 'Pharmacy First':
+    case 'PFS':
       return 'service_pharmacy_first'
     case 'Pharmacy First Appointment':
       return 'service_pharmacy_first'
@@ -171,7 +171,7 @@ const getServiceTableName = service => {
       return 'service_dms'
     case 'HTN':
       return 'service_htn'
-    case 'Flu':
+    case 'FLU':
       return 'service_flu'
     default:
       return `userCustom.${service}`
@@ -321,7 +321,7 @@ const NewBookingForm = ({
   const getVariableFormFields = (selectedService, handleBack) => {
     console.log('Get variable form service is', selectedService == 'Pharmacy First' || 'Pharmacy First Appointment')
     switch (selectedService) {
-      case 'Pharmacy First':
+      case 'PFS':
         return (
           <PharmacyFirstVariableForm
             handleConfirmSubmit={handleConfirmSubmit}
@@ -402,7 +402,7 @@ const NewBookingForm = ({
             handleBookingSubmit={handleBookingSubmit}
           />
         )
-      case 'Flu Jab':
+      case 'FLU':
         return (
           <FluVariableForm
             setServiceInfo={setServiceInfo}
