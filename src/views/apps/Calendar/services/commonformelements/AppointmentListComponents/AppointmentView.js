@@ -94,7 +94,7 @@ const AppointmentView = ({
                     fullWidth
                     color='success'
                     variant='contained'
-                    onClick={toggleAddPaymentDrawer}
+                    // onClick={toggleAddPaymentDrawer}
                     startIcon={<Icon icon='mdi:video' />}
                   >
                     Go To Call
