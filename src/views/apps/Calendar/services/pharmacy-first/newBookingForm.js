@@ -154,7 +154,7 @@ const bookingSchema = yup.object().shape({
 
 const confirmSchema = yup.object().shape({
   // google: yup.string().required(),
-  iAgree: yup.boolean().required()
+  iAgree: yup.boolean().oneOf([true], 'You must agree to the terms and conditions')
 })
 
 const getServiceTableName = service => {
@@ -348,6 +348,7 @@ const NewBookingForm = ({
             handleSelect={handleSelect}
             setServiceInfo={setServiceInfo}
             serviceInfo={serviceInfo}
+            handleBack={handleBack}
           />
         )
       case 'NMS':
@@ -361,6 +362,7 @@ const NewBookingForm = ({
             onSubmit={onSubmit}
             handleSelect={handleSelect}
             handleBookingSubmit={handleBookingSubmit}
+            handleBack={handleBack}
           />
         )
       case 'DMS':
@@ -374,6 +376,7 @@ const NewBookingForm = ({
             onSubmit={onSubmit}
             handleSelect={handleSelect}
             handleBookingSubmit={handleBookingSubmit}
+            handleBack={handleBack}
           />
         )
       case 'DMS S3':
@@ -387,6 +390,7 @@ const NewBookingForm = ({
             onSubmit={onSubmit}
             handleSelect={handleSelect}
             handleBookingSubmit={handleBookingSubmit}
+            handleBack={handleBack}
           />
         )
       case 'HTN':
@@ -400,6 +404,7 @@ const NewBookingForm = ({
             onSubmit={onSubmit}
             handleSelect={handleSelect}
             handleBookingSubmit={handleBookingSubmit}
+            handleBack={handleBack}
           />
         )
       case 'FLU':
@@ -413,6 +418,7 @@ const NewBookingForm = ({
             onSubmit={onSubmit}
             handleSelect={handleSelect}
             handleBookingSubmit={handleBookingSubmit}
+            handleBack={handleBack}
           />
         )
 
@@ -997,7 +1003,7 @@ const NewBookingForm = ({
                       />
                     )}
                   />
-                  {confirmErrors.twitter && (
+                  {confirmErrors.iAgree && (
                     <FormHelperText sx={{ color: 'error.main' }} id='stepper-linear-confirm-iagree'>
                       This field is required
                     </FormHelperText>
