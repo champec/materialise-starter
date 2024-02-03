@@ -49,7 +49,7 @@ const schema = yup.object().shape({
 //form default values
 const defaultValues = {
   password: '123456',
-  email: 'bradleychemistowner1@pharmex.app'
+  email: 'bradleyowner1@pharmex.app'
 }
 
 const BoxWrapper = styled(Box)(({ theme }) => ({

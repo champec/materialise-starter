@@ -59,8 +59,8 @@ const schema = yup.object().shape({
 
 //form default values
 const defaultValues = {
-  password: 'example-password',
-  email: 'chronic2157@gmail.com'
+  password: '123456',
+  email: 'bradleychemist@pharmex.app'
 }
 
 const BoxWrapper = styled(Box)(({ theme }) => ({
@@ -209,6 +209,9 @@ const StepAccountDetails = ({ handleNext, authOrg, authUser }) => {
               router={router}
               isSignedIn={name}
               redirect={redirectToReturnUrlOrHome}
+              setErrorMessage={setErrorMessage}
+              setOpenError={setOpenError}
+              setOpenSuccess={setOpenSuccess}
             />
           </BoxWrapper>
         </Box>
@@ -244,7 +247,10 @@ function Form({
   setShowPassword,
   dispatch,
   isSignedIn,
-  redirect
+  redirect,
+  setErrorMessage,
+  setOpenError,
+  setOpenSuccess
 }) {
   const onSubmit = data => {
     const { email, password } = data
@@ -253,11 +259,24 @@ function Form({
       // .unwrap()
       .then(res => {
         console.log(res)
+
+        if (res.error) {
+          // dispatch(setOrganisationError(res.error.message))
+          setError('email', {
+            type: 'manual',
+            message: res.payload
+          })
+          setErrorMessage(res.error.message)
+          setOpenError(true)
+          return
+        }
         router.push('/')
       })
       .catch(err => {
-        console.log(err)
+        console.log('login error', err)
         dispatch(setOrganisationError(err))
+        setErrorMessage(err)
+        setOpenError(true)
       })
   }
 
