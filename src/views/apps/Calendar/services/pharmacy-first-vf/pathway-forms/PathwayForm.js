@@ -76,6 +76,8 @@ function PathwayForm({ onServiceUpdate, state, ServiceTree, nodeStates, setNodeS
 
     updatedState[nodeId] = {
       ...nodeState,
+      type: ServiceTree.nodes[nodeId].type,
+      type: ServiceTree.nodes[nodeId].type,
       selectedSymptoms
     }
 
@@ -88,6 +90,8 @@ function PathwayForm({ onServiceUpdate, state, ServiceTree, nodeStates, setNodeS
 
     updatedState[nodeId] = {
       ...nodeState,
+      type: ServiceTree.nodes[nodeId].type,
+      type: ServiceTree.nodes[nodeId].type,
       decision // This captures the decision generically, without assuming it's about deterioration
     }
 
@@ -100,6 +104,8 @@ function PathwayForm({ onServiceUpdate, state, ServiceTree, nodeStates, setNodeS
 
     updatedState[nodeId] = {
       ...currentNodeState,
+      type: ServiceTree.nodes[nodeId].type,
+      type: ServiceTree.nodes[nodeId].type,
       additionalComments: value
     }
 
@@ -189,6 +195,7 @@ function PathwayForm({ onServiceUpdate, state, ServiceTree, nodeStates, setNodeS
 
     updatedState[nodeId] = {
       ...currentNodeState,
+      type: ServiceTree.nodes[nodeId].type,
       actionsTaken
     }
 
@@ -211,6 +218,7 @@ function PathwayForm({ onServiceUpdate, state, ServiceTree, nodeStates, setNodeS
 
     updatedState[nodeId] = {
       ...currentNodeState,
+      type: ServiceTree.nodes[nodeId].type,
       selectedTreatments
     }
 
@@ -233,6 +241,7 @@ function PathwayForm({ onServiceUpdate, state, ServiceTree, nodeStates, setNodeS
     updatedState[nodeId] = {
       ...nodeState,
       checkedCriteria, // Update the state with the new checked criteria
+      type: ServiceTree.nodes[nodeId].type,
       noneChecked: false // Reset 'None' option if any checkbox is changed
     }
 
@@ -246,6 +255,7 @@ function PathwayForm({ onServiceUpdate, state, ServiceTree, nodeStates, setNodeS
 
     updatedState[nodeId] = {
       ...nodeState,
+      type: ServiceTree.nodes[nodeId].type,
       checkedCriteria: noneChecked ? {} : nodeState.checkedCriteria, // Clear checkedCriteria if "None" is checked
       noneChecked
     }
@@ -259,6 +269,7 @@ function PathwayForm({ onServiceUpdate, state, ServiceTree, nodeStates, setNodeS
 
     updatedState[nodeId] = {
       ...nodeState,
+      type: ServiceTree.nodes[nodeId].type,
       acknowledged: true // Mark as acknowledged
     }
 
@@ -326,6 +337,7 @@ function PathwayForm({ onServiceUpdate, state, ServiceTree, nodeStates, setNodeS
 
       updatedState[nodeId] = {
         ...currentNodeState,
+        type: ServiceTree.nodes[nodeId].type,
         comment: value
       }
 
@@ -505,6 +517,7 @@ function PathwayForm({ onServiceUpdate, state, ServiceTree, nodeStates, setNodeS
       [nodeId]: {
         ...nodeStates[nodeId],
         selectedOption: selectedOption,
+        type: ServiceTree.nodes[nodeId].type,
         action: action // Store the next action which directly maps to the next node ID
       }
     }
@@ -564,6 +577,7 @@ function PathwayForm({ onServiceUpdate, state, ServiceTree, nodeStates, setNodeS
 
       updatedState[nodeId] = {
         ...nodeState,
+        type: ServiceTree.nodes[nodeId].type,
         symptoms: updatedSymptoms
       }
 
@@ -576,6 +590,7 @@ function PathwayForm({ onServiceUpdate, state, ServiceTree, nodeStates, setNodeS
 
       updatedState[nodeId] = {
         ...nodeState,
+        type: ServiceTree.nodes[nodeId].type,
         symptoms: updatedSymptoms
       }
 
@@ -649,6 +664,7 @@ function PathwayForm({ onServiceUpdate, state, ServiceTree, nodeStates, setNodeS
     const updatedState = { ...nodeStates }
     updatedState[nodeId] = {
       ...updatedState[nodeId],
+      type: ServiceTree.nodes[nodeId].type,
       decision
     }
 
@@ -738,6 +754,7 @@ function PathwayForm({ onServiceUpdate, state, ServiceTree, nodeStates, setNodeS
     const updatedState = { ...nodeStates }
     updatedState[nodeId] = {
       ...updatedState[nodeId],
+      type: ServiceTree.nodes[nodeId].type,
       acknowledged: true
     }
 
@@ -781,6 +798,7 @@ function PathwayForm({ onServiceUpdate, state, ServiceTree, nodeStates, setNodeS
     const updatedState = { ...nodeStates }
     updatedState[nodeId] = {
       ...updatedState[nodeId],
+      type: ServiceTree.nodes[nodeId].type,
       decision
     }
 
@@ -833,6 +851,7 @@ function PathwayForm({ onServiceUpdate, state, ServiceTree, nodeStates, setNodeS
     const updatedState = { ...nodeStates }
     updatedState[nodeId] = {
       ...updatedState[nodeId],
+      type: ServiceTree.nodes[nodeId].type,
       decision // This captures the decision made at the referral node
     }
 
@@ -886,6 +905,7 @@ function PathwayForm({ onServiceUpdate, state, ServiceTree, nodeStates, setNodeS
     const updatedState = { ...nodeStates }
     updatedState[nodeId] = {
       ...updatedState[nodeId],
+      type: ServiceTree.nodes[nodeId].type,
       planText // Store the plan text input by the user
     }
 
@@ -940,6 +960,7 @@ function PathwayForm({ onServiceUpdate, state, ServiceTree, nodeStates, setNodeS
     const updatedState = { ...nodeStates }
     updatedState[nodeId] = {
       ...updatedState[nodeId],
+      type: ServiceTree.nodes[nodeId].type,
       answer // Capture the user's answer to the question
     }
 
@@ -1193,6 +1214,7 @@ function PathwayForm({ onServiceUpdate, state, ServiceTree, nodeStates, setNodeS
 
       updatedState[nodeId] = {
         ...nodeState,
+        type: ServiceTree.nodes[nodeId].type,
         criteria: updatedCriteria
       }
 
@@ -1205,6 +1227,7 @@ function PathwayForm({ onServiceUpdate, state, ServiceTree, nodeStates, setNodeS
 
       updatedState[nodeId] = {
         ...nodeState,
+        type: ServiceTree.nodes[nodeId].type,
         criteria: updatedCriteria
       }
 

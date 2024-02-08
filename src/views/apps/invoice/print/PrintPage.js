@@ -16,6 +16,8 @@ import Typography from '@mui/material/Typography'
 import Box from '@mui/material/Box'
 import { styled, useTheme } from '@mui/material/styles'
 import TableCell from '@mui/material/TableCell'
+import BlankLayout from 'src/@core/layouts/BlankLayout'
+
 
 // ** Third Party Components
 import axios from 'axios'
@@ -331,5 +333,7 @@ const InvoicePrint = ({ data }) => {
     return null
   }
 }
+
+
 
 export default InvoicePrint
