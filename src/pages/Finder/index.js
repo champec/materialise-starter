@@ -116,7 +116,9 @@ const Finder = () => {
   useEffect(() => {
     refContainer.current?.scrollIntoView({ behavior: 'smooth' })
   }, [])
+
   if (loading) return <CircularProgress />
+  
   return (
     <>
       <Grid container spacing={6}>

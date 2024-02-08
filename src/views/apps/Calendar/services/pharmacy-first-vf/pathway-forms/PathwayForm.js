@@ -116,21 +116,29 @@ function PathwayForm({ onServiceUpdate, state, ServiceTree, nodeStates, setNodeS
     }
 
     if (node.type === 'criteriaCheck') {
-      const decisions = Object.keys(state.checkedCriteria || {})
-        .map(criterion => criterion)
+      // Use the criteria from the state if available, otherwise fall back to the node's initial criteria
+      const criteria = state.criteria || node.criteria
+
+      // Map each criterion to a string that includes the criterion text and the selected response
+      const decisions = criteria
+        .map(criterion => {
+          const responseText = criterion.response ? `Response: ${criterion.response}` : 'No Response'
+          return `${criterion.text} - ${responseText}`
+        })
         .join(', ')
       summaryText += decisions ? `Selected Criteria: ${decisions}` : 'No Criteria Selected'
     }
 
     if (node.type === 'symptoms') {
-      const symptomsSummary = nodeStates[node.id]?.selectedSymptoms?.length
-        ? `Symptoms Reported: ${nodeStates[node.id].selectedSymptoms.join(', ')}`
-        : 'No Symptoms Reported'
-      // Use the node's content or a generic term for the decision summary
-      const decisionSummary = nodeStates[node.id]?.decision
-        ? `Decision: '${nodeStates[node.id].decision} ${node?.content ? ' for ' + node.content : ''}'`
-        : `Decision for '${node.content}': Not Made`
-      summaryText += `${symptomsSummary}; ${decisionSummary}`
+      const symptoms = nodeStates[node.id]?.symptoms || node.symptoms
+      const symptomsSummary = symptoms
+        .map((symptom, index) => {
+          const responseText = symptom.response ? `${symptom.response}` : 'No Response'
+          return `${index + 1}. ${symptom.text} - ${responseText}`
+        })
+        .join('; ')
+
+      summaryText += symptomsSummary ? `Symptoms Assessed: ${symptomsSummary}` : 'No Symptoms Assessed'
     } else if (node.type === 'gateway' && state.acknowledged) {
       summaryText += `Acknowledged Gateway: ${node.content}`
     } else if (node.type === 'advice') {
@@ -165,8 +173,8 @@ function PathwayForm({ onServiceUpdate, state, ServiceTree, nodeStates, setNodeS
       const selectedOption = nodeStates[node.id]?.selectedOption || 'No option selected'
       summaryText += `${node.content}: ${selectedOption}`
     } else if (node.type === 'comments') {
-      const commentsText = state.comment ? `Comments: ${state.comment}` : 'No Comments Provided';
-      summaryText += commentsText;
+      const commentsText = state.comment ? `Comments: ${state.comment}` : 'No Comments Provided'
+      summaryText += commentsText
     }
 
     return summaryText
@@ -305,58 +313,59 @@ function PathwayForm({ onServiceUpdate, state, ServiceTree, nodeStates, setNodeS
         return renderOpeningNode(node)
       case 'comments':
         return renderCommentsNode(node)
+      case 'countBased':
+        return renderCountBasedNode(node)
     }
   }
 
   const renderCommentsNode = node => {
     console.log('renderCommentsNode', node)
     const handleCommentChange = (nodeId, value) => {
-      const updatedState = { ...nodeStates };
-      const currentNodeState = updatedState[nodeId] || {};
+      const updatedState = { ...nodeStates }
+      const currentNodeState = updatedState[nodeId] || {}
 
       updatedState[nodeId] = {
         ...currentNodeState,
         comment: value
-      };
+      }
 
-      setNodeStates(updatedState);
-    };
+      setNodeStates(updatedState)
+    }
 
     const handleContinue = () => {
       // Proceed to the next node if defined
       if (node.nextNodeId) {
-        handleNextNode(node.nextNodeId);
+        handleNextNode(node.nextNodeId)
       }
-    };
+    }
 
     return (
       <Card sx={{ m: 2, boxShadow: 3 }}>
         <CardHeader
-          title={<Typography variant="h6">{node.title}</Typography>}
+          title={<Typography variant='h6'>{node.title}</Typography>}
           sx={{ backgroundColor: 'primary.main', color: 'primary.contrastText' }}
         />
         <CardContent>
           <TextField
             id={`comment-${node.id}`}
-            label="Comments"
+            label='Comments'
             multiline
             rows={4}
             value={nodeStates[node.id]?.comment || ''}
             onChange={e => handleCommentChange(node.id, e.target.value)}
-            variant="outlined"
+            variant='outlined'
             fullWidth
-            margin="normal"
+            margin='normal'
           />
         </CardContent>
         <CardActions sx={{ justifyContent: 'flex-end', p: 2 }}>
-          <Button variant="contained" color="primary" onClick={handleContinue}>
+          <Button variant='contained' color='primary' onClick={handleContinue}>
             Continue
           </Button>
         </CardActions>
       </Card>
-    );
-  };
-
+    )
+  }
 
   const renderOpeningNode = node => {
     return (
@@ -475,7 +484,7 @@ function PathwayForm({ onServiceUpdate, state, ServiceTree, nodeStates, setNodeS
                   padding: 2,
                   fontSize: 14,
                   width: '100%', // Changed to '100%' for full width
-                  textAlign: 'right', // Added textAlign for text alignment,
+                  textAlign: 'left', // Added textAlign for text alignment,
                   justifyContent: 'flex-start' // Added justifyContent for text alignment
                 }}
                 onClick={() => handleMultipleChoiceSelection(node.id, answer.text, answer.action)}
@@ -544,6 +553,42 @@ function PathwayForm({ onServiceUpdate, state, ServiceTree, nodeStates, setNodeS
   }
 
   const renderSymptomsNode = node => {
+    const nodeState = nodeStates[node.id] || {}
+    // Transform symptoms into objects with 'text' and 'response' properties if not already done
+    const symptoms = nodeState.symptoms || node.symptoms
+
+    const handleResponseChange = (nodeId, index, response) => {
+      const updatedState = { ...nodeStates }
+      const updatedSymptoms = [...symptoms]
+      updatedSymptoms[index].response = response // Update the response for the selected symptom
+
+      updatedState[nodeId] = {
+        ...nodeState,
+        symptoms: updatedSymptoms
+      }
+
+      setNodeStates(updatedState)
+    }
+
+    const handleAllChange = (nodeId, response) => {
+      const updatedState = { ...nodeStates }
+      const updatedSymptoms = symptoms.map(symptom => ({ ...symptom, response }))
+
+      updatedState[nodeId] = {
+        ...nodeState,
+        symptoms: updatedSymptoms
+      }
+
+      setNodeStates(updatedState)
+    }
+
+    const handleNext = () => {
+      // Determine if the pass criteria are met based on the node's passResponse
+      const passCondition = symptoms.every(symptom => symptom.response === node.passResponse)
+      const nextNodeId = passCondition ? node.nextNodeIdIfNo : node.nextNodeIdIfYes
+      handleNextNode(nextNodeId)
+    }
+
     return (
       <Card sx={{ m: 2, boxShadow: 3 }}>
         <CardHeader
@@ -559,43 +604,41 @@ function PathwayForm({ onServiceUpdate, state, ServiceTree, nodeStates, setNodeS
                 {node.context}
               </Typography>
             )}
-            {node.symptoms.map((symptom, index) => (
-              <FormControlLabel
-                key={index}
-                control={
-                  <Checkbox
-                    onChange={e => handleSymptomChange(node.id, symptom, e.target.checked)}
-                    checked={nodeStates[node.id]?.selectedSymptoms?.includes(symptom) ?? false}
+            {symptoms.map((symptom, index) => (
+              <Box key={index} sx={{ display: 'flex', flexDirection: 'column', mb: 2 }}>
+                <Typography>{`${index + 1}. ${symptom.text}`}</Typography>
+
+                <Box sx={{ display: 'flex', flexDirection: 'row', gap: 1 }}>
+                  <Button
+                    variant={symptom.response === 'Yes' ? 'contained' : 'outlined'}
                     color='primary'
-                  />
-                }
-                label={symptom}
-                sx={{ alignItems: 'center' }} // Ensures text is aligned with the checkbox
-              />
+                    onClick={() => handleResponseChange(node.id, index, 'Yes')}
+                  >
+                    Yes
+                  </Button>
+                  <Button
+                    variant={symptom.response === 'No' ? 'contained' : 'outlined'}
+                    color='secondary'
+                    onClick={() => handleResponseChange(node.id, index, 'No')}
+                  >
+                    No
+                  </Button>
+                </Box>
+              </Box>
             ))}
+            <Box sx={{ display: 'flex', flexDirection: 'row', gap: 1, justifyContent: 'center' }}>
+              <Button variant='outlined' color='primary' onClick={() => handleAllChange(node.id, 'Yes')}>
+                Yes to All
+              </Button>
+              <Button variant='outlined' color='secondary' onClick={() => handleAllChange(node.id, 'No')}>
+                No to All
+              </Button>
+            </Box>
           </Box>
         </CardContent>
         <CardActions sx={{ justifyContent: 'flex-end', p: 2 }}>
-          <Button
-            variant='contained'
-            color='primary'
-            onClick={() => {
-              handleSymptomDecision(node.id, 'Yes') // 'Yes' decision
-              handleNextNode(node.nextNodeIdIfYes)
-            }}
-            sx={{ mr: 1 }}
-          >
-            Yes
-          </Button>
-          <Button
-            variant='outlined'
-            color='secondary'
-            onClick={() => {
-              handleSymptomDecision(node.id, 'No') // 'No' decision
-              handleNextNode(node.nextNodeIdIfNo)
-            }}
-          >
-            No
+          <Button variant='contained' color='primary' onClick={handleNext}>
+            Next
           </Button>
         </CardActions>
       </Card>
@@ -1139,40 +1182,39 @@ function PathwayForm({ onServiceUpdate, state, ServiceTree, nodeStates, setNodeS
 
   const renderCriteriaCheckNode = node => {
     const nodeState = nodeStates[node.id] || {}
-    const checkedCriteria = nodeState.checkedCriteria || {}
-    const noneChecked = nodeState.noneChecked || false
+    // Directly use 'criteria' from the node, ensuring it has default 'response' values if not already set
+    const criteria =
+      nodeState.criteria || node.criteria.map(criterion => ({ ...criterion, response: criterion.response || null }))
 
-    const handleAllChange = nodeId => {
+    const handleResponseChange = (nodeId, index, response) => {
       const updatedState = { ...nodeStates }
-      const nodeState = updatedState[nodeId] || {}
-      const allChecked = !Object.keys(nodeState.checkedCriteria || {}).length // If no criteria are checked, checking "All"
-
-      // If "All" is being checked, select all criteria, otherwise clear selection
-      const checkedCriteria = allChecked
-        ? node.criteria.reduce((acc, criterion) => {
-            acc[criterion.text] = true
-            return acc
-          }, {})
-        : {}
+      const updatedCriteria = [...criteria]
+      updatedCriteria[index].response = response // Update the response for the selected criterion
 
       updatedState[nodeId] = {
         ...nodeState,
-        checkedCriteria,
-        noneChecked: false // Deselect "None" when "All" is selected
+        criteria: updatedCriteria
       }
 
       setNodeStates(updatedState)
     }
 
-    // Function to determine the next node based on the criteria met
+    const handleAllChange = (nodeId, response) => {
+      const updatedState = { ...nodeStates }
+      const updatedCriteria = criteria.map(criterion => ({ ...criterion, response })) // Set all responses
+
+      updatedState[nodeId] = {
+        ...nodeState,
+        criteria: updatedCriteria
+      }
+
+      setNodeStates(updatedState)
+    }
+
     const handleNext = () => {
-      // Check if the "None" option is selected or if the minimum required checkboxes are checked
-      const isRequirementMet = Object.keys(checkedCriteria).length >= node.minRequired
-
-      // Determine the next node based on whether the requirement is met
-      const nextNodeId = isRequirementMet ? node.nextNodeIdIfPassed : node.nextNodeIdIfFailed
-
-      // Update the current node to the next node based on the decision
+      // Determine if the pass criteria are met based on the node's requirements
+      const passCondition = criteria.every(criterion => criterion.response === node.passResponse)
+      const nextNodeId = passCondition ? node.nextNodeIdIfPassed : node.nextNodeIdIfFailed
       handleNextNode(nextNodeId)
     }
 
@@ -1186,40 +1228,39 @@ function PathwayForm({ onServiceUpdate, state, ServiceTree, nodeStates, setNodeS
             </Typography>
           }
           titleTypographyProps={{ variant: 'h6' }}
-          sx={{ backgroundColor: 'primary.main', color: 'primary.contrastText' }}
+          sx={{ backgroundColor: 'primary.main', color: 'primary.contrastText',mb:4 }}
         />
         <CardContent>
-          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, mt: 4 }}>
-            {node.criteria.map((criterion, index) => (
-              <FormControlLabel
-                key={index}
-                control={
-                  <Checkbox
-                    checked={!!checkedCriteria[criterion.text]}
-                    onChange={() => handleCheckboxChange(node.id, index, criterion.text)}
-                    disabled={noneChecked && index !== node.criteria.length} // Disable if "None" is checked, except the "None" checkbox itself
-                  />
-                }
-                label={criterion.text}
-              />
+          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+            {criteria.map((criterion, index) => (
+              <Box key={index}>
+                <Typography>{`${index +1}) ${criterion.text}`}</Typography>
+                <Box sx={{ display: 'flex', flexDirection: 'row', gap: 1 }}>
+                  <Button
+                    variant={criterion.response === 'Yes' ? 'contained' : 'outlined'}
+                    color='primary'
+                    onClick={() => handleResponseChange(node.id, index, 'Yes')}
+                  >
+                    Yes
+                  </Button>
+                  <Button
+                    variant={criterion.response === 'No' ? 'contained' : 'outlined'}
+                    color='secondary'
+                    onClick={() => handleResponseChange(node.id, index, 'No')}
+                  >
+                    No
+                  </Button>
+                </Box>
+              </Box>
             ))}
-            {node.allOption && (
-              <FormControlLabel
-                control={
-                  <Checkbox
-                    checked={node.criteria.every(criterion => checkedCriteria[criterion.text]) && !noneChecked}
-                    onChange={() => handleAllChange(node.id)}
-                  />
-                }
-                label={node.allOption.text}
-              />
-            )}
-            {node.noneOption && (
-              <FormControlLabel
-                control={<Checkbox checked={noneChecked} onChange={() => handleNoneChange(node.id)} color='warning' />}
-                label={<Typography color='warning'>{node.noneOption.text}</Typography>}
-              />
-            )}
+            <Box sx={{ display: 'flex', flexDirection: 'row', gap: 1, justifyContent: 'center' }}>
+              <Button variant='outlined' color='primary' onClick={() => handleAllChange(node.id, 'Yes')}>
+                Yes to All
+              </Button>
+              <Button variant='outlined' color='secondary' onClick={() => handleAllChange(node.id, 'No')}>
+                No to All
+              </Button>
+            </Box>
           </Box>
           <Box sx={{ display: 'flex', justifyContent: 'flex-end', mt: 2 }}>
             <Button variant='contained' color='success' onClick={handleNext}>
@@ -1227,6 +1268,97 @@ function PathwayForm({ onServiceUpdate, state, ServiceTree, nodeStates, setNodeS
             </Button>
           </Box>
         </CardContent>
+      </Card>
+    )
+  }
+
+  const renderCountBasedNode = node => {
+   // Initialize node state from nodeStates or use the node's initial questions if not present
+  const nodeState = nodeStates[node.id] || { ...node, questions: node.questions.map(question => ({ ...question })) };
+
+  // Update nodeStates with the initialized node state if it wasn't already present
+  if (!nodeStates[node.id]) {
+    setNodeStates({ ...nodeStates, [node.id]: nodeState });
+  }
+
+  const handleResponseChange = (index, response) => {
+    // Create a copy of the questions array and update the response for the selected question
+    const updatedQuestions = nodeState.questions.map((question, i) =>
+      i === index ? { ...question, response } : question
+    );
+
+    // Update the node state in nodeStates with the new questions array
+    const updatedNodeState = { ...nodeState, questions: updatedQuestions };
+    setNodeStates({ ...nodeStates, [node.id]: updatedNodeState });
+  };
+
+  const yesCount = nodeState.questions.filter(question => question.response === node.countOption).length;
+    const handleNext = node => {
+      console.log('nodeMap', node)
+
+      const nextNodeId = node.nextNodeMap[yesCount] || node.defaultNextNodeId;
+
+      handleNextNode(nextNodeId)
+    }
+
+    const handleAllResponses = (response) => {
+      const updatedQuestions = nodeState.questions.map(question => ({ ...question, response }));
+
+      setNodeStates({ ...nodeStates, [node.id]: { ...nodeState, questions: updatedQuestions } });
+    };
+
+    return (
+      <Card>
+        {/* <CardHeader title={node.title} /> */}
+        <CardHeader
+          avatar={node.icon ? <IconifyIcon icon={node.icon} style={{ width: '50px', height: '50px' }} /> : null}
+          title={
+            <Typography variant='p' style={{ fontWeight: 'bold' }}>
+              {node.title}
+            </Typography>
+          }
+          titleTypographyProps={{ variant: 'h6' }}
+          sx={{ backgroundColor: 'primary.main', color: 'primary.contrastText',mb:4 }}
+        />
+        <CardContent>
+          <Typography sx={{}}>{node.content || node.context}</Typography>
+          {nodeState.questions.map((question, index) => (
+            <Box key={index} sx={{ mb: 2 }}>
+              <Typography>{`${index + 1}. ${question.text}`}</Typography>
+              <Button
+                variant={question.response === 'Yes' ? 'contained' : 'outlined'}
+                color='primary'
+                onClick={() => handleResponseChange(index, 'Yes')}
+                sx={{ mr: 1 }}
+              >
+                Yes
+              </Button>
+              <Button
+                variant={question.response === 'No' ? 'contained' : 'outlined'}
+                color='secondary'
+                onClick={() => handleResponseChange(index, 'No')}
+              >
+                No
+              </Button>
+            </Box>
+          ))}
+<Box sx={{ display: 'flex', justifyContent: 'center', gap: 2, mt: 2 }}>
+          <Button variant="outlined" color="primary" onClick={() => handleAllResponses('Yes')}>
+            Yes to All
+          </Button>
+          <Button variant="outlined" color="secondary" onClick={() => handleAllResponses('No')}>
+            No to All
+          </Button>
+        </Box>
+        </CardContent>
+        <CardActions sx={{ justifyContent: 'flex-end', p: 2 }}>
+          <Typography variant='h6' sx={{ mr: 2 }}>
+            {node.countText}: {yesCount}
+          </Typography>
+          <Button variant='contained' color='primary' onClick={() => handleNext(node)}>
+            Next
+          </Button>
+        </CardActions>
       </Card>
     )
   }

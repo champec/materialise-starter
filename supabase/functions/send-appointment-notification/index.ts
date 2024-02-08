@@ -31,7 +31,7 @@ Deno.serve(async req => {
     return new Response('Method Not Allowed', { status: 405, headers: corsHeaders })
   }
 
-  const { phoneNumber, message, apiKey, orgId, threadId } = await req.json()
+  const { phoneNumber, message, apiKey, msgTemplate, orgId, threadId } = await req.json()
 
   const apiKeyParts = apiKey.split('-')
   const API_KEY_NAME = apiKeyParts[0]
@@ -57,6 +57,7 @@ Deno.serve(async req => {
     },
     key
   )
+
   console.log('JWT', jwt)
 
   // Call Notify API to send the SMS
@@ -69,7 +70,7 @@ Deno.serve(async req => {
       },
       body: JSON.stringify({
         phone_number: phoneNumber,
-        template_id: '58c0fdb1-1291-4c80-8985-93eebad4726e', // Set your template ID here
+        template_id: msgTemplate, //'58c0fdb1-1291-4c80-8985-93eebad4726e', // Set your template ID here
         personalisation: {
           message: message
         }

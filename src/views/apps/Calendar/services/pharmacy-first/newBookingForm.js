@@ -537,7 +537,7 @@ const NewBookingForm = ({
     // })
   }
 
-  const onSubmit = async data => {
+  const onSubmit = async (data) => {
     setActiveStep(activeStep + 1)
     if (activeStep === steps.length - 1) {
       setLoading(true)

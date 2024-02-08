@@ -108,9 +108,9 @@ const AddNewPatientForm = ({ patient, onClose, onSelect, selectedPatient, setSel
   console.log('patient', firstName)
 
   // ** Function to handle form submit
-  const handleSubmit = async event => {
+  const handleSubmit = async e => {
     // setLoading(true)
-    event.preventDefault()
+    e.preventDefault()
 
     console.log('selected patient', selectedPatient)
 
@@ -176,7 +176,7 @@ const AddNewPatientForm = ({ patient, onClose, onSelect, selectedPatient, setSel
       />
       <CardHeader title='Add New Patient' />
       <Divider sx={{ m: '0 !important' }} />
-      <form onSubmit={handleSubmit}>
+      <form onSubmit={(e) => handleSubmit(e)}>
         <CardContent>
           <Grid container spacing={5}>
             <Grid item xs={12}>

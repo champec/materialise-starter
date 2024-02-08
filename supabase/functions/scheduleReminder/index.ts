@@ -53,7 +53,7 @@ Deno.serve(async req => {
         },
         body: JSON.stringify({
           phone_number: phoneNumber,
-          template_id: '58c0fdb1-1291-4c80-8985-93eebad4726e', // Set your template ID here
+          template_id: '5e4afb2e-ebea-4831-b106-c57a2519a795', // Set your template ID here
           personalisation: { message }
         })
       })

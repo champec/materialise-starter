@@ -26,8 +26,15 @@ function CapturePersonalInfo({
   setDatePickerOpen,
   datePickerOpen
 }) {
+
+  const handleKeyDown = (event) => {
+    if (event.key === 'Enter') {
+      event.preventDefault();
+    }
+  };
+
   return (
-    <form key={0} onSubmit={handleAccountSubmit(onSubmit)}>
+    <form key={0} onSubmit={handleAccountSubmit(onSubmit)} onKeyDown={handleKeyDown}>
       <Capturepatient
         steps={steps}
         handleAccountSubmit={handleAccountSubmit}
