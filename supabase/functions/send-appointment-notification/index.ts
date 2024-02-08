@@ -10,13 +10,45 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js'
 
 const supabase = createClient(Deno.env.get('SUPABASE_URL') ?? '', Deno.env.get('ANON_KEY') ?? '')
 
-async function logToDatabase(type, message, orgId, threadId) {
+async function logToDatabase(type, message, orgId, threadId, messageId) {
   const { data, error } = await supabase
     .from('sms_logs')
     .insert([{ type, message, organisation_id: orgId, thread_id: threadId }])
 
+  if (type === 'error') {
+    const { data, error } = await supabase
+      .from('notifications')
+      .insert({ organisation_id: orgId, message: message, title: 'Error sending SMS' })
+
+    if (error) {
+      console.error('Error logging to database:', error)
+      return new Response(JSON.stringify({ error: error }), {
+        status: 500,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      })
+    }
+
+    // update the most recent message from the sms_messages table with this thread_id status as failed
+    const { data: updateData, error: updateError } = await supabase
+      .from('sms_messages')
+      .update({ status: 'failed' })
+      .eq('id', messageId)
+
+    if (updateError) {
+      console.error('Error updating sms_messages table:', updateError)
+      return new Response(JSON.stringify({ error: updateError }), {
+        status: 500,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      })
+    }
+  }
+
   if (error) {
     console.error('Error logging to database:', error)
+    return new Response(JSON.stringify({ error: error }), {
+      status: 500,
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+    })
   }
 }
 
@@ -31,7 +63,7 @@ Deno.serve(async req => {
     return new Response('Method Not Allowed', { status: 405, headers: corsHeaders })
   }
 
-  const { phoneNumber, message, apiKey, msgTemplate, orgId, threadId } = await req.json()
+  const { phoneNumber, message, apiKey, msgTemplate, orgId, threadId, messageId } = await req.json()
 
   const apiKeyParts = apiKey.split('-')
   const API_KEY_NAME = apiKeyParts[0]
@@ -80,7 +112,7 @@ Deno.serve(async req => {
     if (!notifyResponse.ok) {
       const errorData = await notifyResponse.json()
       console.error('Notify API Error:', errorData)
-      await logToDatabase('error', JSON.stringify(errorData), orgId, threadId)
+      await logToDatabase('error', JSON.stringify(errorData), orgId, threadId, messageId)
       return new Response(JSON.stringify({ error: errorData }), {
         status: notifyResponse.status,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' }
@@ -89,7 +121,7 @@ Deno.serve(async req => {
 
     const notifyData = await notifyResponse.json()
     // Log successful response to database
-    await logToDatabase('success', JSON.stringify(notifyData), orgId, threadId)
+    await logToDatabase('success', JSON.stringify(notifyData), orgId, threadId, messageId)
 
     return new Response(JSON.stringify(notifyData), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' }
