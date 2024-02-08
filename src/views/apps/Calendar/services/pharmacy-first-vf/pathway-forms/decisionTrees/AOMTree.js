@@ -71,6 +71,7 @@ acuteOtitisMediaDecisionTree.nodes = {
       text: 'None of the above', // This option, when selected, will deselect all other options and vice versa
       action: 'untickAll' // Indicates the action to be taken when this option is selected
     },
+    passResponse: 'Yes',
     minRequired: 3, // Specifies the minimum number of checkboxes (excluding the 'None' option) that need to be ticked to proceed
     nextNodeIdIfPassed: 'initial_information',
     nextNodeIdIfFailed: 'criteria_not_met_stop',
@@ -101,12 +102,18 @@ acuteOtitisMediaDecisionTree.nodes = {
     icon: 'ic:sharp-sick',
     content: 'Does the patient risk deterioration?:',
     symptoms: [
-      'Meningitis (neck stiffness, photophobia, mottled skin)',
-      'Mastoiditis (pain, soreness, swelling, tenderness behind the affected ear(s))',
-      'Brain abscess (severe headache, confusion or irritability, muscle weakness)',
-      'Sinus thrombosis (headache behind or around the eyes)',
-      'Facial nerve paralysis'
+      // 'Meningitis (neck stiffness, photophobia, mottled skin)',
+      // 'Mastoiditis (pain, soreness, swelling, tenderness behind the affected ear(s))',
+      // 'Brain abscess (severe headache, confusion or irritability, muscle weakness)',
+      // 'Sinus thrombosis (headache behind or around the eyes)',
+      // 'Facial nerve paralysis'
+      {text: 'Meningitis (neck stiffness, photophobia, mottled skin)', required: true, response:null},
+      {text: 'Mastoiditis (pain, soreness, swelling)', required: true, response:null},
+      {text: 'Brain abscess (severe headache)', required: true, response:null},
+      {text: 'Sinus thrombosis (headache)', required: true, response:null},
+      {text: 'Facial nerve paralysis', required: true, response:null}
     ],
+    passResponse: 'No',
     nextNodeIdIfYes: 'stop_emergency',
     nextNodeIdIfNo: 'gateway_point',
     previousNodeId: 'initial_information'
@@ -130,13 +137,25 @@ acuteOtitisMediaDecisionTree.nodes = {
   },
   acute_symptoms_check: {
     id: 'acute_symptoms_check',
-    type: 'symptoms',
+    type: 'countBased',
     content: 'Does the patient have acute onset of symptoms:',
-    symptoms: [
-      'In older children—earache',
-      'In younger children—holding, tugging, or rubbing of the ear',
-      'In younger children: non-specific symptoms such as fever, crying, poor feeding, restlessness, behavioural changes, cough, or rhinorrhoea'
+    questions: [
+      // 'In older children—earache',
+      // 'In younger children—holding, tugging, or rubbing of the ear',
+      // 'In younger children: non-specific symptoms such as fever, crying, poor feeding, restlessness, behavioural changes, cough, or rhinorrhoea'
+    {text: 'In older children—earache', required: true, response:null},
+    {text: 'In younger children—holding, tugging, or rubbing of the ear', required: true, response:null},
+    {text: 'In younger children: non-specific symptoms such as fever, crying, poor feeding, restlessness, behavioural changes, cough, or rhinorrhoea', required: true, response:null}
     ],
+    countText: 'Acute symptoms',
+    countOption:'Yes',
+    nextNodeMap:{
+      0: 'alternative_diagnosis_advice',
+      1: 'otoscopic_examination',
+      2: 'otoscopic_examination',
+      3: 'otoscopic_examination'
+    },
+    passResponse: 'Yes',
     nextNodeIdIfYes: 'otoscopic_examination',
     nextNodeIdIfNo: 'alternative_diagnosis_advice',
     previousNodeId: 'gateway_point'
@@ -172,10 +191,14 @@ acuteOtitisMediaDecisionTree.nodes = {
     type: 'symptoms',
     content: 'Does the patient meet ANY of the following high-risk criteria:',
     symptoms: [
-      'Systemically very unwell',
-      'Signs of a more serious illness',
-      'High risk of complications due to pre-existing comorbidity'
+      // 'Systemically very unwell',
+      // 'Signs of a more serious illness',
+      // 'High risk of complications due to pre-existing comorbidity'
+      {text: 'Systemically very unwell', required: true, response:null},
+      {text: 'Signs of a more serious illness', required: true, response:null},
+      {text: 'High risk of complications due to pre-existing comorbidity', required: true, response:null}
     ],
+    passResponse: 'No',
     nextNodeIdIfYes: 'onward_referral',
     nextNodeIdIfNo: 'otorrhoea_check',
     previousNodeId: 'otoscopic_examination'

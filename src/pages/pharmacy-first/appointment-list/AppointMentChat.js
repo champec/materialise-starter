@@ -13,7 +13,8 @@ function AppointMentChat({ appointment }) {
 
   const thread_id = appointment.sms_threads[0]?.id
 
-  console.log(thread_id, 'thread_id')
+  console.log(thread_id, 'thread_id', messages)
+  console.log('message informaiton', messages)
 
   const fetchMessages = async () => {
     try {
@@ -24,7 +25,9 @@ function AppointMentChat({ appointment }) {
         .order('created_at', { ascending: true })
 
       if (error) throw error
+
       setMessages(data)
+      console.log('THREAD MESSAGES', data)
     } catch (error) {
       setError(error)
     } finally {
@@ -68,6 +71,7 @@ function AppointMentChat({ appointment }) {
               <div style={{ wordBreak: 'break-word' }}>
                 <p style={{ margin: 0 }}>{message.message}</p>
                 <small style={{ color: 'gray' }}>{new Date(message.created_at).toLocaleString()}</small>
+                {message.status === 'failed' && <small style={{ color: 'red' }}>Failed to send</small>}
               </div>
             </ListItem>
             {index < messages.length - 1 && <Divider />}
