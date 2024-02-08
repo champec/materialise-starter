@@ -56,8 +56,10 @@ const AppointmentView = ({ appointment }) => {
                 >
                   {showChat ? 'SHOW BOOKING' : 'SEND MESSAGE'}
                 </Button>
-                <Button fullWidth sx={{ mb: 3.5 }} color='secondary' variant='outlined'>
-                  Starting in
+                <Button fullWidth sx={{ mb: 3.5 }} color='secondary' variant='outlined'
+                href={`/apps/invoice/print/${id}`}
+                >
+                  Print Appointment
                 </Button>
                 <Button
                   fullWidth

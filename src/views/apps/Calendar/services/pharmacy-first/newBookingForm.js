@@ -694,9 +694,12 @@ const NewBookingForm = ({
         // upload the bookingData to the service table in supabase
         // const serviceTableName = getServiceTableName(selectedService)
         console.log('Creating NEw Service Row in supabase', serviceInfo)
+        const serviceInfoWithoutId = { ...serviceInfo }
+        delete serviceInfoWithoutId.id
+
         const { data: serviceData, error: serviceError } = await supabase
           .from(selectedService.table)
-          .upsert({ ...serviceInfo, consultation_id: newBooking?.id }, { onConflict: 'consultation_id' })
+          .insert({ ...serviceInfoWithoutId, consultation_id: newBooking?.id })
           .select('*')
 
         if (serviceError) {

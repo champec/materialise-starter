@@ -69,6 +69,7 @@ impetigoDecisionTree.nodes = {
       text: 'None of the above',
       action: 'untickAll'
     },
+    passResponse:'Yes',
     minRequired: 5,
     nextNodeIdIfPassed: 'risk_assessment',
     nextNodeIdIfFailed: 'exclusion_criteria_met',
@@ -90,18 +91,26 @@ impetigoDecisionTree.nodes = {
       'Consider the risk of deterioration. Check for serious complications such as Meningitis, Encephalitis, Myelitis, Facial nerve paralysis, or Shingles in specific conditions. Select "No" if no serious complications are suspected.',
     componentType: 'criteriaChecklist',
     symptoms: [
-      'Meningitis (neck stiffness, photophobia, mottled skin)',
-      'Encephalitis (disorientation, changes in behaviour)',
-      'Myelitis (muscle weakness, loss of bladder or bowel control)',
-      'Facial nerve paralysis (typically unilateral) (Ramsay Hunt)',
-      "Shingles in the ophthalmic distribution (Hutchinson's sign, visual symptoms, unexplained red eye)",
-      'Shingles in severely immunosuppressed patient',
-      'Shingles in immunosuppressed patient where the rash is severe, widespread or patient is systemically unwell'
+      // 'Meningitis (neck stiffness, photophobia, mottled skin)',
+      // 'Encephalitis (disorientation, changes in behaviour)',
+      // 'Myelitis (muscle weakness, loss of bladder or bowel control)',
+      // 'Facial nerve paralysis (typically unilateral) (Ramsay Hunt)',
+      // "Shingles in the ophthalmic distribution (Hutchinson's sign, visual symptoms, unexplained red eye)",
+      // 'Shingles in severely immunosuppressed patient',
+      // 'Shingles in immunosuppressed patient where the rash is severe, widespread or patient is systemically unwell'
+      { text: 'Meningitis (neck stiffness, photophobia, mottled skin)', required: false, response: null },
+      { text: 'Encephalitis (disorientation, changes in behaviour)', required: false, response: null },
+      { text: 'Myelitis (muscle weakness, loss of bladder or bowel control)', required: false, response: null },
+      { text: 'Facial nerve paralysis (typically unilateral) (Ramsay Hunt)', required: false, response: null },
+      { text: "Shingles in the ophthalmic distribution (Hutchinson's sign, visual symptoms, unexplained red eye)", required: false, response: null },
+      { text: 'Shingles in severely immunosuppressed patient', required: false, response: null },
+      { text: 'Shingles in immunosuppressed patient where the rash is severe, widespread or patient is systemically unwell', required: false, response: null }
     ],
     noneOption: {
       text: 'None of the above', // This option, when selected, will deselect all other options and vice versa
       action: 'untickAll' // Indicates the action to be taken when this option is selected
     },
+    passResponse: 'No', // The response to be given when the node is considered passed
     minRequired: 0, // Minimum number of criteria that must be selected for the node to be considered passed
     nextNodeIdIfNo: 'clinical_features_check',
     nextNodeIdIfYes: 'emergency_referral',

@@ -138,6 +138,7 @@ acuteOtitisMediaDecisionTree.nodes = {
   acute_symptoms_check: {
     id: 'acute_symptoms_check',
     type: 'countBased',
+    title: 'Acute Symptoms',
     content: 'Does the patient have acute onset of symptoms:',
     questions: [
       // 'In older children—earache',
@@ -170,18 +171,29 @@ acuteOtitisMediaDecisionTree.nodes = {
   },
   otoscopic_examination: {
     id: 'otoscopic_examination',
-    type: 'question',
+    type: 'countBased',
     content: 'Does the patient have an otoscopic examination showing:',
-    answers: [
-      'A distinctly red, yellow, or cloudy tympanic membrane',
-      'Moderate to severe bulging of the tympanic membrane, with loss of normal landmarks and an air-fluid level behind the tympanic membrane',
-      'Perforation of the tympanic membrane and/or sticky discharge in the external auditory canal'
+    title: 'Otoscopy',
+    questions: [
+      // 'A distinctly red, yellow, or cloudy tympanic membrane',
+      // 'Moderate to severe bulging of the tympanic membrane, with loss of normal landmarks and an air-fluid level behind the tympanic membrane',
+      // 'Perforation of the tympanic membrane and/or sticky discharge in the external auditory canal'
+      {text: 'A distinctly red, yellow, or cloudy tympanic membrane', required: true, response:null},
+      {text: 'Moderate to severe bulging of the tympanic membrane, with loss of normal landmarks and an air-fluid level behind the tympanic membrane', required: true, response:null},
+      {text: 'Perforation of the tympanic membrane and/or sticky discharge in the external auditory canal', required: true, response:null}
     ],
     context_list: [
       'A distinctly red, yellow, or cloudy tympanic membrane',
       'Moderate to severe bulging of the tympanic membrane, with loss of normal landmarks and an air-fluid level behind the tympanic membrane',
       'Perforation of the tympanic membrane and/or sticky discharge in the external auditory canal'
     ],
+    passResponse: 'Yes',
+    countOption:'Yes',
+    nextNodeMap:{
+      0: 'alternative_diagnosis_advice',
+      1: 'high_risk_criteria_check',
+      2: 'high_risk_criteria_check'
+    },
     nextNodeIdIfYes: 'high_risk_criteria_check',
     nextNodeIdIfNo: 'alternative_diagnosis_advice',
     previousNodeId: 'acute_symptoms_check'

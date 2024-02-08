@@ -36,7 +36,7 @@ uncomplicatedUrinaryTractInfectionDecisionTree.nodes = {
   },
   criteria_met: {
     id: 'criteria_met',
-    type: 'criteria',
+    type: 'criteriaCheck',
     content: 'Does the patient meets the inclusion criteria for the Uncomplicated Urinary Tract Infection pathway?',
     inclusion: ['women aged 16 to 64 years with suspected lower UTIs'],
     exclusion: [
@@ -45,8 +45,16 @@ uncomplicatedUrinaryTractInfectionDecisionTree.nodes = {
       'recurrent UTI (2 episodes in last 6 months',
       '3 episodes in last 12 months'
     ],
-    nextNodeIdIfTrue: 'risk_assessment',
-    nextNodeIdIfFalse: 'exclusion_criteria_met',
+    criteria:[
+      {text: 'The patient is a woman aged 16 to 64 years with', required: true, response:null},
+      {text: 'The patient has suspected lower UTIs', required: true, response:null},
+      {text: 'The patient is not pregnant', required: true, response:null},
+      {text: 'The patient does not have a urinary catheter', required: true, response:null},
+      {text: 'The patient does not have recurrent UTI (2 episodes in last 6 months or 3 episodes in last 12 months)', required: true, response:null}
+    ],
+    passResponse:'Yes',
+    nextNodeIdIfPassed: 'risk_assessment',
+    nextNodeIdIfFailed: 'exclusion_criteria_met',
     previousNodeId: 'criteria_confirmation'
   },
   exclusion_criteria_met: {
@@ -79,11 +87,16 @@ uncomplicatedUrinaryTractInfectionDecisionTree.nodes = {
     title: 'Pyelonephritis Risk Assessment',
     content: 'Consider the risk of deterioration or serious illness. Check for signs of pyelonephritis.',
     symptoms: [
-      'Kidney pain/tenderness in back under ribs',
-      'New/different myalgia, flu like illness',
-      'Shaking chills (rigors) or temperature 37.9°C or above',
-      'Nausea/vomiting'
+      // 'Kidney pain/tenderness in back under ribs',
+      // 'New/different myalgia, flu like illness',
+      // 'Shaking chills (rigors) or temperature 37.9°C or above',
+      // 'Nausea/vomiting'
+      {text: 'Kidney pain/tenderness in back under ribs', required: false, response:null},
+      {text: 'New/different myalgia, flu like illness', required: false, response:null},
+      {text: 'Shaking chills (rigors) or temperature 37.9°C or above', required: false, response:null},
+      {text: 'Nausea/vomiting', required: false, response:null}
     ],
+    passResponse: 'No',
     noneOption: {
       text: 'None of the above',
       action: 'untickAll'
@@ -119,13 +132,20 @@ uncomplicatedUrinaryTractInfectionDecisionTree.nodes = {
     content: 'Does the patient have ANY of the following:',
 
     symptoms: [
-      'Vaginal discharge: 80% do not have UTI (treat over the counter if signs and symptoms of thrush)',
-      'Urethritis: inflammation post sexual intercourse, irritants',
-      'Check sexual history to exclude sexually transmitted infections',
-      'Check for signs and symptoms of pregnancy- ask about missed or lighter periods- carry out a pregnancy test if unsure',
-      'Genitourinary syndrome of menopause (vulvovaginal atrophy)',
-      'Is the patient immunosuppressed?'
+      // 'Vaginal discharge: 80% do not have UTI (treat over the counter if signs and symptoms of thrush)',
+      // 'Urethritis: inflammation post sexual intercourse, irritants',
+      // 'Check sexual history to exclude sexually transmitted infections',
+      // 'Check for signs and symptoms of pregnancy- ask about missed or lighter periods- carry out a pregnancy test if unsure',
+      // 'Genitourinary syndrome of menopause (vulvovaginal atrophy)',
+      // 'Is the patient immunosuppressed?'
+      {text: 'Vaginal discharge: 80% do not have UTI (treat over the counter if signs and symptoms of thrush)', required: false, response:null},
+      {text: 'Urethritis: inflammation post sexual intercourse, irritants', required: false, response:null},
+      {text: 'Check sexual history to exclude sexually transmitted infections', required: false, response:null},
+      {text: 'Check for signs and symptoms of pregnancy- ask about missed or lighter periods- carry out a pregnancy test if unsure', required: false, response:null},
+      {text: 'Genitourinary syndrome of menopause (vulvovaginal atrophy)', required: false, response:null},
+      {text: 'Is the patient immunosuppressed?', required: false, response:null}
     ],
+    passResponse: 'No',
     noneOption: {
       text: 'None of the above',
       action: 'untickAll'
@@ -154,15 +174,25 @@ uncomplicatedUrinaryTractInfectionDecisionTree.nodes = {
   },
   symptoms_check: {
     id: 'symptoms_check',
-    type: 'multiple_choice_question',
+    type: 'countBased',
     title: 'Symptoms Check',
     content: 'Does the patient have any of the following symptoms?',
-    context_list: [
-      'Dysuria (burning pain when passing urine)',
-      'New nocturia (needing to pass urine in the night)',
-      'Urine cloudy to the naked eye (visual inspection by pharmacist if practicable)'
+    questions: [
+      // 'Dysuria (burning pain when passing urine)',
+      // 'New nocturia (needing to pass urine in the night)',
+      // 'Urine cloudy to the naked eye (visual inspection by pharmacist if practicable)'
+      {text: 'Dysuria (burning pain when passing urine)', required: false, response:null},
+      {text: 'New nocturia (needing to pass urine in the night)', required: false, response:null},
+      {text: 'Urine cloudy to the naked eye (visual inspection by pharmacist if practicable)', required: false, response:null}
     ],
-
+    countOption:'Yes',
+    countText:'Symptoms',
+    nextNodeMap:{
+      0:'other_symptoms_check',
+      1:'uti_unclear',
+      2:'shared_decision_making',
+      3:'shared_decision_making'
+    },
     answers: [
       { text: 'No symptoms', action: 'other_symptoms_check' },
       { text: '1 symptom', action: 'uti_unclear' },
@@ -175,13 +205,20 @@ uncomplicatedUrinaryTractInfectionDecisionTree.nodes = {
     type: 'symptoms',
     content: 'Check for other symptoms of UTI.',
     symptoms: [
-      'Frequency (needing to pass urine more often than usual)',
-      'Urgency (needing to rush to the toilet to pass urine)',
-      'Suprapubic pain (pain in the lower abdomen, above the pubic bone)',
-      'Visible Haematuria (blood in the urine)',
-      'Suprapubic tenderness (pain on palpation of the lower abdomen, above the pubic bone)',
-      'Flank pain (pain in the back, below the ribs)'
+      // 'Frequency (needing to pass urine more often than usual)',
+      // 'Urgency (needing to rush to the toilet to pass urine)',
+      // 'Suprapubic pain (pain in the lower abdomen, above the pubic bone)',
+      // 'Visible Haematuria (blood in the urine)',
+      // 'Suprapubic tenderness (pain on palpation of the lower abdomen, above the pubic bone)',
+      // 'Flank pain (pain in the back, below the ribs)'
+      {text: 'Frequency (needing to pass urine more often than usual)', required: false, response:null},
+      {text: 'Urgency (needing to rush to the toilet to pass urine)', required: false, response:null},
+      {text: 'Suprapubic pain (pain in the lower abdomen, above the pubic bone)', required: false, response:null},
+      {text: 'Visible Haematuria (blood in the urine)', required: false, response:null},
+      {text: 'Suprapubic tenderness (pain on palpation of the lower abdomen, above the pubic bone)', required: false, response:null},
+      {text: 'Flank pain (pain in the back, below the ribs)', required: false, response:null}
     ],
+    passResponse: 'No',
     nextNodeIdIfYes: 'uti_unclear',
     nextNodeIdIfNo: 'uti_unlikely',
     previousNodeId: 'symptoms_check'

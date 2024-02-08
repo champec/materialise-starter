@@ -59,20 +59,26 @@ infectedInsectBitesDecisionTree.nodes = {
   },
   criteria_confirmation: {
     id: 'criteria_confirmation',
-    type: 'criteria',
+    type: 'criteriaCheck',
     content: 'Please confirm the patient meets the following criteria for the Infected Insect Bites pathway:',
-    criteria: ['For adults and children aged 1 year and over', 'Exclude: pregnant individuals under 16 years'],
-    nextNodeIdIfTrue: 'risk_assessment',
-    nextNodeIdIfFalse: 'exclusion_criteria_met',
+    criteria: [
+      // 'For adults and children aged 1 year and over', 'Exclude: pregnant individuals under 16 years'
+      { text: 'For adults and children aged 1 year and over', required: true },
+      { text: 'The patient is not a pregnant individual under 16 years', required: true }
+    ],
+    passResponse:'Yes',
+    nextNodeIdIfPassed: 'risk_assessment',
+    nextNodeIdIfFailed: 'exclusion_criteria_met',
     previousNodeId: 'root'
   },
   risk_assessment: {
     id: 'risk_assessment',
-    type: 'component',
+    type: 'symptoms',
+    title: 'Risk of deterioration or serious illness',
     componentType: 'criteriaChecklist',
     content:
       'Consider the risk of deterioration or serious illness. Check for signs of systemic hypersensitivity reaction, anaphylaxis, severe immunosuppression, risk of airway obstruction, or orbital cellulitis. Select "None" if no serious risks are identified.',
-    criteria: [
+    symptoms: [
       { text: 'Systemic hypersensitivity reaction or anaphylaxis', required: false },
       { text: 'Severely immunosuppressed with signs or symptoms of infection', required: false },
       { text: 'Stings with risk of airway obstruction (e.g., in the mouth or throat)', required: false },
@@ -84,8 +90,9 @@ infectedInsectBitesDecisionTree.nodes = {
       action: 'untickAll'
     },
     minRequired: 1,
-    nextNodeIdIfPassed: 'emergency_referral',
-    nextNodeIdIfFailed: 'clinical_features_check',
+    passResponse:'No',
+    nextNodeIdIfYes: 'emergency_referral',
+    nextNodeIdIfNo: 'clinical_features_check',
     previousNodeId: 'criteria_confirmation'
   },
   emergency_referral: {
@@ -108,7 +115,6 @@ infectedInsectBitesDecisionTree.nodes = {
       { text: 'Bite caused by tick in the UK and signs of Lyme disease', required: false },
       { text: 'Bite or sting occurred while traveling outside of the UK', required: false },
       { text: 'Bite or sting caused by an unusual or exotic insect', required: false },
-      { text: 'None of the above', required: false, action: 'untickAll' }
     ],
     noneOption: {
       text: 'None of the above',
@@ -165,10 +171,10 @@ infectedInsectBitesDecisionTree.nodes = {
   },
   acute_symptoms_check: {
     id: 'acute_symptoms_check',
-    type: 'component',
+    type: 'countBased',
     componentType: 'criteriaChecklist',
     content: 'Does the patient have acute onset of ≥3 of the following symptoms of an infected insect bite?',
-    criteria: [
+    questions: [
       { text: 'Redness of skin', required: false },
       { text: 'Pain or tenderness to the area', required: false },
       { text: 'Swelling of skin', required: false },
@@ -180,6 +186,14 @@ infectedInsectBitesDecisionTree.nodes = {
       action: 'untickAll'
     },
     minRequired: 3,
+    countOption:'Yes',
+    nextNodeMap:{
+      0: 'recommend_self_care',
+      1: 'further_infection_criteria_check',
+      2: 'further_infection_criteria_check',
+      3: 'further_infection_criteria_check',
+      4: 'further_infection_criteria_check'
+    },
     nextNodeIdIfPassed: 'further_infection_criteria_check',
     nextNodeIdIfFailed: 'recommend_self_care',
     previousNodeId: 'itch_principal_symptom_check'
@@ -192,7 +206,6 @@ infectedInsectBitesDecisionTree.nodes = {
     criteria: [
       { text: 'Redness and swelling of skin surrounding the bite is spreading', required: false },
       { text: 'Evidence of pustular discharge at site of bite/sting', required: false },
-      { text: 'None of the above', required: false, action: 'untickAll' }
     ],
     noneOption: {
       text: 'None of the above',

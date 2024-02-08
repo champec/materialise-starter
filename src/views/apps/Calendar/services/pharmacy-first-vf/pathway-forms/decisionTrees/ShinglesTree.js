@@ -46,6 +46,18 @@ shinglesDecisionTree.nodes = {
       { text: 'The patient is aged 18 years or older.', required: true },
       { text: 'Informed consent ', required: true },
       {
+        text: 'The patient has not received antiviral treatment for shingles in the last 6 months.',
+        required: true
+      },
+      {
+        text: 'The patient is not immunosuppressed or has no history of severe immunosuppression.',
+        required: true
+      },
+      {
+        text: 'The patient is not pregnant or breastfeeding.',
+        required: true
+      },
+      {
         text: 'You will: Diagnose shingles using the appropriate NICE guidance.',
         required: true
       }
@@ -58,6 +70,7 @@ shinglesDecisionTree.nodes = {
       text: 'None of the above', // This option, when selected, will deselect all other options and vice versa
       action: 'untickAll' // Indicates the action to be taken when this option is selected
     },
+    passResponse:'Yes',
     minRequired: 3, // Specifies the minimum number of checkboxes (excluding the 'None' option) that need to be ticked to proceed
     nextNodeIdIfPassed: 'risk_assessment',
     nextNodeIdIfFailed: 'exclusion_criteria_met',
@@ -71,23 +84,13 @@ shinglesDecisionTree.nodes = {
     nextNodeIdIfNo: 'treatment_options',
     previousNodeId: 'criteria_confirmation'
   },
-  criteria_confirmation: {
-    id: 'criteria_confirmation',
-    type: 'criteria',
-    componentType: 'criteriaChecklist',
-    content: 'Please confirm the patient meets the following criteria for the Shingles pathway:',
-    criteria: ['For adults aged 18 years and over', 'Exclude: pregnant individuals'],
-    nextNodeIdIfTrue: 'risk_assessment',
-    nextNodeIdIfFalse: 'exclusion_criteria_met',
-    previousNodeId: 'root'
-  },
   risk_assessment: {
     id: 'risk_assessment',
-    type: 'component',
+    type: 'symptoms',
     componentType: 'criteriaChecklist',
     content:
       'Consider the risk of deterioration or serious illness. Check for serious complications such as Meningitis, Encephalitis, Myelitis, Facial nerve paralysis, or Shingles in specific conditions. Select "None" if no serious complications are suspected.',
-    criteria: [
+    symptoms: [
       { text: 'Meningitis (neck stiffness, photophobia, mottled skin)', required: false },
       { text: 'Encephalitis (disorientation, changes in behaviour)', required: false },
       { text: 'Myelitis (muscle weakness, loss of bladder or bowel control)', required: false },
@@ -106,9 +109,10 @@ shinglesDecisionTree.nodes = {
       text: 'None of the above', // This option, when selected, will deselect all other options and vice versa
       action: 'untickAll' // Indicates the action to be taken when this option is selected
     },
+    passResponse:'No',
     minRequired: 0, // Minimum number of criteria that must be selected for the node to be considered passed
-    nextNodeIdIfPassed: 'clinical_features_check',
-    nextNodeIdIfFailed: 'emergency_referral',
+    nextNodeIdIfNo: 'clinical_features_check',
+    nextNodeIdIfYes: 'emergency_referral',
     previousNodeId: 'criteria_confirmation'
   },
   emergency_referral: {
@@ -122,11 +126,12 @@ shinglesDecisionTree.nodes = {
   },
   clinical_features_check: {
     id: 'clinical_features_check',
-    type: 'question',
+    type: 'countBased',
     componentType: 'criteriaChecklist',
+    title: 'Clinical Features Check',
     content:
       'Does the patient follow the typical progression of Shingles clinical features? Refer to NHS.UK for images of Shingles.',
-    context_list: [
+    questions: [
       { text: 'Abnormal skin sensation and pain in the affected area', required: true },
       { text: 'Rash appears within 2-3 days after the onset of pain', required: true },
       { text: 'Fever and/or headache may develop', required: false },
@@ -141,6 +146,17 @@ shinglesDecisionTree.nodes = {
     noneOption: {
       text: 'None of the above',
       action: 'untickAll'
+    },
+    countOption:'Yes',
+    countText: 'Typical features',
+    nextNodeMap: {
+      0: 'alternative_diagnosis',
+      1: 'treatment_criteria_check',
+      2: 'treatment_criteria_check',
+      3: 'treatment_criteria_check',
+      4: 'treatment_criteria_check',
+      5: 'treatment_criteria_check',
+      6: 'treatment_criteria_check'
     },
     nextNodeIdIfYes: 'treatment_criteria_check',
     nextNodeIdIfNo: 'alternative_diagnosis',

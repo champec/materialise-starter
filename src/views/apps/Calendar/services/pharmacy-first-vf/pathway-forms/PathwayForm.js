@@ -1274,7 +1274,11 @@ function PathwayForm({ onServiceUpdate, state, ServiceTree, nodeStates, setNodeS
 
   const renderCountBasedNode = node => {
    // Initialize node state from nodeStates or use the node's initial questions if not present
-  const nodeState = nodeStates[node.id] || { ...node, questions: node.questions.map(question => ({ ...question })) };
+  // Merge the default node state with any saved state from nodeStates
+  const nodeState = { ...ServiceTree.nodes[node.id], ...nodeStates[node.id] };
+
+
+  console.log('countbased nodeState', nodeState)
 
   // Update nodeStates with the initialized node state if it wasn't already present
   if (!nodeStates[node.id]) {
