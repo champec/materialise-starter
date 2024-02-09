@@ -252,7 +252,7 @@ const NewBookingForm = ({
       setSelectedGP(selectedBooking.gp_object)
       bookingReset({
         pharmacist: selectedBooking.pharmacist_object,
-        startDate: selectedBooking.calendar_events.start,
+        startDate: dayjs(selectedBooking.calendar_events.start),
         duration: selectedBooking.duration,
         textMessage: selectedBooking.text_message,
         presentingComplaint: selectedBooking.presenting_complaint,

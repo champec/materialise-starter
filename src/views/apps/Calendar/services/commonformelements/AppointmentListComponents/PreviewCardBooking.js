@@ -25,6 +25,7 @@ import FluBox from '../../flu-vf/FluBox'
 import HtnBox from '../../htn/HtnBox'
 import DmsBox from '../../dms-vf/DmsBox'
 import PfsBox from '../../pharmacy-first-vf/PfsBox'
+import NodeSummary from './NodeSummary'
 
 const getServiceView = (serviceTable, serviceInfo) => {
   switch (serviceTable) {
@@ -57,37 +58,38 @@ const PreviewCardBooking = ({ booking, serviceTable }) => {
   const pathway = serviceInfo?.clinical_pathway
 
   console.log('service view', serviceTable, serviceInfo, nodeStates)
+
   const renderSummaryNode = node => (
     <Box>
       <Typography variant='h6'>Summary of Decisions and Actions</Typography>
       <List>
         {Object.keys(nodeStates).map(nodeId => {
-          const node = DecisionTrees[pathway]?.nodes[nodeId]
-          const state = nodeStates[nodeId]
+          const node = DecisionTrees[pathway]?.nodes[nodeId];
+          const state = nodeStates[nodeId];
           if (!node) {
             return (
               <ListItem key={nodeId}>
                 <ListItemText primary='No Summary Available' />
               </ListItem>
-            )
+            );
           }
           if (node.type === 'stop' && state.treatAnyway) {
             return (
               <ListItem key={nodeId}>
                 <ListItemText primary='Decision: Treat Anyway despite recommendations' />
               </ListItem>
-            )
+            );
           }
-          //   console.log('OMPathway', node, state)
           return (
             <ListItem key={nodeId}>
-              <ListItemText primary={node.content} secondary={generateSummaryText(node, state)} />
+              {/* Use NodeSummary component instead of generateSummaryText function */}
+              <ListItemText primary={node.content} secondary={<NodeSummary node={node} state={state} />} />
             </ListItem>
-          )
+          );
         })}
       </List>
     </Box>
-  )
+  );
 
   const generateSummaryText = (node, state) => {
     let summaryText = ''

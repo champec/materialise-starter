@@ -6,8 +6,13 @@ const supabase = supabaseOrg
 
 export const fetchAppointments = createAsyncThunk(
   'appointmentList/fetchAppointments',
-  async ({ dateRange, type, table, service_id, service_table }, { getState }) => {
-    const orgId = getState().organisation.organisation.id
+  async ({ dateRange, type, table, service_id, service_table, page, pageSize }, { getState }) => {
+    const orgId = getState().organisation.organisation.id;
+
+    const offset = page * pageSize;
+    const limit = pageSize;
+
+
 
     // Set default start and end dates to 2 weeks before and after today
     const defaultStartDate = dayjs().subtract(2, 'week').startOf('day').toISOString()
@@ -32,10 +37,11 @@ export const fetchAppointments = createAsyncThunk(
     // Initialize the query builder
     let query = supabase
       .from('consultations')
-      .select(selectQuery)
+      .select(selectQuery, { count: 'exact' })
       .eq('pharmacy_id', orgId)
       .gte('calendar_events.start', start)
       .lte('calendar_events.end', end)
+      .range(offset, offset + limit - 1)
     // .order('calendar_events', { ascending: true }) // or { ascending: false } for descending order
 
     // Add service conditionally
@@ -50,15 +56,15 @@ export const fetchAppointments = createAsyncThunk(
     console.log('final fetch apppointments query', query, 'and selectquery', selectQuery, 'selectQuery')
 
     // Execute the query
-    const { data, error } = await query
+    const { data, error, count } = await query
 
     if (error) {
       console.error(error)
       throw error // Consider throwing the error to be handled by Redux Toolkit
     }
 
-    console.log(data, 'fetchAppointments')
-    return data || []
+    console.log(data, 'fetchAppointments', count)
+    return { data:data || [], totalCount: count };
   }
 )
 
@@ -336,6 +342,7 @@ export const fetchSelectedBooking = createAsyncThunk('appointmentList/fetchSelec
 
 const initialState = {
   appointments: [],
+  totalCount: 0,
   loading: false,
   pdsPatient: null,
   selectedPatient: null,
@@ -357,7 +364,8 @@ export const appointmnetListSlice = createSlice({
   },
   extraReducers: {
     [fetchAppointments.fulfilled]: (state, action) => {
-      state.appointments = action.payload
+      state.appointments = action.payload.data
+      state.totalCount = action.payload.totalCount
       state.loading = false
     },
     [fetchAppointments.pending]: (state, action) => {

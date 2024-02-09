@@ -19,7 +19,7 @@ import Typography from '@mui/material/Typography'
 import FormControl from '@mui/material/FormControl'
 import CardContent from '@mui/material/CardContent'
 import Select from '@mui/material/Select'
-import { DataGrid } from '@mui/x-data-grid'
+import { DataGrid, GridToolbarContainer, GridExportOptions, GridToolbarExport } from '@mui/x-data-grid'
 import { Dialog, DialogActions, DialogContent, Fade } from '@mui/material'
 
 // ** Icon Imports
@@ -186,6 +186,12 @@ const defaultColumns = [
           </Typography> */}
         </Box>
       )
+    },
+    valueGetter: params => {
+      const { consultation_status: status, calendar_events } = params.row
+      const title = status?.title
+      const serviceTitle = calendar_events?.title
+      return serviceTitle
     }
   },
   // {
@@ -245,6 +251,10 @@ const defaultColumns = [
         // Handle unknown status
         return <span>Unknown Status</span>
       }
+    },
+    valueGetter: params => {
+      const status = invoiceStatusObj[params.row.status]
+      return status?.name
     }
   }
 ]
@@ -287,6 +297,7 @@ const AppointmentList = () => {
     }
   ])
   const appointments = appointmentsSlice?.appointments
+  const totalCount = appointmentsSlice?.totalCount
   const loading = appointmentsSlice?.loading
   dayjs.extend(advancedFormat)
 
@@ -309,7 +320,9 @@ const AppointmentList = () => {
       fetchAppointments({
         dateRange: {
           start: formattedStartDate,
-          end: formattedEndDate
+          end: formattedEndDate,
+          page: paginationModel.page,
+          pageSize: paginationModel.pageSize
         }
       })
     )
@@ -334,7 +347,9 @@ const AppointmentList = () => {
       dispatch(
         fetchAppointments({
           startDate: formattedStartDate,
-          endDate: formattedEndDate
+          endDate: formattedEndDate,
+          page: paginationModel.page,
+          pageSize: paginationModel.pageSize
         })
       )
     }
@@ -468,6 +483,19 @@ const AppointmentList = () => {
     setAppointmentView(true)
   }
 
+  const csvOption = {
+    
+  }
+  const CustomToolbar = () => {
+    return (
+      <GridToolbarContainer>
+
+        <GridToolbarExport options={csvOption} />
+        {/* Include other custom buttons or menu items here */}
+      </GridToolbarContainer>
+    );
+  };
+
   const handleOnChangeRange = dates => {
     const [start, end] = dates
     if (start !== null && end !== null) {
@@ -596,12 +624,22 @@ const AppointmentList = () => {
               rows={filteredAppointments}
               columns={columns}
               checkboxSelection
+              components={{Toolbar: CustomToolbar}}
               disableSelectionOnClick
               pageSizeOptions={[10, 25, 50]}
               paginationModel={paginationModel}
+              rowCount={totalCount}
               onSortModelChange={handleSortModelChange}
+              rowsPerPageOptions={[5, 10, 15, 20,30,50]}
+              pageSize={paginationModel.pageSize}
               sortModel={sortModel}
               onPaginationModelChange={setPaginationModel}
+              onPageSizeChange={(newPageSize) =>
+                setPaginationModel((prev) => ({ ...prev, pageSize: newPageSize }))
+              }
+              onPageChange={(newPage) =>
+                setPaginationModel((prev) => ({ ...prev, page: newPage }))
+              }
               onSelectionModelChange={rows => setSelectedRowIds(rows)}
               onRowDoubleClick={appointment => window.open(`/pharmacy-first/appointment-list/${appointment.id}`)}
             />

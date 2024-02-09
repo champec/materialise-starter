@@ -10,7 +10,6 @@ import Grid from '@mui/material/Grid'
 import Card from '@mui/material/Card'
 import Tooltip from '@mui/material/Tooltip'
 import { styled } from '@mui/material/styles'
-import MenuItem from '@mui/material/MenuItem'
 import TextField from '@mui/material/TextField'
 import CardHeader from '@mui/material/CardHeader'
 import IconButton from '@mui/material/IconButton'
@@ -19,8 +18,8 @@ import Typography from '@mui/material/Typography'
 import FormControl from '@mui/material/FormControl'
 import CardContent from '@mui/material/CardContent'
 import Select from '@mui/material/Select'
-import { DataGrid } from '@mui/x-data-grid'
-import { Dialog, DialogActions, DialogContent, Fade } from '@mui/material'
+import { DataGrid, GridExportOptions, GridToolbarExport, GridToolbarContainer } from '@mui/x-data-grid'
+import { Dialog, DialogActions, DialogContent, Fade, Button, Menu, MenuItem } from '@mui/material'
 
 // ** Icon Imports
 import Icon from 'src/@core/components/icon'
@@ -31,6 +30,7 @@ import DatePicker from 'react-datepicker'
 import dayjs from 'dayjs'
 import advancedFormat from 'dayjs/plugin/advancedFormat'
 import AppointmentView from './AppointmentListComponents/AppointmentView'
+import DeleteCancelModal from 'src/views/apps/services/DeleteCancelModal'
 
 // ** Store & Actions Imports
 import { useDispatch, useSelector } from 'react-redux'
@@ -56,6 +56,7 @@ import BookCalendarSidebar from 'src/views/apps/Calendar/BookCalendarSidebar'
 import bookingsCalendarSlice from 'src/store/apps/calendar/pharmacyfirst/bookingsCalendarSlice'
 import ServiceFormSidebar from '../../ServiceFormSidebar'
 import { setSelectedService } from 'src/store/apps/services'
+import { hide } from '@popperjs/core'
 
 const now = new Date()
 const currentMonth = now.toLocaleString('default', { month: 'short' })
@@ -128,7 +129,8 @@ const defaultColumns = [
           </Box>
         </Box>
       )
-    }
+    },
+    valueGetter: ({ row }) => row.patient_object.full_name
   },
 
   {
@@ -153,8 +155,9 @@ const defaultColumns = [
           {formattedDate}
         </Typography>
       )
-    }
-  }
+    },
+    valueGetter: ({ row }) => row.calendar_events.start
+  },
 ]
 /* eslint-disable */
 const CustomInput = forwardRef((props, ref) => {
@@ -178,6 +181,8 @@ const ServiceAppointmentList = ({ locallySelectedService, customColumns, setLoca
   const [selectedRowIds, setSelectedRowIds] = useState([])
   const [startDateRange, setStartDateRange] = useState(null)
   const [paginationModel, setPaginationModel] = useState({ page: 0, pageSize: 10 })
+  const [anchorEl, setAnchorEl] = useState(null)
+  const anchorOpen = Boolean(anchorEl)
   const appointmentsSlice = useSelector(state => state.appointmentListSlice)
   const slice = useSelector(state => state.bookingsCalendar)
   const [appointmentView, setAppointmentView] = useState(false)
@@ -187,8 +192,10 @@ const ServiceAppointmentList = ({ locallySelectedService, customColumns, setLoca
   const [filteredAppointments, setFilteredAppointments] = useState([])
   const [batchModalOpen, setBatchModalOpen] = useState(false)
   const [currentAction, setCurrentAction] = useState('')
+  const [openDeleteModal, setOpenDeleteModal] = useState(false)
   const [refetching, setRefetching] = useState(false)
   const [resetToEmptyValues, setResetToEmptyValues] = useState(false)
+  const totalCount = appointmentsSlice?.totalCount
   const appointments = appointmentsSlice?.appointments
   const loading = appointmentsSlice?.loading
   dayjs.extend(advancedFormat)
@@ -196,6 +203,18 @@ const ServiceAppointmentList = ({ locallySelectedService, customColumns, setLoca
   const selectedRows = useMemo(() => {
     return appointments.filter(row => selectedRowIds.includes(row.id))
   }, [appointments, selectedRowIds])
+
+  const handleDeleteAppointment = row => {
+    // the row as the selectedRow and then open the modal
+    setSelectedRowIds([row.id])
+    setOpenDeleteModal(true)
+  }
+
+  const handleDeleteAppointments = () => {
+    // dispatch the delete action
+    setOpenDeleteModal(true)
+  }
+
 
   useEffect(() => {
     const serviceId = locallySelectedService?.id
@@ -217,7 +236,9 @@ const ServiceAppointmentList = ({ locallySelectedService, customColumns, setLoca
           end: formattedEndDate
         },
         service_id: serviceId,
-        service_table: serviceTable
+        service_table: serviceTable,
+        page: 0,
+        pageSize: 10
       })
     )
   }, [])
@@ -238,32 +259,40 @@ const ServiceAppointmentList = ({ locallySelectedService, customColumns, setLoca
 
       dispatch(
         fetchAppointments({
-          dateRange: {
-            start: formattedStartDate,
-            end: formattedEndDate
-          },
+          dateRange: { start: formattedStartDate, end: formattedEndDate },
           service_id: serviceId,
-          service_table: serviceTable
+          service_table: serviceTable,
+          page: paginationModel.page,
+          pageSize: paginationModel.pageSize
         })
       )
     }
-  }, [startDateRange, endDateRange])
+  }, [startDateRange, endDateRange, paginationModel.page, paginationModel.pageSize])
 
   const reFetchAppointments = async () => {
     setFilteredAppointments([])
+    console.log('REFETCHING APPOINTMENTS')
     const serviceId = locallySelectedService?.id
     const serviceTable = locallySelectedService?.table
+    const formattedStartDate = new Date(startDateRange).toISOString()
+    const formattedEndDate = new Date(endDateRange).toISOString()
+
     const response = await dispatch(
       fetchAppointments({
+        dateRange: { start: formattedStartDate, end: formattedEndDate },
         service_id: serviceId,
-        service_table: serviceTable
+        service_table: serviceTable,
+        page: paginationModel.page,
+        pageSize: paginationModel.pageSize
       })
     )
     if (response.error) {
       console.log('ERROR', response.error)
     }
 
-    setFilteredAppointments(response.payload)
+    // console.log('RESPONSE', response.payload.data)
+
+    // setFilteredAppointments(response.payload.data)
   }
 
   // console.log('APPOINTMENTS', appointments)
@@ -316,8 +345,8 @@ const ServiceAppointmentList = ({ locallySelectedService, customColumns, setLoca
 
   const handleBatchAction = action => {
     console.log('ACTION', action)
-    setCurrentAction(action)
-    setBatchModalOpen(true)
+    // setCurrentAction(action)
+    // setBatchModalOpen(true)
     // use MUI alert to confirm action and then perform action for each row if confirmed or cancel
 
     // if (action === 'delete') {
@@ -325,6 +354,19 @@ const ServiceAppointmentList = ({ locallySelectedService, customColumns, setLoca
     //     dispatch(deleteInvoice(row))
     //   })
     // }
+    switch (action) {
+      case 'Cancel':
+        handleDeleteAppointments()
+        break
+      case 'Message':
+        break
+      case 'MYS':
+        break
+      case 'GP':
+        break
+      default:
+        break
+    }
   }
 
   const searchFilter = inputValue => {
@@ -374,9 +416,26 @@ const ServiceAppointmentList = ({ locallySelectedService, customColumns, setLoca
     setEndDateRange(end)
   }
 
+  const hiddenColumns = [
+    {
+      flex: 0.1,
+      minWidth: 130,
+      sortable: true,
+      field: 'created_at',
+      headerName: 'Created At',
+      renderCell: ({ row }) => {
+        const formattedDate = dayjs(row.created_at).format('D MMM YYYY')
+        return <Typography variant='body2'>{formattedDate}</Typography>
+      },
+      valueGetter: ({ row }) => row.created_at,
+      hide: true
+    }
+  ]
+
   const columns = [
     ...defaultColumns,
     ...customColumns,
+    ...hiddenColumns,
     {
       flex: 0.1,
       minWidth: 130,
@@ -386,7 +445,7 @@ const ServiceAppointmentList = ({ locallySelectedService, customColumns, setLoca
       renderCell: ({ row }) => (
         <Box sx={{ display: 'flex', alignItems: 'center' }}>
           <Tooltip title='Delete Invoice'>
-            <IconButton size='small' sx={{ mr: 0.5 }} onClick={() => dispatch(deleteInvoice(row.id))}>
+            <IconButton size='small' sx={{ mr: 0.5 }} onClick={() => handleDeleteAppointment(row)}>
               <Icon icon='mdi:delete-outline' />
             </IconButton>
           </Tooltip>
@@ -420,12 +479,60 @@ const ServiceAppointmentList = ({ locallySelectedService, customColumns, setLoca
     }
   ]
 
+  const handleClick = event => {
+    setAnchorEl(event.currentTarget)
+  }
+
+  const handleClose = () => {
+    setAnchorEl(null)
+  }
+
+  const csvOption = {
+    // fields: [
+    //   { label: 'ID', value: 'id' },
+    //   { label: 'Client', value: 'patient_object.full_name' },
+    //   { label: 'Booking Date', value: 'calendar_events.start' },
+    //   { label: 'Status', value: 'consultation_status.title' }
+    // ],
+    fileName:"Pharmex Appointments",
+    allColumns: true,
+  }
+const CustomToolbar = () => {
+  return (
+    <GridToolbarContainer>
+
+      <GridToolbarExport options={csvOption} />
+      {/* Include other custom buttons or menu items here */}
+    </GridToolbarContainer>
+  );
+};
+
   return (
     <DatePickerWrapper>
       <Grid container spacing={6}>
         <Grid item xs={12}>
           <Card>
-            <CardHeader title='Filters' />
+            <CardHeader title='Filters'
+            action={
+              <>
+                {/* <Button
+                  variant='contained'
+                  aria-haspopup='true'
+                  onClick={handleClick}
+                  aria-expanded={anchorOpen ? 'true' : undefined}
+                  endIcon={<Icon icon='mdi:chevron-down' />}
+                  aria-controls={anchorOpen ? 'user-view-overview-export' : undefined}
+                >
+                  Export
+                </Button>
+                <Menu open={anchorOpen} anchorEl={anchorEl} onClose={handleClose} id='user-view-overview-export'>
+                  <MenuItem onClick={handleClose}>PDF</MenuItem>
+                  <MenuItem onClick={handleClose}>XLSX</MenuItem>
+                  <MenuItem onClick={handleClose}>CSV</MenuItem>
+                </Menu> */}
+              </>
+            }
+            />
             <CardContent>
               <Grid container spacing={6}>
                 <Grid item xs={12} sm={6}>
@@ -485,6 +592,7 @@ const ServiceAppointmentList = ({ locallySelectedService, customColumns, setLoca
               selectedRows={selectedRows}
               handleFilter={handleFilter}
               handleBatchAction={handleBatchAction}
+              dele
               reFetching={loading}
               reFetchAppointments={reFetchAppointments}
             />
@@ -492,13 +600,23 @@ const ServiceAppointmentList = ({ locallySelectedService, customColumns, setLoca
               autoHeight
               pagination
               rows={filteredAppointments}
+              rowCount={totalCount}
+              components={{Toolbar: CustomToolbar}}
               columns={columns}
               checkboxSelection
               disableSelectionOnClick
-              pageSizeOptions={[10, 25, 50]}
+              paginationMode='server'
+              rowsPerPageOptions={[5, 10, 15, 20,30,50]}
+              pageSize={paginationModel.pageSize}
               paginationModel={paginationModel}
               onPaginationModelChange={setPaginationModel}
               onSelectionModelChange={rows => setSelectedRowIds(rows)}
+              onPageSizeChange={(newPageSize) =>
+                setPaginationModel((prev) => ({ ...prev, pageSize: newPageSize }))
+              }
+              onPageChange={(newPage) =>
+                setPaginationModel((prev) => ({ ...prev, page: newPage }))
+              }
               onRowDoubleClick={appointment => window.open(`/pharmacy-first/appointment-list/${appointment.id}`)}
             />
           </Card>
@@ -570,6 +688,12 @@ const ServiceAppointmentList = ({ locallySelectedService, customColumns, setLoca
         setResetToEmptyValues={setResetToEmptyValues}
         serviceTable={locallySelectedService?.table}
         setLocallySelectedService={setLocallySelectedService}
+      />
+      <DeleteCancelModal
+        open={openDeleteModal}
+        onClose={() => setOpenDeleteModal(false)}
+        consultations={selectedRows}
+        refetchAppointments={reFetchAppointments}
       />
     </DatePickerWrapper>
   )

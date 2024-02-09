@@ -1,156 +1,103 @@
-import React, { useState, useEffect, useRef } from 'react'
-import TextField from '@mui/material/TextField'
-import ListItem from '@mui/material/ListItem'
-import ListItemText from '@mui/material/ListItemText'
-import Autocomplete, { createFilterOptions } from '@mui/material/Autocomplete'
-import CircularProgress from '@mui/material/CircularProgress'
-import { supabase } from 'src/configs/supabase'
-import { fetchGPs } from 'src/store/apps/services'
+import React, { useState, useEffect, useRef } from 'react';
+import TextField from '@mui/material/TextField';
+import Autocomplete from '@mui/material/Autocomplete';
+import CircularProgress from '@mui/material/CircularProgress';
+import { fetchGPs } from 'src/store/apps/services';
 
 function debounce(func, timeout = 300) {
-  let timer
+  let timer;
   return (...args) => {
-    clearTimeout(timer)
+    clearTimeout(timer);
     timer = setTimeout(() => {
-      func.apply(this, args)
-    }, timeout)
-  }
+      func.apply(this, args);
+    }, timeout);
+  };
 }
 
 const CustomApiSearch = ({
-  tableName,
-  setSelectValue,
-  displayField,
   onSelect,
-  onAdd,
   value,
   setValue,
-  placeholder,
   label,
-  dispatch
+  dispatch,
 }) => {
-  const [options, setOptions] = useState([])
-  const [loading, setLoading] = useState(false)
-  const [error, setError] = useState(null)
-  const [noResults, setNoResults] = useState(false)
-  const debounceSearch = useRef(debounce(nextValue => search(nextValue), 500)).current
-  const filter = createFilterOptions()
+  const [options, setOptions] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+  const [searchTerm, setSearchTerm] = useState('');
+  const debounceSearch = useRef(debounce(nextValue => search(nextValue), 500)).current;
 
   const search = async searchValue => {
     if (!searchValue) {
-      setOptions([])
-      setNoResults(false)
-      return
+      setOptions([]);
+      return;
     }
-    setLoading(true)
-    setError(null)
+    setLoading(true);
     try {
-      const response = await dispatch(fetchGPs(searchValue))
-
-      console.log('response', response.payload)
-      setOptions(Array.isArray(response.payload) ? response.payload : [])
-      setNoResults(response.payload?.length === 0) // Set noResults flag based on search results
-    } catch (error) {
-      setError('Failed to fetch data')
-      console.error('Error fetching data: ', error)
+      const response = await dispatch(fetchGPs(searchValue));
+      setOptions(response.payload || []);
+    } catch (err) {
+      setError('Failed to fetch data');
+      console.error('Error fetching data: ', err);
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   useEffect(() => {
-    debounceSearch(value)
-  }, [value])
+    debounceSearch(searchTerm);
+  }, [searchTerm]);
 
-  const filterOptions = (options, { inputValue }) => {
-    if (inputValue === '' || !noResults) {
-      return options;
+  const handleInputChange = (_, newInputValue) => {
+    setSearchTerm(newInputValue);
+  };
+
+  const handleChange = (_, newValue) => {
+    setValue(newValue);
+    onSelect(newValue);
+    // Construct the display string from the selected item's properties
+    if (newValue) {
+      setSearchTerm(`${newValue.OrganisationName}, ${newValue.Address1}, ${newValue.City}`);
+    } else {
+      setSearchTerm('');
     }
-    // Return an array with a special object indicating no results
-    // Adjust as needed for your UI
-    return [{ OrganisationName: 'No results found', disabled: true }];
-  }
+  };
 
-
-  const displayOption = option => {
-    if (option.isAddNew) {
-      return option.inputValue
-    }
-
-    return (
-      <ListItem>
-        <ListItemText primary={option.OrganisationName} secondary={`${option?.Address1}, ${option?.City}`} />
-      </ListItem>
-    )
-  }
+  const getOptionLabel = (option) => {
+    // Concatenate the OrganisationName with address details for display
+    return `${option.OrganisationName}, ${option.Address1}, ${option.City}`;
+  };
 
   return (
-    <React.Fragment>
-      <Autocomplete
-        freeSolo
-        clearOnBlur
-        value={value}
-        fullWidth
-        selectOnFocus
-        handleHomeEndKeys
-        options={options}
-        loading={loading}
-        renderInput={params => (
-          <TextField
-            {...params}
-            autoComplete='new-password'
-            type='text'
-            // value='Champe 3'
-            onChange={setValue}
-            label={label}
-            InputProps={{
-              ...params.InputProps,
-              endAdornment: (
-                <>
-                  {loading ? <CircularProgress color='inherit' size={20} /> : null}
-                  {params.InputProps.endAdornment}
-                </>
-              )
-            }}
-          />
-        )}
-        renderOption={(props, option) => {
-          // This renders the rich list item in the dropdown
-          return (
-            <li {...props}>
-              <ListItemText primary={option.OrganisationName} secondary={`${option?.Address1}, ${option?.City}`} />
-            </li>
-          )
-        }}
-        getOptionLabel={option =>
-          // This ensures only the name is displayed in the text field after selection
-          typeof option === 'string' ? option : option.OrganisationName || ''
-        }
-        onChange={(event, newValue) => {
-          console.log('newValue', newValue)
-          // if (typeof newValue === 'string') {
-          //   // Handle string input
-          //   // setValue({ [displayField]: newValue })
-          //   onSelect({ [displayField]: newValue })
-          // }
-          //else if (newValue && newValue.isAddNew) {
-          //   // If the "Add new" option was selected
-          //   console.log('ADD NEW PATIENT MODAL', newValue.inputValue)
-          //   setValue(newValue.inputValue)
-          //   onAdd()
-          // else {
-          // Set the entire selected object
-          // onSelect(newValue)
+    <Autocomplete
+      freeSolo
+      clearOnBlur
+      value={value}
+      inputValue={searchTerm}
+      onInputChange={handleInputChange}
+      onChange={handleChange}
+      fullWidth
+      options={options}
+      loading={loading}
+      getOptionLabel={getOptionLabel}
+      renderInput={(params) => (
+        <TextField
+          {...params}
+          label={label}
+          autoComplete="off"
+          InputProps={{
+            ...params.InputProps,
+            endAdornment: (
+              <>
+                {loading ? <CircularProgress color="inherit" size={20} /> : null}
+                {params.InputProps.endAdornment}
+              </>
+            ),
+          }}
+        />
+      )}
+    />
+  );
+};
 
-          setValue(newValue?.OrganisationName)
-          onSelect(newValue)
-          // }
-        }}
-        filterOptions={filterOptions}
-      />
-      {error && <div style={{ color: 'red' }}>{error}</div>}
-    </React.Fragment>
-  )
-}
-
-export default CustomApiSearch
+export default CustomApiSearch;

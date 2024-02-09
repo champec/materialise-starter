@@ -18,10 +18,11 @@ import {
 } from '@mui/material'
 import IconifyIcon from 'src/@core/components/icon'
 import Link from 'next/link'
+import NodeSummary from '../../commonformelements/AppointmentListComponents/NodeSummary'
 
 function PathwayForm({ onServiceUpdate, state, ServiceTree, nodeStates, setNodeStates }) {
   const decisionData = state?.pathwayform
-  console.log('PathwayForm', decisionData, ServiceTree)
+  console.log('PathwayForm', decisionData, ServiceTree, "STATE", nodeStates)
   const [currentNode, setCurrentNode] = useState(ServiceTree.nodes?.root)
   // Initialize an object to keep track of checkbox states for each node
   //   const [nodeStates, setNodeStates] = useState({})
@@ -112,79 +113,78 @@ function PathwayForm({ onServiceUpdate, state, ServiceTree, nodeStates, setNodeS
     setNodeStates(updatedState)
   }
 
-  const generateSummaryText = (node, state) => {
-    let summaryText = ''
-    if (node.type === 'component' && node.componentType === 'criteriaChecklist') {
-      const decisions = Object.keys(state.checkedCriteria || {})
-        .map(criterion => criterion)
-        .join(', ')
-      summaryText += decisions ? `Selected Criteria: ${decisions}` : 'No Criteria Selected'
-    }
+  // const generateSummaryText = (node, state) => {
+  //   let summaryText = '';
 
-    if (node.type === 'criteriaCheck') {
-      // Use the criteria from the state if available, otherwise fall back to the node's initial criteria
-      const criteria = state.criteria || node.criteria
+  //   switch (node.type) {
+  //     case 'component':
+  //       if (node.componentType === 'criteriaChecklist') {
+  //         const decisions = Object.keys(state.checkedCriteria || {})
+  //           .map(criterion => state.checkedCriteria[criterion] ? criterion : null)
+  //           .filter(criterion => criterion !== null)
+  //           .join(', ');
+  //         summaryText += decisions ? `Selected Criteria: ${decisions}` : 'No Criteria Selected';
+  //       }
+  //       break;
 
-      // Map each criterion to a string that includes the criterion text and the selected response
-      const decisions = criteria
-        .map(criterion => {
-          const responseText = criterion.response ? `Response: ${criterion.response}` : 'No Response'
-          return `${criterion.text} - ${responseText}`
-        })
-        .join(', ')
-      summaryText += decisions ? `Selected Criteria: ${decisions}` : 'No Criteria Selected'
-    }
+  //     case 'criteriaCheck':
+  //       const criteriaDecisions = state.criteria
+  //         .map(criterion => `${criterion.text} - Response: ${criterion.response || 'No Response'}`)
+  //         .join(', ');
+  //       summaryText += criteriaDecisions ? `Criteria: ${criteriaDecisions}` : 'No Criteria Assessed';
+  //       break;
 
-    if (node.type === 'symptoms') {
-      const symptoms = nodeStates[node.id]?.symptoms || node.symptoms
-      const symptomsSummary = symptoms
-        .map((symptom, index) => {
-          const responseText = symptom.response ? `${symptom.response}` : 'No Response'
-          return `${index + 1}. ${symptom.text} - ${responseText}`
-        })
-        .join('; ')
+  //     case 'symptoms':
+  //       const symptomsSummary = (state.symptoms || [])
+  //         .map(symptom => `${symptom.text} - Response: ${symptom.response || 'No Response'}`)
+  //         .join('; ');
+  //       summaryText += symptomsSummary ? `Symptoms Assessed: ${symptomsSummary}` : 'No Symptoms Assessed';
+  //       break;
 
-      summaryText += symptomsSummary ? `Symptoms Assessed: ${symptomsSummary}` : 'No Symptoms Assessed'
-    } else if (node.type === 'gateway' && state.acknowledged) {
-      summaryText += `Acknowledged Gateway: ${node.content}`
-    } else if (node.type === 'advice') {
-      summaryText += `Advice Decision: ${state.decision}`
-    } else if (node.type === 'stop') {
-      summaryText += `Stop Decision: ${state.decision}`
-    } else if (node.type === 'question') {
-      summaryText += `Question: ${node.content}, Answer: ${state.answer}`
-    } else if (node.type === 'plan') {
-      summaryText += `Plan for Patient: ${state.planText || 'No plan specified'}`
-    } else if (node.type === 'treatment') {
-      const treatmentNames =
-        state.selectedTreatments?.map(id => node.treatments.find(t => t.id === id)?.name).filter(name => name) || []
-      const treatmentsText =
-        treatmentNames.length > 0 ? `Selected Treatments: ${treatmentNames.join(', ')}` : 'No Treatments Selected'
+  //     case 'advice':
+  //     case 'stop':
+  //     case 'referral':
+  //       summaryText += `Decision: ${state.decision || 'No decision made'}`;
+  //       break;
 
-      const actionsText = state.actionsTaken
-        ? Object.keys(state.actionsTaken)
-            .filter(actionId => state.actionsTaken[actionId])
-            .map(actionId => node.actions.find(a => a.id === actionId)?.label)
-            .join(', ')
-        : 'No Additional Actions Taken'
+  //     case 'question':
+  //       summaryText += `Question: ${node.content}, Answer: ${state.answer}`;
+  //       break;
 
-      const commentsText = state.additionalComments
-        ? `Additional Comments: ${state.additionalComments}`
-        : 'No Additional Comments'
+  //     case 'plan':
+  //       summaryText += `Plan for Patient: ${state.planText || 'No plan specified'}`;
+  //       break;
 
-      summaryText += `${treatmentsText}; ${actionsText}; ${commentsText}`
-    } else if (node.type === 'referral') {
-      summaryText += `Referral Decision: ${state.decision || 'No decision made'}`
-    } else if (node.type === 'multiple_choice_question') {
-      const selectedOption = nodeStates[node.id]?.selectedOption || 'No option selected'
-      summaryText += `${node.content}: ${selectedOption}`
-    } else if (node.type === 'comments') {
-      const commentsText = state.comment ? `Comments: ${state.comment}` : 'No Comments Provided'
-      summaryText += commentsText
-    }
+  //     case 'treatment':
+  //       const treatmentSummary = (state.selectedTreatments || [])
+  //         .map(id => node.treatments.find(t => t.id === id)?.name)
+  //         .join(', ');
+  //       summaryText += treatmentSummary ? `Selected Treatments: ${treatmentSummary}` : 'No Treatments Selected';
+  //       break;
 
-    return summaryText
-  }
+  //     case 'multiple_choice_question':
+  //       summaryText += `Selected Option: ${state.selectedOption || 'No option selected'}`;
+  //       break;
+
+  //     case 'comments':
+  //       summaryText += `Comments: ${state.comment || 'No Comments Provided'}`;
+  //       break;
+
+  //       case 'gateway':
+  //         summaryText += `Gateway Acknowledged: ${state.acknowledged ? 'Yes' : 'No'}`;
+  //         break;
+
+  //       case 'information':
+  //         summaryText += `Information Reviewed: ${state.reviewed ? 'Yes' : 'No'}`;
+  //         break;
+
+  //     default:
+  //       summaryText += 'Information not available for this node type';
+  //   }
+
+  //   return summaryText;
+  // };
+
 
   const handleActionChange = (nodeId, actionId, isChecked) => {
     const updatedState = { ...nodeStates }
@@ -270,6 +270,8 @@ function PathwayForm({ onServiceUpdate, state, ServiceTree, nodeStates, setNodeS
     updatedState[nodeId] = {
       ...nodeState,
       type: ServiceTree.nodes[nodeId].type,
+      title: ServiceTree.nodes[nodeId].title || 'Information acknowledged',
+      content: ServiceTree.nodes[nodeId].content,
       acknowledged: true // Mark as acknowledged
     }
 
@@ -338,6 +340,7 @@ function PathwayForm({ onServiceUpdate, state, ServiceTree, nodeStates, setNodeS
       updatedState[nodeId] = {
         ...currentNodeState,
         type: ServiceTree.nodes[nodeId].type,
+        title: ServiceTree.nodes[nodeId].title,
         comment: value
       }
 
@@ -518,6 +521,8 @@ function PathwayForm({ onServiceUpdate, state, ServiceTree, nodeStates, setNodeS
         ...nodeStates[nodeId],
         selectedOption: selectedOption,
         type: ServiceTree.nodes[nodeId].type,
+        content: ServiceTree.nodes[nodeId].content,
+        title: ServiceTree.nodes[nodeId].title,
         action: action // Store the next action which directly maps to the next node ID
       }
     }
@@ -572,12 +577,13 @@ function PathwayForm({ onServiceUpdate, state, ServiceTree, nodeStates, setNodeS
 
     const handleResponseChange = (nodeId, index, response) => {
       const updatedState = { ...nodeStates }
-      const updatedSymptoms = [...symptoms]
-      updatedSymptoms[index].response = response // Update the response for the selected symptom
+      const updatedSymptoms = symptoms.map((symptom, i) => (i === index ? { ...symptom, response } : symptom))
 
       updatedState[nodeId] = {
         ...nodeState,
         type: ServiceTree.nodes[nodeId].type,
+        title: ServiceTree.nodes[nodeId].title,
+        content: ServiceTree.nodes[nodeId].content,
         symptoms: updatedSymptoms
       }
 
@@ -591,6 +597,8 @@ function PathwayForm({ onServiceUpdate, state, ServiceTree, nodeStates, setNodeS
       updatedState[nodeId] = {
         ...nodeState,
         type: ServiceTree.nodes[nodeId].type,
+        title: ServiceTree.nodes[nodeId].title,
+        content: ServiceTree.nodes[nodeId].content,
         symptoms: updatedSymptoms
       }
 
@@ -665,6 +673,8 @@ function PathwayForm({ onServiceUpdate, state, ServiceTree, nodeStates, setNodeS
     updatedState[nodeId] = {
       ...updatedState[nodeId],
       type: ServiceTree.nodes[nodeId].type,
+      title: ServiceTree.nodes[nodeId].title,
+      content: ServiceTree.nodes[nodeId].content,
       decision
     }
 
@@ -755,6 +765,8 @@ function PathwayForm({ onServiceUpdate, state, ServiceTree, nodeStates, setNodeS
     updatedState[nodeId] = {
       ...updatedState[nodeId],
       type: ServiceTree.nodes[nodeId].type,
+      title: ServiceTree.nodes[nodeId].title,
+      content: ServiceTree.nodes[nodeId].content,
       acknowledged: true
     }
 
@@ -799,6 +811,8 @@ function PathwayForm({ onServiceUpdate, state, ServiceTree, nodeStates, setNodeS
     updatedState[nodeId] = {
       ...updatedState[nodeId],
       type: ServiceTree.nodes[nodeId].type,
+      title: ServiceTree.nodes[nodeId].title || 'Important Advice Acknowledged',
+      content: ServiceTree.nodes[nodeId].content,
       decision
     }
 
@@ -852,6 +866,8 @@ function PathwayForm({ onServiceUpdate, state, ServiceTree, nodeStates, setNodeS
     updatedState[nodeId] = {
       ...updatedState[nodeId],
       type: ServiceTree.nodes[nodeId].type,
+      title: ServiceTree.nodes[nodeId].title || 'Referral Decision',
+      content: ServiceTree.nodes[nodeId].content,
       decision // This captures the decision made at the referral node
     }
 
@@ -906,6 +922,8 @@ function PathwayForm({ onServiceUpdate, state, ServiceTree, nodeStates, setNodeS
     updatedState[nodeId] = {
       ...updatedState[nodeId],
       type: ServiceTree.nodes[nodeId].type,
+      title: ServiceTree.nodes[nodeId].title || 'Patient Plan',
+      content: ServiceTree.nodes[nodeId].content,
       planText // Store the plan text input by the user
     }
 
@@ -961,6 +979,8 @@ function PathwayForm({ onServiceUpdate, state, ServiceTree, nodeStates, setNodeS
     updatedState[nodeId] = {
       ...updatedState[nodeId],
       type: ServiceTree.nodes[nodeId].type,
+      title: ServiceTree.nodes[nodeId].title,
+      content: ServiceTree.nodes[nodeId].content,
       answer // Capture the user's answer to the question
     }
 
@@ -988,7 +1008,7 @@ function PathwayForm({ onServiceUpdate, state, ServiceTree, nodeStates, setNodeS
           //   console.log('PathwayForm', node, state)
           return (
             <ListItem key={nodeId}>
-              <ListItemText primary={node.content} secondary={generateSummaryText(node, state)} />
+              <ListItemText primary={node.content} secondary={<NodeSummary node={node} state={state} />} />
             </ListItem>
           )
         })}
@@ -1209,12 +1229,16 @@ function PathwayForm({ onServiceUpdate, state, ServiceTree, nodeStates, setNodeS
 
     const handleResponseChange = (nodeId, index, response) => {
       const updatedState = { ...nodeStates }
-      const updatedCriteria = [...criteria]
-      updatedCriteria[index].response = response // Update the response for the selected criterion
-
+      const updatedCriteria = criteria.map((criterion, idx) =>
+      idx === index
+        ? { ...criterion, response: response } // Create a new object with the updated response for the selected index
+        : criterion // For other indices, use the existing criterion object
+    );
       updatedState[nodeId] = {
         ...nodeState,
         type: ServiceTree.nodes[nodeId].type,
+        title: ServiceTree.nodes[nodeId].title,
+        content: ServiceTree.nodes[nodeId].content,
         criteria: updatedCriteria
       }
 
@@ -1228,6 +1252,8 @@ function PathwayForm({ onServiceUpdate, state, ServiceTree, nodeStates, setNodeS
       updatedState[nodeId] = {
         ...nodeState,
         type: ServiceTree.nodes[nodeId].type,
+        title: ServiceTree.nodes[nodeId].title,
+        content: ServiceTree.nodes[nodeId].content,
         criteria: updatedCriteria
       }
 

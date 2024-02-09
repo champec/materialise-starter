@@ -1,4 +1,4 @@
-import React, { forwardRef } from 'react'
+import React, { forwardRef, useState } from 'react'
 import { Controller } from 'react-hook-form'
 import { Box, Button, FormControl, FormHelperText, Stack, TextField, Typography } from '@mui/material'
 import CustomAutoCompleteInput from '../pharmacy-first/CustomAutoComplete'
@@ -23,6 +23,7 @@ function CaptureSurgery({
   selectedGPData,
   handleSelectedGP
 }) {
+  const [searchValue, setSearchValue] = useState('')
   return (
     <Box>
       <Box sx={{ mb: 4 }}>

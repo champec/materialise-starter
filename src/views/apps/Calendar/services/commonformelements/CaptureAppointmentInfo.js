@@ -76,7 +76,7 @@ function AppointInfo({
               rules={{ required: true }}
               render={({ field: { value, onChange } }) => (
                 <Select
-                  value={value}
+                selected={value} 
                   onChange={onChange}
                   error={Boolean(bookingErrors.duration)}
                   aria-describedby='stepper-linear-booking-duration'

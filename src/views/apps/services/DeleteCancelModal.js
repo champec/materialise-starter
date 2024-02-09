@@ -11,8 +11,8 @@ const DeleteCancelModal = ({ open, onClose, consultations, refetchAppointments }
   const organisation = useSelector(state => state.organisation?.organisation)
   const [step, setStep] = useState(1)
   const [message, setMessage] = useState(
-    `Dear {patient_name}, your appointment on {appointment_date} has been cancelled. Please do not attend until notified otherwise. If any questions, please contact the pharmacy. 
-    
+    `Dear {patient_name}, your appointment on {appointment_date} has been cancelled. Please do not attend until notified otherwise. If any questions, please contact the pharmacy.
+
     ${organisation?.organisation_name}, ${organisation?.profiles?.phone_number}
     `
   )
@@ -44,12 +44,12 @@ const DeleteCancelModal = ({ open, onClose, consultations, refetchAppointments }
           const customMessage = formatMessage(consultation)
           await dispatch(appendMessageToThread({ threadId: consultation?.sms_threads[0]?.id, message: customMessage }))
         }
-        dispatch(deleteBooking(consultation?.id))
-      }
+        await dispatch(deleteBooking(consultation?.id))
+      } 
 
+      refetchAppointments()
       onClose()
       setStep(1)
-      refetchAppointments()
     }
   }
 
@@ -67,7 +67,7 @@ const DeleteCancelModal = ({ open, onClose, consultations, refetchAppointments }
             </Typography>
             <Divider sx={{ marginTop: 1, marginBottom: 1 }} />
             {/* create a scrollable list with limited height showing the appointments scheduled for cancelation, show the numbers next tot the appoint and subtext of appointment time  */}
-            <Box sx={{ maxHeight: 200, overflowY: 'scroll', marginTop: 1, padding: 2, marginBottom: 2 }}>
+            <Box sx={{ maxHeight:200, overflowY: 'scroll', marginTop: 1, padding: 2, marginBottom: 2 }}>
               {consultations.map((consultation, index) => {
                 const formattedDate = dayjs(consultation?.calendar_events?.start).format('DD/MM/YYYY HH:mm')
                 return (
@@ -108,49 +108,50 @@ const DeleteCancelModal = ({ open, onClose, consultations, refetchAppointments }
 
   return (
     <Modal open={open} onClose={handleCancel}>
-      <Box
-        sx={{
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          height: '100%'
-        }}
-      >
-        <Card
+  <Box
+    sx={{
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      height: '100%',
+      padding: '16px', // Add some padding to prevent the modal from touching the edges
+    }}
+  >
+    <Card
+      sx={{
+        width: '50%',
+        maxHeight: '80vh', // Limit the maximum height of the modal
+        overflowY: 'auto', // Allow scrolling within the modal if content exceeds this height
+        margin: 'auto',
+        padding: 2,
+        display: 'flex',
+        flexDirection: 'column',
+      }}
+    >
+      <CardContent>
+        <Typography variant='h6' sx={{ marginBottom: 2 }}>
+          Cancel Appointment
+        </Typography>
+        {renderStepContent()}
+        <Box
           sx={{
-            width: '50%',
-            height: '50%',
-            margin: 'auto',
-            padding: 2,
             display: 'flex',
-            flexDirection: 'column',
-            justifyContent: 'space-between'
+            justifyContent: 'flex-end',
+            marginTop: 2,
           }}
         >
-          <CardContent>
-            <Typography variant='h6' sx={{ marginBottom: 2 }}>
-              Cancel Appointment
-            </Typography>
-            {renderStepContent()}
-            <Box
-              sx={{
-                display: 'flex',
-                justifyContent: 'flex-end',
-                marginTop: 2,
-                marginBottom: 2
-              }}
-            >
-              <Button sx={{ marginRight: 1 }} onClick={handleCancel} variant='outlined'>
-                Cancel
-              </Button>
-              <Button onClick={handleDeleteConfirm} color='primary' variant='contained'>
-                {step === 3 ? 'Confirm' : 'Yes'}
-              </Button>
-            </Box>
-          </CardContent>
-        </Card>
-      </Box>
-    </Modal>
+          <Button sx={{ marginRight: 1 }} onClick={handleCancel} variant='outlined'>
+            Cancel
+          </Button>
+          <Button onClick={handleDeleteConfirm} color='primary' variant='contained'>
+            {step === 3 ? 'Confirm' : 'Yes'}
+          </Button>
+        </Box>
+      </CardContent>
+    </Card>
+  </Box>
+</Modal>
+
   )
 }
 
