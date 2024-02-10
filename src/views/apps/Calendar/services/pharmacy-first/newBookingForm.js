@@ -109,7 +109,7 @@ const defaultAccountValues = {
   postCode: '',
   dateOfBirth: '',
   telephoneNumber: '',
-  surgery: {},
+  surgery: null,
   pharmacist: {},
   p_first_name: '',
   pFirstName: ''

@@ -28,6 +28,7 @@ const CustomApiSearch = ({
   const debounceSearch = useRef(debounce(nextValue => search(nextValue), 500)).current;
 
   const search = async searchValue => {
+    console.log("SEARCH API: ", searchValue)
     if (!searchValue) {
       setOptions([]);
       return;
@@ -45,6 +46,7 @@ const CustomApiSearch = ({
   };
 
   useEffect(() => {
+    console.log("USE EFFECT search term: ", searchTerm)
     debounceSearch(searchTerm);
   }, [searchTerm]);
 
