@@ -24,7 +24,8 @@ function CapturePersonalInfo({
   bookingErrors,
   bookingControl,
   setDatePickerOpen,
-  datePickerOpen
+  datePickerOpen,
+  handleBack
 }) {
 
   const handleKeyDown = (event) => {
@@ -86,7 +87,7 @@ function CapturePersonalInfo({
         datePickerOpen={datePickerOpen}
       />
       <Box item xs={12} sx={{ mt: 4, display: 'flex', justifyContent: 'space-between' }}>
-        <Button size='large' variant='outlined' color='secondary' disabled>
+        <Button size='large' variant='outlined' color='secondary' onClick={handleBack}>
           Back
         </Button>
         <Button size='large' type='submit' variant='contained'>

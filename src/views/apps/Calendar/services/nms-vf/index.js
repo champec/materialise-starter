@@ -53,13 +53,13 @@ function index({
   return (
     <form key={1} onSubmit={handleBookingSubmit(onSubmit)}>
       <Box container spacing={5}>
-        <Box sx={{ mb: 4 }}>
-          <Typography variant='body2' sx={{ fontWeight: 600, color: 'text.primary' }}>
+       <Box sx={{ mb: 4 }}>
+          {/*<Typography variant='body2' sx={{ fontWeight: 600, color: 'text.primary' }}>
             {steps[1].title}
           </Typography>
           <Typography variant='caption' component='p'>
             {steps[1].subtitle}
-          </Typography>
+          </Typography> */}
         </Box>
 
         <Stack spacing={4}>

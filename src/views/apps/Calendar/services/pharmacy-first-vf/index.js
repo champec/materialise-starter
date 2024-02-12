@@ -6,70 +6,97 @@ import { useForm, Controller } from 'react-hook-form';
 import { DecisionTrees } from './pathway-forms/DecisionTrees';
 
 function Index({
-  handleNext, handleBack, bookingControl, bookingErrors, steps, serviceInfo, setServiceInfo, service
+  handleNext, handleBack, bookingControl, bookingErrors, steps, serviceInfo, setServiceInfo, service, handleBookingSubmit, onSubmit
 }) {
   const { handleSubmit, control } = useForm();
   const [showWarning, setShowWarning] = useState(false);
 
   useEffect(() => {
     const pathway = serviceInfo.clinical_pathway;
-    const existingScreening = serviceInfo.screening;
+    const existingScreening = serviceInfo?.screening;
     const criteriaNode = DecisionTrees[pathway]?.nodes?.criteria_confirmation;
 
-    if (criteriaNode) {
-      // Check if there's already screening data for the selected pathway
-      if (!existingScreening || !existingScreening[pathway]) {
-        // If not, initialize screening for the selected pathway
-        const initializedScreening = criteriaNode.criteria.reduce((acc, criterion) => {
-          acc[criterion.text] = { ...criterion, response: '' }; // Initialize each criterion with an empty response
-          return acc;
-        }, {});
+    // Initialize screening only if there's no existing screening data for the selected pathway
+    if (criteriaNode && (!existingScreening || !existingScreening[pathway])) {
+      const initializedScreening = criteriaNode.criteria.reduce((acc, criterion) => {
+        acc[criterion.text] = { ...criterion, response: '' }; // Initialize with an empty response
+        return acc;
+      }, {});
 
-        setServiceInfo(prev => ({
-          ...prev,
-          screening: {
-            ...prev.screening,
-            [pathway]: initializedScreening,
-            status: 'pending' // Initial status
-          }
-        }));
-      } // else, the existing screening data is kept as is
-    } else {
-      // Reset screening if no pathway is selected or if it doesn't have criteria
-      setServiceInfo(prev => ({ ...prev, screening: {}, clinical_pathway: '' }));
+      setServiceInfo(prev => ({
+        ...prev,
+        screening: {
+          ...prev.screening,
+          [pathway]: initializedScreening,
+        }
+      }));
     }
-  }, [serviceInfo.clinical_pathway, setServiceInfo, serviceInfo.screening]);
+    // Note: No else clause to reset the screening, preserving existing data if any
+  }, [serviceInfo.clinical_pathway, setServiceInfo]);
+
+  const handlePathwayChange = (event) => {
+    const newPathway = event.target.value;
+
+    // Update the clinical pathway in the state
+    setServiceInfo(prev => ({ ...prev, clinical_pathway: newPathway }));
+
+    // Initialize or reset screening for the new pathway
+    const criteriaNode = DecisionTrees[newPathway]?.nodes?.criteria_confirmation;
+    if (criteriaNode) {
+      // Initialize screening for the new pathway with empty responses
+      const initializedScreening = criteriaNode.criteria.reduce((acc, criterion) => {
+        acc[criterion.text] = { ...criterion, response: '' }; // Initialize with an empty response
+        return acc;
+      }, {});
+
+      setServiceInfo(prev => ({
+        ...prev,
+        screening: { [newPathway]: initializedScreening } // Reset screening to only include the new pathway
+      }));
+    } else {
+      // If "None" is selected or the pathway has no criteria, clear the screening data
+      setServiceInfo(prev => ({
+        ...prev,
+        screening: {}
+      }));
+    }
+  };
 
 
   useEffect(() => {
-    // Check if any criteria have a response of 'No' and update showWarning accordingly
-    const hasFailedCriteria = Object.values(serviceInfo.screening || {}).some(criterion => criterion.response === 'No');
-    setShowWarning(hasFailedCriteria);
-  }, [serviceInfo.screening]);
+    // Check if the currently selected pathway has any criteria responses set to 'No'
+    const currentPathwayScreening = serviceInfo?.screening?.[serviceInfo.clinical_pathway] || {};
 
-  const handlePathwayChange = (event) => {
-    const pathway = event.target.value;
-    setServiceInfo(prev => ({ ...prev, clinical_pathway: pathway }));
-  };
+    const hasFailedCriteria = currentPathwayScreening && Object.values(currentPathwayScreening).some(criterion => criterion.response === 'No');
+
+    setShowWarning(hasFailedCriteria);
+  }, [serviceInfo.screening, serviceInfo.clinical_pathway]); // Depend on both the screening data and the selected pathway
+
+
 
   const handleCriteriaChange = (criterionText, response) => {
+    // Update the response for the specific criterion within the currently selected pathway
     setServiceInfo(prev => ({
       ...prev,
       screening: {
         ...prev.screening,
-        [criterionText]: { ...prev.screening[criterionText], response },
-        status: Object.values(prev.screening).some(criterion => criterion.response === 'No') ? 'failedCriteria' : 'passed'
+        [serviceInfo.clinical_pathway]: {
+          ...prev.screening[serviceInfo.clinical_pathway],
+          [criterionText]: { ...prev.screening[serviceInfo.clinical_pathway][criterionText], response: response },
+        },
+        status: Object.values(prev.screening[serviceInfo.clinical_pathway]).some(criterion => criterion.response === 'No') ? 'failedCriteria' : 'passed',
       }
     }));
   };
 
   return (
-    <form onSubmit={handleSubmit(data => console.log(data))}>
+    // <form onSubmit={handleSubmit(data => console.log(data))}>
+    <form key={1} onSubmit={handleBookingSubmit(onSubmit)}>
       <Box container spacing={5}>
         {/* Form Header */}
         <Box sx={{ mb: 4 }}>
-          <Typography variant='body2' sx={{ fontWeight: 600, color: 'text.primary' }}>{steps[1].title}</Typography>
-          <Typography variant='caption' component='p'>{steps[1].subtitle}</Typography>
+          <Typography variant='body2' sx={{ fontWeight: 600, color: 'text.primary' }}>{steps[0].title}</Typography>
+          <Typography variant='caption' component='p'>{steps[0].subtitle}</Typography>
         </Box>
 
         <Stack spacing={4}>
@@ -130,21 +157,22 @@ function Index({
           </FormControl>
 
           {/* Criteria Confirmation */}
-          {serviceInfo.screening && Object.entries(serviceInfo.screening).map(([text, { required, response }], index) => (
-            required && (
-              <FormControl key={index} component="fieldset">
-                <FormLabel component="legend">{text}</FormLabel>
-                <RadioGroup
-                  row
-                  value={response}
-                  onChange={(e) => handleCriteriaChange(text, e.target.value)}
-                >
-                  <FormControlLabel value="Yes" control={<Radio />} label="Yes" />
-                  <FormControlLabel value="No" control={<Radio />} label="No" />
-                </RadioGroup>
-              </FormControl>
-            )
-          ))}
+          {serviceInfo.clinical_pathway && serviceInfo.screening[serviceInfo.clinical_pathway] && Object.entries(serviceInfo.screening[serviceInfo.clinical_pathway]).map(([text, criterion], index) => (
+  criterion.required && (
+    <FormControl key={index} component="fieldset">
+      <FormLabel component="legend">{text}</FormLabel>
+      <RadioGroup
+        row
+        value={criterion.response}
+        onChange={(e) => handleCriteriaChange(text, e.target.value)}
+      >
+        <FormControlLabel value="Yes" control={<Radio />} label="Yes" />
+        <FormControlLabel value="No" control={<Radio />} label="No" />
+      </RadioGroup>
+    </FormControl>
+  )
+))}
+
 
           {/* Warning Message */}
           {showWarning && (
@@ -156,7 +184,7 @@ function Index({
 
         {/* Form Navigation Buttons */}
         <Box item xs={12} sx={{ mt: 4, display: 'flex', justifyContent: 'space-between' }}>
-          <Button size='large' variant='outlined' color='secondary' onClick={handleBack}>Back</Button>
+          <Button size='large' disabled variant='outlined' color='secondary' onClick={handleBack}>Back</Button>
           <Button size='large' type='submit' variant='contained'>Next</Button>
         </Box>
       </Box>

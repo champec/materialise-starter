@@ -891,6 +891,7 @@ const NewBookingForm = ({
             bookingControl={bookingControl}
             setDatePickerOpen={setDatePickerOpen}
             datePickerOpen={datePickerOpen}
+            handleBack={handleBack}
           />
         )
       case 0:

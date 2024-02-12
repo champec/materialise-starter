@@ -25,10 +25,10 @@ function Capturepatient({
       <Box sx={{ mb: 4 }}>
         <Box sx={{ mb: 4 }}>
           <Typography variant='body2' sx={{ fontWeight: 600, color: 'text.primary' }}>
-            {steps[0].title}
+            {steps[1].title}
           </Typography>
           <Typography variant='caption' component='p'>
-            {steps[0].subtitle}
+            {steps[1].subtitle}
           </Typography>
         </Box>
         <Stack spacing={4}>
