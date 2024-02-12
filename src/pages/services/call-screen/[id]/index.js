@@ -312,7 +312,7 @@ function index() {
         </Box>
       </Drawer>
       <Drawer anchor='right' open={openScrSidebar} onClose={() => setOpenScrSidebar(false)} ModalProps={hideBackdrop}>
-        <Box sx={{ width: 300 }}>
+        <Box sx={{ width: '80%' }}>
           <Scr booking={consultation} />
         </Box>
       </Drawer>

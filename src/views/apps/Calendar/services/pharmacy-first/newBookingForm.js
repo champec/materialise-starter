@@ -86,12 +86,12 @@ const Transition = forwardRef(function Transition(props, ref) {
 
 const steps = [
   {
-    title: 'Patient',
-    subtitle: 'Who is the patient'
-  },
-  {
     title: 'Booking',
     subtitle: 'When is the booking'
+  },
+  {
+    title: 'Patient',
+    subtitle: 'Who is the patient'
   },
   {
     title: 'Confirm',
@@ -433,9 +433,10 @@ const NewBookingForm = ({
 
       // Perform validation based on the current active step
       if (activeStep === 0) {
-        isStepValid = await handleAccountSubmit(onSubmit)()
-      } else if (activeStep === 1) {
+
         isStepValid = await handleBookingSubmit(onSubmit)()
+      } else if (activeStep === 1) {
+        isStepValid = await handleAccountSubmit(onSubmit)()
       } else if (activeStep === 2) {
         isStepValid = await handleConfirmSubmit(onSubmit)()
       }
@@ -869,7 +870,7 @@ const NewBookingForm = ({
 
   const getStepContent = step => {
     switch (step) {
-      case 0:
+      case 1:
         return (
           <CapturePersonalInfo
             steps={steps}
@@ -892,7 +893,7 @@ const NewBookingForm = ({
             datePickerOpen={datePickerOpen}
           />
         )
-      case 1:
+      case 0:
         return !variableLoading ? getVariableFormFields(selectedService.title, handleBack) : <CircularProgress />
       case 2:
         return (

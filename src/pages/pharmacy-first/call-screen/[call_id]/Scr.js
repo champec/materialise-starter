@@ -15,67 +15,83 @@ function SCRComponent() {
   }
 
   return (
-    <Card sx={{ maxWidth: 600, m: 'auto', mt: 4, boxShadow: 3 }}>
+    <Card sx={{ width: 'auto', m: 'auto', mt: 4, boxShadow: 3 }}>
       <CardContent>
         <Typography variant='h5' gutterBottom>
-          Patient Summary Care Record (Demo)
+          NHS Summary Care Record
         </Typography>
-
-        <Table size='small'>
-          <TableBody>
-            <TableRow>
-              <TableCell>
-                <strong>Name:</strong>
-              </TableCell>
-              <TableCell>{patientInfo.name}</TableCell>
-            </TableRow>
-            <TableRow>
-              <TableCell>
-                <strong>Address:</strong>
-              </TableCell>
-              <TableCell>{patientInfo.address}</TableCell>
-            </TableRow>
-            <TableRow>
-              <TableCell>
-                <strong>Date of Birth:</strong>
-              </TableCell>
-              <TableCell>{patientInfo.dob}</TableCell>
-            </TableRow>
-            <TableRow>
-              <TableCell>
-                <strong>NHS Number:</strong>
-              </TableCell>
-              <TableCell>{patientInfo.nhsNumber}</TableCell>
-            </TableRow>
-            <TableRow>
-              <TableCell>
-                <strong>Current Medication:</strong>
-              </TableCell>
-              <TableCell>{patientInfo.currentMedication.join(', ')}</TableCell>
-            </TableRow>
-            <TableRow>
-              <TableCell>
-                <strong>Allergies:</strong>
-              </TableCell>
-              <TableCell>{patientInfo.allergies.join(', ')}</TableCell>
-            </TableRow>
-            <TableRow>
-              <TableCell>
-                <strong>Significant Medical History:</strong>
-              </TableCell>
-              <TableCell>{patientInfo.significantMedicalHistory}</TableCell>
-            </TableRow>
-            <TableRow>
-              <TableCell>
-                <strong>Communication Needs:</strong>
-              </TableCell>
-              <TableCell>{patientInfo.communicationNeeds}</TableCell>
-            </TableRow>
-          </TableBody>
-        </Table>
+        <iframe
+          src="https://digital.nhs.uk/services/summary-care-record-application"
+          style={{ width: '100%', height: '600px', border: 'none' }}
+          title="NHS Website"
+        ></iframe>
       </CardContent>
     </Card>
-  )
+  );
+
+  // return (
+  //   <Card sx={{ maxWidth: 600, m: 'auto', mt: 4, boxShadow: 3 }}>
+  //     <CardContent>
+  //       <Typography variant='h5' gutterBottom>
+  //         Patient Summary Care Record (Demo)
+  //       </Typography>
+
+  //       <Table size='small'>
+  //         <TableBody>
+  //           <TableRow>
+  //             <TableCell>
+  //               <strong>Name:</strong>
+  //             </TableCell>
+  //             <TableCell>{patientInfo.name}</TableCell>
+  //           </TableRow>
+  //           <TableRow>
+  //             <TableCell>
+  //               <strong>Address:</strong>
+  //             </TableCell>
+  //             <TableCell>{patientInfo.address}</TableCell>
+  //           </TableRow>
+  //           <TableRow>
+  //             <TableCell>
+  //               <strong>Date of Birth:</strong>
+  //             </TableCell>
+  //             <TableCell>{patientInfo.dob}</TableCell>
+  //           </TableRow>
+  //           <TableRow>
+  //             <TableCell>
+  //               <strong>NHS Number:</strong>
+  //             </TableCell>
+  //             <TableCell>{patientInfo.nhsNumber}</TableCell>
+  //           </TableRow>
+  //           <TableRow>
+  //             <TableCell>
+  //               <strong>Current Medication:</strong>
+  //             </TableCell>
+  //             <TableCell>{patientInfo.currentMedication.join(', ')}</TableCell>
+  //           </TableRow>
+  //           <TableRow>
+  //             <TableCell>
+  //               <strong>Allergies:</strong>
+  //             </TableCell>
+  //             <TableCell>{patientInfo.allergies.join(', ')}</TableCell>
+  //           </TableRow>
+  //           <TableRow>
+  //             <TableCell>
+  //               <strong>Significant Medical History:</strong>
+  //             </TableCell>
+  //             <TableCell>{patientInfo.significantMedicalHistory}</TableCell>
+  //           </TableRow>
+  //           <TableRow>
+  //             <TableCell>
+  //               <strong>Communication Needs:</strong>
+  //             </TableCell>
+  //             <TableCell>{patientInfo.communicationNeeds}</TableCell>
+  //           </TableRow>
+  //         </TableBody>
+  //       </Table>
+  //     </CardContent>
+  //   </Card>
+  // )
+
 }
 
 export default SCRComponent

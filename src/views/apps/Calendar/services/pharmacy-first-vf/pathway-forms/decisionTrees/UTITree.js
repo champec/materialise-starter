@@ -27,15 +27,15 @@ export const uncomplicatedUrinaryTractInfectionDecisionTree = {
   ],
   dates_of_validity: '31/01/2024 to 30/01/2027',
   previousNodeId: null,
-  nextNodeId: 'criteria_met'
+  nextNodeId: 'criteria_confirmation'
 }
 
 uncomplicatedUrinaryTractInfectionDecisionTree.nodes = {
   root: {
     ...uncomplicatedUrinaryTractInfectionDecisionTree
   },
-  criteria_met: {
-    id: 'criteria_met',
+  criteria_confirmation: {
+    id: 'criteria_confirmation',
     type: 'criteriaCheck',
     content: 'Does the patient meets the inclusion criteria for the Uncomplicated Urinary Tract Infection pathway?',
     inclusion: ['women aged 16 to 64 years with suspected lower UTIs'],
@@ -63,7 +63,7 @@ uncomplicatedUrinaryTractInfectionDecisionTree.nodes = {
     content: 'The patient does not meet the inclusion criteria for the Uncomplicated Urinary Tract Infection pathway.',
     nextNodeIdIfYes: 'comments',
     nextNodeIdIfNo: 'treatment_decision',
-    previousNodeId: 'criteria_met'
+    previousNodeId: 'criteria_confirmation'
   },
   risk_assessment: {
     id: 'risk_assessment',
@@ -77,7 +77,7 @@ uncomplicatedUrinaryTractInfectionDecisionTree.nodes = {
     // answers: ['Yes', 'No'],
     nextNodeIdIfYes: 'NEWS2_check',
     nextNodeIdIfNo: 'risk_assessment_pylonephritis',
-    previousNodeId: 'criteria_met',
+    previousNodeId: 'criteria_confirmation',
     nextNodeId: 'risk_assessment_pylonephritis'
   },
   risk_assessment_pylonephritis: {

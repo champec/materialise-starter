@@ -109,8 +109,8 @@ function index() {
           <PrescriptionWrite booking={consultation} prescription={prescription} setPrescription={setPrescription} />
         </Box>
       </Drawer>
-      <Drawer anchor='right' open={openScrSidebar} onClose={() => setOpenScrSidebar(false)}>
-        <Box sx={{ width: 300 }}>
+      <Drawer   anchor='right' open={openScrSidebar} onClose={() => setOpenScrSidebar(false)}>
+        <Box sx={{ width: 600 }}>
           <Scr booking={consultation} />
         </Box>
       </Drawer>
