@@ -4,6 +4,8 @@ const NodeSummary = ({ node, state }) => {
   const generateSummaryText = () => {
     let summaryElements = [];
 
+    console.log('NodeSummary Node:', node);
+
     switch (node.type) {
       case 'component':
         if (node.componentType === 'criteriaChecklist') {
@@ -16,7 +18,8 @@ const NodeSummary = ({ node, state }) => {
         break;
 
       case 'criteriaCheck':
-        state.criteria.forEach((criterion, index) => {
+        console.log('NodeSummary criteriaCheck state:', state);
+        state?.criteria?.forEach((criterion, index) => {
           summaryElements.push(
             <p key={index}>{criterion.text} - Response: {criterion.response || 'No Response'}</p>
           );

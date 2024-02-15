@@ -157,7 +157,7 @@ function Index({
           </FormControl>
 
           {/* Criteria Confirmation */}
-          {serviceInfo.clinical_pathway && serviceInfo.screening[serviceInfo.clinical_pathway] && Object.entries(serviceInfo.screening[serviceInfo.clinical_pathway]).map(([text, criterion], index) => (
+          {serviceInfo.clinical_pathway && serviceInfo.screening?.[serviceInfo.clinical_pathway] && Object.entries(serviceInfo.screening[serviceInfo.clinical_pathway]).map(([text, criterion], index) => (
   criterion.required && (
     <FormControl key={index} component="fieldset">
       <FormLabel component="legend">{text}</FormLabel>
