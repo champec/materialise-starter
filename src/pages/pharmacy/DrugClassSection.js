@@ -9,6 +9,7 @@ import { createTheme } from '@mui/material'
 import { ThemeProvider } from '@mui/material'
 import Grid from '@mui/material/Grid'
 import CardStatsVertical from './RegisterCard'
+import format from 'date-fns/format'
 
 const theme = createTheme({
   palette: {
@@ -25,9 +26,7 @@ function DrugClassSection({ title, register, handleDrugClick }) {
     setLocalSearchTerm(event.target.value.toLowerCase())
   }
 
-  const filteredRegisters = register.filter(register =>
-    register.cdr_drugs.drug_name.toLowerCase().includes(localSearchTerm)
-  )
+  const filteredRegisters = register.filter(register => register.drug_brand.toLowerCase().includes(localSearchTerm))
 
   return (
     <Box>
@@ -47,7 +46,7 @@ function DrugClassSection({ title, register, handleDrugClick }) {
         {filteredRegisters.map(drug => (
           <Grid item xs={12} sm={6} md={4} lg={3} key={drug.id}>
             <ListItem onClick={() => handleDrugClick(drug)}>
-              <CardStatsVertical drug={drug.cdr_drugs} handleDrugClick={handleDrugClick} />
+              <CardStatsVertical drug={drug} handleDrugClick={handleDrugClick} />
             </ListItem>
           </Grid>
         ))}

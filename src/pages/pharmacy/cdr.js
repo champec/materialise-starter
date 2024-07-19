@@ -27,6 +27,13 @@ import MuiAccordionDetails from '@mui/material/AccordionDetails'
 import withReducer from 'src/@core/HOC/withReducer'
 import { cdrSlice } from 'src/store/apps/cdr'
 
+//modla
+import NewRegisterModal from './NewRegisterModal'
+
+//rtk
+import { fetchExistingRegisters } from 'src/store/apps/cdr'
+import { useSelector, useDispatch } from 'react-redux'
+
 const Accordion = styled(MuiAccordion)(({ theme }) => ({
   boxShadow: 'none',
   border: '1px solid',
@@ -54,15 +61,24 @@ const AccordionDetails = styled(MuiAccordionDetails)(({ theme }) => ({
   padding: theme.spacing(2)
 }))
 
-function Cdr({ dbDrugs }) {
+function Cdr() {
+  const dispatch = useDispatch()
+  const { existingRegisters, existingRegistersStatus, existingRegistersError } = useSelector(state => state.cdr)
+
   const [activeComponent, setActiveComponent] = useState('drugList')
-  const [loading, setLoading] = useState(false)
-  const [registers, setRegisters] = useState(dbDrugs || [])
-  const organisationId = useOrgAuth()?.organisation?.id
   const [globalSearchTerm, setGlobalSearchTerm] = useState('')
   const [expanded, setExpanded] = useState(null)
   const [expandAll, setExpandAll] = useState(false)
   const [selectedDrug, setSelectedDrug] = useState(null)
+  const [isNewRegisterModalOpen, setIsNewRegisterModalOpen] = useState(false)
+
+  const organisationId = useOrgAuth()?.organisation?.id
+
+  useEffect(() => {
+    if (organisationId) {
+      dispatch(fetchExistingRegisters(organisationId))
+    }
+  }, [dispatch, organisationId])
 
   const handleAccordionChange = panel => (event, isExpanded) => {
     setExpanded(isExpanded ? panel : null)
@@ -72,13 +88,10 @@ function Cdr({ dbDrugs }) {
     setGlobalSearchTerm(event.target.value.toLowerCase())
   }
 
-  // Apply the global search filter here
-  const filteredRegisters = registers.filter(register =>
-    register.cdr_drugs.drug_name.toLowerCase().includes(globalSearchTerm)
-  )
-
-  // Group the filtered registers by class
-  const drugClasses = [...new Set(filteredRegisters.map(register => register.cdr_drugs.drug_class))]
+  const handleNewRegisterSubmit = formData => {
+    console.log('New register data:', formData)
+    dispatch(fetchExistingRegisters(organisationId))
+  }
 
   const handleDrugClick = drug => {
     setSelectedDrug(drug)
@@ -89,18 +102,49 @@ function Cdr({ dbDrugs }) {
     setSelectedDrug(null)
     setActiveComponent('drugList')
   }
-  if (loading) {
+
+  // Filter registers based on global search
+  const filteredRegisters = existingRegisters.filter(
+    register =>
+      register.drug_brand.toLowerCase().includes(globalSearchTerm) ||
+      register.drug_class.toLowerCase().includes(globalSearchTerm)
+  )
+
+  // Group registers by drug class and sort by strength
+  const groupedRegisters = filteredRegisters.reduce((acc, register) => {
+    if (!acc[register.drug_class]) {
+      acc[register.drug_class] = []
+    }
+    acc[register.drug_class].push(register)
+    return acc
+  }, {})
+
+  // Sort registers within each class by strength
+  Object.keys(groupedRegisters).forEach(className => {
+    groupedRegisters[className].sort((a, b) => {
+      const strengthA = parseFloat(a.drug_strength)
+      const strengthB = parseFloat(b.drug_strength)
+      return strengthA - strengthB
+    })
+  })
+
+  if (existingRegistersStatus === 'loading') {
     return <CircularProgress />
   }
+
+  if (existingRegistersStatus === 'failed') {
+    return <Typography color='error'>{existingRegistersError}</Typography>
+  }
+
   return (
     <Card>
-      {/* DrugClassSections for each drug class */}
       {activeComponent === 'drugList' && (
         <>
           <CardHeader title='Controlled Drugs Register' />
           <Box display='flex' justifyContent='space-between' alignItems='center' padding={2}>
             <Typography variant='h6'>Search All registers</Typography>
             <Button onClick={() => setExpandAll(prev => !prev)}>{expandAll ? 'Collapse All' : 'Expand All'}</Button>
+            <Button onClick={() => setIsNewRegisterModalOpen(true)}>Create New Register</Button>
             <TextField
               id='outlined-basic'
               label='Search'
@@ -110,9 +154,8 @@ function Cdr({ dbDrugs }) {
               type='search'
             />
           </Box>
-          {/* <Divider /> */}
 
-          {drugClasses.map((drugClass, index) => (
+          {Object.entries(groupedRegisters).map(([drugClass, registers], index) => (
             <Accordion
               expanded={expandAll || expanded === `panel${index + 1}`}
               onChange={handleAccordionChange(`panel${index + 1}`)}
@@ -125,11 +168,7 @@ function Cdr({ dbDrugs }) {
                 <Typography>{drugClass}</Typography>
               </AccordionSummary>
               <AccordionDetails>
-                <DrugClassSection
-                  title={drugClass}
-                  register={filteredRegisters.filter(register => register.cdr_drugs.drug_class === drugClass)}
-                  handleDrugClick={handleDrugClick}
-                />
+                <DrugClassSection title={drugClass} register={registers} handleDrugClick={handleDrugClick} />
               </AccordionDetails>
             </Accordion>
           ))}
@@ -138,25 +177,16 @@ function Cdr({ dbDrugs }) {
       {activeComponent === 'drugTable' && (
         <>
           <Button onClick={handleBackClick}>Go back</Button>
-          {/* Here is where you'd put your DrugTable component */}
           <CdrTable selectedDrug={selectedDrug} />
         </>
       )}
+      <NewRegisterModal
+        open={isNewRegisterModalOpen}
+        handleClose={() => setIsNewRegisterModalOpen(false)}
+        handleSubmit={handleNewRegisterSubmit}
+      />
     </Card>
   )
 }
 
-export async function getServerSideProps() {
-  // Fetch initial drugs data
-
-  const dbDrugs = await fetchDrugsFromDb()
-
-  return {
-    props: {
-      dbDrugs
-    }
-  }
-}
-
-// export default Cdr
 export default withReducer('cdr', cdrSlice.reducer)(Cdr)

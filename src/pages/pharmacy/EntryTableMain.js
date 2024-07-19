@@ -58,7 +58,7 @@ function CdrTable({ selectedDrug }) {
     <Box>
       <Box>
         <CardHeader
-          title={`${selectedDrug?.drug_name} ${selectedDrug?.drug_strength}${selectedDrug?.units} CD Register`}
+          title={`${selectedDrug?.drug_brand} ${selectedDrug?.drug_strength}${selectedDrug?.units} CD Register`}
         />
         {/* <Button variant='contained' color='primary' onClick={() => setOpen(prev => !prev)}>
           In
