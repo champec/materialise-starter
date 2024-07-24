@@ -1,0 +1,431 @@
+import React, { useState, useEffect, forwardRef, useRef } from 'react'
+import { useDispatch, useSelector } from 'react-redux'
+import {
+  Box,
+  Dialog,
+  DialogContent,
+  DialogTitle,
+  Alert,
+  AlertTitle,
+  DialogContentText,
+  DialogActions,
+  Button
+} from '@mui/material'
+
+import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns'
+import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider'
+import { createAppointment, updateAppointment } from 'src/store/apps/pharmacy-services/pharmacyServicesThunks'
+import { selectServices, selectServiceStages } from 'src/store/apps/pharmacy-services/pharmacyServicesSlice'
+
+import AddEditPatientForm from './components/AddEditPatientForm'
+import { Stack, Fade } from '@mui/material'
+import PDSPatientSearch from './components/PDSPatientSearch'
+import AppointmentForm from './components/AppointmentForm'
+import useGPSearch from './hooks/useGPSearch'
+import GPSearchDialog from './components/GPSearchDialog'
+import usePatient from './hooks/usePatient'
+import parseISO from 'date-fns/parseISO'
+import CustomSnackbar from 'src/views/apps/Calendar/services/pharmacy-first/CustomSnackBar'
+
+import PerfectScrollbar from 'react-perfect-scrollbar'
+
+import useAppointmentSubmission from './hooks/useAppointmentSubmission'
+
+const Transition = forwardRef(function Transition(props, ref) {
+  return <Fade ref={ref} {...props} />
+})
+
+const BookingComponent = ({ appointment, onClose }) => {
+  const dispatch = useDispatch()
+  const services = useSelector(selectServices)
+  const organisationId = useSelector(state => state.organisation.organisation.id)
+  const [selectedService, setSelectedService] = useState(null)
+  const serviceStages = useSelector(selectServiceStages(selectedService))
+  const [nhsPatientDialog, setNhsPatientDialog] = useState(false)
+  const [gpDialogOpen, setGpDialogOpen] = useState(false)
+  const [snackbarMessage, setSnackbarMessage] = useState('')
+  const [snackSeverity, setSnackbarSeverity] = useState(null)
+  const [snackbarOpen, setSnackbarOpen] = useState(false)
+  const [openConfirmDialog, setOpenConfirmDialog] = useState(false)
+  const [objectToSubmit, setObjectToSubmit] = useState(null)
+  const { submitAppointment, loading } = useAppointmentSubmission()
+
+  const showMessage = (severity, message) => {
+    setSnackbarSeverity(severity)
+    setSnackbarMessage(message)
+    setSnackbarOpen(true)
+  }
+
+  const {
+    selectedPatient,
+    patientInputValue,
+    setSelectedPatient,
+    setPatientInputValue,
+    handleEditPatient,
+    addNewPatientDialog,
+    setAddNewPatientDialog,
+    handlePatientSelect,
+    handlePatientInputChange,
+    handleConfirm: handlePatientConfirm,
+    searchType,
+    setSearchType,
+    firstName,
+    setFirstName,
+    middleName,
+    setMiddleName,
+    lastName,
+    setLastName,
+    dateOfBirth,
+    setDateOfBirth,
+    gender,
+    setGender,
+    nhsNumber,
+    setNhsNumber,
+    feedback,
+    isLoading: ptIsLoading,
+    patientData,
+    handleSearch,
+    handleSearchAgain
+  } = usePatient()
+
+  const {
+    selectedGP,
+    gpSearchTerm,
+    gpSearchResults,
+    isLoading,
+    error,
+    setSelectedGP,
+    setGpSearchTerm,
+    handleGPSearch,
+    handleGPSelect,
+    handleRemoveGP
+  } = useGPSearch(selectedPatient)
+
+  const handleNhsPatientFetch = () => {
+    setNhsPatientDialog(true)
+  }
+
+  const [formData, setFormData] = useState({
+    pharmacy_id: organisationId,
+    patient_id: null,
+    service_id: '',
+    appointment_type: '',
+    overall_status: 'Scheduled',
+    current_stage_id: '',
+    scheduled_time: null,
+    details: {}
+  })
+
+  useEffect(() => {
+    if (appointment) {
+      setFormData({
+        ...appointment,
+        scheduled_time: appointment.scheduled_time ? parseISO(appointment.scheduled_time) : null
+      })
+      setSelectedPatient(appointment.patient_object)
+      setSelectedGP(appointment.gp_object)
+      setSelectedService(appointment.service_id)
+    }
+  }, [appointment])
+
+  const handleDateChange = date => {
+    setFormData(prevData => ({
+      ...prevData,
+      scheduled_time: date
+    }))
+  }
+
+  const handleServiceChange = event => {
+    const { name, value } = event.target
+    setFormData(prevData => ({
+      ...prevData,
+      [name]: value
+    }))
+    setSelectedService(value)
+    setFormData(prevData => ({
+      ...prevData,
+      current_stage_id: ''
+    }))
+  }
+
+  const handleFieldChange = event => {
+    const { name, value } = event.target
+
+    // Split the name to handle nested fields
+    const keys = name.split('.')
+
+    console.log('Current formData:', formData)
+    console.log('Attempting to change:', name, 'to', value)
+
+    setFormData(prevData => {
+      console.log('Previous data:', prevData)
+
+      let updatedData = { ...prevData }
+      let nestedData = updatedData
+
+      for (let i = 0; i < keys.length - 1; i++) {
+        if (!nestedData[keys[i]]) {
+          nestedData[keys[i]] = {}
+        }
+        nestedData = nestedData[keys[i]]
+        console.log(`Nested level ${i}:`, nestedData)
+      }
+
+      console.log('Final nested data before update:', nestedData)
+      console.log('Is triage frozen?', Object.isFrozen(nestedData.triage))
+
+      try {
+        nestedData[keys[keys.length - 1]] = value
+      } catch (error) {
+        console.error('Error updating nested data:', error)
+      }
+
+      console.log('Updated data:', updatedData)
+      return updatedData
+    })
+  }
+
+  const handleCheckboxChange = event => {
+    const { name, checked } = event.target
+    handleFieldChange({
+      target: {
+        name,
+        value: checked
+      }
+    })
+  }
+
+  // const handleSubmit = event => {
+  //   event.preventDefault()
+
+  //   const ObjectToSubmit = { ...formData, gp_object: { ...selectedGP }, patient_object: { ...selectedPatient } }
+  //   console.log('details we have', ObjectToSubmit)
+  //   // if (appointment) {
+  //   //   dispatch(updateAppointment({ id: appointment.id, ...formData }))
+  //   // } else {
+  //   //   dispatch(createAppointment(formData))
+  //   // }
+  //   // onClose()
+  // }
+
+  const handleSubmit = event => {
+    event.preventDefault()
+
+    console.log('SUBMIT BUTON PRESSE')
+    const newObjectToSubmit = { ...formData, gp_object: { ...selectedGP }, patient_object: { ...selectedPatient } }
+
+    // Validation checks
+    if (!newObjectToSubmit.patient_object || Object.keys(newObjectToSubmit.patient_object).length === 0) {
+      showMessage('error', 'Please select a patient.')
+      return
+    }
+
+    if (!newObjectToSubmit.gp_object || Object.keys(newObjectToSubmit.gp_object).length === 0) {
+      showMessage('error', 'Please select a GP.')
+      return
+    }
+
+    if (!newObjectToSubmit.details.acceptTerms) {
+      showMessage('error', 'Please accept the terms and conditions.')
+      return
+    }
+
+    if (!newObjectToSubmit.scheduled_time) {
+      showMessage('error', 'Please choose a time for the appointment.')
+      return
+    }
+
+    // Check if text message is not being sent
+    if (!newObjectToSubmit.details.sendTextUpdate) {
+      setObjectToSubmit(newObjectToSubmit)
+      setOpenConfirmDialog(true)
+    } else {
+      submitForm(newObjectToSubmit)
+    }
+  }
+
+  const submitForm = async dataToSubmit => {
+    console.log('Submitting data:', dataToSubmit)
+    if (appointment) {
+      dispatch(updateAppointment({ id: appointment.id, ...dataToSubmit }))
+    } else {
+      // dispatch(createAppointment(dataToSubmit))
+      const newAppointment = await submitAppointment(dataToSubmit)
+      console.log('New appointment created:', newAppointment)
+    }
+    // onClose()
+  }
+
+  const handleConfirmNoText = () => {
+    setOpenConfirmDialog(false)
+    submitForm(objectToSubmit)
+  }
+
+  const handleCancelNoText = () => {
+    setOpenConfirmDialog(false)
+  }
+
+  return (
+    <LocalizationProvider dateAdapter={AdapterDateFns}>
+      <PerfectScrollbar>
+        <Box>
+          {loading && <h1>LOADING</h1>}
+          <AppointmentForm
+            appointment={appointment}
+            formData={formData}
+            services={services}
+            serviceStages={serviceStages}
+            selectedPatient={selectedPatient}
+            patientInputValue={patientInputValue}
+            onPatientSelect={handlePatientSelect}
+            onPatientInputChange={handlePatientInputChange}
+            onEditPatient={handleEditPatient}
+            onServiceChange={handleServiceChange}
+            onFieldChange={handleFieldChange}
+            onDateChange={handleDateChange}
+            onSubmit={handleSubmit}
+            onNhsPatientFetch={handleNhsPatientFetch}
+            onNewPatientDialogOpen={() => setAddNewPatientDialog(true)}
+            setSelectedPatient={setSelectedPatient}
+            setPatientInputValue={setPatientInputValue}
+            selectedGP={selectedGP}
+            gpSearchTerm={gpSearchTerm}
+            gpSearchResults={gpSearchResults}
+            isLoading={isLoading}
+            error={error}
+            setGpSearchTerm={setGpSearchTerm}
+            handleGPSearch={handleGPSearch}
+            handleGPSelect={handleGPSelect}
+            handleRemoveGP={handleRemoveGP}
+            setGpDialogOpen={setGpDialogOpen}
+            gpDialogOpen={gpDialogOpen}
+            handleCheckboxChange={handleCheckboxChange}
+          />
+        </Box>
+
+        <Dialog
+          fullWidth
+          maxWidth='md'
+          scroll='body'
+          TransitionComponent={Transition}
+          open={addNewPatientDialog}
+          onClose={() => setAddNewPatientDialog(false)}
+        >
+          <DialogContent>
+            <AddEditPatientForm
+              patient={{ full_name: patientInputValue }}
+              onClose={() => {
+                console.log('ADd new patient form close')
+                // setSelectedPatient(null)
+                setAddNewPatientDialog(false)
+                setPatientInputValue('')
+              }}
+              onSelect={handlePatientSelect}
+              selectedPatient={selectedPatient}
+              setSelectedPatient={setSelectedPatient}
+            />
+          </DialogContent>
+        </Dialog>
+
+        {/* New NHS Patient Fetch Dialog */}
+        <Dialog
+          fullWidth
+          maxWidth='md'
+          PaperProps={{
+            sx: { minHeight: '600px' }
+          }}
+          scroll='body'
+          TransitionComponent={Transition}
+          open={nhsPatientDialog}
+          onClose={() => setNhsPatientDialog(false)}
+        >
+          <DialogContent>
+            <PDSPatientSearch
+              onClose={() => setNhsPatientDialog(false)}
+              onSelect={handlePatientSelect}
+              setSelectedPatient={setSelectedPatient}
+              handlePatientConfirm={handlePatientConfirm}
+              searchType={searchType}
+              setSearchType={setSearchType}
+              firstName={firstName}
+              setFirstName={setFirstName}
+              middleName={middleName}
+              setMiddleName={setMiddleName}
+              lastName={lastName}
+              setLastName={setLastName}
+              dateOfBirth={dateOfBirth}
+              setDateOfBirth={setDateOfBirth}
+              gender={gender}
+              setGender={setGender}
+              nhsNumber={nhsNumber}
+              setNhsNumber={setNhsNumber}
+              feedback={feedback}
+              isLoading={ptIsLoading}
+              patientData={patientData}
+              handleSearch={handleSearch}
+              handleSearchAgain={handleSearchAgain}
+            />
+          </DialogContent>
+        </Dialog>
+
+        <Dialog
+          fullWidth
+          maxWidth='md'
+          PaperProps={{
+            sx: { minHeight: '600px' }
+          }}
+          open={gpDialogOpen}
+          onClose={() => setGpDialogOpen(false)}
+        >
+          <DialogTitle>Find GP</DialogTitle>
+          <DialogContent>
+            <GPSearchDialog
+              gpSearchTerm={gpSearchTerm}
+              setGpSearchTerm={setGpSearchTerm}
+              handleGPSearch={handleGPSearch}
+              handleGPSelect={gp => {
+                handleGPSelect(gp)
+                setGpDialogOpen(false)
+              }}
+              gpSearchResults={gpSearchResults}
+              isLoading={isLoading}
+              error={error}
+            />
+          </DialogContent>
+        </Dialog>
+        <CustomSnackbar
+          message={snackbarMessage}
+          severity={snackSeverity}
+          horizontal={'center'}
+          vertical={'top'}
+          open={snackbarOpen}
+          setOpen={setSnackbarOpen}
+        />
+        <Dialog
+          open={openConfirmDialog}
+          onClose={handleCancelNoText}
+          aria-labelledby='alert-dialog-title'
+          aria-describedby='alert-dialog-description'
+        >
+          <DialogTitle id='alert-dialog-title'>{'Confirm Appointment Without Text Message'}</DialogTitle>
+          <DialogContent>
+            <Alert severity='warning'>
+              <AlertTitle>Warning</AlertTitle>
+              <DialogContentText id='alert-dialog-description'>
+                You have chosen not to send a text message with this appointment. Are you sure you want to proceed?
+              </DialogContentText>
+            </Alert>
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={handleCancelNoText}>Cancel</Button>
+            <Button onClick={handleConfirmNoText} autoFocus>
+              Confirm
+            </Button>
+          </DialogActions>
+        </Dialog>
+      </PerfectScrollbar>
+    </LocalizationProvider>
+  )
+}
+
+export default BookingComponent
