@@ -1,13 +1,25 @@
+import React, { useState, useEffect } from 'react'
 import { injectReducer } from 'src/store'
 
 const withReducer = (key, reducer) => WrappedComponent => {
   return props => {
-    // Check if the first argument is an object (multiple reducers)
-    // or a string (single reducer), and call injectReducer accordingly
-    if (typeof key === 'object') {
-      injectReducer(key) // Multiple reducers
-    } else {
-      injectReducer(key, reducer) // Single reducer
+    const [isReducerReady, setIsReducerReady] = useState(false)
+
+    useEffect(() => {
+      const addReducer = async () => {
+        if (typeof key === 'object') {
+          await injectReducer(key) // Multiple reducers
+        } else {
+          await injectReducer(key, reducer) // Single reducer
+        }
+        setIsReducerReady(true)
+      }
+
+      addReducer()
+    }, [])
+
+    if (!isReducerReady) {
+      return <div>Loading...</div> // Or any loading component
     }
 
     return <WrappedComponent {...props} />

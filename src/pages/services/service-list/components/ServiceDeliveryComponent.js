@@ -72,7 +72,9 @@ function ServiceDeliveryComponent({ appointment, onClose }) {
   }
 
   const handleGoToDelivery = delivery => {
-    router.push(`/services/service-delivery/${delivery.id}`)
+    // router.push(`/services/service-delivery/${delivery.id}`)
+    const url = `/services/service-delivery/${delivery.id}`
+    window.open(url, '_blank', 'noopener,noreferrer')
   }
 
   const handleView = delivery => {
