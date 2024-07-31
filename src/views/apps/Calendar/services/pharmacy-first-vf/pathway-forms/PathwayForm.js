@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react'
-import { DecisionTrees, acuteOtitisMediaDecisionTree } from './DecisionTrees'
 import {
   Box,
   Typography,
@@ -22,7 +21,7 @@ import NodeSummary from '../../commonformelements/AppointmentListComponents/Node
 
 function PathwayForm({ onServiceUpdate, state, ServiceTree, nodeStates, setNodeStates }) {
   const decisionData = state?.pathwayform
-  console.log('PathwayForm', decisionData, ServiceTree, "STATE", nodeStates)
+  console.log('PathwayForm', decisionData, ServiceTree, 'STATE', nodeStates)
   const [currentNode, setCurrentNode] = useState(ServiceTree.nodes?.root)
   // Initialize an object to keep track of checkbox states for each node
   //   const [nodeStates, setNodeStates] = useState({})
@@ -184,7 +183,6 @@ function PathwayForm({ onServiceUpdate, state, ServiceTree, nodeStates, setNodeS
 
   //   return summaryText;
   // };
-
 
   const handleActionChange = (nodeId, actionId, isChecked) => {
     const updatedState = { ...nodeStates }
@@ -1229,11 +1227,12 @@ function PathwayForm({ onServiceUpdate, state, ServiceTree, nodeStates, setNodeS
 
     const handleResponseChange = (nodeId, index, response) => {
       const updatedState = { ...nodeStates }
-      const updatedCriteria = criteria.map((criterion, idx) =>
-      idx === index
-        ? { ...criterion, response: response } // Create a new object with the updated response for the selected index
-        : criterion // For other indices, use the existing criterion object
-    );
+      const updatedCriteria = criteria.map(
+        (criterion, idx) =>
+          idx === index
+            ? { ...criterion, response: response } // Create a new object with the updated response for the selected index
+            : criterion // For other indices, use the existing criterion object
+      )
       updatedState[nodeId] = {
         ...nodeState,
         type: ServiceTree.nodes[nodeId].type,
@@ -1277,13 +1276,13 @@ function PathwayForm({ onServiceUpdate, state, ServiceTree, nodeStates, setNodeS
             </Typography>
           }
           titleTypographyProps={{ variant: 'h6' }}
-          sx={{ backgroundColor: 'primary.main', color: 'primary.contrastText',mb:4 }}
+          sx={{ backgroundColor: 'primary.main', color: 'primary.contrastText', mb: 4 }}
         />
         <CardContent>
           <Box sx={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
             {criteria.map((criterion, index) => (
               <Box key={index}>
-                <Typography>{`${index +1}) ${criterion.text}`}</Typography>
+                <Typography>{`${index + 1}) ${criterion.text}`}</Typography>
                 <Box sx={{ display: 'flex', flexDirection: 'row', gap: 1 }}>
                   <Button
                     variant={criterion.response === 'Yes' ? 'contained' : 'outlined'}
@@ -1322,43 +1321,42 @@ function PathwayForm({ onServiceUpdate, state, ServiceTree, nodeStates, setNodeS
   }
 
   const renderCountBasedNode = node => {
-   // Initialize node state from nodeStates or use the node's initial questions if not present
-  // Merge the default node state with any saved state from nodeStates
-  const nodeState = { ...ServiceTree.nodes[node.id], ...nodeStates[node.id] };
+    // Initialize node state from nodeStates or use the node's initial questions if not present
+    // Merge the default node state with any saved state from nodeStates
+    const nodeState = { ...ServiceTree.nodes[node.id], ...nodeStates[node.id] }
 
+    console.log('countbased nodeState', nodeState)
 
-  console.log('countbased nodeState', nodeState)
+    // Update nodeStates with the initialized node state if it wasn't already present
+    if (!nodeStates[node.id]) {
+      setNodeStates({ ...nodeStates, [node.id]: nodeState })
+    }
 
-  // Update nodeStates with the initialized node state if it wasn't already present
-  if (!nodeStates[node.id]) {
-    setNodeStates({ ...nodeStates, [node.id]: nodeState });
-  }
+    const handleResponseChange = (index, response) => {
+      // Create a copy of the questions array and update the response for the selected question
+      const updatedQuestions = nodeState.questions.map((question, i) =>
+        i === index ? { ...question, response } : question
+      )
 
-  const handleResponseChange = (index, response) => {
-    // Create a copy of the questions array and update the response for the selected question
-    const updatedQuestions = nodeState.questions.map((question, i) =>
-      i === index ? { ...question, response } : question
-    );
+      // Update the node state in nodeStates with the new questions array
+      const updatedNodeState = { ...nodeState, questions: updatedQuestions }
+      setNodeStates({ ...nodeStates, [node.id]: updatedNodeState })
+    }
 
-    // Update the node state in nodeStates with the new questions array
-    const updatedNodeState = { ...nodeState, questions: updatedQuestions };
-    setNodeStates({ ...nodeStates, [node.id]: updatedNodeState });
-  };
-
-  const yesCount = nodeState.questions.filter(question => question.response === node.countOption).length;
+    const yesCount = nodeState.questions.filter(question => question.response === node.countOption).length
     const handleNext = node => {
       console.log('nodeMap', node)
 
-      const nextNodeId = node.nextNodeMap[yesCount] || node.defaultNextNodeId;
+      const nextNodeId = node.nextNodeMap[yesCount] || node.defaultNextNodeId
 
       handleNextNode(nextNodeId)
     }
 
-    const handleAllResponses = (response) => {
-      const updatedQuestions = nodeState.questions.map(question => ({ ...question, response }));
+    const handleAllResponses = response => {
+      const updatedQuestions = nodeState.questions.map(question => ({ ...question, response }))
 
-      setNodeStates({ ...nodeStates, [node.id]: { ...nodeState, questions: updatedQuestions } });
-    };
+      setNodeStates({ ...nodeStates, [node.id]: { ...nodeState, questions: updatedQuestions } })
+    }
 
     return (
       <Card>
@@ -1371,7 +1369,7 @@ function PathwayForm({ onServiceUpdate, state, ServiceTree, nodeStates, setNodeS
             </Typography>
           }
           titleTypographyProps={{ variant: 'h6' }}
-          sx={{ backgroundColor: 'primary.main', color: 'primary.contrastText',mb:4 }}
+          sx={{ backgroundColor: 'primary.main', color: 'primary.contrastText', mb: 4 }}
         />
         <CardContent>
           <Typography sx={{}}>{node.content || node.context}</Typography>
@@ -1395,14 +1393,14 @@ function PathwayForm({ onServiceUpdate, state, ServiceTree, nodeStates, setNodeS
               </Button>
             </Box>
           ))}
-<Box sx={{ display: 'flex', justifyContent: 'center', gap: 2, mt: 2 }}>
-          <Button variant="outlined" color="primary" onClick={() => handleAllResponses('Yes')}>
-            Yes to All
-          </Button>
-          <Button variant="outlined" color="secondary" onClick={() => handleAllResponses('No')}>
-            No to All
-          </Button>
-        </Box>
+          <Box sx={{ display: 'flex', justifyContent: 'center', gap: 2, mt: 2 }}>
+            <Button variant='outlined' color='primary' onClick={() => handleAllResponses('Yes')}>
+              Yes to All
+            </Button>
+            <Button variant='outlined' color='secondary' onClick={() => handleAllResponses('No')}>
+              No to All
+            </Button>
+          </Box>
         </CardContent>
         <CardActions sx={{ justifyContent: 'flex-end', p: 2 }}>
           <Typography variant='h6' sx={{ mr: 2 }}>

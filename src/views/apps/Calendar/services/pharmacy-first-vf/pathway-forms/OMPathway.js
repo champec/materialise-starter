@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react'
-import { acuteOtitisMediaDecisionTree } from './DecisionTrees'
+import { acuteOtitisMediaDecisionTree } from './decisionTrees/AOMTree'
 import {
   Box,
   Typography,
