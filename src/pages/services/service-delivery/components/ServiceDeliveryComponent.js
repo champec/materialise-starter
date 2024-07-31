@@ -2,8 +2,8 @@ import React, { useState, useEffect } from 'react'
 import { useRouter } from 'next/router'
 import { Typography, Box, CircularProgress, Button } from '@mui/material'
 import { supabaseOrg as supabase } from 'src/configs/supabase'
-import AdvancedFormEngine from '../../components/AdvancedFormEngine'
-import { getFormDefinitionForService } from '../../utils/formDefinitions'
+import AdvancedFormEngine from './AdvancedFormEngine'
+import { getFormDefinitionForService } from './utils/getFormDefinitionForService'
 
 function ServiceDeliveryPage() {
   const router = useRouter()

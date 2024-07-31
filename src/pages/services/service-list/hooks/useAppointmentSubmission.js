@@ -8,7 +8,50 @@ import { parseISO, addMinutes, format, parse } from 'date-fns'
 import { createAppointment, updateAppointment } from 'src/store/apps/pharmacy-services/pharmacyServicesThunks'
 
 export const createServiceDeliveries = async (appointmentId, serviceId, appointmentStageId) => {
-  // ... (keep the existing createServiceDeliveries function as is)
+  // Fetch service details along with its stages
+  const { data: serviceData, error: serviceError } = await supabase
+    .from('ps_services')
+    .select(
+      `
+        *,
+        ps_service_stages (*)
+      `
+    )
+    .eq('id', serviceId)
+    .single()
+
+  if (serviceError) throw new Error('Error fetching service details')
+
+  let deliveryRecords = []
+
+  if (serviceData.multi_stage) {
+    // Create a service delivery for each stage
+    deliveryRecords = serviceData.ps_service_stages.map(stage => ({
+      appointment_id: appointmentId,
+      service_id: serviceId,
+      service_stage_id: stage.id,
+      status: 'Not Started',
+      outcome: 'pending'
+    }))
+  } else {
+    // For single-stage services, create one delivery using the appointment's service_stage_id
+    deliveryRecords = [
+      {
+        appointment_id: appointmentId,
+        service_id: serviceId,
+        service_stage_id: appointmentStageId,
+        status: 'Not Started',
+        outcome: 'pending'
+      }
+    ]
+  }
+
+  const { error: deliveryError } = await supabase.from('ps_service_delivery').insert(deliveryRecords)
+
+  if (deliveryError) {
+    console.log(deliveryError)
+    throw new Error('Error creating service delivery records', deliveryError.message)
+  }
 }
 
 const useAppointmentSubmission = () => {
