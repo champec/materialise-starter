@@ -10,7 +10,7 @@ import CustomAvatar from 'src/@core/components/mui/avatar'
 
 // ** Icon Imports
 import Icon from 'src/@core/components/icon'
-import format from 'date-fns/format'
+import { format } from 'date-fns'
 
 const CardStatsVertical = props => {
   // ** Props

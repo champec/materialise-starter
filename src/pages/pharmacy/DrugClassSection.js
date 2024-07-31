@@ -9,7 +9,7 @@ import { createTheme } from '@mui/material'
 import { ThemeProvider } from '@mui/material'
 import Grid from '@mui/material/Grid'
 import CardStatsVertical from './RegisterCard'
-import format from 'date-fns/format'
+import { format } from 'date-fns'
 
 const theme = createTheme({
   palette: {

@@ -26,7 +26,7 @@ import { Dialog, DialogActions, DialogContent, Fade } from '@mui/material'
 import Icon from 'src/@core/components/icon'
 
 // ** Third Party Imports
-import format from 'date-fns/format'
+import { format } from 'date-fns'
 import DatePicker from 'react-datepicker'
 import dayjs from 'dayjs'
 import advancedFormat from 'dayjs/plugin/advancedFormat'
@@ -483,18 +483,15 @@ const AppointmentList = () => {
     setAppointmentView(true)
   }
 
-  const csvOption = {
-    
-  }
+  const csvOption = {}
   const CustomToolbar = () => {
     return (
       <GridToolbarContainer>
-
         <GridToolbarExport options={csvOption} />
         {/* Include other custom buttons or menu items here */}
       </GridToolbarContainer>
-    );
-  };
+    )
+  }
 
   const handleOnChangeRange = dates => {
     const [start, end] = dates
@@ -624,22 +621,18 @@ const AppointmentList = () => {
               rows={filteredAppointments}
               columns={columns}
               checkboxSelection
-              components={{Toolbar: CustomToolbar}}
+              components={{ Toolbar: CustomToolbar }}
               disableSelectionOnClick
               pageSizeOptions={[10, 25, 50]}
               paginationModel={paginationModel}
               rowCount={totalCount}
               onSortModelChange={handleSortModelChange}
-              rowsPerPageOptions={[5, 10, 15, 20,30,50]}
+              rowsPerPageOptions={[5, 10, 15, 20, 30, 50]}
               pageSize={paginationModel.pageSize}
               sortModel={sortModel}
               onPaginationModelChange={setPaginationModel}
-              onPageSizeChange={(newPageSize) =>
-                setPaginationModel((prev) => ({ ...prev, pageSize: newPageSize }))
-              }
-              onPageChange={(newPage) =>
-                setPaginationModel((prev) => ({ ...prev, page: newPage }))
-              }
+              onPageSizeChange={newPageSize => setPaginationModel(prev => ({ ...prev, pageSize: newPageSize }))}
+              onPageChange={newPage => setPaginationModel(prev => ({ ...prev, page: newPage }))}
               onSelectionModelChange={rows => setSelectedRowIds(rows)}
               onRowDoubleClick={appointment => window.open(`/pharmacy-first/appointment-list/${appointment.id}`)}
             />

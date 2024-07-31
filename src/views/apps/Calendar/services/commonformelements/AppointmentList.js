@@ -25,7 +25,8 @@ import { Dialog, DialogActions, DialogContent, Fade, Button, Menu, MenuItem } fr
 import Icon from 'src/@core/components/icon'
 
 // ** Third Party Imports
-import format from 'date-fns/format'
+
+import { format } from 'date-fns'
 import DatePicker from 'react-datepicker'
 import dayjs from 'dayjs'
 import advancedFormat from 'dayjs/plugin/advancedFormat'
@@ -157,7 +158,7 @@ const defaultColumns = [
       )
     },
     valueGetter: ({ row }) => row.calendar_events.start
-  },
+  }
 ]
 /* eslint-disable */
 const CustomInput = forwardRef((props, ref) => {
@@ -214,7 +215,6 @@ const ServiceAppointmentList = ({ locallySelectedService, customColumns, setLoca
     // dispatch the delete action
     setOpenDeleteModal(true)
   }
-
 
   useEffect(() => {
     const serviceId = locallySelectedService?.id
@@ -494,28 +494,28 @@ const ServiceAppointmentList = ({ locallySelectedService, customColumns, setLoca
     //   { label: 'Booking Date', value: 'calendar_events.start' },
     //   { label: 'Status', value: 'consultation_status.title' }
     // ],
-    fileName:"Pharmex Appointments",
-    allColumns: true,
+    fileName: 'Pharmex Appointments',
+    allColumns: true
   }
-const CustomToolbar = () => {
-  return (
-    <GridToolbarContainer>
-
-      <GridToolbarExport options={csvOption} />
-      {/* Include other custom buttons or menu items here */}
-    </GridToolbarContainer>
-  );
-};
+  const CustomToolbar = () => {
+    return (
+      <GridToolbarContainer>
+        <GridToolbarExport options={csvOption} />
+        {/* Include other custom buttons or menu items here */}
+      </GridToolbarContainer>
+    )
+  }
 
   return (
     <DatePickerWrapper>
       <Grid container spacing={6}>
         <Grid item xs={12}>
           <Card>
-            <CardHeader title='Filters'
-            action={
-              <>
-                {/* <Button
+            <CardHeader
+              title='Filters'
+              action={
+                <>
+                  {/* <Button
                   variant='contained'
                   aria-haspopup='true'
                   onClick={handleClick}
@@ -530,8 +530,8 @@ const CustomToolbar = () => {
                   <MenuItem onClick={handleClose}>XLSX</MenuItem>
                   <MenuItem onClick={handleClose}>CSV</MenuItem>
                 </Menu> */}
-              </>
-            }
+                </>
+              }
             />
             <CardContent>
               <Grid container spacing={6}>
@@ -601,22 +601,18 @@ const CustomToolbar = () => {
               pagination
               rows={filteredAppointments}
               rowCount={totalCount}
-              components={{Toolbar: CustomToolbar}}
+              components={{ Toolbar: CustomToolbar }}
               columns={columns}
               checkboxSelection
               disableSelectionOnClick
               paginationMode='server'
-              rowsPerPageOptions={[5, 10, 15, 20,30,50]}
+              rowsPerPageOptions={[5, 10, 15, 20, 30, 50]}
               pageSize={paginationModel.pageSize}
               paginationModel={paginationModel}
               onPaginationModelChange={setPaginationModel}
               onSelectionModelChange={rows => setSelectedRowIds(rows)}
-              onPageSizeChange={(newPageSize) =>
-                setPaginationModel((prev) => ({ ...prev, pageSize: newPageSize }))
-              }
-              onPageChange={(newPage) =>
-                setPaginationModel((prev) => ({ ...prev, page: newPage }))
-              }
+              onPageSizeChange={newPageSize => setPaginationModel(prev => ({ ...prev, pageSize: newPageSize }))}
+              onPageChange={newPage => setPaginationModel(prev => ({ ...prev, page: newPage }))}
               onRowDoubleClick={appointment => window.open(`/pharmacy-first/appointment-list/${appointment.id}`)}
             />
           </Card>

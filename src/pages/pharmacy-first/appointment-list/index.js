@@ -26,7 +26,7 @@ import { Dialog, DialogActions, DialogContent, Fade } from '@mui/material'
 import Icon from 'src/@core/components/icon'
 
 // ** Third Party Imports
-import format from 'date-fns/format'
+import { format } from 'date-fns'
 import DatePicker from 'react-datepicker'
 import dayjs from 'dayjs'
 import advancedFormat from 'dayjs/plugin/advancedFormat'

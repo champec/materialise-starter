@@ -2,7 +2,7 @@ import React, { useState } from 'react'
 import { Box, Typography, Paper, Chip, Alert, AlertTitle } from '@mui/material'
 
 import IconifyIcon from 'src/@core/components/icon'
-import format from 'date-fns/format'
+import { format } from 'date-fns'
 
 const formatDate = dateString => {
   if (!dateString) return 'N/A'
