@@ -47,13 +47,13 @@ const navigation = (role, plan) => {
       children: [
         {
           title: 'Service Calendar',
-          path: '/pharmacy-first/appointment-scheduler',
+          path: '/services/calendar',
           icon: 'streamline:waiting-appointments-calendar',
           disabled: false
         },
         {
           title: 'Service List',
-          path: '/services/pharmacy-first/appointment-list',
+          path: '/services/service-list',
           icon: 'bi:file-medical-fill',
           disabled: false
         },
@@ -61,42 +61,6 @@ const navigation = (role, plan) => {
           title: 'Service Stats',
           path: '/services/service-stats',
           icon: 'bi:file-medical-fill',
-          disabled: false
-        },
-        {
-          title: 'Call Screen',
-          path: '/pharmacy-first/call-screen',
-          icon: 'wpf:medical-doctor',
-          disabled: false
-        },
-        {
-          title: 'NMS',
-          path: '/services/nms?service=NMS',
-          icon: 'game-icons:medicine-pills',
-          disabled: false
-        },
-        {
-          title: 'DMS',
-          path: '/services/dms?service=DMS',
-          icon: 'bi:hospital-fill',
-          disabled: false
-        },
-        {
-          title: 'HTN',
-          path: '/services/htn?service=HTN',
-          icon: 'bi:hospital-fill',
-          disabled: false
-        },
-        {
-          title: 'PFS',
-          path: '/services/pfs?service=PFS',
-          icon: 'bi:hospital-fill',
-          disabled: false
-        },
-        {
-          title: 'FLU',
-          path: '/services/flu?service=FLU',
-          icon: 'bi:hospital-fill',
           disabled: false
         }
       ]

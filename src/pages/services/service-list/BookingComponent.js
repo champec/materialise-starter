@@ -48,7 +48,7 @@ const BookingComponent = ({ appointment, onClose }) => {
   const [snackbarOpen, setSnackbarOpen] = useState(false)
   const [openConfirmDialog, setOpenConfirmDialog] = useState(false)
   const [objectToSubmit, setObjectToSubmit] = useState(null)
-  const { submitAppointment, loading } = useAppointmentSubmission()
+  const { submitAppointment, updateExistingAppointment, loading } = useAppointmentSubmission()
 
   const showMessage = (severity, message) => {
     setSnackbarSeverity(severity)
@@ -195,19 +195,6 @@ const BookingComponent = ({ appointment, onClose }) => {
     })
   }
 
-  // const handleSubmit = event => {
-  //   event.preventDefault()
-
-  //   const ObjectToSubmit = { ...formData, gp_object: { ...selectedGP }, patient_object: { ...selectedPatient } }
-  //   console.log('details we have', ObjectToSubmit)
-  //   // if (appointment) {
-  //   //   dispatch(updateAppointment({ id: appointment.id, ...formData }))
-  //   // } else {
-  //   //   dispatch(createAppointment(formData))
-  //   // }
-  //   // onClose()
-  // }
-
   const handleSubmit = event => {
     event.preventDefault()
 
@@ -244,16 +231,33 @@ const BookingComponent = ({ appointment, onClose }) => {
     }
   }
 
+  // const submitForm = async dataToSubmit => {
+  //   console.log('Submitting data:', dataToSubmit)
+  //   if (appointment) {
+  //     dispatch(updateAppointment({ id: appointment.id, ...dataToSubmit }))
+  //   } else {
+  //     // dispatch(createAppointment(dataToSubmit))
+  //     const newAppointment = await submitAppointment(dataToSubmit)
+  //     console.log('New appointment created:', newAppointment)
+  //   }
+  //   // onClose()
+  // }
+
   const submitForm = async dataToSubmit => {
     console.log('Submitting data:', dataToSubmit)
-    if (appointment) {
-      dispatch(updateAppointment({ id: appointment.id, ...dataToSubmit }))
-    } else {
-      // dispatch(createAppointment(dataToSubmit))
-      const newAppointment = await submitAppointment(dataToSubmit)
-      console.log('New appointment created:', newAppointment)
+    try {
+      if (appointment) {
+        const updatedAppointment = await updateExistingAppointment(dataToSubmit)
+        console.log('Appointment updated:', updatedAppointment)
+      } else {
+        const newAppointment = await submitAppointment(dataToSubmit)
+        console.log('New appointment created:', newAppointment)
+      }
+      onClose()
+    } catch (error) {
+      console.error('Error submitting appointment:', error)
+      showMessage('error', 'Failed to submit appointment. Please try again.')
     }
-    // onClose()
   }
 
   const handleConfirmNoText = () => {

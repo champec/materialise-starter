@@ -133,6 +133,15 @@ const AdvancedFormEngine: React.FC<AdvancedFormEngineProps> = ({
       ...prevData,
       [currentNodeId]: answer
     }))
+
+    // Clear the error for this field if it exists
+    if (errors[currentNodeId]) {
+      setErrors(prevErrors => {
+        const newErrors = { ...prevErrors }
+        delete newErrors[currentNodeId]
+        return newErrors
+      })
+    }
   }
 
   const handleNext = () => {
@@ -205,16 +214,46 @@ const AdvancedFormEngine: React.FC<AdvancedFormEngineProps> = ({
     setIsLocked(formDefinition.nodes[currentNodeId].isStopNode || false)
     setFormData(preservedFormData)
   }
+
+  const validateAndNavigate = (targetNodeId: string) => {
+    const currentError = validateField(currentNode.field, formData[currentNodeId])
+    if (currentError) {
+      setErrors(prevErrors => ({ ...prevErrors, [currentNodeId]: currentError }))
+      return false
+    }
+
+    // Clear the error for the current field if it was previously set
+    setErrors(prevErrors => {
+      const newErrors = { ...prevErrors }
+      delete newErrors[currentNodeId]
+      return newErrors
+    })
+
+    setCurrentNodeId(targetNodeId)
+    return true
+  }
+
   const handleNavigation = (nodeId: string) => {
     if (!isLocked || nodeId === formDefinition.nodes[currentNodeId].returnTo) {
       const targetIndex = visibleHistory.indexOf(nodeId)
       if (targetIndex !== -1) {
-        // Only navigate to nodes that are in the current history
-        setCurrentNodeId(nodeId)
+        const currentIndex = visibleHistory.indexOf(currentNodeId)
+
+        // If moving forward, validate all steps in between
+        if (targetIndex > currentIndex) {
+          for (let i = currentIndex; i < targetIndex; i++) {
+            if (!validateAndNavigate(visibleHistory[i])) {
+              return // Stop if validation fails
+            }
+          }
+        }
+
+        validateAndNavigate(nodeId)
         setIsLocked(formDefinition.nodes[nodeId].isStopNode || false)
       }
     }
   }
+
   const handleBack = () => {
     if (isLocked) {
       const returnNodeId = formDefinition.nodes[currentNodeId].returnTo

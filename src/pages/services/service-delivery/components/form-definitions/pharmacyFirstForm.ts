@@ -72,6 +72,7 @@ const pharmacyFirstForm = {
       field: {
         type: 'custom',
         question: 'Please select all applicable symptoms:',
+        options: ['Brain wave', 'ear aache', 'childishgambino'],
         component: SymptomChecklist,
         required: true
       },

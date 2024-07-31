@@ -15,12 +15,18 @@ import {
   DialogContent,
   DialogActions,
   Snackbar,
-  Alert
+  Alert,
+  Grid,
+  Card,
+  CardContent
 } from '@mui/material'
 import { createServiceDeliveries } from '../hooks/useAppointmentSubmission'
 import { fetchAppointments } from 'src/store/apps/pharmacy-services/pharmacyServicesThunks'
 import { supabaseOrg as supabase } from 'src/configs/supabase'
 import { useDispatch } from 'react-redux'
+import ServiceDeliverySummary from './ServiceDeliverySummary'
+import ServiceDeliveryChat from './ServiceDeliveryChat'
+import Icon from 'src/@core/components/icon'
 
 function ServiceDeliveryComponent({ appointment, onClose }) {
   const dispatch = useDispatch()
@@ -31,6 +37,7 @@ function ServiceDeliveryComponent({ appointment, onClose }) {
   const [viewDialogOpen, setViewDialogOpen] = useState(false)
   const [selectedDelivery, setSelectedDelivery] = useState(null)
   const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'info' })
+  const [showChat, setShowChat] = useState(false)
 
   useEffect(() => {
     if (appointment) {
@@ -72,7 +79,6 @@ function ServiceDeliveryComponent({ appointment, onClose }) {
   }
 
   const handleGoToDelivery = delivery => {
-    // router.push(`/services/service-delivery/${delivery.id}`)
     const url = `/services/service-delivery/${delivery.id}`
     window.open(url, '_blank', 'noopener,noreferrer')
   }
@@ -86,86 +92,91 @@ function ServiceDeliveryComponent({ appointment, onClose }) {
     setSnackbar({ open: true, message, severity })
   }
 
+  const toggleChat = () => setShowChat(!showChat)
+
   if (!appointment) {
     return <Typography>No appointment selected</Typography>
   }
 
   return (
-    <Box>
-      <Typography variant='h5'>Service Delivery for {appointment.patient_object?.full_name}</Typography>
-      <Typography>Service: {appointment.service_name}</Typography>
-      <Typography>Scheduled Time: {appointment.scheduled_time}</Typography>
-      <Typography>Appointment Type: {appointment.appointment_type}</Typography>
-
-      {loading ? (
-        <CircularProgress />
-      ) : serviceDeliveries.length > 0 ? (
-        <Box>
-          <Table>
-            <TableHead>
-              <TableRow>
-                <TableCell>Stage</TableCell>
-                <TableCell>Status</TableCell>
-                <TableCell>Actions</TableCell>
-              </TableRow>
-            </TableHead>
-            <TableBody>
-              {serviceDeliveries.map(delivery => (
-                <TableRow key={delivery.id}>
-                  <TableCell>{delivery.ps_service_stages.name}</TableCell>
-                  <TableCell>{delivery.status}</TableCell>
-                  <TableCell>
-                    <Button variant='contained' size='small' onClick={() => handleGoToDelivery(delivery)}>
-                      Go to Delivery
-                    </Button>
-                    <Button variant='outlined' size='small' onClick={() => handleView(delivery)} sx={{ ml: 1 }}>
-                      View
-                    </Button>
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
+    <Grid container spacing={6}>
+      <Grid item xs={12}>
+        <Box sx={{ mb: 4 }}>
+          <Typography variant='h5'>Service Delivery for {appointment.patient_object?.full_name}</Typography>
+          <Typography>Service: {appointment?.ps_services?.name}</Typography>
+          <Typography>Scheduled Time: {appointment.scheduled_time}</Typography>
+          <Typography>Appointment Type: {appointment.appointment_type}</Typography>
         </Box>
-      ) : (
-        <Box>
-          <Typography>No service deliveries configured</Typography>
-          <Button onClick={handleConfigureService} disabled={configuring}>
-            {configuring ? <CircularProgress size={24} /> : 'Configure Service'}
-          </Button>
-        </Box>
-      )}
-
-      <Box sx={{ mt: 2 }}>
-        <Button onClick={fetchServiceDeliveries} disabled={loading} sx={{ mr: 1 }}>
-          Refresh
-        </Button>
-        <Button onClick={onClose}>Close</Button>
-      </Box>
-
-      <Dialog open={viewDialogOpen} onClose={() => setViewDialogOpen(false)}>
-        <DialogTitle>Delivery Details</DialogTitle>
-        <DialogContent>
-          {selectedDelivery && (
-            <Box>
-              <Typography>Stage: {selectedDelivery.ps_service_stages.name}</Typography>
-              <Typography>Status: {selectedDelivery.status}</Typography>
-              <Typography>Appointment Type: {appointment.appointment_type}</Typography>
-              {/* Add more delivery details here */}
+        <Card>
+          <CardContent>
+            <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 2 }}>
+              <Button
+                variant='contained'
+                onClick={toggleChat}
+                startIcon={<Icon icon={showChat ? 'mdi:table' : 'mdi:message-outline'} />}
+              >
+                {showChat ? 'Show Deliveries' : 'Show Chat'}
+              </Button>
+              <Button onClick={onClose}>Close</Button>
             </Box>
-          )}
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setViewDialogOpen(false)}>Close</Button>
-        </DialogActions>
-      </Dialog>
+            {showChat ? (
+              <ServiceDeliveryChat appointment={appointment} />
+            ) : loading ? (
+              <CircularProgress />
+            ) : serviceDeliveries.length > 0 ? (
+              <Table>
+                <TableHead>
+                  <TableRow>
+                    <TableCell>Stage</TableCell>
+                    <TableCell>Status</TableCell>
+                    <TableCell>Actions</TableCell>
+                  </TableRow>
+                </TableHead>
+                <TableBody>
+                  {serviceDeliveries.map(delivery => (
+                    <TableRow key={delivery.id}>
+                      <TableCell>{delivery.ps_service_stages.name}</TableCell>
+                      <TableCell>{delivery.status}</TableCell>
+                      <TableCell>
+                        <Button variant='contained' size='small' onClick={() => handleGoToDelivery(delivery)}>
+                          Go to Delivery
+                        </Button>
+                        <Button variant='outlined' size='small' onClick={() => handleView(delivery)} sx={{ ml: 1 }}>
+                          View
+                        </Button>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            ) : (
+              <Box>
+                <Typography>No service deliveries configured</Typography>
+                <Button onClick={handleConfigureService} disabled={configuring}>
+                  {configuring ? <CircularProgress size={24} /> : 'Configure Service'}
+                </Button>
+              </Box>
+            )}
+          </CardContent>
+        </Card>
+      </Grid>
+
+      {selectedDelivery && (
+        <ServiceDeliverySummary
+          deliveryId={selectedDelivery.id}
+          onClose={() => {
+            setViewDialogOpen(false)
+            setSelectedDelivery(null)
+          }}
+        />
+      )}
 
       <Snackbar open={snackbar.open} autoHideDuration={6000} onClose={() => setSnackbar({ ...snackbar, open: false })}>
         <Alert onClose={() => setSnackbar({ ...snackbar, open: false })} severity={snackbar.severity}>
           {snackbar.message}
         </Alert>
       </Snackbar>
-    </Box>
+    </Grid>
   )
 }
 

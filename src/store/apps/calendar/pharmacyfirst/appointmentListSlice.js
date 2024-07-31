@@ -7,12 +7,10 @@ const supabase = supabaseOrg
 export const fetchAppointments = createAsyncThunk(
   'appointmentList/fetchAppointments',
   async ({ dateRange, type, table, service_id, service_table, page, pageSize }, { getState }) => {
-    const orgId = getState().organisation.organisation.id;
+    const orgId = getState().organisation.organisation.id
 
-    const offset = page * pageSize;
-    const limit = pageSize;
-
-
+    const offset = page * pageSize
+    const limit = pageSize
 
     // Set default start and end dates to 2 weeks before and after today
     const defaultStartDate = dayjs().subtract(2, 'week').startOf('day').toISOString()
@@ -64,7 +62,7 @@ export const fetchAppointments = createAsyncThunk(
     }
 
     console.log(data, 'fetchAppointments', count)
-    return { data:data || [], totalCount: count };
+    return { data: data || [], totalCount: count }
   }
 )
 
@@ -103,8 +101,8 @@ export const createThreadAndSendSMS = createAsyncThunk(
     const { data, error } = await supabase
       .from('sms_threads')
       .insert({
-        patient_id: patientId,
-        consultation_id: appointmentId,
+        patientId,
+        appointment_id: appointmentId,
         organisation_id: orgId,
         patient_phone_number: phoneNumber
       })
@@ -112,7 +110,6 @@ export const createThreadAndSendSMS = createAsyncThunk(
       .single()
 
     if (error) {
-      console.error(error)
       throw error // Consider throwing the error to be handled by Redux Toolkit
     }
 

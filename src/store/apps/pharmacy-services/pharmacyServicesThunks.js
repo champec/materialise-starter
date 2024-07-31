@@ -72,7 +72,6 @@ export const fetchSubscribedServices = createAsyncThunk(
 
 // Other thunks (createAppointment, updateAppointment, deleteAppointment) remain the same
 
-// Create a new appointment
 export const createAppointment = createAsyncThunk(
   'pharmacyServices/createAppointment',
   async (appointmentData, { getState }) => {
@@ -87,10 +86,11 @@ export const createAppointment = createAsyncThunk(
   }
 )
 
-// Update an existing appointment
 export const updateAppointment = createAsyncThunk(
   'pharmacyServices/updateAppointment',
-  async ({ id, ...updateData }, { getState }) => {
+  async (appointmentData, { getState }) => {
+    const { id, ps_services, ...updateData } = appointmentData
+    console.log('APPOINTMENT DATA', updateData)
     const { data, error } = await supabase.from('ps_appointments').update(updateData).eq('id', id).select()
 
     if (error) throw error
@@ -98,7 +98,6 @@ export const updateAppointment = createAsyncThunk(
   }
 )
 
-// Delete an appointment
 export const deleteAppointment = createAsyncThunk('pharmacyServices/deleteAppointment', async (id, { getState }) => {
   const { error } = await supabase.from('ps_appointments').delete().eq('id', id)
 

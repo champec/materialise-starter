@@ -17,6 +17,7 @@ import {
 import { supabaseOrg as supabase } from 'src/configs/supabase'
 import AdvancedFormEngine from './components/AdvancedFormEngine'
 import { getFormDefinitionForService } from './components/utils/getFormDefinitionForService'
+import VideoCallPage from './remote-video'
 
 function ServiceDeliveryPage() {
   const router = useRouter()
@@ -127,6 +128,18 @@ function ServiceDeliveryPage() {
       <Box display='flex' justifyContent='center' alignItems='center' minHeight='100vh'>
         <Typography color='error'>Error loading service delivery information</Typography>
       </Box>
+    )
+  }
+
+  if (appointment.appointment_type === 'remote-video' && appointment.remote_details) {
+    return (
+      <VideoCallPage
+        appointment={appointment}
+        serviceDelivery={serviceDelivery}
+        formDefinition={formDefinition}
+        onSubmit={handleFormSubmit}
+        onSaveProgress={handleSaveProgress}
+      />
     )
   }
 
