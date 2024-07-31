@@ -21,11 +21,22 @@ module.exports = withTM({
   eslint: {
     ignoreDuringBuilds: true
   },
-  webpack: config => {
+  // Option 1: Ignore TypeScript errors (less safe, but quicker fix)
+  // typescript: {
+  //   ignoreBuildErrors: true,
+  // },
+  // Option 2: Don't ignore TypeScript errors (safer, but requires fixing type issues)
+  typescript: {
+    ignoreBuildErrors: false
+  },
+  webpack: (config, { isServer }) => {
     config.resolve.alias = {
       ...config.resolve.alias,
       apexcharts: path.resolve(__dirname, './node_modules/apexcharts-clevision')
     }
+
+    // Exclude Supabase functions from webpack processing
+    config.externals = [...(config.externals || []), 'supabase']
 
     return config
   }
