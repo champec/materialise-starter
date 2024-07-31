@@ -1,7 +1,10 @@
 import React, { useState, useEffect, useCallback } from 'react'
 import { useDispatch } from 'react-redux'
 import { supabaseOrg as supabase } from 'src/configs/supabase'
-import { appendMessageToThread, createNewThread } from 'src/store/apps/calendar/pharmacyfirst/appointmentListSlice'
+import {
+  appendMessageToThread,
+  createThreadAndSendSMS
+} from 'src/store/apps/calendar/pharmacyfirst/appointmentListSlice'
 import { List, ListItem, Divider, TextField, Button, Typography, Box, CircularProgress } from '@mui/material'
 import Swal from 'sweetalert2'
 
@@ -63,10 +66,13 @@ function ServiceDeliveryChat({ appointment }) {
 
       if (!thread_id) {
         response = await dispatch(
-          createNewThread({
-            appointmentId: appointment.id,
+          createThreadAndSendSMS({
             patientId: appointment.patient_id,
-            message: newMessage
+            patientName: appointment.patient_object.full_name,
+            message: newMessage,
+            phoneNumber: appointment.patient_object.mobile_number,
+            appointmentId: appointment.id,
+            time: appointment.scheduled_time
           })
         )
         setThreadId(response.payload.id)
