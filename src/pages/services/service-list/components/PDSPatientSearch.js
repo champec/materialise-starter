@@ -20,7 +20,6 @@ import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns'
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider'
 import { v4 as uuidv4 } from 'uuid'
 import axios from 'axios'
-import { utcToZonedTime } from 'date-fns-tz'
 import PatientConfirmation from './PDSPatientConfirmation'
 import usePatient from '../hooks/usePatient'
 
