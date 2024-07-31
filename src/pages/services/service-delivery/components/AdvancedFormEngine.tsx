@@ -20,21 +20,30 @@ import {
   Checkbox
 } from '@mui/material'
 
+// Add these interfaces
+interface ProgressionCriteria {
+  type: 'allYes' | 'allNo' | 'someYes'
+  count?: number
+}
+
 interface FormField {
-  type: 'text' | 'select' | 'radio' | 'custom' | 'hidden'
+  type: 'text' | 'select' | 'radio' | 'custom' | 'hidden' | 'checkbox'
   question: string
   options?: string[]
   required?: boolean
-  component?: React.ComponentType<any>
+  component?: React.ComponentType<any> | 'SymptomChecklist'
   validate?: (value: any) => string | null
+  progressionCriteria?: ProgressionCriteria
 }
 
 interface FormNode {
   id: string
   field: FormField
   next: (answer: any) => string | null
+  isEndNode?: boolean
   isStopNode?: boolean
   returnTo?: string
+  hidden?: boolean
 }
 
 interface FormDefinition {
@@ -43,11 +52,24 @@ interface FormDefinition {
   nodes: Record<string, FormNode>
 }
 
+type CustomComponentType = React.ComponentType<any> | 'SymptomChecklist'
+
 interface AdvancedFormEngineProps {
   formDefinition: FormDefinition
   initialData?: Record<string, any>
   onSubmit: (formData: Record<string, any>) => void
   onSaveProgress: (formData: Record<string, any>) => void
+}
+
+// Ensure your SymptomChecklist component is typed correctly
+interface SymptomChecklistProps {
+  id: string
+  value: Record<string, boolean>
+  onChange: (value: Record<string, boolean>) => void
+  error?: string
+  options: string[]
+  question: string
+  progressionCriteria?: ProgressionCriteria
 }
 
 const SafetyNettingChecklist = ({ id, value, onChange, error, options, question }) => {
@@ -417,7 +439,7 @@ const AdvancedFormEngine: React.FC<AdvancedFormEngineProps> = ({
         )
       case 'custom':
         if (field.component) {
-          const CustomComponent = field.component
+          let CustomComponent: React.ComponentType<any>
           return (
             <CustomComponent
               id={currentNodeId}
