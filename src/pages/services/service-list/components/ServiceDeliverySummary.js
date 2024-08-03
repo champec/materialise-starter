@@ -16,7 +16,7 @@ import {
 } from '@mui/material'
 import { supabaseOrg as supabase } from 'src/configs/supabase'
 import Icon from '@iconify/react'
-import { getFormDefinitionForService } from '../../service-delivery/components/utils/getFormDefinitionForService'
+import { getFormDefinitionForService } from '../../../../views/apps/services/serviceDelivery/components/utils/getFormDefinitionForService'
 
 const renderQuestionAnswer = (field, value) => {
   const renderValue = () => {

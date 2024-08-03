@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react'
 import { Box, Typography, Drawer, Button, IconButton, Snackbar, Alert } from '@mui/material'
 // import CloseIcon from '@mui/icons-material/Close'
 import DailyIframe from '@daily-co/daily-js'
-import AdvancedFormEngine from '../components/AdvancedFormEngine'
+import AdvancedFormEngine from '../../../../views/apps/services/serviceDelivery/components/AdvancedFormEngine'
 import { Icon } from '@iconify/react'
 
 const VideoCallPage = ({ appointment, serviceDelivery, formDefinition, onSubmit, onSaveProgress }) => {

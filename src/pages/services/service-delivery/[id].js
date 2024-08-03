@@ -15,8 +15,8 @@ import {
   Alert
 } from '@mui/material'
 import { supabaseOrg as supabase } from 'src/configs/supabase'
-import AdvancedFormEngine from './components/AdvancedFormEngine'
-import { getFormDefinitionForService } from './components/utils/getFormDefinitionForService'
+import AdvancedFormEngine from '../../../views/apps/services/serviceDelivery/components/AdvancedFormEngine'
+import { getFormDefinitionForService } from '../../../views/apps/services/serviceDelivery/components/utils/getFormDefinitionForService'
 import VideoCallPage from './remote-video'
 
 function ServiceDeliveryPage() {
