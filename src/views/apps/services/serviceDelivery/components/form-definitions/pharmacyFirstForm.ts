@@ -1,6 +1,3 @@
-import SymptomChecklist from '../CustomFormFiekds/SymptomChecklist'
-import BloodPressureComponent from '../CustomFormFiekds/BloodPressureComponent'
-
 const pharmacyFirstForm = {
   name: 'Pharmacy First Service',
   startNode: 'patientConsent',
@@ -73,7 +70,7 @@ const pharmacyFirstForm = {
         type: 'custom',
         question: 'Please select all applicable symptoms:',
         options: ['Brain wave', 'ear aache', 'childishgambino'],
-        component: SymptomChecklist,
+        component: 'SymptomChecklist',
         required: true
       },
       next: () => 'temperature'
@@ -107,7 +104,7 @@ const pharmacyFirstForm = {
       field: {
         type: 'custom',
         question: "Please enter the patient's blood pressure:",
-        component: BloodPressureComponent,
+        component: 'BloodPressureComponent',
         required: true
       },
       next: answer => {
@@ -178,7 +175,7 @@ const utiServiceDefinition = {
       id: 'eligibilityCheck',
       field: {
         type: 'custom',
-        component: SymptomChecklist,
+        component: 'SymptomChecklist',
         question: 'Check for exclusion criteria:',
         options: [
           'Patient is pregnant',
@@ -219,7 +216,7 @@ a life threatening emergency`,
       id: 'keySymptoms',
       field: {
         type: 'custom',
-        component: SymptomChecklist,
+        component: 'SymptomChecklist',
         question: 'Does the patient have any of the 3 key diagnostic signs/symptoms?',
         options: [
           'Dysuria (burning pain when passing urine)',
@@ -240,7 +237,7 @@ a life threatening emergency`,
       id: 'otherUrinarySymptoms',
       field: {
         type: 'custom',
-        component: SymptomChecklist,
+        component: 'SymptomChecklist',
         question: 'Are there other urinary symptoms?',
         options: ['Urgency', 'Frequency', 'Visible haematuria', 'Suprapubic pain/tenderness'],
         required: true
@@ -262,7 +259,7 @@ a life threatening emergency`,
       id: 'otherDiagnoses',
       field: {
         type: 'custom',
-        component: SymptomChecklist,
+        component: 'SymptomChecklist',
         question: 'additional symptom check:',
         options: [
           'Vaginal discharge',
@@ -332,7 +329,7 @@ a life threatening emergency`,
       id: 'pyelonephritisCheck',
       field: {
         type: 'custom',
-        component: SymptomChecklist,
+        component: 'SymptomChecklist',
         question: 'Check for any new signs/symptoms of PYELONEPHRITIS:',
         options: [
           'Kidney pain/tenderness in back under ribs',
