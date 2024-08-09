@@ -118,13 +118,46 @@ const BookingComponent = ({ appointment, onClose }) => {
 
   useEffect(() => {
     if (appointment) {
+      const {
+        pharmacy_id,
+        patient_id,
+        service_id,
+        appointment_type,
+        overall_status,
+        current_stage_id,
+        scheduled_time,
+        details,
+        patient_object,
+        gp_object
+      } = appointment
+
+      console.log('DETAILS SENDING TO FORM DATA', { details })
+
       setFormData({
-        ...appointment,
-        scheduled_time: appointment.scheduled_time ? parseISO(appointment.scheduled_time) : null
+        pharmacy_id,
+        patient_id,
+        service_id,
+        appointment_type,
+        overall_status,
+        current_stage_id,
+        scheduled_time: scheduled_time ? parseISO(scheduled_time) : null,
+        details: {
+          ...details,
+          triage: details.triage ? { ...details.triage } : {}
+        }
       })
-      setSelectedPatient(appointment.patient_object)
-      setSelectedGP(appointment.gp_object)
-      setSelectedService(appointment.service_id)
+
+      setSelectedPatient(patient_object)
+      setSelectedGP(gp_object)
+      setSelectedService(service_id)
+    }
+  }, [appointment])
+
+  useEffect(() => {
+    if (appointment) {
+      // ... (setting formData as shown above)
+
+      console.log('Form data after initialization:', { appointment, formData })
     }
   }, [appointment])
 
@@ -144,46 +177,90 @@ const BookingComponent = ({ appointment, onClose }) => {
     setSelectedService(value)
     setFormData(prevData => ({
       ...prevData,
-      current_stage_id: ''
+      current_stage_id: '',
+      details: {
+        ...prevData.details,
+        triage: {}
+      }
     }))
   }
 
   const handleFieldChange = event => {
+    // Extract the name and value from the event target (usually an input field)
     const { name, value } = event.target
 
-    // Split the name to handle nested fields
+    // Split the name into an array of keys
+    // For example, 'details.triage.question1' becomes ['details', 'triage', 'question1']
     const keys = name.split('.')
 
-    console.log('Current formData:', formData)
-    console.log('Attempting to change:', name, 'to', value)
-
     setFormData(prevData => {
-      console.log('Previous data:', prevData)
+      // If there's only one key, it's a top-level update
+      if (keys.length === 1) {
+        // Return a new object with all previous data, updating only the specified field
+        return { ...prevData, [name]: value }
+      }
 
-      let updatedData = { ...prevData }
-      let nestedData = updatedData
+      // Handle nested updates
+      // Separate the first key (outerKey) from the rest (innerKeys)
+      // For 'details.triage.question1':
+      // outerKey would be 'details'
+      // innerKeys would be ['triage', 'question1']
+      const [outerKey, ...innerKeys] = keys
 
-      for (let i = 0; i < keys.length - 1; i++) {
-        if (!nestedData[keys[i]]) {
-          nestedData[keys[i]] = {}
+      // Join the inner keys back into a string
+      // ['triage', 'question1'] becomes 'triage.question1'
+      const innerPath = innerKeys.join('.')
+
+      // Return a new state object
+      return {
+        ...prevData, // Spread all previous data
+        [outerKey]: {
+          // Update the outer key (e.g., 'details')
+          ...prevData[outerKey], // Spread the previous data for this key
+          [innerPath]: value // Update the nested value
+          // This creates a new object for 'details', with a new nested structure
+          // It effectively does: details: { ...prevDetails, triage: { ...prevTriage, question1: value } }
         }
-        nestedData = nestedData[keys[i]]
-        console.log(`Nested level ${i}:`, nestedData)
       }
-
-      console.log('Final nested data before update:', nestedData)
-      console.log('Is triage frozen?', Object.isFrozen(nestedData.triage))
-
-      try {
-        nestedData[keys[keys.length - 1]] = value
-      } catch (error) {
-        console.error('Error updating nested data:', error)
-      }
-
-      console.log('Updated data:', updatedData)
-      return updatedData
     })
   }
+
+  // const handleFieldChange = event => {
+  //   const { name, value } = event.target
+
+  //   // Split the name to handle nested fields
+  //   const keys = name.split('.')
+
+  //   console.log('Current formData:', formData)
+  //   console.log('Attempting to change:', name, 'to', value)
+
+  //   setFormData(prevData => {
+  //     console.log('Previous data:', prevData)
+
+  //     let updatedData = { ...prevData }
+  //     let nestedData = updatedData
+
+  //     for (let i = 0; i < keys.length - 1; i++) {
+  //       if (!nestedData[keys[i]]) {
+  //         nestedData[keys[i]] = {}
+  //       }
+  //       nestedData = nestedData[keys[i]]
+  //       console.log(`Nested level ${i}:`, nestedData)
+  //     }
+
+  //     console.log('Final nested data before update:', nestedData)
+  //     console.log('Is triage frozen?', Object.isFrozen(nestedData.triage))
+
+  //     try {
+  //       nestedData[keys[keys.length - 1]] = value
+  //     } catch (error) {
+  //       console.error('Error updating nested data:', error)
+  //     }
+
+  //     console.log('Updated data:', updatedData)
+  //     return updatedData
+  //   })
+  // }
 
   const handleCheckboxChange = event => {
     const { name, checked } = event.target
@@ -231,23 +308,11 @@ const BookingComponent = ({ appointment, onClose }) => {
     }
   }
 
-  // const submitForm = async dataToSubmit => {
-  //   console.log('Submitting data:', dataToSubmit)
-  //   if (appointment) {
-  //     dispatch(updateAppointment({ id: appointment.id, ...dataToSubmit }))
-  //   } else {
-  //     // dispatch(createAppointment(dataToSubmit))
-  //     const newAppointment = await submitAppointment(dataToSubmit)
-  //     console.log('New appointment created:', newAppointment)
-  //   }
-  //   // onClose()
-  // }
-
   const submitForm = async dataToSubmit => {
     console.log('Submitting data:', dataToSubmit)
     try {
       if (appointment) {
-        const updatedAppointment = await updateExistingAppointment(dataToSubmit)
+        const updatedAppointment = await updateExistingAppointment({ id: appointment.id, ...dataToSubmit })
         console.log('Appointment updated:', updatedAppointment)
       } else {
         const newAppointment = await submitAppointment(dataToSubmit)
@@ -269,6 +334,7 @@ const BookingComponent = ({ appointment, onClose }) => {
     setOpenConfirmDialog(false)
   }
 
+  console.log('FORM DATA BEFORE GOING TO APPOINTMENT FORM', formData)
   return (
     <LocalizationProvider dateAdapter={AdapterDateFns}>
       <PerfectScrollbar>

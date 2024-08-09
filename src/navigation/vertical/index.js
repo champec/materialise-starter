@@ -58,8 +58,20 @@ const navigation = (role, plan) => {
           disabled: false
         },
         {
+          title: 'Quick Service',
+          path: '/services/quick-service',
+          icon: 'bi:file-medical-fill',
+          disabled: false
+        },
+        {
           title: 'Service Stats',
           path: '/services/service-stats',
+          icon: 'bi:file-medical-fill',
+          disabled: false
+        },
+        {
+          title: 'Claims',
+          path: '/services/claims',
           icon: 'bi:file-medical-fill',
           disabled: false
         }

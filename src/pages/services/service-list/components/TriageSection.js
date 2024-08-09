@@ -48,7 +48,7 @@ const serviceNames = [
 ]
 
 const TriageSection = ({ stageId, formData, onFieldChange }) => {
-  console.log('TRIAGE', stageId)
+  console.log('TRIAGE', stageId, formData)
   const questions = {
     'aa0bb38d-a436-4076-88e8-2b9caa704e47': [
       // UTI

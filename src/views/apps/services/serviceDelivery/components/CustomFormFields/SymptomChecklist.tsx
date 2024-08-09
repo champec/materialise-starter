@@ -62,22 +62,22 @@ const SymptomChecklist: React.FC<SymptomChecklistProps> = ({
 
   return (
     <Box>
-      <Typography variant='h6' gutterBottom>
-        {question}
-      </Typography>
+      <Typography variant='h6' gutterBottom></Typography>
       <FormGroup>
         {options.map(symptom => (
-          <RadioGroup
-            key={symptom}
-            value={symptoms[symptom]?.toString() || ''}
-            onChange={e =>
-              handleChange(symptom, e.target.value === 'true' ? true : e.target.value === 'false' ? false : null)
-            }
-          >
+          <Box key={symptom} mb={1}>
             <Typography variant='body1'>{symptom}</Typography>
-            <FormControlLabel value='true' control={<Radio />} label='Yes' />
-            <FormControlLabel value='false' control={<Radio />} label='No' />
-          </RadioGroup>
+            <RadioGroup
+              row
+              value={symptoms[symptom]?.toString() || ''}
+              onChange={e =>
+                handleChange(symptom, e.target.value === 'true' ? true : e.target.value === 'false' ? false : null)
+              }
+            >
+              <FormControlLabel value='true' control={<Radio />} label='Yes' />
+              <FormControlLabel value='false' control={<Radio />} label='No' />
+            </RadioGroup>
+          </Box>
         ))}
       </FormGroup>
       <Box sx={{ mt: 2, display: 'flex', justifyContent: 'space-between' }}>

@@ -50,7 +50,7 @@ function ServiceDeliveryPage() {
 
       const { data: appointmentData, error: appointmentError } = await supabase
         .from('ps_appointments')
-        .select('*, ps_services(*)')
+        .select('*, ps_services(*), ps_service_stages(id)')
         .eq('id', deliveryData.appointment_id)
         .single()
 
@@ -59,7 +59,8 @@ function ServiceDeliveryPage() {
       setServiceDelivery(deliveryData)
       setAppointment(appointmentData)
 
-      const formDef = getFormDefinitionForService(appointmentData.ps_services.id)
+      const formDef = getFormDefinitionForService(appointmentData.ps_service_stages?.id)
+      console.log('FORM DEFINTIION', formDef)
       setFormDefinition(formDef)
     } catch (error) {
       console.error('Error fetching service delivery data:', error)

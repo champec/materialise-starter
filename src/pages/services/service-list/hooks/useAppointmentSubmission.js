@@ -7,52 +7,162 @@ import { addEvent, updateEvent } from 'src/store/apps/calendar/pharmacyfirst/boo
 import { parseISO, addMinutes, format, parse } from 'date-fns'
 import { createAppointment, updateAppointment } from 'src/store/apps/pharmacy-services/pharmacyServicesThunks'
 
-export const createServiceDeliveries = async (appointmentId, serviceId, appointmentStageId) => {
-  // Fetch service details along with its stages
+export const createServiceDeliveries = async (appointmentId, serviceId, appointmentStageId, isUpdate = false) => {
+  // Fetch the service details to check if it's multi-stage
   const { data: serviceData, error: serviceError } = await supabase
     .from('ps_services')
-    .select(
-      `
-        *,
-        ps_service_stages (*)
-      `
-    )
+    .select('multi')
     .eq('id', serviceId)
     .single()
 
   if (serviceError) throw new Error('Error fetching service details')
 
-  let deliveryRecords = []
+  if (!serviceData?.multi) {
+    // Single-stage service logic (remains the same)
+    const { data: existingDelivery, error: fetchError } = await supabase
+      .from('ps_service_delivery')
+      .select('*')
+      .eq('appointment_id', appointmentId)
+      .single()
 
-  if (serviceData.multi_stage) {
-    // Create a service delivery for each stage
-    deliveryRecords = serviceData.ps_service_stages.map(stage => ({
-      appointment_id: appointmentId,
-      service_id: serviceId,
-      service_stage_id: stage.id,
-      status: 'Not Started',
-      outcome: 'pending'
-    }))
-  } else {
-    // For single-stage services, create one delivery using the appointment's service_stage_id
-    deliveryRecords = [
-      {
+    if (fetchError && fetchError.code !== 'PGRST116') throw new Error('Error fetching existing service delivery')
+
+    if (existingDelivery) {
+      // Update existing delivery
+      const { error: updateError } = await supabase
+        .from('ps_service_delivery')
+        .update({
+          status: 'In Progress',
+          service_id: serviceId,
+          service_stage_id: appointmentStageId
+        })
+        .eq('id', existingDelivery.id)
+
+      if (updateError) throw new Error('Error updating existing service delivery')
+    } else {
+      // Create new delivery
+      const { error: insertError } = await supabase.from('ps_service_delivery').insert({
         appointment_id: appointmentId,
         service_id: serviceId,
         service_stage_id: appointmentStageId,
-        status: 'Not Started',
+        status: 'In Progress',
         outcome: 'pending'
+      })
+
+      if (insertError) throw new Error('Error creating new service delivery')
+    }
+  } else {
+    // Multi-stage service logic
+    // Fetch all stages for this service
+    const { data: stages, error: stagesError } = await supabase
+      .from('ps_service_stages')
+      .select('id')
+      .eq('service_id', serviceId)
+
+    if (stagesError) throw new Error('Error fetching service stages')
+
+    if (!isUpdate) {
+      // For new appointments, create delivery records for all stages
+      const deliveriesToInsert = stages.map(stage => ({
+        appointment_id: appointmentId,
+        service_id: serviceId,
+        service_stage_id: stage.id,
+        status: stage.id === appointmentStageId ? 'In Progress' : 'Not Started',
+        outcome: 'pending'
+      }))
+
+      const { error: insertError } = await supabase.from('ps_service_delivery').insert(deliveriesToInsert)
+
+      if (insertError) throw new Error('Error creating new service deliveries')
+    } else {
+      // For updates, handle each stage individually
+      const { data: existingDeliveries, error: fetchError } = await supabase
+        .from('ps_service_delivery')
+        .select('*')
+        .eq('appointment_id', appointmentId)
+
+      if (fetchError) throw new Error('Error fetching existing service deliveries')
+
+      for (const stage of stages) {
+        const existingDelivery = existingDeliveries.find(d => d.service_stage_id === stage.id)
+
+        if (existingDelivery) {
+          // Update existing delivery
+          await supabase
+            .from('ps_service_delivery')
+            .update({
+              status: stage.id === appointmentStageId ? 'In Progress' : 'Not Started',
+              service_id: serviceId
+            })
+            .eq('id', existingDelivery.id)
+        } else {
+          // Create new delivery if it doesn't exist
+          await supabase.from('ps_service_delivery').insert({
+            appointment_id: appointmentId,
+            service_id: serviceId,
+            service_stage_id: stage.id,
+            status: stage.id === appointmentStageId ? 'In Progress' : 'Not Started',
+            outcome: 'pending'
+          })
+        }
       }
-    ]
-  }
 
-  const { error: deliveryError } = await supabase.from('ps_service_delivery').insert(deliveryRecords)
-
-  if (deliveryError) {
-    console.log(deliveryError)
-    throw new Error('Error creating service delivery records', deliveryError.message)
+      // Set all deliveries not matching the current stage to 'Inactive'
+      await supabase
+        .from('ps_service_delivery')
+        .update({ status: 'Inactive' })
+        .eq('appointment_id', appointmentId)
+        .neq('service_stage_id', appointmentStageId)
+    }
   }
 }
+
+// export const createServiceDeliveries = async (appointmentId, serviceId, appointmentStageId) => {
+//   // Fetch service details along with its stages
+//   const { data: serviceData, error: serviceError } = await supabase
+//     .from('ps_services')
+//     .select(
+//       `
+//         *,
+//         ps_service_stages (*)
+//       `
+//     )
+//     .eq('id', serviceId)
+//     .single()
+
+//   if (serviceError) throw new Error('Error fetching service details')
+
+//   let deliveryRecords = []
+
+//   if (serviceData.multi_stage) {
+//     // Create a service delivery for each stage
+//     deliveryRecords = serviceData.ps_service_stages.map(stage => ({
+//       appointment_id: appointmentId,
+//       service_id: serviceId,
+//       service_stage_id: stage.id,
+//       status: 'Not Started',
+//       outcome: 'pending'
+//     }))
+//   } else {
+//     // For single-stage services, create one delivery using the appointment's service_stage_id
+//     deliveryRecords = [
+//       {
+//         appointment_id: appointmentId,
+//         service_id: serviceId,
+//         service_stage_id: appointmentStageId,
+//         status: 'Not Started',
+//         outcome: 'pending'
+//       }
+//     ]
+//   }
+
+//   const { error: deliveryError } = await supabase.from('ps_service_delivery').insert(deliveryRecords)
+
+//   if (deliveryError) {
+//     console.log(deliveryError)
+//     throw new Error('Error creating service delivery records', deliveryError.message)
+//   }
+// }
 
 const useAppointmentSubmission = () => {
   const [loading, setLoading] = useState(false)
@@ -96,6 +206,13 @@ const useAppointmentSubmission = () => {
         const { payload, error } = await dispatch(updateAppointment(appointmentPayload))
         if (error) throw new Error('Error updating appointment')
         appointmentResult = payload
+
+        await createServiceDeliveries(
+          appointmentResult.id,
+          appointmentData.service_id,
+          appointmentData.current_stage_id,
+          isUpdate
+        )
       } else {
         const { payload, error } = await dispatch(createAppointment(appointmentPayload))
         if (error) throw new Error('Error creating appointment')
@@ -104,7 +221,8 @@ const useAppointmentSubmission = () => {
         await createServiceDeliveries(
           appointmentResult.id,
           appointmentData.service_id,
-          appointmentData.current_stage_id
+          appointmentData.current_stage_id,
+          isUpdate
         )
       }
 

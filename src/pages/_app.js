@@ -22,6 +22,8 @@ import { initializeSession as initOrg } from 'src/store/auth/organisation'
 import { initializeSession as initUser } from 'src/store/auth/user'
 import { addNotification, fetchNotifications, updateNotification } from 'src/store/notifications'
 import { supabaseOrg as supabase } from 'src/configs/supabase'
+import { DailyProvider, useCallObject } from '@daily-co/daily-react'
+import { RecoilRoot } from 'recoil'
 
 // ** Fake-DB Import
 import 'src/@fake-db'
@@ -178,6 +180,7 @@ const App = props => {
   const guestGuard = Component.guestGuard ?? false // automatically all users can see all content unless turned on then only guests can see - i.e login, etc
   const orgGuard = Component.orgGuard ?? true // if the component doesn't have a orgGuard prop then the orGuard is false otherwise whatever the component defines it as
   // const aclAbilities = Component.acl ??
+  const callObject = useCallObject()
 
   return (
     <CacheProvider value={emotionCache}>
@@ -196,24 +199,37 @@ const App = props => {
           <AuthUserProvider>
             <Provider store={store}>
               <SettingsProvider {...(setConfig ? { pageSettings: setConfig() } : {})}>
-                <SettingsConsumer>
-                  {({ settings }) => {
-                    return (
-                      <ThemeComponent settings={settings}>
-                        <WindowWrapper>
-                          {/*/ this passes down rules for page views depending on user state */}
-                          <Guard authGuard={authGuard} orgGuard={orgGuard} guestGuard={guestGuard}>
-                            {/*/this is a CRUD guard but can be replaced for RLS in supabase*/}
-                            <LoadingProvider>{getLayout(<Component {...pageProps} />)}</LoadingProvider>
-                          </Guard>
-                        </WindowWrapper>
-                        <ReactHotToast>
-                          <Toaster position={settings.toastPosition} toastOptions={{ className: 'react-hot-toast' }} />
-                        </ReactHotToast>
-                      </ThemeComponent>
-                    )
-                  }}
-                </SettingsConsumer>
+                <RecoilRoot>
+                  <DailyProvider
+                    callObject={callObject}
+                    recoilRootProps={{
+                      // stores Daily React's state in RecoilRoot above
+                      override: false
+                    }}
+                  >
+                    <SettingsConsumer>
+                      {({ settings }) => {
+                        return (
+                          <ThemeComponent settings={settings}>
+                            <WindowWrapper>
+                              {/*/ this passes down rules for page views depending on user state */}
+                              <Guard authGuard={authGuard} orgGuard={orgGuard} guestGuard={guestGuard}>
+                                {/*/this is a CRUD guard but can be replaced for RLS in supabase*/}
+                                <LoadingProvider>{getLayout(<Component {...pageProps} />)}</LoadingProvider>
+                              </Guard>
+                            </WindowWrapper>
+                            <ReactHotToast>
+                              <Toaster
+                                position={settings.toastPosition}
+                                toastOptions={{ className: 'react-hot-toast' }}
+                              />
+                            </ReactHotToast>
+                          </ThemeComponent>
+                        )
+                      }}
+                    </SettingsConsumer>
+                  </DailyProvider>
+                </RecoilRoot>
               </SettingsProvider>
             </Provider>
           </AuthUserProvider>

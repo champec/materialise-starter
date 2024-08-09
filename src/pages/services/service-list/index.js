@@ -9,6 +9,7 @@ import pharmacyServicesSlice, {
   selectServiceFilter,
   selectStatusFilter
 } from 'src/store/apps/pharmacy-services/pharmacyServicesSlice'
+import format from 'date-fns/format'
 import { fetchAppointments, fetchServicesWithStages } from 'src/store/apps/pharmacy-services/pharmacyServicesThunks'
 import {
   Grid,
@@ -28,9 +29,15 @@ import {
   ListItemText,
   Menu,
   Dialog,
-  DialogContent
+  DialogContent,
+  Tooltip,
+  IconButton,
+  DialogTitle,
+  DialogActions
 } from '@mui/material'
 import { DataGrid } from '@mui/x-data-grid'
+import BatchActionsModal from './components/BatchActionsModal'
+import Icon from 'src/@core/components/icon'
 import BookingComponent from './BookingComponent'
 import ServiceDeliveryComponent from './components/ServiceDeliveryComponent'
 
@@ -76,8 +83,14 @@ function PharmacyServicesPage() {
   const selectedServices = useSelector(selectServiceFilter)
   const selectedStatuses = useSelector(selectStatusFilter)
   const [anchorEl, setAnchorEl] = useState(null)
+  const [batchActionAnchorEl, setBatchActionAnchorEl] = useState(null)
   const [selectedAppointment, setSelectedAppointment] = useState(null)
   const [isDeliveryModalOpen, setIsDeliveryModalOpen] = useState(false)
+  const [openStatusDetails, setOpenStatusDetails] = useState(false)
+  const [statusDetails, setStatusDetails] = useState(null)
+  const [isBatchActionsModalOpen, setIsBatchActionsModalOpen] = useState(false)
+  const [selectedAppointments, setSelectedAppointments] = useState([])
+  const [currentBatchAction, setCurrentBatchAction] = useState('')
 
   const statuses = ['Scheduled', 'In Progress', 'Completed', 'Cancelled']
 
@@ -86,6 +99,12 @@ function PharmacyServicesPage() {
   const handleActionClick = (event, appointment) => {
     setAnchorEl(event.currentTarget)
     setSelectedAppointment(appointment)
+  }
+
+  const handleBatchActionSelect = action => {
+    handleBatchActionClose()
+    setCurrentBatchAction(action)
+    setIsBatchActionsModalOpen(true)
   }
 
   const handleActionClose = () => {
@@ -105,6 +124,10 @@ function PharmacyServicesPage() {
         break
       // Add more cases for other actions as needed
     }
+  }
+
+  const handleBatchActionsClick = event => {
+    setBatchActionAnchorEl(event.currentTarget)
   }
 
   useEffect(() => {
@@ -156,6 +179,42 @@ function PharmacyServicesPage() {
     dispatch(setServiceFilter(newSelectedServices))
   }
 
+  const renderStatusDetails = (service, statusDetails) => {
+    // This function will render status details based on the service type
+    // You can customize this further based on your specific requirements
+    switch (service.abbreviation) {
+      case 'PFx':
+        return (
+          <>
+            <div>Current stage: {statusDetails?.currentStage}</div>
+            <div>Completed stages: {statusDetails?.completedStages.join(', ')}</div>
+          </>
+        )
+      case 'DMSx':
+        return (
+          <>
+            <div>Referral status: {statusDetails?.referralStatus}</div>
+            <div>Review status: {statusDetails?.reviewStatus}</div>
+          </>
+        )
+      // Add more cases for other service types
+      default:
+        return JSON.stringify(statusDetails)
+    }
+  }
+
+  const handleStatusDetailsClick = appointment => {
+    const service = services.find(s => s.id === appointment.service_id)
+    const statusDetailsContent = renderStatusDetails(service, appointment.status_details)
+    setStatusDetails(statusDetailsContent)
+    // setServiceName(service.name);
+    setOpenStatusDetails(true)
+  }
+
+  const handleCloseStatusDetails = () => {
+    setOpenStatusDetails(false)
+  }
+
   const handleStatusChange = (event, child) => {
     const clickedValue = child.props.value
     console.log('Clicked status:', clickedValue)
@@ -184,6 +243,10 @@ function PharmacyServicesPage() {
     return selected.map(id => services.find(s => s.id === id)?.name).join(', ')
   }
 
+  const handleBatchActionClose = () => {
+    setBatchActionAnchorEl(null)
+  }
+
   const renderStatusValue = selected => {
     if (selected.includes('all')) {
       return 'All'
@@ -192,8 +255,13 @@ function PharmacyServicesPage() {
   }
 
   const columns = [
-    { field: 'id', headerName: 'ID', width: 70 },
-    { field: 'patientName', headerName: 'Patient Name', width: 130 },
+    // { field: 'id', headerName: 'ID', width: 70 },
+    {
+      field: 'patientName',
+      headerName: 'Patient Name',
+      width: 130,
+      valueGetter: params => params.row.patient_object?.full_name || 'N/A'
+    },
     {
       field: 'serviceName',
       headerName: 'Service',
@@ -203,8 +271,37 @@ function PharmacyServicesPage() {
         return service ? `${service.abbreviation} - ${service.name}` : ''
       }
     },
-    { field: 'scheduledTime', headerName: 'Scheduled Time', width: 180 },
-    { field: 'status', headerName: 'Status', width: 130 },
+    {
+      field: 'currentStage',
+      headerName: 'Current Stage',
+      width: 150,
+      valueGetter: params => {
+        const service = services.find(s => s.id === params.row.service_id)
+        const stage = service?.stages.find(stage => stage.id === params.row.current_stage_id)
+        return stage ? stage.name : 'N/A'
+      }
+    },
+    {
+      field: 'scheduledTime',
+      headerName: 'Scheduled Time',
+      width: 180,
+      valueGetter: params => format(new Date(params.row.scheduled_time), 'PPpp')
+    },
+    {
+      field: 'overall_status',
+      headerName: 'Status',
+      width: 180,
+      renderCell: params => (
+        <div style={{ display: 'flex', alignItems: 'center' }}>
+          {params.row.overall_status}
+          <Tooltip title='View Status Details'>
+            <IconButton size='small' onClick={() => handleStatusDetailsClick(params.row)}>
+              <Icon icon='icon-park:info' fontSize='small' />
+            </IconButton>
+          </Tooltip>
+        </div>
+      )
+    },
     {
       field: 'actions',
       headerName: 'Actions',
@@ -227,7 +324,7 @@ function PharmacyServicesPage() {
               Appointments
             </Typography>
           </Grid>
-          <Grid item xs={6}>
+          <Grid item xs={4}>
             <FormControl sx={{ m: 1, width: 300 }}>
               <InputLabel id='service-multiple-checkbox-label'>Services</InputLabel>
               <Select
@@ -266,7 +363,7 @@ function PharmacyServicesPage() {
               </Select>
             </FormControl>
           </Grid>
-          <Grid item xs={6}>
+          <Grid item xs={4}>
             <FormControl sx={{ m: 1, width: 300 }}>
               <InputLabel id='status-multiple-checkbox-label'>Statuses</InputLabel>
               <Select
@@ -294,6 +391,22 @@ function PharmacyServicesPage() {
               </Select>
             </FormControl>
           </Grid>
+          <Grid item xs={4}>
+            <Button
+              variant='contained'
+              color='primary'
+              onClick={handleBatchActionsClick}
+              disabled={selectedAppointments.length === 0}
+              endIcon={<Icon icon='mdi:chevron-down' />}
+              fullWidth
+            >
+              Batch Actions
+            </Button>
+            <Menu anchorEl={batchActionAnchorEl} open={Boolean(batchActionAnchorEl)} onClose={handleBatchActionClose}>
+              <MenuItem onClick={() => handleBatchActionSelect('submitClaim')}>Submit Claim</MenuItem>
+              {/* Add more menu items for other batch actions here */}
+            </Menu>
+          </Grid>
           <Grid item xs={12}>
             <DataGrid
               rows={appointments}
@@ -303,6 +416,9 @@ function PharmacyServicesPage() {
               rowsPerPageOptions={[5, 10, 20]}
               checkboxSelection
               disableSelectionOnClick
+              onSelectionModelChange={newSelectionModel => {
+                setSelectedAppointments(newSelectionModel)
+              }}
               autoHeight
             />
           </Grid>
@@ -333,6 +449,21 @@ function PharmacyServicesPage() {
           </DialogContent>
         </Dialog>
       )}
+
+      <Dialog open={openStatusDetails} onClose={handleCloseStatusDetails} aria-labelledby='status-details-dialog-title'>
+        <DialogTitle id='status-details-dialog-title'>Status Details for</DialogTitle>
+        <DialogContent>{statusDetails}</DialogContent>
+        <DialogActions>
+          <Button onClick={handleCloseStatusDetails}>Close</Button>
+        </DialogActions>
+      </Dialog>
+      <BatchActionsModal
+        open={isBatchActionsModalOpen}
+        onClose={() => setIsBatchActionsModalOpen(false)}
+        selectedAppointments={selectedAppointments}
+        appointments={appointments}
+        action={currentBatchAction} // Add this state to track the current batch action
+      />
     </Box>
   )
 }

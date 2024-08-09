@@ -1,5 +1,6 @@
 import React, { useEffect } from 'react'
 import DailyIframe from '@daily-co/daily-js'
+import { useCallFrame } from '@daily-co/daily-react'
 
 const VideoCallComponent = ({
   containerRef,
@@ -9,16 +10,28 @@ const VideoCallComponent = ({
   handleNotesButton,
   handlePrescriptionButton
 }) => {
-  useEffect(() => {
-    if (!containerRef.current) return
-    const callFrame = DailyIframe.createFrame(containerRef.current, {
+  const callFrame = useCallFrame({
+    parentElRef: containerRef,
+    options: {
       iframeStyle: {
         position: 'relative',
         width: '100%',
         height: '100%',
         border: 'none'
       }
-    })
+    },
+    shouldCreateInstance: () => containerRef.current
+  })
+  useEffect(() => {
+    if (!containerRef.current || !callFrame) return
+    // const callFrame = DailyIframe.createFrame(containerRef.current, {
+    //   iframeStyle: {
+    //     position: 'relative',
+    //     width: '100%',
+    //     height: '100%',
+    //     border: 'none'
+    //   }
+    // })
 
     callFrame.join({
       url: url ? url : null,
@@ -77,7 +90,7 @@ const VideoCallComponent = ({
     })
 
     return () => callFrame.destroy()
-  }, [containerRef])
+  }, [containerRef, callFrame])
 
   return null // The iframe is attached to the ref's current element
 }
