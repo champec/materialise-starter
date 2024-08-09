@@ -1,6 +1,6 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit'
 import { supabaseOrg as supabase } from 'src/configs/supabase'
-import { formatClaimData } from '../../../pages/services/claims/FormatClaimData'
+import { prepareClaimData } from '../pharmacy-services/utils/mysPrep'
 
 export const fetchClaims = createAsyncThunk('claims/fetchClaims', async (_, { rejectWithValue }) => {
   try {
@@ -35,7 +35,7 @@ export const sendClaim = createAsyncThunk('claims/sendClaim', async (claimData, 
 
     if (serviceDeliveryError) throw serviceDeliveryError
 
-    const formattedClaimData = formatClaimData(claimData, appointmentData, serviceDeliveryData)
+    const formattedClaimData = prepareClaimData(claimData, appointmentData, serviceDeliveryData)
 
     // Send claim to MYS API
     const response = await fetch('https://stg.api.{service}.pharmacy.mys.nhsbsa.nhs.uk/v1/claim', {
@@ -78,7 +78,7 @@ export const amendClaim = createAsyncThunk(
 
       if (fetchError) throw fetchError
 
-      const formattedAmendedData = formatClaimData(
+      const formattedAmendedData = prepareClaimData(
         { ...existingClaim, ...amendedData },
         existingClaim.ps_appointments,
         existingClaim

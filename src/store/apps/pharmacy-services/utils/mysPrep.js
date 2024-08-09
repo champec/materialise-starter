@@ -20,8 +20,6 @@ const prepareClaimData = (appointment, serviceDeliveries) => {
   }
 }
 
-export { prepareClaimData }
-
 const prepareDMSClaim = (appointment, serviceDeliveries) => {
   const { patient_object, gp_object, pharmacy_id } = appointment
 
@@ -649,8 +647,6 @@ const prepareFluvaccinationClaim = (appointment, serviceDeliveries) => {
 }
 // Implement similar functions for other service types
 
-export { prepareClaimData }
-
 const prepareSmokingCessationClaim = (appointment, serviceDeliveries) => {
   const { patient_object, gp_object, pharmacy_id } = appointment
 
@@ -695,3 +691,5 @@ const prepareSmokingCessationClaim = (appointment, serviceDeliveries) => {
 
   return claim
 }
+
+export { prepareClaimData }
