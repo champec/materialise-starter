@@ -50,7 +50,6 @@ const QuickServiceDeliveryComponent = () => {
   const services = useSelector(selectServices)
   const [activeStep, setActiveStep] = useState(0)
   const [config, setConfig] = useState({ appointmentType: '', service: '', stage: '' })
-  const [formData, setFormData] = useState({})
   const [formDef, setFormDef] = useState({})
   const [appointmentDetails, setAppointmentDetails] = useState({
     patient: null,
@@ -67,6 +66,13 @@ const QuickServiceDeliveryComponent = () => {
   const [isCallReady, setIsCallReady] = useState(false)
   const [textSent, setTextSent] = useState(false)
   const { submitAppointment, loading } = useAppointmentSubmission()
+
+  // ADVANCED FORM STATES
+  const [currentNodeId, setCurrentNodeId] = useState(formDef?.startNode)
+  const [formData, setFormData] = useState({})
+  const [history, setHistory] = useState([formDef?.startNode])
+  const [errors, setErrors] = useState({})
+  const [isLocked, setIsLocked] = useState(false)
 
   const {
     selectedGP,
@@ -87,6 +93,8 @@ const QuickServiceDeliveryComponent = () => {
   useEffect(() => {
     if (config?.stage) {
       const formDef = getFormDefinitionForService(config.stage)
+      setCurrentNodeId(formDef.startNode)
+      setHistory([formDef.startNode])
       setFormDef(formDef)
     }
   }, [config?.stage])
@@ -337,6 +345,16 @@ const QuickServiceDeliveryComponent = () => {
                     initialData={formData}
                     onSubmit={handleFormSubmit}
                     onSaveProgress={handleSaveProgress}
+                    formData={formData}
+                    setFormData={setFormData}
+                    currentNodeId={currentNodeId}
+                    setCurrentNodeId={setCurrentNodeId}
+                    history={history}
+                    setHistory={setHistory}
+                    isLocked={isLocked}
+                    setIsLocked={setIsLocked}
+                    errors={errors}
+                    setErrors={setErrors}
                   />
                 </Drawer>
               </>
@@ -345,12 +363,24 @@ const QuickServiceDeliveryComponent = () => {
                 <Typography variant='h6' gutterBottom>
                   Service Delivery Form
                 </Typography>
-                <AdvancedFormEngine
-                  formDefinition={formDef}
-                  initialData={formData}
-                  onSubmit={handleFormSubmit}
-                  onSaveProgress={handleSaveProgress}
-                />
+                {formDef && (
+                  <AdvancedFormEngine
+                    formDefinition={formDef}
+                    initialData={formData}
+                    onSubmit={handleFormSubmit}
+                    onSaveProgress={handleSaveProgress}
+                    formData={formData}
+                    setFormData={setFormData}
+                    currentNodeId={currentNodeId}
+                    setCurrentNodeId={setCurrentNodeId}
+                    history={history}
+                    setHistory={setHistory}
+                    isLocked={isLocked}
+                    setIsLocked={setIsLocked}
+                    errors={errors}
+                    setErrors={setErrors}
+                  />
+                )}
               </Box>
             )}
           </Box>

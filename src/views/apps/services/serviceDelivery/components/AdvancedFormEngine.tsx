@@ -19,6 +19,7 @@ import {
   FormGroup,
   Checkbox
 } from '@mui/material'
+//custom component
 import SymptomChecklist from './CustomFormFields/SymptomChecklist'
 import CodeSelect from './CustomFormFields/CodeSelect'
 import GateWayNotMet from './CustomFormFields/GateWayNotMet'
@@ -27,7 +28,7 @@ import ReferralComponent from './CustomFormFields/ReferralComponent'
 import ChooseOutcome from './CustomFormFields/ChooseOutcome'
 import ReviewComponent from './CustomFormFields/ReviewComponent'
 import MedicineSupplied from './CustomFormFields/MedicineSupplied'
-//custom component
+import SafetyNettingChecklist from './CustomFormFields/SafetyNettingChecklist'
 
 // Add these interfaces
 interface ProgressionCriteria {
@@ -83,72 +84,28 @@ interface SymptomChecklistProps {
   progressionCriteria?: ProgressionCriteria
 }
 
-const SafetyNettingChecklist = ({ id, value, onChange, error, options, question }) => {
-  const [checkedItems, setCheckedItems] = useState(value || {})
-
-  const handleChange = event => {
-    const newCheckedItems = {
-      ...checkedItems,
-      [event.target.name]: event.target.checked
-    }
-    setCheckedItems(newCheckedItems)
-    onChange(newCheckedItems)
-  }
-
-  const handleCheckAll = () => {
-    const allChecked = options.reduce((acc, option) => {
-      acc[option] = true
-      return acc
-    }, {})
-    setCheckedItems(allChecked)
-    onChange(allChecked)
-  }
-
-  const handleUncheckAll = () => {
-    const allUnchecked = options.reduce((acc, option) => {
-      acc[option] = false
-      return acc
-    }, {})
-    setCheckedItems(allUnchecked)
-    onChange(allUnchecked)
-  }
-
-  return (
-    <Box>
-      <FormGroup>
-        {options.map(option => (
-          <FormControlLabel
-            key={option}
-            control={<Checkbox checked={checkedItems[option] || false} onChange={handleChange} name={option} />}
-            label={option}
-          />
-        ))}
-      </FormGroup>
-      <Box mt={2}>
-        <Button variant='outlined' onClick={handleCheckAll} sx={{ mr: 1 }}>
-          Check All
-        </Button>
-        <Button variant='outlined' onClick={handleUncheckAll}>
-          Uncheck All
-        </Button>
-      </Box>
-      {error && <FormHelperText error>{error}</FormHelperText>}
-    </Box>
-  )
-}
-
 const AdvancedFormEngine: React.FC<AdvancedFormEngineProps> = ({
   formDefinition,
   initialData = {},
   onSubmit,
-  onSaveProgress
+  onSaveProgress,
+  formData,
+  setFormData,
+  currentNodeId,
+  setCurrentNodeId,
+  history,
+  setHistory,
+  isLocked,
+  setIsLocked,
+  errors,
+  setErrors
 }) => {
-  console.log('FORM DEFINITION', { formDefinition })
-  const [currentNodeId, setCurrentNodeId] = useState(formDefinition.startNode)
-  const [formData, setFormData] = useState<Record<string, any>>(initialData)
-  const [history, setHistory] = useState<string[]>([formDefinition.startNode])
-  const [errors, setErrors] = useState<Record<string, string>>({})
-  const [isLocked, setIsLocked] = useState(false)
+  console.log('FORM DEFINITION', { formDefinition, currentNodeId })
+  // const [currentNodeId, setCurrentNodeId] = useState(formDefinition.startNode)
+  // const [formData, setFormData] = useState<Record<string, any>>(initialData) //! make sure to add external formdata state in service delivery aswel
+  // const [history, setHistory] = useState<string[]>([formDefinition.startNode])
+  // const [errors, setErrors] = useState<Record<string, string>>({})
+  // const [isLocked, setIsLocked] = useState(false)
 
   const visibleHistory = getVisibleHistory(history, formDefinition)
 
@@ -748,7 +705,7 @@ const AdvancedFormEngine: React.FC<AdvancedFormEngineProps> = ({
 }
 
 const getVisibleHistory = (history: string[], formDefinition: FormDefinition): string[] => {
-  return history.filter(nodeId => !formDefinition.nodes[nodeId].hidden)
+  return history.filter(nodeId => !formDefinition.nodes[nodeId]?.hidden)
 }
 
 // Helper function to reconstruct history based on initial data
