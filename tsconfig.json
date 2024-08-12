@@ -22,7 +22,8 @@
   "include": [
     "next-env.d.ts",
     "**/*.ts",
-    "**/*.tsx"
+    "**/*.tsx",
+    "src/views/apps/services/serviceDelivery/components/CustomFormFields/AdviceForm.js"
   ],
   "exclude": [
     "node_modules",

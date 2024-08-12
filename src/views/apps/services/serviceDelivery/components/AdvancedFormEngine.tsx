@@ -29,6 +29,9 @@ import ChooseOutcome from './CustomFormFields/ChooseOutcome'
 import ReviewComponent from './CustomFormFields/ReviewComponent'
 import MedicineSupplied from './CustomFormFields/MedicineSupplied'
 import SafetyNettingChecklist from './CustomFormFields/SafetyNettingChecklist'
+import FeverPainCalculator from './CustomFormFields/FeverPainCalculator'
+import AdiceForm from './CustomFormFields/AdviceForm'
+import AdviceForm from './CustomFormFields/AdviceForm'
 
 // Add these interfaces
 interface ProgressionCriteria {
@@ -89,8 +92,8 @@ const AdvancedFormEngine: React.FC<AdvancedFormEngineProps> = ({
   initialData = {},
   onSubmit,
   onSaveProgress,
-  formData,
-  setFormData,
+  // formData,
+  // setFormData,
   currentNodeId,
   setCurrentNodeId,
   history,
@@ -102,7 +105,7 @@ const AdvancedFormEngine: React.FC<AdvancedFormEngineProps> = ({
 }) => {
   console.log('FORM DEFINITION', { formDefinition, currentNodeId })
   // const [currentNodeId, setCurrentNodeId] = useState(formDefinition.startNode)
-  // const [formData, setFormData] = useState<Record<string, any>>(initialData) //! make sure to add external formdata state in service delivery aswel
+  const [formData, setFormData] = useState<Record<string, any>>(initialData) //! make sure to add external formdata state in service delivery aswel
   // const [history, setHistory] = useState<string[]>([formDefinition.startNode])
   // const [errors, setErrors] = useState<Record<string, string>>({})
   // const [isLocked, setIsLocked] = useState(false)
@@ -175,52 +178,6 @@ const AdvancedFormEngine: React.FC<AdvancedFormEngineProps> = ({
     }
   }
 
-  // const handleNext = () => {
-  //   const error = validateField(currentNode.field, formData[currentNodeId])
-  //   if (error) {
-  //     setErrors({ ...errors, [currentNodeId]: error })
-  //     return
-  //   }
-
-  //   const nextNodeId = currentNode.next(formData[currentNodeId])
-  //   if (nextNodeId) {
-  //     // Find the last decision point
-  //     const currentIndex = history.indexOf(currentNodeId)
-  //     let lastDecisionPointIndex = currentIndex
-
-  //     for (let i = currentIndex; i >= 0; i--) {
-  //       const node = formDefinition.nodes[history[i]]
-  //       if (Object.keys(node.next({})).length > 1) {
-  //         lastDecisionPointIndex = i
-  //         break
-  //       }
-  //     }
-
-  //     // Remove answers and history after the last decision point
-  //     const newHistory = history.slice(0, lastDecisionPointIndex + 1)
-  //     if (!newHistory.includes(nextNodeId)) {
-  //       newHistory.push(nextNodeId)
-  //     }
-
-  //     setHistory(newHistory)
-
-  //     // Remove form data for removed nodes
-  //     const preservedFormData = {}
-  //     newHistory.forEach(nodeId => {
-  //       if (formData[nodeId] !== undefined) {
-  //         preservedFormData[nodeId] = formData[nodeId]
-  //       }
-  //     })
-
-  //     setFormData(preservedFormData)
-  //     setCurrentNodeId(nextNodeId)
-  //     setIsLocked(formDefinition.nodes[nextNodeId].isStopNode || false)
-  //   } else {
-  //     // If there's no next node, we might be at the end of the form
-  //     setIsLocked(false)
-  //   }
-  // }
-
   const handleNext = () => {
     const error = validateField(currentNode.field, formData[currentNodeId])
     if (error) {
@@ -230,15 +187,14 @@ const AdvancedFormEngine: React.FC<AdvancedFormEngineProps> = ({
 
     const result = currentNode.next(formData[currentNodeId])
     let nextId: string | null = null
-    let data: any = undefined
+    let contextData: any = undefined
 
+    console.log('RESULTS OF THE PRESCIIOUYS NEXT CLICK', result)
     if (typeof result === 'string' || result === null) {
-      // Backwards compatibility: treat the result as just the nextId
       nextId = result
     } else {
-      // New functionality: extract nextId and data
       nextId = result.nextId
-      data = result.data
+      contextData = result.data
     }
 
     if (nextId) {
@@ -274,9 +230,14 @@ const AdvancedFormEngine: React.FC<AdvancedFormEngineProps> = ({
         }
       })
 
-      // Add the new data to the form data
-      if (data) {
-        preservedFormData[nextId] = { ...preservedFormData[nextId], __contextData: data }
+      // Initialize the next node's form data
+      if (contextData !== undefined) {
+        preservedFormData[nextId] = {
+          value: '', // The actual form value, initially empty
+          __contextData: contextData // Store any contextual data separately
+        }
+      } else {
+        preservedFormData[nextId] = ''
       }
 
       setFormData(preservedFormData)
@@ -530,6 +491,19 @@ const AdvancedFormEngine: React.FC<AdvancedFormEngineProps> = ({
               progressionCriteria={field.progressionCriteria}
             />
           )
+        }
+        if (field.component === 'AdviceForm') {
+          return (
+            <AdviceForm
+              id={currentNodeId}
+              value={formData[currentNodeId] || {}}
+              onChange={(value: any) => handleAnswer(value)}
+              error={error}
+              options={field.options || []}
+              question={field.question}
+              progressionCriteria={field.progressionCriteria}
+            />
+          )
         } else if (field.component === 'ReviewComponent') {
           return <ReviewComponent formData={formData} formDefinition={formDefinition} />
         } else if (field.component === 'Referral') {
@@ -549,6 +523,15 @@ const AdvancedFormEngine: React.FC<AdvancedFormEngineProps> = ({
               onChange={(value: any) => handleAnswer(value)}
               error={error}
               predefinedOptions={field.predefinedOptions || []}
+            />
+          )
+        } else if (field.component === 'FeverPainCalculator') {
+          return (
+            <FeverPainCalculator
+              id={currentNodeId}
+              value={formData[currentNodeId] || {}}
+              onChange={(value: any) => handleAnswer(value)}
+              error={error}
             />
           )
         } else if (field.component === 'CodeSelect') {
@@ -713,17 +696,28 @@ const reconstructHistory = (formDefinition: FormDefinition, initialData: Record<
   let history = [formDefinition.startNode]
   let currentNodeId = formDefinition.startNode
 
+  console.log('Starting reconstructHistory with initialData:', initialData)
+
   while (true) {
     const currentNode = formDefinition.nodes[currentNodeId]
     const answer = initialData[currentNodeId]
-    const nextNodeId = currentNode.next(answer)
+    console.log(`Processing node: ${currentNodeId}, answer:`, answer)
 
-    if (!nextNodeId) break
+    try {
+      const nextNodeId = currentNode.next(answer)
+      console.log(`Next node: ${nextNodeId}`)
 
-    history.push(nextNodeId)
-    currentNodeId = nextNodeId
+      if (!nextNodeId) break
+
+      history.push(nextNodeId)
+      currentNodeId = nextNodeId
+    } catch (error) {
+      console.error(`Error in node ${currentNodeId}:`, error)
+      break
+    }
   }
 
+  console.log('Reconstructed history:', history)
   return history
 }
 

@@ -57,7 +57,7 @@ const shinglesServiceDefinition = {
         required: true,
         progressionCriteria: { type: 'any' }
       },
-      next: answer => (Object?.values(answer)?.some(v => v) ? 'chooseOutcome' : 'clinicalFeatures')
+      next: answer => (Object?.values(answer)?.some(v => v) ? 'chooseOutcome' : 'possibleScarletFever')
     },
     chooseOutcome: {
       id: ' chooseOutcome',
@@ -66,13 +66,20 @@ const shinglesServiceDefinition = {
         component: 'ChooseOutcome',
         question: 'Choose outcome',
         required: true,
-        progressionCriteria: { type: 'any' },
-        autoProgress: true
+        progressionCriteria: { type: 'any' }
+        // autoProgress: true
       },
       next: answer => {
-        switch (answer) {
+        let finalAnswer = ''
+        if (typeof answer === 'object') {
+          finalAnswer = answer.selectedValue
+        } else if (typeof answer === 'string') {
+          finalAnswer = answer
+        }
+        console.log('final answer', finalAnswer, answer, answer?.selectedValue, typeof answer)
+        switch (finalAnswer) {
           case 'ADVICE_ONLY':
-            return 'adviceDetails'
+            return 'adviceProvided'
           case 'OTC_MEDICINE_SALE':
             return 'medicationSupplyDetails'
           case 'MAS_REFERRAL':
@@ -91,6 +98,73 @@ const shinglesServiceDefinition = {
             return 'otherOutcomeDetails'
           default:
             return 'additionalDetails'
+        }
+      }
+    },
+    adviceProvided: {
+      id: 'adviceProvided',
+      field: {
+        type: 'custom',
+        component: 'AdviceForm',
+        question: 'Provide the advice to the patient:',
+        options: [
+          'Avoid scratching the rash to prevent infection.',
+          'Keep the rash clean and dry.',
+          'Take pain relief if necessary.',
+          'Avoid contact with pregnant women, newborns, and immunocompromised individuals until the rash has crusted over.'
+        ],
+        required: true,
+        progressionCriteria: { type: 'someYes', count: 1 }
+      },
+      next: answer => 'safetyNetting'
+    },
+    possibleScarletFever: {
+      id: 'possibleScarletFever',
+      field: {
+        type: 'custom',
+        component: 'SymptomChecklist',
+        question: 'Check for risk symptoms of scarlet fever, glandular fever, quincy or any of the criteria below',
+        options: [
+          'Individual has signs or symptoms of scarlet fever',
+          'Individual has signs or symptoms of glandular fever',
+          'Individual is immunosuppressed',
+          'Individual is currently taking/receiving the following medicines known to cuase agranulocytosis (e.g methotrexate, sulfasalazine, carbamazepine, all chemotherapy',
+          'Individual is systemically unwell but not showing signs or symptoms of sepsis',
+          'Possible cancer suspected (persistent mouth ulcers, mess/unilateral swelling preset, red or white patches in the mouth, individuals > 45 with unexplained hoarse voice lasting 3 weeks or more',
+          'individuals where treatement under this PGD is not indicated/permitted but upper respiratory symptoms are present and require further assessment'
+        ],
+        required: true,
+        progressionCriteria: { type: 'any' }
+      },
+      next: answer => (Object?.values(answer)?.some(v => v) ? 'chooseOutcome' : 'feverPainSore')
+    },
+    feverPainSore: {
+      id: 'feverPainSore',
+      field: {
+        type: 'custom',
+        component: 'FeverPainCalculator',
+        question: 'Calculate FeverPAIN score:',
+        required: true
+      },
+      next: answer => {
+        let recommendedOutcome = ''
+        let additionalAdvice = ''
+        if (answer.feverPainScore <= 1) {
+          recommendedOutcome = 'ADVICE_ONLY'
+        } else if (answer.feverPainScore <= 3) {
+          recommendedOutcome = 'ADVICE_ONLY'
+          additionalAdvice =
+            'Unlike with a fever score of 0-1, you might want to ask the patient to come back to the pharmacy if no improvement within 3-5 days for reassessment'
+        } else {
+          recommendedOutcome = 'ONWARD_REFERRAL'
+        }
+
+        if (answer.feverPainScore > 3) {
+          return 'chooseOutcome_treatment'
+        }
+        return {
+          nextId: 'chooseOutcome',
+          data: { recommendedOutcome, additionalAdvice }
         }
       }
     },
