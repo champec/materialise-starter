@@ -20,17 +20,18 @@ function ServiceDeliveryChat({ appointment }) {
 
   const fetchThreadId = useCallback(async () => {
     try {
-      const { data, error } = await supabase
-        .from('sms_threads')
-        .select('id')
-        .eq('appointment_id', appointment.id)
-        .single()
+      const { data, error } = await supabase.from('sms_threads').select('id').eq('appointment_id', appointment.id)
 
       if (error) throw error
-      if (data) setThreadId(data.id)
+      if (data) {
+        console.log('data', data)
+        setThreadId(data[0]?.id)
+        setLoading(false)
+      }
     } catch (error) {
       console.error('Error fetching thread ID:', error)
       setError(error)
+      setLoading(false)
     }
   }, [appointment.id])
 

@@ -11,73 +11,60 @@ import {
   Alert
 } from '@mui/material'
 
-const consultationOutcomes = [
-  { value: 'ADVICE_ONLY', label: 'Advice given only' },
-  { value: 'OTC_MEDICINE_SALE', label: 'Sale of an Over the Counter (OTC) medicine' },
-  { value: 'MAS_REFERRAL', label: 'Referral into a pharmacy local minor ailments service (MAS)' },
-  { value: 'LOCAL_COMMISSIONED_REFERRAL', label: 'Referral into an appropriate locally commissioned NHS service' },
-  { value: 'SUPPLY_NO_SUPPLY', label: 'Medicines supply / non-supply' },
-  { value: 'SUPPLY_NO_SUPPLY', label: 'Medicines non-supply (specify actions taken)' },
-  { value: 'ONWARD_REFERRAL', label: 'Onward referral to another CPCS pharmacy' },
-  { value: 'NON_URGENT', label: 'Non-urgent signposting to another service' },
-  { value: 'URGENT', label: 'Urgent escalation to another service' },
-  { value: 'OTHER', label: 'Other (please specify)' }
-]
-
-const ChooseOutcome = ({ id, value, onChange, error }) => {
-  const [otherOutcome, setOtherOutcome] = useState('')
-  const dataRecommendedOutcome = value?.__contextData?.recommendedOutcome
-  const dataAdditionalAdvice = value?.__contextData?.additionalAdvice
-  const additionalAdvice = value === 'object' && value.additionalAdvice ? value.additionalAdvice : dataAdditionalAdvice
-  const recommendedOutcome =
-    typeof value === 'object' && value.recommendedOutcome ? value.recommendedOutcome : dataRecommendedOutcome
+const ChooseOutcome = ({ id, value, onChange, error, consultationOutcomes }) => {
   const [selectedOutcome, setSelectedOutcome] = useState('')
+  const [otherOutcome, setOtherOutcome] = useState('')
+  const [recommendedOutcome, setRecommendedOutcome] = useState('')
+  const [additionalAdvice, setAdditionalAdvice] = useState('')
 
   useEffect(() => {
-    let initialOutcome = ''
-    if (typeof value === 'object' && value.selectedValue) {
-      initialOutcome = value.selectedValue
+    let outcome = ''
+    let other = ''
+    let recommended = ''
+    let advice = ''
+
+    if (typeof value === 'object') {
+      outcome = value.selectedValue || value.__contextData?.recommendedOutcome || ''
+      other = value.otherOutcome || ''
+      recommended = value.recommendedOutcome || value.__contextData?.recommendedOutcome || ''
+      advice = value.additionalAdvice || value.__contextData?.additionalAdvice || ''
     } else if (typeof value === 'string') {
-      initialOutcome = value
-    } else if (recommendedOutcome) {
-      initialOutcome = recommendedOutcome
+      outcome = value
     }
 
-    if (initialOutcome && initialOutcome !== selectedOutcome) {
-      console.log('Setting initial outcome:', initialOutcome)
-      setSelectedOutcome(initialOutcome)
+    setSelectedOutcome(outcome)
+    setOtherOutcome(other)
+    setRecommendedOutcome(recommended)
+    setAdditionalAdvice(advice)
 
-      // Only call onChange if the value actually changed
-      if (initialOutcome !== (value?.selectedValue || value)) {
-        onChange({
-          selectedValue: initialOutcome,
-          recommendedOutcome: recommendedOutcome,
-          additionalAdvice: additionalAdvice
-        })
-      }
-    }
-  }, [value, recommendedOutcome, selectedOutcome, onChange])
+    // Trigger updateParent to notify form engine of the initial state
+    updateParent(outcome, other, recommended, advice)
+  }, [])
 
-  console.log('VALID OUTCOME', recommendedOutcome, value)
+  console.log('VALUE IN CHOOSe', value)
 
   const handleOutcomeChange = event => {
     const newOutcome = event.target.value
-    console.log('Outcome changed:', newOutcome)
     setSelectedOutcome(newOutcome)
-    onChange({
-      selectedValue: newOutcome,
-      recommendedOutcome: recommendedOutcome,
-      additionalAdvice: additionalAdvice
-    })
+    updateParent(newOutcome, otherOutcome, recommendedOutcome, additionalAdvice)
   }
 
   const handleOtherOutcomeChange = event => {
     const newOtherOutcome = event.target.value
     setOtherOutcome(newOtherOutcome)
-    onChange(newOtherOutcome)
+    updateParent(selectedOutcome, newOtherOutcome, recommendedOutcome, additionalAdvice)
   }
 
-  console.log('recommededoutcom', value, value?.__contextData?.recommendedOutcome, recommendedOutcome)
+  const updateParent = (outcome, other, recommended, advice) => {
+    console.log('ON CHANGE UPDATE PARENT CHOOSe', outcome, other, recommended, advice)
+    onChange({
+      selectedValue: outcome,
+      otherOutcome: other,
+      recommendedOutcome: recommended,
+      additionalAdvice: advice
+    })
+  }
+
   return (
     <Box>
       <Typography variant='h6' gutterBottom>

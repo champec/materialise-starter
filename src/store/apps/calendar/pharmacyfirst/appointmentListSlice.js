@@ -110,6 +110,7 @@ export const createThreadAndSendSMS = createAsyncThunk(
       .single()
 
     if (error) {
+      console.log('sms thread error')
       throw error // Consider throwing the error to be handled by Redux Toolkit
     }
 
@@ -135,7 +136,7 @@ export const createThreadAndSendSMS = createAsyncThunk(
         .insert({ thread_id: data.id, message: message, sender_id: orgId })
 
       if (messageError) {
-        console.error(messageError)
+        console.log('sms send error', messageError)
         throw messageError // Consider throwing the error to be handled by Redux Toolkit
       }
     }

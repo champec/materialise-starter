@@ -30,7 +30,7 @@ import ReviewComponent from './CustomFormFields/ReviewComponent'
 import MedicineSupplied from './CustomFormFields/MedicineSupplied'
 import SafetyNettingChecklist from './CustomFormFields/SafetyNettingChecklist'
 import FeverPainCalculator from './CustomFormFields/FeverPainCalculator'
-import AdiceForm from './CustomFormFields/AdviceForm'
+import TargetRTI from './CustomFormFields/TargetRTI'
 import AdviceForm from './CustomFormFields/AdviceForm'
 
 // Add these interfaces
@@ -92,8 +92,8 @@ const AdvancedFormEngine: React.FC<AdvancedFormEngineProps> = ({
   initialData = {},
   onSubmit,
   onSaveProgress,
-  // formData,
-  // setFormData,
+  formData,
+  setFormData,
   currentNodeId,
   setCurrentNodeId,
   history,
@@ -105,7 +105,7 @@ const AdvancedFormEngine: React.FC<AdvancedFormEngineProps> = ({
 }) => {
   console.log('FORM DEFINITION', { formDefinition, currentNodeId })
   // const [currentNodeId, setCurrentNodeId] = useState(formDefinition.startNode)
-  const [formData, setFormData] = useState<Record<string, any>>(initialData) //! make sure to add external formdata state in service delivery aswel
+  //const [formData, setFormData] = useState<Record<string, any>>(initialData) //! make sure to add external formdata state in service delivery aswel
   // const [history, setHistory] = useState<string[]>([formDefinition.startNode])
   // const [errors, setErrors] = useState<Record<string, string>>({})
   // const [isLocked, setIsLocked] = useState(false)
@@ -125,23 +125,93 @@ const AdvancedFormEngine: React.FC<AdvancedFormEngineProps> = ({
 
   // Update handleAnswer function to work with the new SymptomChecklist
   const handleAnswer = (answer: any) => {
-    setFormData(prevData => ({
-      ...prevData,
-      [currentNodeId]: answer
-    }))
+    console.log('HANDLE ANSWER FIRED')
+    const oldAnswer = formData[currentNodeId]
+    const answerChanged = JSON.stringify(oldAnswer) !== JSON.stringify(answer)
 
-    // Clear the error for this field if it exists
-    if (errors[currentNodeId]) {
-      setErrors(prevErrors => {
-        const newErrors = { ...prevErrors }
-        delete newErrors[currentNodeId]
-        return newErrors
-      })
+    if (!answerChanged) {
+      // If the answer hasn't changed, don't do anything
+      return
+    }
+    console.log('HANDLE ANSWER FIRED answer', oldAnswer, answerChanged)
+    // Update form data
+    const newFormData = {
+      ...formData,
+      [currentNodeId]: answer
     }
 
-    // Check if the current field has autoProgress enabled
-    if (currentNode.field.autoProgress) {
-      handleAutoProgress(answer)
+    // Determine the new path
+    const result = currentNode.next(answer)
+    let newNextNode: string | null = null
+    let data: any = undefined
+
+    if (typeof result === 'object' && result !== null) {
+      newNextNode = result.nextId
+      data = result.data
+    } else {
+      newNextNode = result
+    }
+
+    const oldResult = oldAnswer !== undefined ? currentNode.next(oldAnswer) : null
+    let oldNextNode: string | null = null
+
+    if (typeof oldResult === 'object' && oldResult !== null) {
+      oldNextNode = oldResult.nextId
+    } else {
+      oldNextNode = oldResult
+    }
+
+    console.log('HANDLE ANSWER FIRED node', newNextNode, oldNextNode)
+    // If the path has changed, update history and clear irrelevant data
+    if (newNextNode !== oldNextNode) {
+      // Find the index of the current node in the history
+      const currentIndex = history.indexOf(currentNodeId)
+
+      // Create new history, removing future nodes
+      const newHistory = history.slice(0, currentIndex + 1)
+
+      // If the new next node isn't already in the history, add it
+      if (newNextNode && !newHistory.includes(newNextNode)) {
+        newHistory.push(newNextNode)
+      }
+
+      // Remove data for nodes that are no longer in the history
+      Object.keys(newFormData).forEach(key => {
+        if (!newHistory.includes(key) && key !== currentNodeId) {
+          delete newFormData[key]
+        }
+      })
+
+      // Update state
+      setFormData(newFormData)
+      setHistory(newHistory)
+    } else {
+      // If the path hasn't changed, just update form data
+      setFormData(newFormData)
+    }
+
+    // Clear any errors for this field
+    setErrors(prevErrors => {
+      const newErrors = { ...prevErrors }
+      delete newErrors[currentNodeId]
+      return newErrors
+    })
+
+    // Handle auto-progress if enabled
+    if (currentNode.field.autoProgress && newNextNode) {
+      setCurrentNodeId(newNextNode)
+      setIsLocked(formDefinition.nodes[newNextNode].isStopNode || false)
+    }
+
+    // Update the form data with the data returned from the next function
+    if (data) {
+      setFormData(prevFormData => ({
+        ...prevFormData,
+        [newNextNode]: {
+          ...prevFormData[newNextNode],
+          __contextData: data
+        }
+      }))
     }
   }
 
@@ -187,64 +257,18 @@ const AdvancedFormEngine: React.FC<AdvancedFormEngineProps> = ({
 
     const result = currentNode.next(formData[currentNodeId])
     let nextId: string | null = null
-    let contextData: any = undefined
 
-    console.log('RESULTS OF THE PRESCIIOUYS NEXT CLICK', result)
     if (typeof result === 'string' || result === null) {
       nextId = result
     } else {
       nextId = result.nextId
-      contextData = result.data
     }
 
+    console.log('NEXT ID', nextId)
     if (nextId) {
-      // Find the last decision point
-      const currentIndex = history.indexOf(currentNodeId)
-      let lastDecisionPointIndex = currentIndex
-
-      for (let i = currentIndex; i >= 0; i--) {
-        const node = formDefinition.nodes[history[i]]
-        const nextResult = node.next({})
-        if (
-          (typeof nextResult === 'object' && nextResult !== null && Object.keys(nextResult).length > 1) ||
-          (typeof nextResult === 'string' && nextResult !== null)
-        ) {
-          lastDecisionPointIndex = i
-          break
-        }
-      }
-
-      // Remove answers and history after the last decision point
-      const newHistory = history.slice(0, lastDecisionPointIndex + 1)
-      if (!newHistory.includes(nextId)) {
-        newHistory.push(nextId)
-      }
-
-      setHistory(newHistory)
-
-      // Remove form data for removed nodes
-      const preservedFormData = {}
-      newHistory.forEach(nodeId => {
-        if (formData[nodeId] !== undefined) {
-          preservedFormData[nodeId] = formData[nodeId]
-        }
-      })
-
-      // Initialize the next node's form data
-      if (contextData !== undefined) {
-        preservedFormData[nextId] = {
-          value: '', // The actual form value, initially empty
-          __contextData: contextData // Store any contextual data separately
-        }
-      } else {
-        preservedFormData[nextId] = ''
-      }
-
-      setFormData(preservedFormData)
       setCurrentNodeId(nextId)
       setIsLocked(formDefinition.nodes[nextId].isStopNode || false)
     } else {
-      // If there's no next node, we might be at the end of the form
       setIsLocked(false)
     }
   }
@@ -430,6 +454,8 @@ const AdvancedFormEngine: React.FC<AdvancedFormEngineProps> = ({
             error={!!error}
             helperText={error}
             required={field.required}
+            multiline={field?.multi}
+            rows={field?.rows || 1}
           />
         )
       case 'select':
@@ -495,6 +521,19 @@ const AdvancedFormEngine: React.FC<AdvancedFormEngineProps> = ({
         if (field.component === 'AdviceForm') {
           return (
             <AdviceForm
+              id={currentNodeId}
+              value={formData[currentNodeId] || {}}
+              onChange={(value: any) => handleAnswer(value)}
+              error={error}
+              options={field.options || []}
+              question={field.question}
+              progressionCriteria={field.progressionCriteria}
+            />
+          )
+        }
+        if (field.component === 'TargetRTI') {
+          return (
+            <TargetRTI
               id={currentNodeId}
               value={formData[currentNodeId] || {}}
               onChange={(value: any) => handleAnswer(value)}
@@ -576,6 +615,7 @@ const AdvancedFormEngine: React.FC<AdvancedFormEngineProps> = ({
               onChange={value => handleAnswer(value)}
               error={error}
               options={field?.options || []}
+              consultationOutcomes={field.consultationOutcomes}
             />
           )
         } else if (field.component === 'GateWayNotMet') {
@@ -636,23 +676,28 @@ const AdvancedFormEngine: React.FC<AdvancedFormEngineProps> = ({
     <Grid container spacing={2}>
       <Grid item xs={3}>
         <Stepper activeStep={visibleHistory.indexOf(currentNodeId)} orientation='vertical'>
-          {visibleHistory.map((nodeId, index) => (
-            <Step key={nodeId}>
-              <StepLabel
-                error={!!errors[nodeId]}
-                onClick={() => handleNavigation(nodeId)}
-                style={{
-                  cursor:
-                    isLocked && nodeId !== formDefinition.nodes[currentNodeId].returnTo ? 'not-allowed' : 'pointer'
-                }}
-              >
-                {formDefinition.nodes[nodeId].field.question}
-              </StepLabel>
-              <StepContent>
-                <Typography variant='body2'>{formData[nodeId] ? 'Answered' : 'Not answered'}</Typography>
-              </StepContent>
-            </Step>
-          ))}
+          {visibleHistory.map((nodeId, index) => {
+            const nodeKey = typeof nodeId === 'object' ? nodeId.nextId : nodeId
+            const node = formDefinition.nodes[nodeKey]
+
+            return (
+              <Step key={nodeId}>
+                <StepLabel
+                  error={!!errors[nodeId]}
+                  onClick={() => handleNavigation(nodeId)}
+                  style={{
+                    cursor:
+                      isLocked && nodeId !== formDefinition.nodes[currentNodeId].returnTo ? 'not-allowed' : 'pointer'
+                  }}
+                >
+                  {formDefinition.nodes[nodeKey].field.question}
+                </StepLabel>
+                <StepContent>
+                  <Typography variant='body2'>{formData[nodeId] ? 'Answered' : 'Not answered'}</Typography>
+                </StepContent>
+              </Step>
+            )
+          })}
         </Stepper>
       </Grid>
       <Grid item xs={9}>

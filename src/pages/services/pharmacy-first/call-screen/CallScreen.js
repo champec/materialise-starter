@@ -8,7 +8,8 @@ const VideoCallComponent = ({
   handleBookingButton,
   handleScrButton,
   handleNotesButton,
-  handlePrescriptionButton
+  handlePrescriptionButton,
+  hcpToken
 }) => {
   const callFrame = useCallFrame({
     parentElRef: containerRef,
@@ -18,7 +19,9 @@ const VideoCallComponent = ({
         width: '100%',
         height: '100%',
         border: 'none'
-      }
+      },
+      showLeaveButton: true,
+      showFullscreenButton: true
     },
     shouldCreateInstance: () => containerRef.current
   })
@@ -33,8 +36,11 @@ const VideoCallComponent = ({
     //   }
     // })
 
+    console.log(hcpToken, 'hcptoken')
+
     callFrame.join({
       url: url ? url : null,
+      token: hcpToken,
       theme: {
         colors: {
           accent: '#1AA1FB',

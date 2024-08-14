@@ -4,7 +4,6 @@ const shinglesServiceDefinition = {
   name: 'Shingles Service',
   startNode: 'eligibilityCheck',
   nodes: {
-    ...universalCPCSFormDefinition.nodes,
     eligibilityCheck: {
       id: 'eligibilityCheck',
       field: {
@@ -66,8 +65,28 @@ const shinglesServiceDefinition = {
         component: 'ChooseOutcome',
         question: 'Choose outcome',
         required: true,
-        progressionCriteria: { type: 'any' }
+        consultationOutcomes: [
+          { value: 'ADVICE_ONLY', label: 'Advice given only' },
+          { value: 'OTC_MEDICINE_SALE', label: 'Sale of an Over the Counter (OTC) medicine' },
+          { value: 'MAS_REFERRAL', label: 'Referral into a pharmacy local minor ailments service (MAS)' },
+          {
+            value: 'LOCAL_COMMISSIONED_REFERRAL',
+            label: 'Referral into an appropriate locally commissioned NHS service'
+          },
+          { value: 'SUPPLY_NO_SUPPLY', label: 'Medicines supply / non-supply' },
+          { value: 'SUPPLY_NO_SUPPLY', label: 'Medicines non-supply (specify actions taken)' },
+          { value: 'ONWARD_REFERRAL', label: 'Onward referral to another CPCS pharmacy' },
+          { value: 'NON_URGENT', label: 'Non-urgent signposting to another service' },
+          { value: 'URGENT', label: 'Urgent escalation to another service' },
+          { value: 'OTHER', label: 'Other (please specify)' }
+        ],
         // autoProgress: true
+        validate: value => {
+          if (!value || !value.selectedValue) {
+            return 'You must select an outcome to proceed'
+          }
+          return null
+        }
       },
       next: answer => {
         let finalAnswer = ''
@@ -96,6 +115,46 @@ const shinglesServiceDefinition = {
             return 'wouldYouLikeANewsScore'
           case 'OTHER':
             return 'otherOutcomeDetails'
+          default:
+            return 'additionalDetails'
+        }
+      }
+    },
+    chooseOutcome_treatment: {
+      id: ' chooseOutcome_treatment',
+      field: {
+        type: 'custom',
+        component: 'ChooseOutcome',
+        question: 'Choose outcome',
+        required: true,
+        consultationOutcomes: [
+          {
+            value: 'Mild_Symptoms',
+            label: '(Mild Symptoms) Conider pain relief and self care as first line treatment'
+          },
+          { value: 'Severe_Symptoms', label: '(Severe Symptoms) Conider antibiotics' }
+        ],
+        // autoProgress: true
+        validate: value => {
+          if (!value || !value.selectedValue) {
+            return 'You must select an outcome to proceed'
+          }
+          return null
+        }
+      },
+      next: answer => {
+        let finalAnswer = ''
+        if (typeof answer === 'object') {
+          finalAnswer = answer.selectedValue
+        } else if (typeof answer === 'string') {
+          finalAnswer = answer
+        }
+        console.log('final answer', finalAnswer, answer, answer?.selectedValue, typeof answer)
+        switch (finalAnswer) {
+          case 'Mild_Symptoms':
+            return 'adviceProvided'
+          case 'Severe_Symptoms':
+            return 'medicationSupplyDetails'
           default:
             return 'additionalDetails'
         }
@@ -160,7 +219,7 @@ const shinglesServiceDefinition = {
         }
 
         if (answer.feverPainScore > 3) {
-          return 'chooseOutcome_treatment'
+          return 'wouldYouLikeToDoRTI'
         }
         return {
           nextId: 'chooseOutcome',
@@ -205,6 +264,46 @@ const shinglesServiceDefinition = {
         data: { newsScore: answer }
       })
     },
+    wouldYouLikeToDoRTI: {
+      id: 'wouldYouLikeToDoRTI',
+      field: {
+        type: 'radio',
+        question: 'Shared decision making approach using TARGET RTI resource and clinician global impression? ',
+        options: ['Yes', 'No'],
+        required: true,
+        autoProgress: true
+      },
+      next: answer => ({
+        nextId: answer === 'Yes' ? 'targetRTI' : 'chooseOutcome_treatment',
+        data: { newsScore: answer }
+      })
+    },
+    targetRTI: {
+      id: 'targetRTI',
+      field: {
+        type: 'custom',
+        component: 'TargetRTI',
+        question: 'Complete the TARGET RTI assessment:',
+        required: true,
+        validate: value => {
+          if (!value || !value.outcome) {
+            return 'Please complete the assessment and select an outcome.'
+          }
+          return null
+        }
+      },
+      next: answer => {
+        if (answer.outcome === 'red_flag') {
+          return 'referralComponent' // or any other logic for next step
+        } else if (answer.outcome === 'mild_symptoms') {
+          return 'adviceProvided'
+        } else if (answer.outcome === 'sever_symptoms') {
+          return 'medicationSupplyDetails'
+        }
+
+        return 'reviewComponent'
+      }
+    },
     news2Calculator: {
       id: 'news2Calculator',
       field: {
@@ -240,145 +339,16 @@ const shinglesServiceDefinition = {
       next: () => null, // End of the form
       isEndNode: true
     },
-
-    // OLD COMPONENT
-    urgentReferralStop: {
-      id: 'urgentReferralStop',
+    completion: {
+      id: 'completion',
       field: {
         type: 'text',
-        question:
-          'Urgent referral required. Consider calculating NEWS2 Score ahead of signposting patient to A&E or calling 999 in a life-threatening emergency.',
+        question: 'Any additional notes or observations?',
+        multi: true,
+        rows: 4,
         required: false
       },
-      next: () => null,
-      isStopNode: true,
-      returnTo: 'riskOfDeterioration'
-    },
-    clinicalFeatures: {
-      id: 'clinicalFeatures',
-      field: {
-        type: 'custom',
-        component: 'SymptomChecklist',
-        question: 'Does the patient follow typical progression of shingles clinical features:',
-        options: [
-          'Abnormal skin sensation and pain in the affected area (burning, stabbing, throbbing, itching, tingling)',
-          'Rash appears within 2-3 days after the onset of pain',
-          'Fever and/or headache may develop',
-          'Rash appears as a group of red spots on a pink-red background which quickly turn into small fluid-filled blisters',
-          'Blisters burst, fill with blood or pus, then slowly dry and form crusts/scabs',
-          'Rash covers a well-defined area of skin on one side of the body only in a dermatomal distribution'
-        ],
-        required: true,
-        progressionCriteria: { type: 'allYes' }
-      },
-      next: answer => (Object.values(answer).every(v => v) ? 'rashOnsetCheck' : 'alternativeDiagnosis')
-    },
-    alternativeDiagnosis: {
-      id: 'alternativeDiagnosis',
-      field: {
-        type: 'text',
-        question: 'Shingles less likely. Consider alternative diagnosis and proceed appropriately.',
-        required: false
-      },
-      next: () => null,
-      isStopNode: true,
-      returnTo: 'clinicalFeatures'
-    },
-    rashOnsetCheck: {
-      id: 'rashOnsetCheck',
-      field: {
-        type: 'radio',
-        question: 'Is the shingles rash within 72 hours of onset?',
-        options: ['Yes', 'No'],
-        required: true
-      },
-      next: answer => (answer === 'Yes' ? 'treatmentCriteria72h' : 'rashOnsetCheck1Week')
-    },
-    treatmentCriteria72h: {
-      id: 'treatmentCriteria72h',
-      field: {
-        type: 'custom',
-        component: 'SymptomChecklist',
-        question: 'Does the patient meet ANY of the following criteria:',
-        options: [
-          'Immunosuppressed',
-          'Non-truncal involvement (shingles affecting the neck, limbs, or perineum)',
-          'Moderate or severe pain',
-          'Moderate or severe rash (defined as confluent lesions)',
-          'Patient aged over 50 years'
-        ],
-        required: true,
-        progressionCriteria: { type: 'someYes', count: 1 }
-      },
-      next: answer => (Object.values(answer).some(v => v) ? 'offerTreatment' : 'selfCareStop')
-    },
-    rashOnsetCheck1Week: {
-      id: 'rashOnsetCheck1Week',
-      field: {
-        type: 'radio',
-        question: 'Is the shingles rash up to one week after onset?',
-        options: ['Yes', 'No'],
-        required: true
-      },
-      next: answer => (answer === 'Yes' ? 'treatmentCriteria1Week' : 'selfCareStop')
-    },
-    treatmentCriteria1Week: {
-      id: 'treatmentCriteria1Week',
-      field: {
-        type: 'custom',
-        component: 'SymptomChecklist',
-        question: 'Does the patient meet ANY of the following criteria:',
-        options: [
-          'Immunosuppressed',
-          'Continued vesicle formation',
-          'Severe pain',
-          'High risk of severe shingles (e.g. severe atopic dermatitis/eczema)',
-          'Patient aged 70 years and over'
-        ],
-        required: true,
-        progressionCriteria: { type: 'someYes', count: 1 }
-      },
-      next: answer => (Object.values(answer).some(v => v) ? 'offerTreatment' : 'selfCareStop')
-    },
-    offerTreatment: {
-      id: 'offerTreatment',
-      field: {
-        type: 'radio',
-        question: 'Offer treatment:',
-        options: ['Aciclovir', 'Valaciclovir'],
-        required: true
-      },
-      next: () => 'medication_supply'
-    },
-    selfCareStop: {
-      id: 'selfCareStop',
-      field: {
-        type: 'text',
-        question: 'Patient does not meet treatment criteria. Provide self-care advice and safety-netting information.',
-        required: false
-      },
-      next: () => null,
-      isStopNode: true,
-      returnTo: 'rashOnsetCheck'
-    },
-    painManagement: {
-      id: 'painManagement',
-      field: {
-        type: 'radio',
-        question: 'Is pain management with over-the-counter medications effective?',
-        options: ['Yes', 'No'],
-        required: true
-      },
-      next: answer => (answer === 'No' ? 'referForPainManagement' : 'safetyNetting')
-    },
-    referForPainManagement: {
-      id: 'referForPainManagement',
-      field: {
-        type: 'text',
-        question: 'Refer patient to general practice for further pain management.',
-        required: false
-      },
-      next: () => 'safetyNetting'
+      next: () => 'reviewComponent'
     },
     safetyNetting: {
       id: 'safetyNetting',
@@ -397,13 +367,6 @@ const shinglesServiceDefinition = {
         required: true
       },
       next: () => 'completion'
-    },
-    completion: {
-      ...universalCPCSFormDefinition.nodes.completion,
-      field: {
-        ...universalCPCSFormDefinition.nodes.completion.field,
-        question: 'Shingles assessment and treatment completed. Any additional notes or observations?'
-      }
     }
   }
 }

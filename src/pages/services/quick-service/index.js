@@ -17,7 +17,8 @@ import {
   Drawer,
   IconButton,
   Snackbar,
-  Alert
+  Alert,
+  CircularProgress
 } from '@mui/material'
 import { DateTimePicker } from '@mui/x-date-pickers/DateTimePicker'
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns'
@@ -51,6 +52,7 @@ const QuickServiceDeliveryComponent = () => {
   const [activeStep, setActiveStep] = useState(0)
   const [config, setConfig] = useState({ appointmentType: '', service: '', stage: '' })
   const [formDef, setFormDef] = useState({})
+  const [loadingRemote, setLoadingRemote] = useState(false)
   const [appointmentDetails, setAppointmentDetails] = useState({
     patient: null,
     gp: null,
@@ -148,6 +150,7 @@ const QuickServiceDeliveryComponent = () => {
       }
 
       try {
+        setLoadingRemote(true)
         // Create video link
         const { data: dailyResponse, error: dailyError } = await supabase.functions.invoke('daily-scheduler', {
           body: { scheduledTime: appointmentDetails.scheduledTime }
@@ -155,6 +158,7 @@ const QuickServiceDeliveryComponent = () => {
 
         if (dailyError) {
           console.log('error generitng vid link', dailyError)
+          setLoadingRemote(false)
           throw new Error('Error generating video link')
         }
 
@@ -169,15 +173,18 @@ const QuickServiceDeliveryComponent = () => {
           }
         }))
 
+        const patientFirstName = appointmentDetails.patientName || 'sir/madam'
+
         // Send text message
-        const message = `Your remote Pharmacy First appointment is scheduled for ${
-          ('a quick immediate appointment',
-          {
-            /*appointmentDetails.scheduledTime*/
-          })
-        }. 
-          Use this link to join the meeting: ${dailyResponse.room.url}. 
-          Your secure word is your first name: ${appointmentDetails.patientName}`
+        const message = dailyResponse.scheduledTime
+          ? `Your remote Pharmacy First appointment is scheduled for ${new Date(
+              dailyResponse.scheduledTime * 1000
+            ).toLocaleString()}. 
+           Use this link to join the meeting: ${dailyResponse.room.url}?token=${dailyResponse.patientToken}. 
+           Please be ready at the scheduled time. When prompted, enter your first name '${patientFirstName}' to join the call.`
+          : `Your immediate remote Pharmacy First appointment is ready. 
+           Use this link to join the meeting: ${dailyResponse.room.url}?token=${dailyResponse.patientToken}. 
+           You can join the call now. When prompted, enter your first name '${patientFirstName}' to join the call.`
 
         await dispatch(
           createThreadAndSendSMS({
@@ -193,11 +200,12 @@ const QuickServiceDeliveryComponent = () => {
         showSnackbar('Video link created and text message sent', 'success')
       } catch (error) {
         showSnackbar('Error setting up remote appointment, error')
+        setLoadingRemote(false)
         console.log('Error setting up remote appointment', error)
         return
       }
     }
-
+    setLoadingRemote(false)
     setActiveStep(prevActiveStep => prevActiveStep + 1)
   }
 
@@ -241,7 +249,7 @@ const QuickServiceDeliveryComponent = () => {
       case 0:
         return (
           <Box>
-            <FormControl fullWidth sx={{ mb: 2 }}>
+            <FormControl fullWidth sx={{ mb: 2 }} disabled={loadingRemote}>
               <InputLabel>Appointment Type</InputLabel>
               <Select
                 value={config.appointmentType || 'in-person'}
@@ -312,6 +320,7 @@ const QuickServiceDeliveryComponent = () => {
                       handleScrButton={handleScrButton}
                       handleNotesButton={handleNotesButton}
                       handlePrescriptionButton={handlePrescriptionButton}
+                      hcpToken={appointmentDetails.remote_details.hcp_token}
                     />
                   </Box>
                 ) : (
@@ -445,7 +454,7 @@ const QuickServiceDeliveryComponent = () => {
         </Stepper>
         <Box sx={{ mt: 2, mb: 1 }}>{renderStepContent(activeStep)}</Box>
         <Box sx={{ display: 'flex', flexDirection: 'row', pt: 2 }}>
-          <Button color='inherit' disabled={activeStep === 0} onClick={handleBack} sx={{ mr: 1 }}>
+          <Button color='inherit' disabled={activeStep === 0 || loadingRemote} onClick={handleBack} sx={{ mr: 1 }}>
             Back
           </Button>
           <Box sx={{ flex: '1 1 auto' }} />
@@ -454,7 +463,9 @@ const QuickServiceDeliveryComponent = () => {
               {loading ? 'Submitting...' : 'Submit'}
             </Button>
           ) : (
-            <Button onClick={handleNext}>Next</Button>
+            <Button onClick={handleNext} disabled={loadingRemote}>
+              {loadingRemote ? <CircularProgress /> : 'Next'}
+            </Button>
           )}
         </Box>
       </Box>

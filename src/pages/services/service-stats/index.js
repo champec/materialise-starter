@@ -1,8 +1,35 @@
-import { Box, Grid, Typography, Card, CardContent } from '@mui/material'
+import { Box, Grid, Typography, Card, CardContent, Button } from '@mui/material'
+import { createThreadAndSendSMS } from '../../../store/apps/calendar/pharmacyfirst/appointmentListSlice'
+import { useDispatch } from 'react-redux'
+import ClinicalNotesComponent from './AIConsult'
 
 function ServiceStats() {
+  const dispatch = useDispatch()
+  const sendSMS = () => {
+    const patientId = null
+    const patientName = 'Champe Chilufya'
+    const message = 'testing message'
+    const phoneNumber = '07445693784'
+    const time = new Date()
+    const appointmentId = null
+    const doNotIncludeTextMessage = false
+
+    dispatch(
+      createThreadAndSendSMS({
+        patientId,
+        patientName,
+        message,
+        phoneNumber,
+        time,
+        appointmentId,
+        doNotIncludeTextMessage
+      })
+    )
+  }
+
   return (
     <Box sx={{ p: 2 }}>
+      <Button onClick={sendSMS}>Send SMS</Button>
       <Typography variant='h4' gutterBottom>
         Service Stats
       </Typography>
@@ -98,6 +125,8 @@ function ServiceStats() {
           </Card>
         </Grid>
       </Grid>
+
+      <ClinicalNotesComponent />
     </Box>
   )
 }

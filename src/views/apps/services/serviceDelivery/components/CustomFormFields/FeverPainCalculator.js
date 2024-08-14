@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import {
   Box,
   Typography,
@@ -12,7 +12,7 @@ import {
 
 const FeverPainCalculator = ({ id, value, onChange, error }) => {
   const [params, setParams] = useState(
-    value || {
+    value?.params || {
       fever: false,
       purulence: false,
       attendRapidly: false,
@@ -24,33 +24,39 @@ const FeverPainCalculator = ({ id, value, onChange, error }) => {
   const [feverPainScore, setFeverPainScore] = useState(value?.feverPainScore || 0)
   const [outcome, setOutcome] = useState(value?.outcome || '')
 
+  useEffect(() => {
+    if (value) {
+      setParams(value.params || params)
+      setFeverPainScore(value.feverPainScore || feverPainScore)
+      setOutcome(value.outcome || outcome)
+    }
+  }, [value])
+
   const handleChange = param => {
     const updatedParams = { ...params, [param]: !params[param] }
     setParams(updatedParams)
-    onChange({
-      ...updatedParams,
-      feverPainScore,
-      outcome
-    })
+    // updateParent(updatedParams, feverPainScore, outcome)
   }
 
   const calculateFeverPainScore = () => {
-    // Count only the parameters that are true
     return Object.values(params).filter(value => value === true).length
   }
 
   const handleCalculate = () => {
     const score = calculateFeverPainScore()
-    const outcome = getOutcome(score)
+    const newOutcome = getOutcome(score)
     setFeverPainScore(score)
-    setOutcome(outcome)
+    setOutcome(newOutcome)
+    updateParent(params, score, newOutcome)
+  }
 
-    const result = {
-      ...params,
+  const updateParent = (newParams, score, newOutcome) => {
+    console.log('UPDATE PARENT', newParams, score, newOutcome)
+    onChange({
+      params: newParams,
       feverPainScore: score,
-      outcome: outcome
-    }
-    onChange(result)
+      outcome: newOutcome
+    })
   }
 
   const getOutcome = score => {
@@ -66,31 +72,17 @@ const FeverPainCalculator = ({ id, value, onChange, error }) => {
       </Typography>
       <FormControl component='fieldset'>
         <FormGroup>
-          <FormControlLabel
-            control={<Checkbox checked={params.fever} onChange={() => handleChange('fever')} />}
-            label='Fever in last 24 hours'
-          />
-          <FormControlLabel
-            control={<Checkbox checked={params.purulence} onChange={() => handleChange('purulence')} />}
-            label='Purulence'
-          />
-          <FormControlLabel
-            control={<Checkbox checked={params.attendRapidly} onChange={() => handleChange('attendRapidly')} />}
-            label='Attend rapidly under 3 days'
-          />
-          <FormControlLabel
-            control={<Checkbox checked={params.inflamedTonsils} onChange={() => handleChange('inflamedTonsils')} />}
-            label='Inflamed tonsils'
-          />
-          <FormControlLabel
-            control={<Checkbox checked={params.noCoughOrCoryza} onChange={() => handleChange('noCoughOrCoryza')} />}
-            label='No cough or coryza'
-          />
+          {Object.entries(params).map(([key, checked]) => (
+            <FormControlLabel
+              key={key}
+              control={<Checkbox checked={checked} onChange={() => handleChange(key)} />}
+              label={key.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase())}
+            />
+          ))}
         </FormGroup>
       </FormControl>
       {error && <FormHelperText error>{error}</FormHelperText>}
 
-      {/* Place the button directly underneath the checklist */}
       <Box sx={{ mt: 2 }}>
         <Button variant='contained' onClick={handleCalculate}>
           Calculate FeverPAIN Score

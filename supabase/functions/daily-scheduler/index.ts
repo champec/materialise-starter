@@ -10,26 +10,29 @@ const DAILY_API_KEY = Deno.env.get('DAILY_API_KEY')
 const DAILY_API_ENDPOINT = 'https://api.daily.co/v1/rooms'
 const DAILY_API_MEETINGTOKEN = 'https://api.daily.co/v1/meeting-tokens'
 
+console.log('Edge function loaded')
+
 // Function to generate token
-const generateToken = async (roomName, isHcp) => {
-  const properties = isHcp
-    ? {
-        room_name: roomName,
-        is_owner: true,
-        enable_screenshare: true
-        // enable_recording: 'cloud'
-        // additional properties for HCP
-      }
-    : {
-        room_name: roomName,
-        enable_screenshare: false,
-        start_video_off: true,
-        close_tab_on_exit: true,
-        redirect_on_meeting_exit: 'www.google.com'
-        // additional properties for patient
-      }
+const generateToken = async (roomName, isHcp, nbf) => {
+  console.log('Generating token for:', isHcp ? 'HCP' : 'Patient', 'NBF:', nbf)
+  const properties = {
+    room_name: roomName,
+    ...(nbf && { nbf }), // Only include nbf if it's provided
+    ...(isHcp
+      ? {
+          is_owner: true,
+          enable_screenshare: true
+        }
+      : {
+          enable_screenshare: false,
+          start_video_off: true,
+          close_tab_on_exit: true,
+          redirect_on_meeting_exit: 'pharmex.uk'
+        })
+  }
 
   try {
+    console.log('Sending token request to Daily.co')
     const tokenResponse = await fetch(DAILY_API_MEETINGTOKEN, {
       method: 'POST',
       headers: {
@@ -40,11 +43,12 @@ const generateToken = async (roomName, isHcp) => {
     })
 
     if (!tokenResponse.ok) {
-      throw new Error(`HTTP Error: ${tokenResponse}`)
+      console.error('Token generation failed:', tokenResponse.status, await tokenResponse.text())
+      throw new Error(`HTTP Error: ${tokenResponse.status}`)
     }
 
-    console.log('tokenResponse', tokenResponse)
     const tokenData = await tokenResponse.json()
+    console.log('Token generated successfully')
     return tokenData.token
   } catch (error) {
     console.error('Failed to generate token:', error)
@@ -53,17 +57,24 @@ const generateToken = async (roomName, isHcp) => {
 }
 
 Deno.serve(async req => {
+  console.log('Request received')
+
   if (req.method === 'OPTIONS') {
+    console.log('OPTIONS request handled')
     return new Response('ok', { headers: corsHeaders })
   }
 
   if (req.method !== 'POST') {
+    console.log('Method not allowed:', req.method)
     return new Response('Method Not Allowed', { status: 405, headers: corsHeaders })
   }
 
   try {
-    const { scheduledTime } = await req.json() // Extract the scheduled start time from the request body
+    console.log('Parsing request body')
+    const { scheduledTime } = await req.json()
+    console.log('Scheduled time:', scheduledTime)
 
+    console.log('Creating Daily.co room')
     const roomResponse = await fetch(DAILY_API_ENDPOINT, {
       method: 'POST',
       headers: {
@@ -72,35 +83,39 @@ Deno.serve(async req => {
         Authorization: `Bearer ${DAILY_API_KEY}`
       },
       body: JSON.stringify({
+        privacy: 'private',
         properties: {
-          // nbf: scheduledTime, // Unix timestamp for "Not Before" time
-          max_participants: 2, // Limit to 2 people
-          enable_prejoin_ui: true
-          // Add any additional properties you need
+          max_participants: 2,
+          enable_prejoin_ui: true,
+          enable_knocking: true // This enables the waiting room feature
         }
       })
     })
 
     if (!roomResponse.ok) {
+      console.error('Room creation failed:', roomResponse.status, await roomResponse.text())
       throw new Error(`HTTP Error: ${roomResponse.status}`)
     }
 
     const roomData = await roomResponse.json()
-    const roomName = roomData.name
+    console.log('Room created:', roomData.name)
 
-    // Generate tokens for HCP and patient
-    const hcpToken = await generateToken(roomName, true)
-    const patientToken = await generateToken(roomName, false)
+    console.log('Generating tokens')
+    const hostNbf = scheduledTime ? scheduledTime - 600 : null // 5 minutes before scheduled time
+    const hcpToken = await generateToken(roomData.name, true, hostNbf)
+    const patientToken = await generateToken(roomData.name, false, scheduledTime)
 
-    // Include tokens in the response
     const response = {
       room: roomData,
       hcpToken: hcpToken,
-      patientToken: patientToken
+      patientToken: patientToken,
+      scheduledTime: scheduledTime
     }
 
+    console.log('Sending response')
     return new Response(JSON.stringify(response), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } })
   } catch (error) {
+    console.error('Error in edge function:', error)
     return new Response(JSON.stringify({ error: error.message }), {
       status: 500,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' }

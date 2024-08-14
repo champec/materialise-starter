@@ -104,7 +104,7 @@ Deno.serve(async req => {
         phone_number: phoneNumber,
         template_id: msgTemplate, //'58c0fdb1-1291-4c80-8985-93eebad4726e', // Set your template ID here
         personalisation: {
-          message: message
+          'first name': message
         }
       })
     })

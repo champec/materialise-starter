@@ -63,13 +63,13 @@ const prescriptionInterceptedOptions = [
 ]
 
 const MedicinesSupplied = ({ id, value, onChange, error, predefinedOptions = [] }) => {
-  const [medications, setMedications] = useState({})
+  const [medications, setMedications] = useState(value?.medications || {})
   const [commonFields, setCommonFields] = useState({
-    medicationSupplyType: medicationSupplyTypes[0].value,
-    provisionDate: '',
-    patientExemptCode: patientExemptCodes[0].value,
-    supplyRequestReason: '',
-    prescriptionIntercepted: ''
+    medicationSupplyType: value?.commonFields?.medicationSupplyType || medicationSupplyTypes[0].value,
+    provisionDate: value?.commonFields?.provisionDate || '',
+    patientExemptCode: value?.commonFields?.patientExemptCode || patientExemptCodes[0].value,
+    supplyRequestReason: value?.commonFields?.supplyRequestReason || '',
+    prescriptionIntercepted: value?.commonFields?.prescriptionIntercepted || ''
   })
   const [genericDrug, setGenericDrug] = useState(null)
   const [genericDrugs, setGenericDrugs] = useState([])
@@ -78,6 +78,26 @@ const MedicinesSupplied = ({ id, value, onChange, error, predefinedOptions = [] 
   const [loading, setLoading] = useState(false)
   const [selectedDrugCode, setSelectedDrugCode] = useState('')
   const [showDuplicateWarning, setShowDuplicateWarning] = useState(false)
+
+  useEffect(() => {
+    if (value) {
+      if (value.medications) {
+        setMedications(value.medications)
+        // Set the selected drug code to the first medication if any exist
+        const medicationCodes = Object.keys(value.medications)
+        if (medicationCodes.length > 0) {
+          setSelectedDrugCode(medicationCodes[0])
+        }
+      }
+      if (value.commonFields) {
+        setCommonFields(prevFields => ({
+          ...prevFields,
+          ...value.commonFields,
+          provisionDate: value.commonFields.provisionDate || new Date().toISOString().split('T')[0]
+        }))
+      }
+    }
+  }, [])
 
   const handleDrugChange = (code, param, newValue) => {
     setMedications(prevMeds => ({
@@ -88,6 +108,24 @@ const MedicinesSupplied = ({ id, value, onChange, error, predefinedOptions = [] 
       }
     }))
   }
+
+  const updateParent = () => {
+    const filteredMedications = Object.entries(medications).reduce((acc, [key, value]) => {
+      if (key !== 'temp' || (value.drugDescription && value.pack && value.quantitySupplied && value.drugDose)) {
+        acc[key] = value
+      }
+      return acc
+    }, {})
+
+    onChange({
+      medications: filteredMedications,
+      commonFields
+    })
+  }
+
+  useEffect(() => {
+    updateParent()
+  }, [medications, commonFields])
 
   const handleCommonFieldChange = (field, value) => {
     setCommonFields(prev => ({ ...prev, [field]: value }))
@@ -122,8 +160,18 @@ const MedicinesSupplied = ({ id, value, onChange, error, predefinedOptions = [] 
       setGenericDrugOptions([])
     }
   }
-  const handleGenericDrugSelect = selectedDrug => {
-    if (!selectedDrug) return
+  const handleGenericDrugSelect = (selectedDrug, drugCode) => {
+    if (!selectedDrug) {
+      // If selectedDrug is null, clear the drug information
+      setMedications(prev => {
+        const newMedications = { ...prev }
+        delete newMedications[drugCode]
+        return newMedications
+      })
+      setSelectedDrugCode('')
+      setPackOptions(prev => ({ ...prev, [drugCode]: [] }))
+      return
+    }
 
     setMedications(prev => {
       const newMedications = { ...prev }
@@ -175,8 +223,12 @@ const MedicinesSupplied = ({ id, value, onChange, error, predefinedOptions = [] 
     }
   }
 
-  const handlePackSelect = (selectedPack, index) => {
-    handleDrugChange(index, 'pack', selectedPack ? selectedPack.nm : '')
+  const handlePackSelect = (selectedPack, drugCode) => {
+    handleDrugChange(drugCode, 'pack', selectedPack ? selectedPack.nm : '')
+    if (!selectedPack) {
+      // Refetch pack options when the pack is cleared
+      fetchPackOptions(drugCode)
+    }
   }
 
   const removeDrug = codeToRemove => {
@@ -188,7 +240,7 @@ const MedicinesSupplied = ({ id, value, onChange, error, predefinedOptions = [] 
       const remainingDrugCodes = Object.keys(medications).filter(code => code !== codeToRemove)
       setSelectedDrugCode(remainingDrugCodes[0] || '')
     }
-    onChange(medications)
+    // onChange(medications)
   }
 
   const handlePredefinedOptionSelect = (option, code) => {
@@ -252,7 +304,7 @@ const MedicinesSupplied = ({ id, value, onChange, error, predefinedOptions = [] 
       const remainingDrugCodes = Object.keys(medications).filter(code => code !== codeToRemove)
       setSelectedDrugCode(remainingDrugCodes[0] || '')
     }
-    onChange(medications)
+    // onChange(medications)
   }
 
   const renderSelectedDrugForm = () => {
@@ -320,13 +372,6 @@ const MedicinesSupplied = ({ id, value, onChange, error, predefinedOptions = [] 
         <Autocomplete
           options={packOptions[selectedMedication.drugCode] || []}
           getOptionLabel={option => `${option.nm} - ${option.subp || 'No size specified'}`}
-          filterOptions={(options, state) => {
-            const inputValue = state.inputValue.toLowerCase()
-            return options.filter(option => {
-              const optionText = `${option.nm} - ${option.subp || 'No size specified'}`.toLowerCase()
-              return optionText.includes(inputValue)
-            })
-          }}
           renderInput={params => (
             <TextField
               {...params}
@@ -344,7 +389,7 @@ const MedicinesSupplied = ({ id, value, onChange, error, predefinedOptions = [] 
               }}
             />
           )}
-          value={packOptions[selectedMedication.drugCode]?.find(pack => pack.nm === selectedMedication.pack) || null}
+          value={selectedMedication.pack ? { nm: selectedMedication.pack } : null}
           onChange={(event, newValue) => handlePackSelect(newValue, selectedMedication.drugCode)}
           disabled={!selectedGenericDrug}
           loading={loading}
