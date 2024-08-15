@@ -17,7 +17,8 @@ import {
   FormHelperText,
   Grid,
   FormGroup,
-  Checkbox
+  Checkbox,
+  styled
 } from '@mui/material'
 //custom component
 import SymptomChecklist from './CustomFormFields/SymptomChecklist'
@@ -86,6 +87,28 @@ interface SymptomChecklistProps {
   question: string
   progressionCriteria?: ProgressionCriteria
 }
+
+//styled components
+
+const FixedHeightContainer = styled(Paper)(({ theme }) => ({
+  maxHeight: '800px', // Adjust this value as needed
+  display: 'flex',
+  flexDirection: 'column',
+  overflow: 'hidden'
+}))
+
+const ScrollableContent = styled(Box)({
+  flexGrow: 1,
+  overflowY: 'auto',
+  padding: '16px'
+})
+
+const StickyFooter = styled(Box)(({ theme }) => ({
+  borderTop: `1px solid ${theme.palette.divider}`,
+  padding: theme.spacing(2),
+  display: 'flex',
+  justifyContent: 'space-between'
+}))
 
 const AdvancedFormEngine: React.FC<AdvancedFormEngineProps> = ({
   formDefinition,
@@ -701,32 +724,34 @@ const AdvancedFormEngine: React.FC<AdvancedFormEngineProps> = ({
         </Stepper>
       </Grid>
       <Grid item xs={9}>
-        <Paper elevation={3} sx={{ p: 3 }}>
-          <Typography variant='h6' gutterBottom>
-            {currentNode.field.question}
-          </Typography>
-          {renderField(currentNode.field)}
-          <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 2 }}>
+        <FixedHeightContainer elevation={3}>
+          <ScrollableContent>
+            <Typography variant='h6' gutterBottom>
+              {currentNode.field.question}
+            </Typography>
+            {renderField(currentNode.field)}
+          </ScrollableContent>
+          <StickyFooter>
             <Button onClick={handleBack} disabled={visibleHistory.indexOf(currentNodeId) === 0}>
               Back
             </Button>
             <Button onClick={handleNext} disabled={isLocked || currentNode.isStopNode}>
               {currentNode.isStopNode ? 'Continue' : 'Next'}
             </Button>
-          </Box>
-          <Box sx={{ display: 'flex', justifyContent: 'flex-end', mt: 2 }}>
-            <Button onClick={handleSaveProgress} variant='outlined' sx={{ mr: 1 }}>
-              Save Progress
-            </Button>
-            <Button
-              onClick={handleSubmit}
-              variant='contained'
-              disabled={!canSubmitFromCurrentNode() && !isFormComplete()}
-            >
-              Submit
-            </Button>
-          </Box>
-        </Paper>
+          </StickyFooter>
+        </FixedHeightContainer>
+        <Box sx={{ display: 'flex', justifyContent: 'flex-end', mt: 2 }}>
+          <Button onClick={handleSaveProgress} variant='outlined' sx={{ mr: 1 }}>
+            Save Progress
+          </Button>
+          <Button
+            onClick={handleSubmit}
+            variant='contained'
+            disabled={!canSubmitFromCurrentNode() && !isFormComplete()}
+          >
+            Submit
+          </Button>
+        </Box>
       </Grid>
     </Grid>
   )
@@ -737,6 +762,7 @@ const getVisibleHistory = (history: string[], formDefinition: FormDefinition): s
 }
 
 // Helper function to reconstruct history based on initial data
+
 const reconstructHistory = (formDefinition: FormDefinition, initialData: Record<string, any>): string[] => {
   let history = [formDefinition.startNode]
   let currentNodeId = formDefinition.startNode
@@ -748,8 +774,30 @@ const reconstructHistory = (formDefinition: FormDefinition, initialData: Record<
     const answer = initialData[currentNodeId]
     console.log(`Processing node: ${currentNodeId}, answer:`, answer)
 
+    if (!currentNode) {
+      console.error(`Node not found: ${currentNodeId}`)
+      break
+    }
+
     try {
-      const nextNodeId = currentNode.next(answer)
+      const nextResult = currentNode.next(answer)
+      console.log(`Next result:`, nextResult)
+
+      if (!nextResult) {
+        console.log('Reached end of form')
+        break
+      }
+
+      let nextNodeId
+      if (typeof nextResult === 'object' && nextResult.nextId) {
+        nextNodeId = nextResult.nextId
+      } else if (typeof nextResult === 'string') {
+        nextNodeId = nextResult
+      } else {
+        console.error(`Invalid next result:`, nextResult)
+        break
+      }
+
       console.log(`Next node: ${nextNodeId}`)
 
       if (!nextNodeId) break

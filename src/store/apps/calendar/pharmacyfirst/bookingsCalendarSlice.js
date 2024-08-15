@@ -4,22 +4,64 @@ import { createSlice, createAsyncThunk } from '@reduxjs/toolkit'
 import { appendMessageToThread } from './appointmentListSlice'
 const supabase = supabaseOrg
 
+// export const fetchEvents = createAsyncThunk('appCalendar/fetchEvents', async (orgId, { getState }) => {
+//   // const { viewStart, viewEnd } = getState().calendar
+//   // const { data, error } = await supabase.rpc('get_events', { org_id: orgId, start_time: viewStart, end_time: viewEnd })
+//   // if (error) {
+//   //   console.log(error)
+//   // }
+//   const { data, error } = await supabase
+//     .from('calendar_events')
+//     .select('*, consultations!calendar_events_booking_id_fkey(*), calendar_types(*)')
+//     .eq('company_id', orgId)
+//   if (error) {
+//     console.log(error)
+//     throw error
+//   }
+//   console.log(data, 'fetchEvents')
+//   return data
+// })
+
 export const fetchEvents = createAsyncThunk('appCalendar/fetchEvents', async (orgId, { getState }) => {
-  // const { viewStart, viewEnd } = getState().calendar
+  const { viewStart, viewEnd } = getState().bookingsCalendar
   // const { data, error } = await supabase.rpc('get_events', { org_id: orgId, start_time: viewStart, end_time: viewEnd })
-  // if (error) {
-  //   console.log(error)
-  // }
   const { data, error } = await supabase
-    .from('calendar_events')
-    .select('*, consultations!calendar_events_booking_id_fkey(*), calendar_types(*)')
-    .eq('company_id', orgId)
+    .from('ps_appointments')
+    .select('id, status_details, scheduled_time, ps_services(ps_pharmacy_services(id, color))')
+    .eq('pharmacy_id', orgId)
+
   if (error) {
     console.log(error)
-    throw error
   }
-  console.log(data, 'fetchEvents')
-  return data
+
+  const appointments = data.map(event => {
+    return {
+      ...event,
+      url: event?.details?.remote?.url,
+      start: event.scheduled_time,
+      color: event.ps_services?.ps_pharmacy_services?.[0].color,
+      p_service_id: event.ps_services?.ps_pharmacy_services?.[0]?.id,
+      title: event.patient_object?.full_name || 'Full Name'
+    }
+  })
+
+  console.log('appointments', appointments, data, 'fetchEvents')
+  return appointments || []
+})
+
+export const fetchCalendarTypes = createAsyncThunk('appCalendar/fetchCalendarTypes', async () => {
+  //const { data, error } = await supabase.from('calendar_types').select('*').eq('type', 'booking') error, success, warning, info,
+  const { data, error } = await supabase.from('ps_pharmacy_services').select(`*, ps_services (*)`)
+  if (error) {
+    console.log(error)
+  }
+
+  console.log('calender types from supabse', data)
+  const types = data.map(cal => {
+    return { id: cal.id, title: cal.ps_services.abbreviation, color: cal.color }
+  })
+  console.log('calender types from supabse', types)
+  return types
 })
 
 // ** Add Event
@@ -159,17 +201,18 @@ export const deleteBooking = createAsyncThunk('appCalendar/deleteBooking', async
 })
 
 //** Fetch Calendar types
-export const fetchCalendarTypes = createAsyncThunk('appCalendar/fetchCalendarTypes', async () => {
-  const { data, error } = await supabase.from('calendar_types').select('*').eq('type', 'booking')
-  if (error) {
-    console.log(error)
-  }
-  const types = data.map(cal => {
-    return { id: cal.id, title: cal.type, color: cal.color }
-  })
-  console.log('calender types from supabse', types)
-  return data
-})
+// export const fetchCalendarTypes = createAsyncThunk('appCalendar/fetchCalendarTypes', async () => {
+//   //const { data, error } = await supabase.from('calendar_types').select('*').eq('type', 'booking') error, success, warning, info,
+//   const { data, error } = await supabase.from('ps_pharmacy_services').select('*, ps_service(*)')
+//   if (error) {
+//     console.log(error)
+//   }
+//   const types = data.map(cal => {
+//     return { id: cal.id, title: cal.ps_service.abbreviation, color: cal.color }
+//   })
+//   console.log('calender types from supabse', types)
+//   return data
+// })
 
 //* update v
 export const updateViewDates = createAsyncThunk('appCalendar/updateViewDates', async ({ viewStart, viewEnd }) => {

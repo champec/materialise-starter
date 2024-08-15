@@ -227,6 +227,7 @@ const shinglesServiceDefinition = {
         }
       }
     },
+    // ps_prescriptions expects id(auto generated supabase), created_at (now), drug_code (from the delivery forms medicationSupplyDetails node which I will show you below), drug_desc, drug_qty, drug_unit, patient_id, written_by (user id), ps_delivery_id (the delivery id)
     medicationSupplyDetails: {
       id: 'medicationSupplyDetails',
       field: {
@@ -367,6 +368,17 @@ const shinglesServiceDefinition = {
         required: true
       },
       next: () => 'completion'
+    },
+    additionalDetails: {
+      id: 'additionalDetails',
+      field: {
+        type: 'text',
+        question: 'Please provide any additional details or comments:',
+        multi: true,
+        rows: 4,
+        required: false
+      },
+      next: () => 'reviewComponent'
     }
   }
 }

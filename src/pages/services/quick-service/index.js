@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react'
+import React, { useState, useEffect, useRef, useCallback, forwardRef } from 'react'
 import { useSelector, useDispatch } from 'react-redux'
 import {
   Box,
@@ -18,7 +18,12 @@ import {
   IconButton,
   Snackbar,
   Alert,
-  CircularProgress
+  CircularProgress,
+  styled,
+  Dialog,
+  DialogContent,
+  Fade,
+  DialogTitle
 } from '@mui/material'
 import { DateTimePicker } from '@mui/x-date-pickers/DateTimePicker'
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns'
@@ -43,11 +48,47 @@ import { supabaseOrg as supabase } from 'src/configs/supabase'
 import { useCallFrame } from '@daily-co/daily-react'
 import { position } from 'stylis'
 import VideoCallComponent from '../pharmacy-first/call-screen/CallScreen'
+import AppointmentForm from '../service-list/components/AppointmentForm'
+import usePatient from '../service-list/hooks/usePatient'
+import PDSPatientSearch from '../service-list/components/PDSPatientSearch'
+import CustomSnackbar from 'src/views/apps/Calendar/services/pharmacy-first/CustomSnackBar'
+import { createServiceDeliveries } from '../service-list/hooks/useAppointmentSubmission'
 
 const steps = ['Initial Configuration', 'Service Form', 'Appointment Details', 'Review & Submit']
 
+const Transition = forwardRef(function Transition(props, ref) {
+  return <Fade ref={ref} {...props} />
+})
+
+//styled components
+
+const StepperContainer = styled(Paper)(({ theme }) => ({
+  padding: theme.spacing(2),
+  backgroundColor: theme.palette.grey[100],
+  borderRadius: theme.shape.borderRadius,
+  boxShadow: theme.shadows[1]
+}))
+
+const FormContainer = styled(Paper)(({ theme }) => ({
+  padding: theme.spacing(2),
+  backgroundColor: theme.palette.background.paper,
+  borderRadius: theme.shape.borderRadius,
+  boxShadow: theme.shadows[3]
+}))
+
+const MainStepperButton = styled(Button)(({ theme }) => ({
+  marginTop: theme.spacing(2),
+  backgroundColor: theme.palette.primary.main,
+  color: theme.palette.primary.contrastText,
+  '&:hover': {
+    backgroundColor: theme.palette.primary.dark
+  }
+}))
+
 const QuickServiceDeliveryComponent = () => {
   const dispatch = useDispatch()
+  const organisationId = useSelector(state => state.organisation.organisation.id)
+  const userId = useSelector(state => state.user.user.id)
   const services = useSelector(selectServices)
   const [activeStep, setActiveStep] = useState(0)
   const [config, setConfig] = useState({ appointmentType: '', service: '', stage: '' })
@@ -56,10 +97,19 @@ const QuickServiceDeliveryComponent = () => {
   const [appointmentDetails, setAppointmentDetails] = useState({
     patient: null,
     gp: null,
-    scheduledTime: null,
     phoneNumber: '',
     patientName: '',
-    remote_details: null
+    remote_details: null,
+    pharmacy_id: organisationId,
+    patient_id: null,
+    service_id: '',
+    appointment_type: '',
+    overall_status: 'Scheduled',
+    current_stage_id: '',
+    scheduled_time: null,
+    patient_object: null,
+    gp_object: null,
+    details: {}
   })
   const [isDrawerOpen, setIsDrawerOpen] = useState(false)
   const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'info' })
@@ -68,6 +118,14 @@ const QuickServiceDeliveryComponent = () => {
   const [isCallReady, setIsCallReady] = useState(false)
   const [textSent, setTextSent] = useState(false)
   const { submitAppointment, loading } = useAppointmentSubmission()
+  const [nhsPatientDialog, setNhsPatientDialog] = useState(false)
+  const [gpDialogOpen, setGpDialogOpen] = useState(false)
+  const [snackbarMessage, setSnackbarMessage] = useState('')
+  const [snackSeverity, setSnackbarSeverity] = useState(null)
+
+  const [openConfirmDialog, setOpenConfirmDialog] = useState(false)
+  const [objectToSubmit, setObjectToSubmit] = useState(null)
+  const [submitLoading, setSubmitLoading] = useState(false)
 
   // ADVANCED FORM STATES
   const [currentNodeId, setCurrentNodeId] = useState(formDef?.startNode)
@@ -75,6 +133,44 @@ const QuickServiceDeliveryComponent = () => {
   const [history, setHistory] = useState([formDef?.startNode])
   const [errors, setErrors] = useState({})
   const [isLocked, setIsLocked] = useState(false)
+  const [prescriptionId, setPrescriptionId] = useState(null)
+  const [serviceDeliveryId, setServiceDeliveryId] = useState(null)
+  const [submissionComplete, setSubmissionComplete] = useState(false)
+  const {
+    selectedPatient,
+    patientInputValue,
+    setSelectedPatient,
+    setPatientInputValue,
+    handleEditPatient,
+    addNewPatientDialog,
+    setAddNewPatientDialog,
+    handlePatientSelect,
+    handlePatientInputChange,
+    handleConfirm: handlePatientConfirm,
+    searchType,
+    setSearchType,
+    firstName,
+    setFirstName,
+    middleName,
+    setMiddleName,
+    lastName,
+    setLastName,
+    dateOfBirth,
+    setDateOfBirth,
+    gender,
+    setGender,
+    nhsNumber,
+    setNhsNumber,
+    feedback,
+    isLoading: ptIsLoading,
+    patientData,
+    handleSearch,
+    handleSearchAgain
+  } = usePatient()
+
+  const handleNhsPatientFetch = () => {
+    setNhsPatientDialog(true)
+  }
 
   const {
     selectedGP,
@@ -85,7 +181,8 @@ const QuickServiceDeliveryComponent = () => {
     setSelectedGP,
     setGpSearchTerm,
     handleGPSearch,
-    handleGPSelect
+    handleGPSelect,
+    handleRemoveGP
   } = useGPSearch()
 
   useEffect(() => {
@@ -119,9 +216,31 @@ const QuickServiceDeliveryComponent = () => {
     // Add your logic here
   }
 
+  const setSnackbarOpen = isOpen => {
+    setSnackbar(prev => ({ ...prev, open: isOpen }))
+  }
+
+  const handlePrintForm = () => {
+    // Implement logic to open a new window for printing the form
+    window.open(`/services/quick-service/print-form/${serviceDeliveryId}`, '_blank')
+  }
+
+  const handlePrintPrescription = () => {
+    // Implement logic to open a new window for printing the prescription
+    window.open(`/services/quick-service/print-prescription/${prescriptionId}`, '_blank')
+  }
+
   const handlePrescriptionButton = () => {
     console.log('Prescription button clicked')
     // Add your logic here
+  }
+
+  const handleReset = () => {
+    resetForm()
+    setActiveStep(0)
+    setSubmissionComplete(false)
+    setServiceDeliveryId(null)
+    setPrescriptionId(null)
   }
 
   const toggleDrawer = () => {
@@ -140,6 +259,10 @@ const QuickServiceDeliveryComponent = () => {
 
   const showSnackbar = (message, severity = 'info') => {
     setSnackbar({ open: true, message, severity })
+  }
+
+  const handleStep = step => () => {
+    setActiveStep(step)
   }
 
   const handleNext = async () => {
@@ -221,34 +344,226 @@ const QuickServiceDeliveryComponent = () => {
     setAppointmentDetails(prev => ({ ...prev, [field]: value }))
   }
 
-  const handleSubmit = async () => {
+  const handleCheckboxChange = event => {
+    const { name, checked } = event.target
+
+    const keys = name.split('.')
+    const [outerKey, ...innerKeys] = keys
+    const mainkey = innerKeys[0]
+
     const appointmentData = {
       ...config,
       ...formData,
       ...appointmentDetails,
       details: {
         ...formData,
-        sendTextUpdate: config.appointmentType === 'remote-video'
+        [mainkey]: checked
       }
     }
 
-    try {
-      const result = await submitAppointment(appointmentData)
-      if (result.remote_details) {
-        setAppointmentDetails(prev => ({ ...prev, remote_details: result.remote_details }))
+    setAppointmentDetails(appointmentData)
+  }
+
+  const handleAdditionalDetails = event => {
+    const { name, value } = event.target
+
+    const keys = name.split('.')
+    const [outerKey, ...innerKeys] = keys
+    const mainkey = innerKeys[0]
+
+    const appointmentData = {
+      ...config,
+      ...formData,
+      ...appointmentDetails,
+      details: {
+        ...formData,
+        [mainkey]: value
       }
-      showSnackbar('Appointment created successfully', 'success')
-    } catch (error) {
-      console.log('Error creating appointment', error)
-      showSnackbar('Error creating appointment', 'error')
     }
+
+    setAppointmentDetails(appointmentData)
+  }
+
+  //temp
+  // appointment requirements - id(auto supabse), pharmacy_id, patient_id, service_id, appointment_type, overall_Status, current_stage_id, scheduled_time, last_updated,
+  // completed_at, details, patient_object, gp_object, remote_details, status_details, referral
+  //generate all the ps_service_delivery entries based on the ps_service_stages for the chosen service, and populate the ps_service_delivery for the current just filled in stage
+  // ps_service_delivery table requirements: id(auto supabase), appointment_id (from recently generated appointment),
+  //service_stage_id - (one for each, getting ps_service.id and the ps_service.multi bool and if multi finding all the ps_service_stages.service_id for that service, if not multi then just the currently selected stage is made), status (will be completed for this stage, required by stepper, completed_at will be now, details is where the entire service deliver oject goes), last_updated is now, completed_by for now is null, outcome will come from the object details.outcome if there is one, not all services have it,
+  // this entire process needs to succeed for it to be completed, if at any stage there is failure we need to undo all saved supabased changed and go back to initial state in db, i dont want half baked entries, there is need to clear error handling, and also clear process indicators along the way.
+  // submisison should start by simple validation, obviously a service needs to have been picked and a service stage needs to have been picked,
+  //temp
+
+  const handleSubmit = async () => {
+    // Start by showing a loading indicator
+    setSubmitLoading(true)
+
+    try {
+      // 1. Validate input
+      if (!config.service || !config.stage) {
+        throw new Error('Please select both a service and a stage.')
+      }
+
+      // 2. Prepare appointment data
+      const appointmentData = {
+        pharmacy_id: organisationId,
+        patient_id: selectedPatient?.id,
+        service_id: config.service,
+        appointment_type: config.appointmentType,
+        overall_status: 'Scheduled',
+        current_stage_id: config.stage,
+        scheduled_time: appointmentDetails.scheduledTime,
+        last_updated: new Date().toISOString(),
+        details: {
+          ...formData,
+          sendTextUpdate: config.appointmentType === 'remote-video'
+        },
+        patient_object: selectedPatient,
+        gp_object: appointmentDetails.gp,
+        remote_details: appointmentDetails.remote_details,
+        status_details: { currentStatus: 'Scheduled' },
+        referral: null // Add referral data if available
+      }
+
+      console.log('SUBMIT', appointmentData, 'FORM DATA', formData)
+      // 3. Insert appointment
+      const { data: appointmentResult, error: appointmentError } = await supabase
+        .from('ps_appointments')
+        .insert(appointmentData)
+        .select('*')
+        .single()
+
+      if (appointmentError) throw appointmentError
+
+      const appointmentId = appointmentResult.id
+
+      // 4. Create service deliveries
+      await createServiceDeliveries(appointmentId, config.service, config.stage)
+
+      // 5. Update the current stage's service delivery with form data
+      const { data: currentDelivery, error: updateError } = await supabase
+        .from('ps_service_delivery')
+        .update({
+          status: 'Completed',
+          completed_at: new Date().toISOString(),
+          details: formData,
+          outcome: formData.outcome || 'completed'
+        })
+        .eq('appointment_id', appointmentId)
+        .eq('service_stage_id', config.stage)
+        .select('id')
+
+      if (updateError) {
+        console.log('UPDATE APPOINTMENT ERROR', updateError)
+        throw updateError
+      }
+
+      setServiceDeliveryId(currentDelivery[0].id)
+
+      // 6. Check for medications and create prescriptions
+      if (
+        formData.medicationSupplyDetails?.medications &&
+        Object.keys(formData.medicationSupplyDetails.medications).length > 0
+      ) {
+        const prescriptions = Object.entries(formData.medicationSupplyDetails.medications).map(
+          ([drugCode, details]) => ({
+            created_at: new Date().toISOString(),
+            drug_code: drugCode,
+            drug_desc: details.drugDescription,
+            drug_brand: details.pack,
+            drug_dose: details.drugDose,
+            prescription_particulars: formData.medicationSupplyDetails.commonFields,
+            drug_qty: details.quantitySupplied,
+            drug_unit: details?.drugUnit || null,
+            patient_id: selectedPatient?.id,
+            written_by: userId, // Assuming you have access to the current user's ID
+            ps_delivery_id: currentDelivery[0].id,
+            patient_object: appointmentDetails.patient_object,
+            gp_object: appointmentDetails.gp_object
+          })
+        )
+
+        const { data: prescriptionData, error: prescriptionError } = await supabase
+          .from('ps_prescriptions')
+          .insert(prescriptions)
+          .select('id')
+
+        if (prescriptionError) {
+          console.log('PRESCRIPTION ERROR', prescriptionError)
+          throw prescriptionError
+        }
+
+        if (prescriptionData) {
+          setPrescriptionId(prescriptionData[0]?.id)
+        }
+      }
+
+      // 7. Handle remote appointment specifics
+      if (config.appointmentType === 'remote-video' && appointmentDetails.remote_details) {
+        // Send SMS reminder if needed
+        if (appointmentData.details.sendTextUpdate) {
+          await sendSMSReminder(appointmentDetails.phoneNumber, appointmentDetails.remote_details.url)
+        }
+      }
+
+      // 7. Show success message
+      showSnackbar('Appointment created successfully', 'success')
+      setSubmissionComplete(true)
+
+      // 8. Reset form or navigate away
+      resetForm() // Implement this function to clear all form fields
+      // or
+      // router.push('/appointments'); // Navigate to appointments list
+    } catch (error) {
+      console.error('Error in handleSubmit:', error)
+      showSnackbar(`Error: ${error.message}`, 'error')
+
+      // 9. Attempt to roll back changes if possible
+      if (error.appointmentId) {
+        await supabase.from('ps_appointments').delete().eq('id', error.appointmentId)
+        await supabase.from('ps_service_delivery').delete().eq('appointment_id', error.appointmentId)
+      }
+    } finally {
+      setSubmitLoading(false)
+    }
+  }
+
+  // Helper function to send SMS reminder
+  const sendSMSReminder = async (phoneNumber, meetingUrl) => {
+    // Implement your SMS sending logic here
+    // This could be a call to your backend API or a third-party service
+    console.log(`Sending SMS to ${phoneNumber} with meeting URL: ${meetingUrl}`)
+  }
+
+  // Helper function to reset the form
+  const resetForm = () => {
+    setConfig({ appointmentType: '', service: '', stage: '' })
+    setFormData({})
+    setAppointmentDetails({
+      patient: null,
+      gp: null,
+      phoneNumber: '',
+      patientName: '',
+      remote_details: null,
+      pharmacy_id: organisationId,
+      patient_id: null,
+      service_id: '',
+      appointment_type: '',
+      overall_status: 'Scheduled',
+      current_stage_id: '',
+      scheduled_time: null,
+      details: {}
+    })
+    setSelectedPatient(null)
+    setVideoLinkCreated(false)
+    setTextSent(false)
   }
 
   const renderStepContent = step => {
     switch (step) {
       case 0:
         return (
-          <Box>
+          <FormContainer>
             <FormControl fullWidth sx={{ mb: 2 }} disabled={loadingRemote}>
               <InputLabel>Appointment Type</InputLabel>
               <Select
@@ -302,13 +617,14 @@ const QuickServiceDeliveryComponent = () => {
                 </Select>
               </FormControl>
             )}
-          </Box>
+          </FormContainer>
         )
       case 1:
         return (
-          <Box sx={{ height: '100vh', position: 'relative' }}>
+          <FormContainer>
             {config.appointmentType === 'remote-video' ? (
               <>
+                {submitLoading ? 'Submitting...' : 'Submit Appointment'}
                 {appointmentDetails.remote_details?.url ? (
                   <Box ref={callRef} sx={{ height: '80vh', position: 'relative' }}>
                     {/* <div ref={callRef} style={{ height: '80vh', position: 'relative' }} />
@@ -392,12 +708,39 @@ const QuickServiceDeliveryComponent = () => {
                 )}
               </Box>
             )}
-          </Box>
+          </FormContainer>
         )
       case 2:
         return (
-          <Box>
-            <AddEditPatientForm
+          <FormContainer>
+            <AppointmentForm
+              quickService={true}
+              formData={appointmentDetails}
+              selectedPatient={selectedPatient}
+              patientInputValue={patientInputValue}
+              onPatientSelect={handlePatientSelect}
+              onPatientInputChange={handlePatientInputChange}
+              onEditPatient={handleEditPatient}
+              onNewPatientDialogOpen={() => setAddNewPatientDialog(true)}
+              setPatientInputValue={setPatientInputValue}
+              setSelectedPatient={setSelectedPatient}
+              onSubmit={handleSubmit}
+              onNhsPatientFetch={handleNhsPatientFetch}
+              selectedGP={selectedGP}
+              gpSearchTerm={gpSearchTerm}
+              gpSearchResults={gpSearchResults}
+              isLoading={gpLoading}
+              error={gpError}
+              setGpSearchTerm={setGpSearchTerm}
+              handleGPSearch={handleGPSearch}
+              handleGPSelect={handleGPSelect}
+              handleRemoveGP={handleRemoveGP}
+              setGpDialogOpen={setGpDialogOpen}
+              gpDialogOpen={gpDialogOpen}
+              handleCheckboxChange={handleCheckboxChange}
+              onFieldChange={handleAdditionalDetails}
+            />
+            {/* <AddEditPatientForm
               onSelect={patient => handleAppointmentDetailsChange('patient', patient)}
               selectedPatient={appointmentDetails.patient}
             />
@@ -417,25 +760,74 @@ const QuickServiceDeliveryComponent = () => {
                 onChange={date => handleAppointmentDetailsChange('scheduledTime', date)}
                 renderInput={params => <TextField {...params} fullWidth sx={{ mt: 2 }} />}
               />
-            </LocalizationProvider>
-          </Box>
+            </LocalizationProvider> */}
+          </FormContainer>
         )
       case 3:
         return (
-          <Paper elevation={3} sx={{ p: 2 }}>
-            <Typography variant='h6' gutterBottom>
-              Review Appointment Details
-            </Typography>
-            <Typography>Appointment Type: {config.appointmentType}</Typography>
-            <Typography>Service: {services.find(s => s.id === config.service)?.name}</Typography>
-            <Typography>Stage: {serviceStages.find(s => s.id === config.stage)?.name}</Typography>
-            <Typography>Patient: {appointmentDetails.patient?.full_name || appointmentDetails.patientName}</Typography>
-            <Typography>GP: {appointmentDetails.gp?.OrganisationName}</Typography>
-            <Typography>Scheduled Time: {appointmentDetails.scheduledTime?.toString()}</Typography>
-            {config.appointmentType === 'remote-video' && (
-              <Typography>Phone Number: {appointmentDetails.phoneNumber}</Typography>
+          <FormContainer>
+            {submitLoading ? (
+              <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', py: 3 }}>
+                <CircularProgress />
+                <Typography variant='h6' sx={{ mt: 2 }}>
+                  Submitting appointment...
+                </Typography>
+              </Box>
+            ) : submissionComplete ? (
+              <Box>
+                <Typography variant='h6' gutterBottom>
+                  Submission Successful
+                </Typography>
+                <Box sx={{ display: 'flex', justifyContent: 'flex-end', mt: 2 }}>
+                  <Button onClick={handlePrintForm} sx={{ mr: 1 }}>
+                    Print Form
+                  </Button>
+                  {prescriptionId && (
+                    <Button onClick={handlePrintPrescription} sx={{ mr: 1 }}>
+                      Print Prescription
+                    </Button>
+                  )}
+                  <Button onClick={handleReset}>Reset</Button>
+                </Box>
+                <Typography variant='h6' gutterBottom sx={{ mt: 3 }}>
+                  Appointment Summary
+                </Typography>
+                <Typography>Appointment Type: {config.appointmentType}</Typography>
+                <Typography>Service: {services.find(s => s.id === config.service)?.name}</Typography>
+                <Typography>Stage: {serviceStages.find(s => s.id === config.stage)?.name}</Typography>
+                <Typography>
+                  Patient: {appointmentDetails.patient?.full_name || appointmentDetails.patientName}
+                </Typography>
+                <Typography>GP: {appointmentDetails.gp?.OrganisationName}</Typography>
+                <Typography>Scheduled Time: {appointmentDetails.scheduledTime?.toString()}</Typography>
+                {config.appointmentType === 'remote-video' && (
+                  <Typography>Phone Number: {appointmentDetails.phoneNumber}</Typography>
+                )}
+              </Box>
+            ) : (
+              <>
+                <Typography variant='h6' gutterBottom>
+                  Review Appointment Details
+                </Typography>
+                <Typography>Appointment Type: {config.appointmentType}</Typography>
+                <Typography>Service: {services.find(s => s.id === config.service)?.name}</Typography>
+                <Typography>Stage: {serviceStages.find(s => s.id === config.stage)?.name}</Typography>
+                <Typography>
+                  Patient: {appointmentDetails.patient?.full_name || appointmentDetails.patientName}
+                </Typography>
+                <Typography>GP: {appointmentDetails.gp?.OrganisationName}</Typography>
+                <Typography>Scheduled Time: {appointmentDetails.scheduledTime?.toString()}</Typography>
+                {config.appointmentType === 'remote-video' && (
+                  <Typography>Phone Number: {appointmentDetails.phoneNumber}</Typography>
+                )}
+                <Box sx={{ display: 'flex', justifyContent: 'flex-end', mt: 2 }}>
+                  <Button onClick={handleSubmit} disabled={submitLoading || submissionComplete}>
+                    {submitLoading ? 'Submitting...' : 'Submit Appointment'}
+                  </Button>
+                </Box>
+              </>
             )}
-          </Paper>
+          </FormContainer>
         )
       default:
         return null
@@ -448,7 +840,9 @@ const QuickServiceDeliveryComponent = () => {
         <Stepper activeStep={activeStep}>
           {steps.map((label, index) => (
             <Step key={label}>
-              <StepLabel>{label}</StepLabel>
+              <StepLabel onClick={handleStep(index)} style={{ cursor: 'pointer' }}>
+                {label}
+              </StepLabel>
             </Step>
           ))}
         </Stepper>
@@ -479,6 +873,104 @@ const QuickServiceDeliveryComponent = () => {
           {snackbar.message}
         </Alert>
       </Snackbar>
+      <Dialog
+        fullWidth
+        maxWidth='md'
+        scroll='body'
+        TransitionComponent={Transition}
+        open={addNewPatientDialog}
+        onClose={() => setAddNewPatientDialog(false)}
+      >
+        <DialogContent>
+          <AddEditPatientForm
+            patient={{ full_name: patientInputValue }}
+            onClose={() => {
+              console.log('ADd new patient form close')
+              // setSelectedPatient(null)
+              setAddNewPatientDialog(false)
+              setPatientInputValue('')
+            }}
+            onSelect={handlePatientSelect}
+            selectedPatient={selectedPatient}
+            setSelectedPatient={setSelectedPatient}
+          />
+        </DialogContent>
+      </Dialog>
+
+      {/* New NHS Patient Fetch Dialog */}
+      <Dialog
+        fullWidth
+        maxWidth='md'
+        PaperProps={{
+          sx: { minHeight: '600px' }
+        }}
+        scroll='body'
+        TransitionComponent={Transition}
+        open={nhsPatientDialog}
+        onClose={() => setNhsPatientDialog(false)}
+      >
+        <DialogContent>
+          <PDSPatientSearch
+            onClose={() => setNhsPatientDialog(false)}
+            onSelect={handlePatientSelect}
+            setSelectedPatient={setSelectedPatient}
+            handlePatientConfirm={handlePatientConfirm}
+            searchType={searchType}
+            setSearchType={setSearchType}
+            firstName={firstName}
+            setFirstName={setFirstName}
+            middleName={middleName}
+            setMiddleName={setMiddleName}
+            lastName={lastName}
+            setLastName={setLastName}
+            dateOfBirth={dateOfBirth}
+            setDateOfBirth={setDateOfBirth}
+            gender={gender}
+            setGender={setGender}
+            nhsNumber={nhsNumber}
+            setNhsNumber={setNhsNumber}
+            feedback={feedback}
+            isLoading={ptIsLoading}
+            patientData={patientData}
+            handleSearch={handleSearch}
+            handleSearchAgain={handleSearchAgain}
+          />
+        </DialogContent>
+      </Dialog>
+
+      <Dialog
+        fullWidth
+        maxWidth='md'
+        PaperProps={{
+          sx: { minHeight: '600px' }
+        }}
+        open={gpDialogOpen}
+        onClose={() => setGpDialogOpen(false)}
+      >
+        <DialogTitle>Find GP</DialogTitle>
+        <DialogContent>
+          <GPSearchDialog
+            gpSearchTerm={gpSearchTerm}
+            setGpSearchTerm={setGpSearchTerm}
+            handleGPSearch={handleGPSearch}
+            handleGPSelect={gp => {
+              handleGPSelect(gp)
+              setGpDialogOpen(false)
+            }}
+            gpSearchResults={gpSearchResults}
+            isLoading={gpLoading}
+            error={gpError}
+          />
+        </DialogContent>
+      </Dialog>
+      <CustomSnackbar
+        message={snackbar.message}
+        severity={snackbar.severity || 'warning'}
+        horizontal={'center'}
+        vertical={'top'}
+        open={snackbar.open}
+        setOpen={setSnackbarOpen}
+      />
     </LocalizationProvider>
   )
 }

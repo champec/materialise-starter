@@ -5,7 +5,23 @@ import DailyIframe from '@daily-co/daily-js'
 import AdvancedFormEngine from '../../../../views/apps/services/serviceDelivery/components/AdvancedFormEngine'
 import { Icon } from '@iconify/react'
 
-const VideoCallPage = ({ appointment, serviceDelivery, formDefinition, onSubmit, onSaveProgress }) => {
+const VideoCallPage = ({
+  appointment,
+  serviceDelivery,
+  formDefinition,
+  onSubmit,
+  onSaveProgress,
+  formData,
+  setFormData,
+  isLocked,
+  setIsLocked,
+  errors,
+  setErrors,
+  history,
+  setHistory,
+  currentNodeId,
+  setCurrentNodeId
+}) => {
   const [callFrame, setCallFrame] = useState(null)
   const [isDrawerOpen, setIsDrawerOpen] = useState(false)
   const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'info' })
@@ -94,6 +110,19 @@ const VideoCallPage = ({ appointment, serviceDelivery, formDefinition, onSubmit,
           initialData={serviceDelivery.details || {}}
           onSubmit={handleFormSubmit}
           onSaveProgress={handleSaveProgress}
+          // new states
+
+          // initialData={}
+          formData={formData}
+          setFormData={setFormData}
+          currentNodeId={currentNodeId}
+          setCurrentNodeId={setCurrentNodeId}
+          history={history}
+          setHistory={setHistory}
+          isLocked={isLocked}
+          setIsLocked={setIsLocked}
+          errors={errors}
+          setErrors={setErrors}
         />
       </Drawer>
 

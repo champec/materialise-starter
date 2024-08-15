@@ -72,6 +72,7 @@ const ServiceDeliverySummary = ({ deliveryId, onClose }) => {
   const [loading, setLoading] = useState(true)
   const [deliveryData, setDeliveryData] = useState(null)
   const [formDefinition, setFormDefinition] = useState(null)
+  const [prescriptionId, setPrescriptionId] = useState(null)
   const [error, setError] = useState(null)
 
   useEffect(() => {
@@ -91,7 +92,8 @@ const ServiceDeliverySummary = ({ deliveryId, onClose }) => {
             *,
             patient_object,
             ps_services(*)
-          )
+          ),
+          ps_prescriptions(id)
         `
         )
         .eq('id', deliveryId)
@@ -99,7 +101,9 @@ const ServiceDeliverySummary = ({ deliveryId, onClose }) => {
 
       if (error) throw error
 
+      console.log('SERVICE SUMMARY DATA', data)
       setDeliveryData(data)
+      setPrescriptionId(data?.ps_prescriptions?.[0]?.id)
 
       // Get form definition using the utility function
       const formDef = getFormDefinitionForService(data.ps_appointments.ps_services.id)
@@ -114,6 +118,16 @@ const ServiceDeliverySummary = ({ deliveryId, onClose }) => {
 
   const handlePrint = () => {
     window.print()
+  }
+
+  const handlePrintForm = () => {
+    // Implement logic to open a new window for printing the form
+    window.open(`/services/quick-service/print-form/${deliveryId}`, '_blank')
+  }
+
+  const handlePrintPrescription = () => {
+    // Implement logic to open a new window for printing the prescription
+    window.open(`/services/quick-service/print-prescription/${prescriptionId}`, '_blank')
   }
 
   const handleEmail = () => {
@@ -131,12 +145,17 @@ const ServiceDeliverySummary = ({ deliveryId, onClose }) => {
       <DialogTitle>
         Service Delivery Summary
         <Box sx={{ position: 'absolute', right: 8, top: 8 }}>
+          {prescriptionId && (
+            <Button onClick={handlePrintPrescription} sx={{ mr: 1 }}>
+              Print Prescription
+            </Button>
+          )}
           <Button
             //   startIcon={<Icon icon='lets-icons:print' />}
-            onClick={handlePrint}
+            onClick={handlePrintForm}
             sx={{ mr: 1 }}
           >
-            Print
+            Print Form
           </Button>
           <Button
             //   startIcon={<Icon icon='clarity:email-line' />}
@@ -151,8 +170,9 @@ const ServiceDeliverySummary = ({ deliveryId, onClose }) => {
           <Typography variant='h6' gutterBottom>
             Patient Information
           </Typography>
-          <Typography>Name: {appointment.patient_object.full_name}</Typography>
-          <Typography>Date of Birth: {appointment.patient_object.date_of_birth}</Typography>
+          <Typography>Name: {appointment.patient_object?.full_name || 'not provided'}</Typography>
+          <Typography>Date of Birth: {appointment.patient_object?.date_of_birth || 'not provided'}</Typography>
+          <Typography>NHS Number: {appointment.patient_object?.nhs_number || 'not provided'}</Typography>
           <Typography>Service: {appointment.ps_services.name}</Typography>
           <Typography>Appointment Date: {new Date(appointment.scheduled_time).toLocaleString()}</Typography>
           <Typography>Stage: {stage.name}</Typography>

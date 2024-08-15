@@ -74,10 +74,12 @@ const AppointmentForm = ({
   handleRemoveGP,
   setGpDialogOpen,
   gpDialogOpen,
-  handleCheckboxChange
+  handleCheckboxChange,
+  quickService = false
 }) => {
   useEffect(() => {
     // Reset triage data when service or stage changes
+    if (quickService) return
     if (formData.service_id !== 'pharmacy_first' || !formData.current_stage_id) {
       onFieldChange({
         target: {
@@ -86,7 +88,7 @@ const AppointmentForm = ({
         }
       })
     }
-  }, [formData.service_id, formData.current_stage_id])
+  }, [formData?.service_id, formData?.current_stage_id])
 
   return (
     <LocalizationProvider dateAdapter={AdapterDateFns}>
@@ -145,104 +147,112 @@ const AppointmentForm = ({
               )}
             </Grid>
 
-            <Grid item xs={12}>
-              <StyledFormControl fullWidth variant='outlined'>
-                <InputLabel id='service-label'>Service</InputLabel>
-                <Select
-                  labelId='service-label'
-                  name='service_id'
-                  value={formData.service_id}
-                  onChange={onServiceChange}
-                  label='Service'
-                  required
-                >
-                  {services.map(service => (
-                    <MenuItem key={service.id} value={service.id}>
-                      {service.name}
-                    </MenuItem>
-                  ))}
-                </Select>
-              </StyledFormControl>
-            </Grid>
-
-            <Grid item xs={12}>
-              <StyledFormControl fullWidth variant='outlined'>
-                <InputLabel id='appointment-type-label'>Appointment Type</InputLabel>
-                <Select
-                  labelId='appointment-type-label'
-                  id='appointment-type'
-                  value={formData.appointment_type || ''}
-                  onChange={onFieldChange}
-                  name='appointment_type'
-                  label='Appointment Type'
-                  renderValue={value => <SelectedValue value={value} />}
-                  required
-                >
-                  <MenuItem value='remote-video'>
-                    <ListItemIcon>
-                      <IconifyIcon icon='mdi:video' />
-                    </ListItemIcon>
-                    <ListItemText primary='Remote Video' />
-                  </MenuItem>
-                  <MenuItem value='in-person'>
-                    <ListItemIcon>
-                      <IconifyIcon icon='mdi:account' />
-                    </ListItemIcon>
-                    <ListItemText primary='In-Person' />
-                  </MenuItem>
-                </Select>
-              </StyledFormControl>
-            </Grid>
-
-            <Grid item xs={12}>
-              <StyledFormControl fullWidth variant='outlined'>
-                <InputLabel>Overall Status</InputLabel>
-                <Select name='overall_status' value={formData.overall_status} onChange={onFieldChange} required>
-                  <MenuItem value='Scheduled'>Scheduled</MenuItem>
-                  <MenuItem value='In Progress'>In Progress</MenuItem>
-                  <MenuItem value='Completed'>Completed</MenuItem>
-                  <MenuItem value='Cancelled'>Cancelled</MenuItem>
-                </Select>
-              </StyledFormControl>
-            </Grid>
-
-            <Grid item xs={12}>
-              <Tooltip title={!formData.service_id ? 'Please select a service first' : ''}>
-                <span>
+            {!quickService && (
+              <div>
+                <Grid item xs={12}>
                   <StyledFormControl fullWidth variant='outlined'>
-                    <InputLabel>Current Stage</InputLabel>
+                    <InputLabel id='service-label'>Service</InputLabel>
                     <Select
-                      name='current_stage_id'
-                      value={formData.current_stage_id}
-                      onChange={onFieldChange}
+                      labelId='service-label'
+                      name='service_id'
+                      value={formData.service_id}
+                      onChange={onServiceChange}
+                      label='Service'
                       required
-                      disabled={!formData.service_id}
                     >
-                      {serviceStages.map(stage => (
-                        <MenuItem key={stage.id} value={stage.id}>
-                          {stage.name}
+                      {services.map(service => (
+                        <MenuItem key={service.id} value={service.id}>
+                          {service.name}
                         </MenuItem>
                       ))}
                     </Select>
                   </StyledFormControl>
-                </span>
-              </Tooltip>
-            </Grid>
+                </Grid>
 
-            {formData.service_id === '5a499835-7a49-43b6-9de5-6b492baf12d9' && formData.current_stage_id && (
-              <Grid item xs={12}>
-                <TriageSection stageId={formData.current_stage_id} formData={formData} onFieldChange={onFieldChange} />
-              </Grid>
+                <Grid item xs={12}>
+                  <StyledFormControl fullWidth variant='outlined'>
+                    <InputLabel id='appointment-type-label'>Appointment Type</InputLabel>
+                    <Select
+                      labelId='appointment-type-label'
+                      id='appointment-type'
+                      value={formData.appointment_type || ''}
+                      onChange={onFieldChange}
+                      name='appointment_type'
+                      label='Appointment Type'
+                      renderValue={value => <SelectedValue value={value} />}
+                      required
+                    >
+                      <MenuItem value='remote-video'>
+                        <ListItemIcon>
+                          <IconifyIcon icon='mdi:video' />
+                        </ListItemIcon>
+                        <ListItemText primary='Remote Video' />
+                      </MenuItem>
+                      <MenuItem value='in-person'>
+                        <ListItemIcon>
+                          <IconifyIcon icon='mdi:account' />
+                        </ListItemIcon>
+                        <ListItemText primary='In-Person' />
+                      </MenuItem>
+                    </Select>
+                  </StyledFormControl>
+                </Grid>
+
+                <Grid item xs={12}>
+                  <StyledFormControl fullWidth variant='outlined'>
+                    <InputLabel>Overall Status</InputLabel>
+                    <Select name='overall_status' value={formData.overall_status} onChange={onFieldChange} required>
+                      <MenuItem value='Scheduled'>Scheduled</MenuItem>
+                      <MenuItem value='In Progress'>In Progress</MenuItem>
+                      <MenuItem value='Completed'>Completed</MenuItem>
+                      <MenuItem value='Cancelled'>Cancelled</MenuItem>
+                    </Select>
+                  </StyledFormControl>
+                </Grid>
+
+                <Grid item xs={12}>
+                  <Tooltip title={!formData.service_id ? 'Please select a service first' : ''}>
+                    <span>
+                      <StyledFormControl fullWidth variant='outlined'>
+                        <InputLabel>Current Stage</InputLabel>
+                        <Select
+                          name='current_stage_id'
+                          value={formData.current_stage_id}
+                          onChange={onFieldChange}
+                          required
+                          disabled={!formData.service_id}
+                        >
+                          {serviceStages.map(stage => (
+                            <MenuItem key={stage.id} value={stage.id}>
+                              {stage.name}
+                            </MenuItem>
+                          ))}
+                        </Select>
+                      </StyledFormControl>
+                    </span>
+                  </Tooltip>
+                </Grid>
+
+                {formData.service_id === '5a499835-7a49-43b6-9de5-6b492baf12d9' && formData.current_stage_id && (
+                  <Grid item xs={12}>
+                    <TriageSection
+                      stageId={formData.current_stage_id}
+                      formData={formData}
+                      onFieldChange={onFieldChange}
+                    />
+                  </Grid>
+                )}
+
+                <Grid item xs={12}>
+                  <StyledDateTimePicker
+                    label='Scheduled Time'
+                    value={formData.scheduled_time}
+                    onChange={onDateChange}
+                    renderInput={params => <TextField {...params} fullWidth required />}
+                  />
+                </Grid>
+              </div>
             )}
-
-            <Grid item xs={12}>
-              <StyledDateTimePicker
-                label='Scheduled Time'
-                value={formData.scheduled_time}
-                onChange={onDateChange}
-                renderInput={params => <TextField {...params} fullWidth required />}
-              />
-            </Grid>
 
             <Grid item xs={12}>
               <TextField
@@ -269,24 +279,28 @@ const AppointmentForm = ({
               />
             </Grid>
 
-            <Grid item xs={12}>
-              <FormControlLabel
-                control={
-                  <Checkbox
-                    checked={formData.details.sendTextUpdate || false}
-                    onChange={handleCheckboxChange}
-                    name='details.sendTextUpdate'
-                  />
-                }
-                label='Send a text message with this update'
-              />
-            </Grid>
+            {!quickService && (
+              <Grid item xs={12}>
+                <FormControlLabel
+                  control={
+                    <Checkbox
+                      checked={formData.details.sendTextUpdate || false}
+                      onChange={handleCheckboxChange}
+                      name='details.sendTextUpdate'
+                    />
+                  }
+                  label='Send a text message with this update'
+                />
+              </Grid>
+            )}
 
-            <Grid item xs={12}>
-              <Button type='submit' variant='contained' color='primary' fullWidth>
-                {appointment ? 'Update Appointment' : 'Create Appointment'}
-              </Button>
-            </Grid>
+            {!quickService && (
+              <Grid item xs={12}>
+                <Button type='submit' variant='contained' color='primary' fullWidth>
+                  {appointment ? 'Update Appointment' : 'Create Appointment'}
+                </Button>
+              </Grid>
+            )}
           </Grid>
         </form>
       </Box>

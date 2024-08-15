@@ -7,7 +7,7 @@ import listPlugin from '@fullcalendar/list'
 import dayGridPlugin from '@fullcalendar/daygrid'
 import timeGridPlugin from '@fullcalendar/timegrid'
 import interactionPlugin from '@fullcalendar/interaction'
-
+import { Tooltip } from '@mui/material'
 // ** Icon Imports
 import Icon from 'src/@core/components/icon'
 
@@ -45,7 +45,8 @@ const Calendar = props => {
     appointment,
     fetchSelectedBooking,
     setSelectedService,
-    handleBookCalendarSidebar
+    handleBookCalendarSidebar,
+    openDelivery
   } = props
 
   // ** Refs
@@ -56,13 +57,37 @@ const Calendar = props => {
       setCalendarApi(calendarRef.current.getApi())
     }
   }, [calendarApi, setCalendarApi])
+
+  const renderEventContent = eventInfo => {
+    return (
+      <Tooltip title={eventInfo.event.extendedProps.description || ''}>
+        <div
+          style={{
+            backgroundColor: eventInfo.event.backgroundColor || '#3788d8',
+            color: eventInfo.event.textColor || 'white',
+            padding: '2px 5px',
+            borderRadius: '3px',
+            fontSize: '0.85em',
+            display: 'flex',
+            alignItems: 'center'
+          }}
+        >
+          <span>{eventInfo.event.title}</span>
+          {eventInfo.event.extendedProps.isCompleted && (
+            // <CheckCircleIcon style={{ marginLeft: '5px', fontSize: '1em' }} />
+            <div>CheckMARK</div>
+          )}
+        </div>
+      </Tooltip>
+    )
+  }
+
   if (store) {
     // ** calendarOptions(Props)
     const selectedCalendars = store.selectedCalendars
-
+    console.log('CALENDAR', selectedCalendars, store.events)
     const calendarOptions = {
-      events: store.events.length ? store.events.filter(event => selectedCalendars.includes(event.calendarType)) : [],
-
+      events: store.events.length ? store.events.filter(event => selectedCalendars.includes(event?.p_service_id)) : [],
       plugins: [interactionPlugin, dayGridPlugin, timeGridPlugin, listPlugin],
       initialView: 'dayGridMonth',
       headerToolbar: {
@@ -75,12 +100,12 @@ const Calendar = props => {
         }
       },
       slotDuration: appointment ? '00:10:00' : '00:30:00',
+
       /*
             Enable dragging and resizing event
             ? Docs: https://fullcalendar.io/docs/editable
           */
       editable: true,
-
       /*
             Enable resizing event from start
             ? Docs: https://fullcalendar.io/docs/eventResizableFromStart
@@ -108,7 +133,8 @@ const Calendar = props => {
         // @ts-ignore
         // const colorName = calendarsColor[calendarEvent._def.extendedProps.calendar]
 
-        const colorName = event._def.extendedProps.calendar_types.color
+        // const colorName = event._def.extendedProps.calendar_types.color
+        const colorName = event.color
 
         console.log('colorName', colorName, event)
 
@@ -119,21 +145,23 @@ const Calendar = props => {
       },
       eventClick({ event: clickedEvent, jsEvent }) {
         jsEvent.preventDefault() // Prevents going to the URL
-        const eventId = clickedEvent?._def.extendedProps?.booking_id
+        // const eventId = clickedEvent?._def.extendedProps?.booking_id
+        const eventId = clickedEvent?.id
         const selectedService = clickedEvent?._def.extendedProps.calendar_types
 
         console.log('clickedEvent', clickedEvent)
         // if (eventId) {
         //   window.open(`/apps/appointment-scheduler/${eventId}`, '_blank')
         // }
-        if (eventId) {
-          dispatch(fetchSelectedBooking(eventId))
-          dispatch(setSelectedService(selectedService))
-          handleAddBookingSidebarToggle(eventId)
-        } else {
-          dispatch(handleSelectEvent(clickedEvent))
-          handleAddEventSidebarToggle(eventId)
-        }
+        // if (eventId) {
+        //   dispatch(fetchSelectedBooking(eventId))
+        //   dispatch(setSelectedService(selectedService))
+        //   handleAddBookingSidebarToggle(eventId)
+        // } else {
+        //   dispatch(handleSelectEvent(clickedEvent))
+        //   handleAddEventSidebarToggle(eventId)
+        // }
+        openDelivery(eventId)
         // * Only grab required field otherwise it goes in infinity loop
         // ! Always grab all fields rendered by form (even if it get `undefined`) otherwise due to Vue3/Composition API you might get: "object is not extensible"
         // event.value = grabEventDataFromEventApi(clickedEvent)

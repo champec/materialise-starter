@@ -22,6 +22,9 @@ import {
 } from 'src/store/apps/calendar/pharmacyfirst/bookingsCalendarSlice'
 import { fetchSelectedBooking } from 'src/store/apps/calendar/pharmacyfirst/appointmentListSlice'
 
+//MUI
+import { Dialog, DialogContent, Drawer } from '@mui/material'
+
 // ** Hooks
 import { useSettings } from 'src/@core/hooks/useSettings'
 import withReducer from 'src/@core/HOC/withReducer'
@@ -29,6 +32,14 @@ import bookingsCalendarSlice from 'src/store/apps/calendar/pharmacyfirst/booking
 import calendar from 'src/store/apps/calendar'
 import appointmentListSlice from 'src/store/apps/calendar/pharmacyfirst/appointmentListSlice'
 import services from 'src/store/apps/services'
+import pharmacyServicesSlice, {
+  setServiceFilter,
+  setStatusFilter,
+  selectFilteredAppointments,
+  selectServices,
+  selectServiceFilter,
+  selectStatusFilter
+} from 'src/store/apps/pharmacy-services/pharmacyServicesSlice'
 
 // ** FullCalendar & App Components Imports
 import Calendar from 'src/views/apps/Calendar/Calendar'
@@ -38,6 +49,8 @@ import AddEventSidebar from 'src/views/apps/Calendar/AddEventSidebar'
 import AddCalendarSidebar from 'src/views/apps/Calendar/AddCalendarSidebar'
 import BookCalendarSidebar from 'src/views/apps/Calendar/BookCalendarSidebar'
 import ServiceSelectorModal from 'src/views/apps/services/ServiceSelectorModal'
+import ServiceDeliveryComponent from '../service-list/components/ServiceDeliveryComponent'
+import BookingComponent from '../service-list/BookingComponent'
 
 // ** Actions
 // import {
@@ -66,6 +79,9 @@ const AppCalendar = ({ addCalendarType, updateCalendarType, deleteCalendarType }
   const [addCalendarSidebarOpen, setAddCalendarSidebarOpen] = useState(false)
   const [bookCalendarSidebarOpen, setBookCalendarSidebarOpen] = useState(false)
   const [openServiceSelectorModal, setOpenServiceSelectorModal] = useState(false)
+  const [isDeliveryModalOpen, setIsDeliveryModalOpen] = useState(false)
+  const [selectedAppointment, setSelectedAppointment] = useState(null)
+  const [isDrawerOpen, setIsDrawerOpen] = useState(false)
 
   // ** Hooks
   const { settings } = useSettings()
@@ -97,14 +113,30 @@ const AppCalendar = ({ addCalendarType, updateCalendarType, deleteCalendarType }
   const handleAddEventSidebarToggle = () => setAddEventSidebarOpen(!addEventSidebarOpen)
   const handleAddBookingSidebarToggle = () => setAddBookingSidebarOpen(!addBookingSidebarOpen)
   const handleAddCalendarSidebarToggle = () => setAddCalendarSidebarOpen(!addCalendarSidebarOpen)
-  const selectedService = useSelector(state => state.services.selectedService)
+  const selectedService = null // useSelector(state => state.services.selectedService) null
 
   console.log('selectedService', selectedService)
 
   const handleBookCalendarSidebar = event => {
-    setOpenServiceSelectorModal(true)
-    // handleAddBookingSidebarToggle()
-    // dispatch(handleSelectEvent(null))
+    // setOpenServiceSelectorModal(true)
+    // console.log('NEW BOOKING TO BE MADE')
+    setIsDrawerOpen(true)
+  }
+
+  const openDelivery = eventId => {
+    console.log('OPEN DELIVER FOR APPOINTMENT', eventId)
+    setSelectedAppointment({ id: eventId })
+    setIsDeliveryModalOpen(true)
+  }
+
+  const handleCloseDrawer = () => {
+    setIsDrawerOpen(false)
+    setSelectedAppointment(null)
+  }
+
+  const handleCloseDeliveryModal = () => {
+    setSelectedAppointment(null)
+    setIsDeliveryModalOpen(false)
   }
 
   return (
@@ -126,10 +158,10 @@ const AppCalendar = ({ addCalendarType, updateCalendarType, deleteCalendarType }
         handleAllCalendars={handleAllCalendars}
         handleSelectCalendar={handleSelectCalendar}
         handleCalendarsUpdate={handleCalendarsUpdate}
-        handleLeftSidebarToggle={handleLeftSidebarToggle}
-        handleAddEventSidebarToggle={handleAddEventSidebarToggle}
-        handleAddCalendarSidebarToggle={handleAddCalendarSidebarToggle}
-        handleAddBookingSidebarToggle={handleAddBookingSidebarToggle}
+        // handleLeftSidebarToggle={handleLeftSidebarToggle}
+        // handleAddEventSidebarToggle={handleAddEventSidebarToggle}
+        // handleAddCalendarSidebarToggle={handleAddCalendarSidebarToggle}
+        // handleAddBookingSidebarToggle={handleAddBookingSidebarToggle}
         appointment
         handleBookCalendarSidebar={handleBookCalendarSidebar}
         openServiceSelectorModal={openServiceSelectorModal}
@@ -156,15 +188,16 @@ const AppCalendar = ({ addCalendarType, updateCalendarType, deleteCalendarType }
           setCalendarApi={setCalendarApi}
           updateViewDates={updateViewDates}
           handleSelectEvent={handleSelectEvent}
-          handleLeftSidebarToggle={handleLeftSidebarToggle}
-          handleAddEventSidebarToggle={handleBookCalendarSidebar}
-          handleAddCalendarSidebarToggle={handleAddCalendarSidebarToggle}
-          handleAddBookingSidebarToggle={handleAddBookingSidebarToggle}
+          // handleLeftSidebarToggle={handleLeftSidebarToggle}
+          // handleAddEventSidebarToggle={handleBookCalendarSidebar}
+          // handleAddCalendarSidebarToggle={handleAddCalendarSidebarToggle}
+          // handleAddBookingSidebarToggle={handleAddBookingSidebarToggle}
+          openDelivery={openDelivery}
           fetchSelectedBooking={fetchSelectedBooking}
           appointment
         />
       </Box>
-      <AddEventSidebar
+      {/* <AddEventSidebar
         store={store}
         dispatch={dispatch}
         addEvent={addEvent}
@@ -177,8 +210,8 @@ const AppCalendar = ({ addCalendarType, updateCalendarType, deleteCalendarType }
         addEventSidebarOpen={false}
         handleAddEventSidebarToggle={handleAddEventSidebarToggle}
         appointment
-      />
-      <AddCalendarSidebar
+      /> */}
+      {/* <AddCalendarSidebar
         store={store}
         dispatch={dispatch}
         calendarApi={calendarApi}
@@ -189,8 +222,8 @@ const AppCalendar = ({ addCalendarType, updateCalendarType, deleteCalendarType }
         drawerWidth={addEventSidebarWidth}
         addCalendarSidebarOpen={addCalendarSidebarOpen}
         handleAddCalendarSidebarToggle={handleAddCalendarSidebarToggle}
-      />
-      <BookCalendarSidebar
+      /> */}
+      {/* <BookCalendarSidebar
         store={store}
         dispatch={dispatch}
         calendarApi={calendarApi}
@@ -206,7 +239,17 @@ const AppCalendar = ({ addCalendarType, updateCalendarType, deleteCalendarType }
         addBookingSidebarOpen={addBookingSidebarOpen}
         handleSelectEvent={handleSelectEvent}
         selectedService={selectedService}
-      />
+      /> */}
+      {selectedAppointment && (
+        <Dialog open={isDeliveryModalOpen} onClose={handleCloseDeliveryModal} maxWidth='lg' fullWidth>
+          <DialogContent sx={{ minWidth: '800px', minHeight: '600px' }}>
+            <ServiceDeliveryComponent appointment={selectedAppointment} onClose={handleCloseDeliveryModal} />
+          </DialogContent>
+        </Dialog>
+      )}
+      <Drawer anchor='left' open={isDrawerOpen} onClose={handleCloseDrawer}>
+        <BookingComponent appointment={selectedAppointment} onClose={handleCloseDrawer} />
+      </Drawer>
     </CalendarWrapper>
   )
 }
@@ -215,7 +258,7 @@ const AppCalendar = ({ addCalendarType, updateCalendarType, deleteCalendarType }
 
 export default withReducer({
   bookingsCalendar: bookingsCalendarSlice,
-  calendar: calendar,
-  appointmentListSlice: appointmentListSlice,
-  services: services
+  // calendar: calendar,
+  // appointmentListSlice: appointmentListSlice,
+  services: pharmacyServicesSlice
 })(AppCalendar)

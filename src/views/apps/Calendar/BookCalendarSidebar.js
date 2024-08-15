@@ -288,14 +288,14 @@ const BookCalendarSidebar = props => {
         </Box>
         <Box className='sidebar-body' sx={{ p: theme => theme.spacing(5, 6) }}>
           <DatePickerWrapper>
-            <NewBookingForm
+            {/* <NewBookingForm
               resetToEmptyValues={resetToEmptyValues}
               onClose={handleSidebarClose}
               selectedService={selectedService}
               setResetToEmptyValues={setResetToEmptyValues}
               refetchAppointments={refetchAppointments}
               addBookingSidebarOpen={addBookingSidebarOpen}
-            />
+            /> */}
           </DatePickerWrapper>
         </Box>
       </Drawer>

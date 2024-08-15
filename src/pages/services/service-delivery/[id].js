@@ -30,6 +30,11 @@ function ServiceDeliveryPage() {
   const [confirmDialogOpen, setConfirmDialogOpen] = useState(false)
   const [formDataToSubmit, setFormDataToSubmit] = useState(null)
   const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'info' })
+  const [currentNodeId, setCurrentNodeId] = useState(formDefinition?.startNode)
+  const [formData, setFormData] = useState({})
+  const [history, setHistory] = useState([formDefinition?.startNode])
+  const [errors, setErrors] = useState({})
+  const [isLocked, setIsLocked] = useState(false)
 
   useEffect(() => {
     if (id) {
@@ -60,7 +65,9 @@ function ServiceDeliveryPage() {
       setAppointment(appointmentData)
 
       const formDef = getFormDefinitionForService(appointmentData.ps_service_stages?.id)
-      console.log('FORM DEFINTIION', formDef)
+      console.log('FORM DEFINTIION', formDef, 'delivery data', deliveryData)
+      setCurrentNodeId(formDef?.startNode)
+      setHistory([formDef?.startNode])
       setFormDefinition(formDef)
     } catch (error) {
       console.error('Error fetching service delivery data:', error)
@@ -140,6 +147,14 @@ function ServiceDeliveryPage() {
         formDefinition={formDefinition}
         onSubmit={handleFormSubmit}
         onSaveProgress={handleSaveProgress}
+        setCurrentNodeId={setCurrentNodeId}
+        currentNodeId={currentNodeId}
+        history={history}
+        setHistory={setHistory}
+        setErrors={setErrors}
+        errors={errors}
+        formData={formData}
+        setFormData={setFormData}
       />
     )
   }
@@ -158,12 +173,27 @@ function ServiceDeliveryPage() {
         </Typography>
       </Paper>
 
-      <AdvancedFormEngine
-        formDefinition={formDefinition}
-        initialData={serviceDelivery.details || {}}
-        onSubmit={handleFormSubmit}
-        onSaveProgress={handleSaveProgress}
-      />
+      {formDefinition && (
+        <AdvancedFormEngine
+          formDefinition={formDefinition}
+          initialData={serviceDelivery.details || {}}
+          onSubmit={handleFormSubmit}
+          onSaveProgress={handleSaveProgress}
+          // new states
+
+          // initialData={}
+          formData={formData}
+          setFormData={setFormData}
+          currentNodeId={currentNodeId}
+          setCurrentNodeId={setCurrentNodeId}
+          history={history}
+          setHistory={setHistory}
+          isLocked={isLocked}
+          setIsLocked={setIsLocked}
+          errors={errors}
+          setErrors={setErrors}
+        />
+      )}
 
       <Box sx={{ mt: 3, display: 'flex', justifyContent: 'space-between' }}>
         <Button variant='outlined' onClick={() => router.push('/appointments')}>
