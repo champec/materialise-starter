@@ -1,22 +1,17 @@
 import React, { useState, useEffect } from 'react'
 import { Container, AppBar, Toolbar, Typography, Button, Paper, Box } from '@mui/material'
-import Lane from './lowerdashboard/ddlanes'
-import Card from './lowerdashboard/ddCards'
+import DDLane from './lowerdashboard/ddlanes'
+import DDCard from './lowerdashboard/ddCards'
 import { useDispatch, useSelector } from 'react-redux'
-import { fetchBags } from 'src/store/apps/drugdash/ddBags'
-import { fetchJobs } from 'src/store/apps/drugdash/ddDelivery'
+import { fetchBags, fetchCollections } from '../../../store/apps/drugdash/ddThunks'
+import { selectBagsByStatus, selectAllCollections } from '../../../store/apps/drugdash'
 import { styled, useTheme } from '@mui/material/styles'
 import { hexToRGBA } from 'src/@core/utils/hex-to-rgba'
 import ModalManager from 'src/views/apps/drugdash/ModalManager'
-import { openModal, closeModal } from 'src/store/apps/drugdash/ddModals'
+import { openModal } from 'src/store/apps/drugdash/ddModals'
 import withReducer from 'src/@core/HOC/withReducer'
-import drugdash from 'src/store/apps/drugdash'
-import ddBags from 'src/store/apps/drugdash/ddBags'
-import ddDelivery from 'src/store/apps/drugdash/ddDelivery'
-import ddModals from 'src/store/apps/drugdash/ddModals'
-import ddDrivers from 'src/store/apps/drugdash/ddDrivers'
-import ddPatients from 'src/store/apps/drugdash/ddPatients'
-import ddDrugs from 'src/store/apps/drugdash/ddDrugs'
+import drugDash from '../../../store/apps/drugdash'
+import modalSlice from '../../../store/apps/drugdash/ddModals'
 
 const Settings = () => {
   return (
@@ -29,7 +24,7 @@ const Settings = () => {
 const StyledContainer = styled(Paper)(({ theme }) => ({
   overflowX: 'auto',
   '&::-webkit-scrollbar': {
-    height: 6 // This targets the horizontal scrollbar's height
+    height: 6
   },
   '&::-webkit-scrollbar-thumb': {
     borderRadius: 20,
@@ -44,13 +39,17 @@ const StyledContainer = styled(Paper)(({ theme }) => ({
 const Index = () => {
   const [showSettings, setShowSettings] = useState(false)
   const dispatch = useDispatch()
-  // converted to array to map over it
-  const lanes = useSelector(state => Object.values(state.drugdash.lanes))
   const theme = useTheme()
+
+  const inPharmacyBags = useSelector(state => selectBagsByStatus(state, 'in_pharmacy'))
+  const inGroupBags = useSelector(state => selectBagsByStatus(state, 'in_group'))
+  const inTransitBags = useSelector(state => selectBagsByStatus(state, 'in_transit'))
+  const deliveredBags = useSelector(state => selectBagsByStatus(state, 'delivered'))
+  const collections = useSelector(selectAllCollections)
 
   useEffect(() => {
     dispatch(fetchBags())
-    dispatch(fetchJobs())
+    dispatch(fetchCollections())
   }, [dispatch])
 
   const toggleSettings = () => {
@@ -59,7 +58,6 @@ const Index = () => {
 
   const handleWheel = e => {
     if (e.deltaY !== 0 && e.target.closest('.LanePaper')) {
-      // check if event target is inside a Lane
       return // Ignore vertical scrolls inside a Lane
     }
     const container = e.currentTarget
@@ -73,9 +71,16 @@ const Index = () => {
     dispatch(openModal('newBag'))
   }
 
-  const handleOpenJobModal = () => {
-    dispatch(openModal('newJob'))
+  const handleOpenCollectionModal = () => {
+    dispatch(openModal('newCollection'))
   }
+
+  const lanes = [
+    { key: 'in_pharmacy', title: 'In Pharmacy', data: inPharmacyBags },
+    { key: 'collections', title: 'Collections', data: collections },
+    { key: 'in_transit', title: 'In Transit', data: inTransitBags },
+    { key: 'delivered', title: 'Delivered', data: deliveredBags }
+  ]
 
   return (
     <Container>
@@ -88,8 +93,8 @@ const Index = () => {
           <Button color='inherit' onClick={handleOpenBagModal}>
             Add New Bag
           </Button>
-          <Button color='inherit' onClick={handleOpenJobModal}>
-            Add New Delivery
+          <Button color='inherit' onClick={handleOpenCollectionModal}>
+            Add New Collection
           </Button>
         </Toolbar>
       </AppBar>
@@ -109,11 +114,11 @@ const Index = () => {
         ) : (
           <Box sx={{ display: 'flex', flexDirection: 'row', height: '100%', flexWrap: 'nowrap' }} onWheel={handleWheel}>
             {lanes.map(lane => (
-              <Lane key={lane.key} title={lane.title}>
+              <DDLane key={lane.key} title={lane.title}>
                 {lane.data.map(item => (
-                  <Card key={item.id} title={item.title} data={item} />
+                  <DDCard key={item.id} title={item.title} data={item} />
                 ))}
-              </Lane>
+              </DDLane>
             ))}
           </Box>
         )}
@@ -123,13 +128,4 @@ const Index = () => {
   )
 }
 
-// export default Index
-export default withReducer({
-  drugdash: drugdash,
-  ddBags: ddBags,
-  ddDelivery: ddDelivery,
-  ddModals: ddModals,
-  ddDrivers: ddDrivers,
-  ddPatients: ddPatients,
-  ddDrugs: ddDrugs
-})(Index)
+export default withReducer({ drugDash, ddModals: modalSlice })(Index)
