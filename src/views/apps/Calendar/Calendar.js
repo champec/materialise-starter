@@ -29,6 +29,7 @@ const Calendar = props => {
   // ** Props
   const {
     store,
+    events,
     orgId,
     dispatch,
     direction,
@@ -85,9 +86,11 @@ const Calendar = props => {
   if (store) {
     // ** calendarOptions(Props)
     const selectedCalendars = store.selectedCalendars
-    console.log('CALENDAR', selectedCalendars, store.events)
+    console.log('CALENDAR', selectedCalendars, events, events[0]?.ps_services?.ps_pharmacy_services?.[0]?.id)
     const calendarOptions = {
-      events: store.events.length ? store.events.filter(event => selectedCalendars.includes(event?.p_service_id)) : [],
+      events: events.length
+        ? events.filter(event => selectedCalendars.includes(event?.ps_services?.ps_pharmacy_services?.[0]?.id))
+        : [],
       plugins: [interactionPlugin, dayGridPlugin, timeGridPlugin, listPlugin],
       initialView: 'dayGridMonth',
       headerToolbar: {
@@ -146,7 +149,7 @@ const Calendar = props => {
       eventClick({ event: clickedEvent, jsEvent }) {
         jsEvent.preventDefault() // Prevents going to the URL
         // const eventId = clickedEvent?._def.extendedProps?.booking_id
-        const eventId = clickedEvent?.id
+        const eventId = clickedEvent?._def?.publicId
         const selectedService = clickedEvent?._def.extendedProps.calendar_types
 
         console.log('clickedEvent', clickedEvent)

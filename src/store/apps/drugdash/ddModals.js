@@ -4,24 +4,31 @@ import { supabaseOrg as supabase } from 'src/configs/supabase'
 const modalSlice = createSlice({
   name: 'modals',
   initialState: {
-    openModals: []
+    openModals: [],
+    modalProps: {}
   },
   reducers: {
     openModal: (state, action) => {
       // add the payload to the openModals array
-      state.openModals.push(action.payload)
+      const modalName = action.payload.modalName || action.payload
+      state.openModals.push(modalName)
+      // Assign modal props, using an empty object if none provided
+      state.modalProps[modalName] = action.payload.props || {}
     },
     closeModal: state => {
       // remove the last item from the openModals array
-      state.openModals.pop()
+      const closedModal = state.openModals.pop()
+      if (closedModal) {
+        delete state.modalProps[closedModal]
+      }
     },
     closeSpecificModal: (state, action) => {
       // filter out the modal with the specified name
       state.openModals = state.openModals.filter(modal => modal !== action.payload)
     },
     closeAllModals: state => {
-      // reset the openModals array
       state.openModals = []
+      state.modalProps = {}
     }
   }
 })

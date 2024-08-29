@@ -229,7 +229,8 @@ export const bookingsCalendarSlice = createSlice({
     calendarTypes: [],
     viewStart: null,
     viewEnd: null,
-    notifyApiKey: null
+    notifyApiKey: null,
+    selectedAppointment: null
   },
   reducers: {
     handleSelectEvent: (state, action) => {
@@ -257,6 +258,12 @@ export const bookingsCalendarSlice = createSlice({
       } else {
         state.selectedCalendars = []
       }
+    },
+    setSelectedAppointmentById: (state, action) => {
+      state.selectedAppointment = state.events.find(event => event.id === action.payload)
+    },
+    setSelectedAppointment: (state, action) => {
+      state.selectedAppointment = action.payload
     }
   },
   extraReducers: builder => {
@@ -274,7 +281,13 @@ export const bookingsCalendarSlice = createSlice({
 })
 
 // export const { handleSelectEvent, handleCalendarsUpdate, handleAllCalendars } = bookingsCalendarSlice.actions
-export const { handleSelectEvent, handleSelectCalendar, handleCalendarsUpdate, handleAllCalendars } =
-  bookingsCalendarSlice.actions
+export const {
+  handleSelectEvent,
+  handleSelectCalendar,
+  handleCalendarsUpdate,
+  handleAllCalendars,
+  setSelectedAppointmentById,
+  setSelectedAppointment
+} = bookingsCalendarSlice.actions
 
 export default bookingsCalendarSlice.reducer

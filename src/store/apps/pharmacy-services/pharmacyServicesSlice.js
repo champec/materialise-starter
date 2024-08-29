@@ -5,7 +5,8 @@ import {
   fetchSubscribedServices,
   createAppointment,
   updateAppointment,
-  deleteAppointment
+  deleteAppointment,
+  fetchServiceDeliveries
 } from './pharmacyServicesThunks'
 
 const pharmacyServicesSlice = createSlice({
@@ -14,8 +15,10 @@ const pharmacyServicesSlice = createSlice({
     appointments: [],
     services: [],
     subscribedServices: [],
+    selectedAppointment: null,
     loading: false,
     error: null,
+    serviceDeliveries: [],
     filters: {
       status: [],
       service: []
@@ -27,6 +30,12 @@ const pharmacyServicesSlice = createSlice({
     },
     setServiceFilter: (state, action) => {
       state.filters.service = action.payload
+    },
+    setSelectedAppointmentById: (state, action) => {
+      state.selectedAppointment = state.appointments.find(app => app.id === action.payload)
+    },
+    setSelectedAppointment: (state, action) => {
+      state.selectedAppointment = action.payload
     }
   },
   extraReducers: builder => {
@@ -56,21 +65,27 @@ const pharmacyServicesSlice = createSlice({
         state.subscribedServices = action.payload
       })
       .addCase(createAppointment.fulfilled, (state, action) => {
-        state.appointments.push(action.payload)
+        console.log('Appointment created:', action.payload)
       })
       .addCase(updateAppointment.fulfilled, (state, action) => {
-        const index = state.appointments.findIndex(app => app.id === action.payload.id)
-        if (index !== -1) {
-          state.appointments[index] = action.payload
-        }
+        console.log('Appointment updated:', action.payload)
+        // const index = state.appointments.findIndex(app => app.id === action.payload.id)
+        // if (index !== -1) {
+        //   state.appointments[index] = action.payload
+        // }
       })
       .addCase(deleteAppointment.fulfilled, (state, action) => {
-        state.appointments = state.appointments.filter(app => app.id !== action.payload)
+        // state.appointments = state.appointments.filter(app => app.id !== action.payload)
+        console.log('Appointment deleted:', action.payload)
+      })
+      .addCase(fetchServiceDeliveries.fulfilled, (state, action) => {
+        state.serviceDeliveries = action.payload
       })
   }
 })
 
-export const { setStatusFilter, setServiceFilter } = pharmacyServicesSlice.actions
+export const { setStatusFilter, setServiceFilter, setSelectedAppointmentById, setSelectedAppointment } =
+  pharmacyServicesSlice.actions
 
 export default pharmacyServicesSlice.reducer
 

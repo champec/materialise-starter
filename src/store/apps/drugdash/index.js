@@ -8,6 +8,9 @@ const initialState = {
   collections: [],
   selectedPatient: null,
   selectedCollection: null,
+  searchedDrivers: [],
+  transitStops: [],
+  selectedDriver: null,
   drivers: [],
   loading: false,
   error: null
@@ -26,6 +29,12 @@ const drugDashSlice = createSlice({
     },
     setSelectedCollection: (state, action) => {
       state.selectedCollection = action.payload
+    },
+    setSelectedDriver: (state, action) => {
+      state.selectedDriver = action.payload
+    },
+    clearSelectedDriver: state => {
+      state.selectedDriver = null
     }
   },
   extraReducers: builder => {
@@ -53,22 +62,50 @@ const drugDashSlice = createSlice({
         state.loading = true
       })
       .addCase(thunks.fetchBags.fulfilled, (state, action) => {
-        state.bags = action.payload
+        const bags = action.payload.map(bag => ({ ...bag, is_bag: true }))
+        state.bags = bags
         state.loading = false
       })
       .addCase(thunks.addBag.fulfilled, (state, action) => {
-        state.bags.push(action.payload)
+        // state.bags.push(action.payload)
       })
       .addCase(thunks.updateBagStatus.fulfilled, (state, action) => {
         const index = state.bags.findIndex(bag => bag.id === action.payload.id)
         if (index !== -1) {
+          action.payload.is_bag = true
           state.bags[index] = action.payload
         }
       })
 
+      // Transit Stops
+      .addCase(thunks.createTransitStops.fulfilled, (state, action) => {
+        state.transitStops = action.payload
+      })
+      .addCase(thunks.fetchTransitStops.fulfilled, (state, action) => {
+        state.transitStops = action.payload
+      })
+
       // Collections
       .addCase(thunks.fetchCollections.fulfilled, (state, action) => {
-        state.collections = action.payload
+        const collecitons = action.payload.map(collection => ({ ...collection, is_collection: true }))
+        state.collections = collecitons
+      })
+      .addCase(thunks.fetchCollectionById.fulfilled, (state, action) => {
+        const index = state.collections.findIndex(c => c.id === action.payload.id)
+        if (index !== -1) {
+          action.payload.is_collection = true
+          state.collections[index] = action.payload
+        } else {
+          action.payload.is_collection = true
+          state.collections.push(action.payload)
+        }
+      })
+      .addCase(thunks.updateCollection.fulfilled, (state, action) => {
+        const index = state.collections.findIndex(c => c.id === action.payload.id)
+        if (index !== -1) {
+          action.payload.is_collection = true
+          state.collections[index] = action.payload
+        }
       })
       .addCase(thunks.createCollection.fulfilled, (state, action) => {
         state.collections.push(action.payload)
@@ -79,7 +116,23 @@ const drugDashSlice = createSlice({
         state.drivers = action.payload
       })
       .addCase(thunks.addDriver.fulfilled, (state, action) => {
-        state.drivers.push(action.payload)
+        state.selectedDriver = action.payload
+      })
+      .addCase(thunks.searchDrivers.fulfilled, (state, action) => {
+        state.searchedDrivers = action.payload
+      })
+      .addCase(thunks.deleteCollection.fulfilled, (state, action) => {
+        // Remove the collection from the state
+        state.collections = state.collections.filter(c => c.id !== action.payload.collectionId)
+
+        // Update the bags in the state
+        action.payload.updatedBags.forEach(updatedBag => {
+          const index = state.bags.findIndex(b => b.id === updatedBag.id)
+          if (index !== -1) {
+            updatedBag.is_bag = true
+            state.bags[index] = updatedBag
+          }
+        })
       })
 
       // Generic error handling for all rejected actions
@@ -101,10 +154,18 @@ const drugDashSlice = createSlice({
 })
 
 // Action creators are generated for each case reducer function
-export const { clearError, resetState, setSelectedPatient, setSelectedCollection } = drugDashSlice.actions
+export const {
+  clearError,
+  resetState,
+  setSelectedPatient,
+  setSelectedCollection,
+  setSelectedDriver,
+  clearSelectedDriver
+} = drugDashSlice.actions
 
 export const selectSelectedPatient = state => state.drugDash.selectedPatient
 export const selectSelectedCollection = state => state.drugDash.selectedCollection
+export const selectTransitStops = state => state.drugDash.transitStops
 
 // Selectors
 export const selectAllPatients = state => state.drugDash.patients
@@ -126,6 +187,8 @@ export const selectFilteredBags = state => {
 }
 
 export const selectBagsByStatus = (state, status) => state.drugDash.bags.filter(bag => bag.status === status)
+export const selectCollectionByStatus = (state, status) =>
+  state.drugDash.collections.filter(collection => collection.status === status)
 
 export const selectCollectionById = (state, collectionId) =>
   state.drugDash.collections.find(collection => collection.id === collectionId)

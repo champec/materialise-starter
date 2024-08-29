@@ -13,12 +13,14 @@ import {
   MenuItem,
   Box
 } from '@mui/material'
+import { useDispatch } from 'react-redux'
+import { openModal } from '../../../../store/apps/drugdash/ddModals'
 
 import Icon from 'src/@core/components/icon'
 
 const DDCard = ({ data }) => {
   console.log(data, 'data')
-
+  const dispatch = useDispatch()
   const [anchorEl, setAnchorEl] = React.useState(null)
   const getIconByType = type => {
     switch (type) {
@@ -34,6 +36,24 @@ const DDCard = ({ data }) => {
         return ''
     }
   }
+
+  const handleCardClick = () => {
+    console.log('CLICKED ON EDIT BAG', data)
+
+    if (data.is_bag == true) {
+      dispatch(openModal({ modalName: 'newBag', props: { bagId: data.id } }))
+
+      // case 'delivery_box':
+      //   dispatch(openModal({ modalName: 'addEditCollection', props: { collectionId: data.id } }))
+      //   break
+      // Add more cases as needed
+    } else if (data.is_collection == true && data.status === 'pending') {
+      dispatch(openModal({ modalName: 'addEditCollection', props: { collectionId: data.id } }))
+    } else if (data.is_collection == true && data.status === 'in_transit') {
+      dispatch(openModal({ modalName: 'transitStops', props: { collectionId: data.id } }))
+    }
+  }
+
   const renderMiddleSection = () => {
     switch (data.type) {
       case 'rx_bag':
@@ -120,7 +140,7 @@ const DDCard = ({ data }) => {
             <Typography variant='caption'>{data.title}</Typography>
           </Grid>
           <Grid item xs={3} sx={{ display: 'flex', flexDirection: 'row' }}>
-            <IconButton size='small'>
+            <IconButton size='small' onClick={handleCardClick}>
               <Icon icon={'ep:edit'} />
             </IconButton>
             <IconButton size='small'>

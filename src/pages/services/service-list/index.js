@@ -96,9 +96,9 @@ function PharmacyServicesPage() {
 
   console.log('APPOINTMENTS', { appointments })
 
-  const handleActionClick = (event, appointment) => {
-    setAnchorEl(event.currentTarget)
+  const handleViewClick = appointment => {
     setSelectedAppointment(appointment)
+    setIsDeliveryModalOpen(true)
   }
 
   const handleBatchActionSelect = action => {
@@ -306,9 +306,10 @@ function PharmacyServicesPage() {
       field: 'actions',
       headerName: 'Actions',
       width: 120,
+      sortable: false,
       renderCell: params => (
-        <Button onClick={event => handleActionClick(event, params.row)} variant='outlined' size='small'>
-          Actions
+        <Button variant='contained' size='small' onClick={() => handleViewClick(params.row)}>
+          View
         </Button>
       )
     }
@@ -425,14 +426,10 @@ function PharmacyServicesPage() {
         </Grid>
       </Container>
       <Footer />
-      <Drawer anchor='left' open={isDrawerOpen} onClose={handleCloseDrawer}>
+      <Drawer anchor='left' open={isDrawerOpen} onClose={handleCloseDrawer} sx={{ zIndex: 10000 }}>
         <BookingComponent appointment={editingAppointment} onClose={handleCloseDrawer} />
       </Drawer>
-      <Menu anchorEl={anchorEl} open={Boolean(anchorEl)} onClose={handleActionClose}>
-        <MenuItem onClick={() => handleActionSelect('edit')}>Edit</MenuItem>
-        <MenuItem onClick={() => handleActionSelect('deliver')}>Deliver</MenuItem>
-        {/* Add more menu items for other actions as needed */}
-      </Menu>
+
       {selectedAppointment && (
         <Dialog
           open={isDeliveryModalOpen}
@@ -445,7 +442,11 @@ function PharmacyServicesPage() {
           fullWidth
         >
           <DialogContent sx={{ minWidth: '800px', minHeight: '600px' }}>
-            <ServiceDeliveryComponent appointment={selectedAppointment} onClose={() => setIsDeliveryModalOpen(false)} />
+            <ServiceDeliveryComponent
+              appointment={selectedAppointment}
+              onClose={() => setIsDeliveryModalOpen(false)}
+              onEdit={handleEditBooking}
+            />
           </DialogContent>
         </Dialog>
       )}

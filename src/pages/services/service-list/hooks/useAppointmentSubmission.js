@@ -5,7 +5,7 @@ import { supabaseOrg as supabase } from 'src/configs/supabase'
 import { createThreadAndSendSMS, scheduleReminder } from 'src/store/apps/calendar/pharmacyfirst/appointmentListSlice'
 import { addEvent, updateEvent } from 'src/store/apps/calendar/pharmacyfirst/bookingsCalendarSlice'
 import { parseISO, addMinutes, format, parse } from 'date-fns'
-import { createAppointment, updateAppointment } from 'src/store/apps/pharmacy-services/pharmacyServicesThunks'
+import { createAppointment, updateAppointment } from '../../../../store/apps/pharmacy-services/pharmacyServicesThunks' //'src/store/apps/pharmacy-services/pharmacyServicesThunks'
 
 export const createServiceDeliveries = async (appointmentId, serviceId, appointmentStageId, isUpdate = false) => {
   // Fetch the service details to check if it's multi-stage
@@ -25,7 +25,8 @@ export const createServiceDeliveries = async (appointmentId, serviceId, appointm
       .eq('appointment_id', appointmentId)
       .single()
 
-    if (fetchError && fetchError.code !== 'PGRST116') throw new Error('Error fetching existing service delivery')
+    if (fetchError && fetchError.code !== 'PGRST116')
+      throw new Error('Error fetching existing service delivery', fetchError)
 
     if (existingDelivery) {
       // Update existing delivery
@@ -38,7 +39,7 @@ export const createServiceDeliveries = async (appointmentId, serviceId, appointm
         })
         .eq('id', existingDelivery.id)
 
-      if (updateError) throw new Error('Error updating existing service delivery')
+      if (updateError) throw new Error('Error updating existing service delivery', updateError)
     } else {
       // Create new delivery
       const { error: insertError } = await supabase.from('ps_service_delivery').insert({
@@ -59,7 +60,7 @@ export const createServiceDeliveries = async (appointmentId, serviceId, appointm
       .select('id')
       .eq('service_id', serviceId)
 
-    if (stagesError) throw new Error('Error fetching service stages')
+    if (stagesError) throw new Error('Error fetching service stages', stagesError)
 
     if (!isUpdate) {
       // For new appointments, create delivery records for all stages
@@ -81,7 +82,7 @@ export const createServiceDeliveries = async (appointmentId, serviceId, appointm
         .select('*')
         .eq('appointment_id', appointmentId)
 
-      if (fetchError) throw new Error('Error fetching existing service deliveries')
+      if (fetchError) throw new Error('Error fetching existing service deliveries', fetchError)
 
       for (const stage of stages) {
         const existingDelivery = existingDeliveries.find(d => d.service_stage_id === stage.id)
@@ -172,6 +173,7 @@ const useAppointmentSubmission = () => {
   const notifyApiKey = useSelector(state => state.organisation.organisation.notifyApiKey)
 
   const handleAppointment = async (appointmentData, isUpdate = false) => {
+    console.log('Starting handleAppointment', { appointmentData, isUpdate })
     setLoading(true)
     let dailyData = null
     let appointmentResult = null
@@ -179,13 +181,18 @@ const useAppointmentSubmission = () => {
     try {
       // Generate a scheduled meeting if it's a new remote video appointment
       if (appointmentData.appointment_type === 'remote-video' && !isUpdate) {
+        console.log('Generating video link for remote appointment')
         const unixTimeStamp = dayjs(appointmentData.scheduled_time).unix()
         const { data: dailyResponse, error: dailyError } = await supabase.functions.invoke('daily-scheduler', {
           body: { scheduledTime: unixTimeStamp }
         })
 
-        if (dailyError) throw new Error('Error generating video link')
+        if (dailyError) {
+          console.error('Error generating video link:', dailyError)
+          throw new Error('Error generating video link')
+        }
         dailyData = dailyResponse
+        console.log('Video link generated successfully', dailyData)
       }
 
       // Prepare appointment payload
@@ -200,12 +207,18 @@ const useAppointmentSubmission = () => {
               patient_token: dailyData?.patientToken
             }
       }
+      console.log('Prepared appointment payload', appointmentPayload)
 
       // Create or update the appointment
       if (isUpdate) {
+        console.log('Updating existing appointment')
         const { payload, error } = await dispatch(updateAppointment(appointmentPayload))
-        if (error) throw new Error('Error updating appointment')
+        if (error) {
+          console.error('Error updating appointment:', error)
+          throw new Error('Error updating appointment')
+        }
         appointmentResult = payload
+        console.log('Appointment updated successfully', appointmentResult)
 
         await createServiceDeliveries(
           appointmentResult.id,
@@ -214,9 +227,14 @@ const useAppointmentSubmission = () => {
           isUpdate
         )
       } else {
+        console.log('Creating new appointment')
         const { payload, error } = await dispatch(createAppointment(appointmentPayload))
-        if (error) throw new Error('Error creating appointment')
+        if (error) {
+          console.error('Error creating appointment:', error)
+          throw new Error('Error creating appointment')
+        }
         appointmentResult = payload
+        console.log('Appointment created successfully', appointmentResult)
 
         await createServiceDeliveries(
           appointmentResult.id,
@@ -227,6 +245,7 @@ const useAppointmentSubmission = () => {
       }
 
       // Handle event creation or update
+      console.log('Handling event creation/update')
       const startTime = parse(appointmentData.scheduled_time, 'EEE MMM dd yyyy HH:mm:ss xx', new Date())
       const duration = appointmentData?.duration || 30
       const endTime = addMinutes(startTime, duration)
@@ -243,15 +262,19 @@ const useAppointmentSubmission = () => {
         url: appointmentData.remote_details?.url || null,
         appointment_id: appointmentResult.id
       }
+      console.log('Event payload prepared', eventPayload)
 
       if (isUpdate) {
+        console.log('Updating existing event')
         await dispatch(updateEvent({ id: appointmentData.event_id, ...eventPayload }))
       } else {
+        console.log('Adding new event')
         await dispatch(addEvent(eventPayload))
       }
 
       // Handle SMS notifications
       if (appointmentData.details.sendTextUpdate) {
+        console.log('Sending SMS notification')
         const userLink = `https://pharmex.uk/pharmacy-first/patient/${appointmentResult.id}`
         const message = `Your Pharmacy First appointment is ${isUpdate ? 'updated and' : ''} scheduled for ${dayjs(
           appointmentData.scheduled_time
@@ -269,8 +292,10 @@ const useAppointmentSubmission = () => {
             time: appointmentData.scheduled_time
           })
         )
+        console.log('SMS notification sent')
 
         // Schedule a reminder
+        console.log('Scheduling reminder')
         const reminderDate = dayjs(appointmentData.scheduled_time).subtract(30, 'minute')
         await dispatch(
           scheduleReminder({
@@ -283,11 +308,14 @@ const useAppointmentSubmission = () => {
             title: `Pharmacy First Appointment Reminder`
           })
         )
+        console.log('Reminder scheduled')
       }
 
       setLoading(false)
+      console.log('Appointment handling completed successfully')
       return appointmentResult
     } catch (error) {
+      console.error('Error in handleAppointment:', error)
       setLoading(false)
       throw error
     }

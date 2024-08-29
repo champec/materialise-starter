@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useRef } from 'react'
 import {
   Box,
   Typography,
@@ -74,21 +74,39 @@ const AppointmentForm = ({
   handleRemoveGP,
   setGpDialogOpen,
   gpDialogOpen,
+  setSelectedGP,
   handleCheckboxChange,
-  quickService = false
+  quickService = false,
+  editingAppointment = false
 }) => {
+  const prevServiceIdRef = useRef(appointment?.service_id)
+  const prevStageIdRef = useRef(appointment?.current_stage_id)
+
   useEffect(() => {
-    // Reset triage data when service or stage changes
-    if (quickService) return
-    if (formData.service_id !== 'pharmacy_first' || !formData.current_stage_id) {
+    // Only run this effect if we're not in quickService mode
+    if (quickService || !formData.service_id || !formData.current_stage_id) return
+
+    console.log('triag changes', { prevServiceIdRef, prevStageIdRef }, formData.service_id, formData.current_stage_id)
+    console.log(
+      'triage changes 2',
+      formData.service_id !== prevServiceIdRef.current || formData.current_stage_id !== prevStageIdRef.current
+    )
+
+    // Check if the service or stage has changed
+    if (formData.service_id !== prevServiceIdRef.current || formData.current_stage_id !== prevStageIdRef.current) {
+      // Reset triage data when changing services or stages
       onFieldChange({
         target: {
           name: 'details.triage',
           value: {}
         }
       })
+
+      // Update the refs with the new values
+      prevServiceIdRef.current = formData.service_id
+      prevStageIdRef.current = formData.current_stage_id
     }
-  }, [formData?.service_id, formData?.current_stage_id])
+  }, [formData.service_id, formData.current_stage_id, quickService, onFieldChange])
 
   return (
     <LocalizationProvider dateAdapter={AdapterDateFns}>
@@ -137,7 +155,7 @@ const AppointmentForm = ({
                 <GPPreview
                   gp={selectedGP}
                   onEdit={() => setGpDialogOpen(true)}
-                  setSelectedGP={handleRemoveGP}
+                  setSelectedGP={setSelectedGP}
                   setGPInputValue={setGpSearchTerm}
                 />
               ) : (
@@ -159,6 +177,7 @@ const AppointmentForm = ({
                       onChange={onServiceChange}
                       label='Service'
                       required
+                      disabled={editingAppointment}
                     >
                       {services.map(service => (
                         <MenuItem key={service.id} value={service.id}>

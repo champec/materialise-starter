@@ -10,15 +10,51 @@ export const fetchAppointments = createAsyncThunk('pharmacyServices/fetchAppoint
     .select(
       `
         *,
-        ps_services (*)
+       ps_services (
+        *,
+        ps_pharmacy_services (id, color)
+      )
       `
     )
     .eq('pharmacy_id', organisationId)
     .order('scheduled_time', { ascending: true })
 
+  //format the data for full calendar by making scheduled_time into start and the rest into event data
+  const formattedData = data.map(appointment => {
+    return {
+      ...appointment,
+      start: appointment.scheduled_time,
+      color: appointment.ps_services?.ps_pharmacy_services?.[0]?.color,
+      p_service_id: appointment.ps_services?.ps_pharmacy_services?.[0]?.id,
+      title: appointment.patient_object?.full_name || 'Full Name'
+      // eventData: {
+      //   id: appointment.id,
+      //   status_details: appointment.status_details,
+      //   scheduled_time: appointment.scheduled_time,
+      //   ps_services: appointment.ps_services
+      // }
+    }
+  })
+
+  console.log('formattedData', formattedData)
+
   if (error) throw error
-  return data
+  return formattedData
 })
+
+export const fetchServiceDeliveries = createAsyncThunk(
+  'pharmacyServices/fetchServiceDeliveries',
+  async (id, { getState }) => {
+    const { data, error } = await supabase
+      .from('ps_service_delivery')
+      .select(`*, ps_service_stages!ps_service_delivery_service_stage_id_fkey(*)`)
+      .eq('appointment_id', id)
+
+    if (error) throw error
+
+    return data || []
+  }
+)
 
 // Fetch services and their stages for the current organisation
 export const fetchServicesWithStages = createAsyncThunk(
@@ -75,7 +111,7 @@ export const fetchSubscribedServices = createAsyncThunk(
 
 export const createAppointment = createAsyncThunk(
   'pharmacyServices/createAppointment',
-  async (appointmentData, { getState }) => {
+  async (appointmentData, { getState, dispatch }) => {
     const organisationId = getState().organisation.organisation.id
     const { data, error } = await supabase
       .from('ps_appointments')
@@ -83,28 +119,34 @@ export const createAppointment = createAsyncThunk(
       .select()
 
     if (error) throw error
-    return data[0]
+    dispatch(fetchAppointments())
+    return
   }
 )
 
 export const updateAppointment = createAsyncThunk(
   'pharmacyServices/updateAppointment',
-  async (appointmentData, { getState }) => {
+  async (appointmentData, { getState, dispatch }) => {
     const { id, ps_services, ...updateData } = appointmentData
     console.log('APPOINTMENT DATA', updateData)
-    const { data, error } = await supabase.from('ps_appointments').update(updateData).eq('id', id).select()
+    const { data, error } = await supabase.from('ps_appointments').update(updateData).eq('id', id).select().single()
 
     if (error) throw error
-    return data[0]
+    dispatch(fetchAppointments())
+    return data
   }
 )
 
-export const deleteAppointment = createAsyncThunk('pharmacyServices/deleteAppointment', async (id, { getState }) => {
-  const { error } = await supabase.from('ps_appointments').delete().eq('id', id)
+export const deleteAppointment = createAsyncThunk(
+  'pharmacyServices/deleteAppointment',
+  async (id, { getState, dispatch }) => {
+    const { error } = await supabase.from('ps_appointments').delete().eq('id', id)
 
-  if (error) throw error
-  return id
-})
+    if (error) throw error
+    dispatch(fetchAppointments())
+    return id
+  }
+)
 
 export const submitClaim = createAsyncThunk(
   'pharmacyServices/submitClaim',
@@ -141,7 +183,8 @@ export const submitClaim = createAsyncThunk(
       }
     }
 
-    return results
+    dispatch(fetchAppointments())
+    return
   }
 )
 
@@ -225,12 +268,13 @@ const storeClaimResult = async (appointmentId, mysResponse) => {
   return data
 }
 
-const updateAppointmentStatus = async (appointmentId, newStatus) => {
+const updateAppointmentStatus = async ({ appointmentId, newStatus }, { dispatch }) => {
   const { data, error } = await supabase
     .from('ps_appointments')
     .update({ overall_status: newStatus })
     .eq('id', appointmentId)
 
   if (error) throw new Error(`Failed to update appointment status: ${error.message}`)
-  return data
+  dispatch(fetchAppointments())
+  return
 }

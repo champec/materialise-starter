@@ -21,47 +21,47 @@ import {
   CardContent
 } from '@mui/material'
 import { createServiceDeliveries } from '../hooks/useAppointmentSubmission'
-import { fetchAppointments } from 'src/store/apps/pharmacy-services/pharmacyServicesThunks'
+import {
+  fetchAppointments,
+  fetchServiceDeliveries
+} from '../../../../store/apps/pharmacy-services/pharmacyServicesThunks' //'src/store/apps/pharmacy-services/pharmacyServicesThunks'
 import { supabaseOrg as supabase } from 'src/configs/supabase'
-import { useDispatch } from 'react-redux'
+import { useDispatch, useSelector } from 'react-redux'
 import ServiceDeliverySummary from './ServiceDeliverySummary'
 import ServiceDeliveryChat from './ServiceDeliveryChat'
 import Icon from 'src/@core/components/icon'
 
-function ServiceDeliveryComponent({ appointment, onClose }) {
+function ServiceDeliveryComponent({ appointment, onClose, onEdit }) {
   const dispatch = useDispatch()
   const router = useRouter()
   const [loading, setLoading] = useState(true)
   const [configuring, setConfiguring] = useState(false)
-  const [serviceDeliveries, setServiceDeliveries] = useState([])
   const [viewDialogOpen, setViewDialogOpen] = useState(false)
   const [selectedDelivery, setSelectedDelivery] = useState(null)
   const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'info' })
   const [showChat, setShowChat] = useState(false)
+  const serviceDeliveries = useSelector(state => state.services.serviceDeliveries)
 
   useEffect(() => {
     if (appointment) {
-      fetchServiceDeliveries()
+      dispatch(fetchServiceDeliveries(appointment?.id)).then(() => {
+        console.log('serviceDeliveries', serviceDeliveries)
+        setLoading(false)
+      })
     }
   }, [appointment])
 
-  const fetchServiceDeliveries = async () => {
-    setLoading(true)
-    try {
-      const { data, error } = await supabase
-        .from('ps_service_delivery')
-        .select(`*, ps_service_stages!ps_service_delivery_service_stage_id_fkey(*)`)
-        .eq('appointment_id', appointment.id)
-
-      if (error) throw error
-      setServiceDeliveries(data || [])
-    } catch (error) {
-      console.error('Error fetching service deliveries:', error)
-      showSnackbar('Error fetching service deliveries', 'error')
-    } finally {
-      setLoading(false)
-    }
-  }
+  // const fetchServiceDeliveries = async () => {
+  //   setLoading(true)
+  //   try {
+  //     const data = await dispatch(fetchServiceDeliveries(appointment)).unwrap()
+  //   } catch (error) {
+  //     console.error('Error fetching service deliveries:', error)
+  //     showSnackbar('Error fetching service deliveries', 'error')
+  //   } finally {
+  //     setLoading(false)
+  //   }
+  // }
 
   const handleConfigureService = async () => {
     setConfiguring(true)
@@ -76,6 +76,10 @@ function ServiceDeliveryComponent({ appointment, onClose }) {
     } finally {
       setConfiguring(false)
     }
+  }
+
+  const handleEditAppointment = appointment => {
+    onEdit(appointment)
   }
 
   const handleGoToDelivery = delivery => {
@@ -106,7 +110,12 @@ function ServiceDeliveryComponent({ appointment, onClose }) {
           <Typography>Service: {appointment?.ps_services?.name}</Typography>
           <Typography>Scheduled Time: {appointment.scheduled_time}</Typography>
           <Typography>Appointment Type: {appointment.appointment_type}</Typography>
+
+          <Button variant='outlined' onClick={() => handleEditAppointment(appointment)}>
+            Edit Appointment
+          </Button>
         </Box>
+
         <Card>
           <CardContent>
             <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 2 }}>

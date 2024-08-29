@@ -4,7 +4,7 @@ import DDLane from './lowerdashboard/ddlanes'
 import DDCard from './lowerdashboard/ddCards'
 import { useDispatch, useSelector } from 'react-redux'
 import { fetchBags, fetchCollections } from '../../../store/apps/drugdash/ddThunks'
-import { selectBagsByStatus, selectAllCollections } from '../../../store/apps/drugdash'
+import { selectBagsByStatus, selectAllCollections, selectCollectionByStatus } from '../../../store/apps/drugdash'
 import { styled, useTheme } from '@mui/material/styles'
 import { hexToRGBA } from 'src/@core/utils/hex-to-rgba'
 import ModalManager from 'src/views/apps/drugdash/ModalManager'
@@ -43,12 +43,12 @@ const Index = () => {
 
   const inPharmacyBags = useSelector(state => selectBagsByStatus(state, 'in_pharmacy'))
   const inGroupBags = useSelector(state => selectBagsByStatus(state, 'in_group'))
-  const inTransitBags = useSelector(state => selectBagsByStatus(state, 'in_transit'))
+  const inTransitBags = useSelector(state => selectCollectionByStatus(state, 'in_transit'))
   const deliveredBags = useSelector(state => selectBagsByStatus(state, 'delivered'))
-  const collections = useSelector(selectAllCollections)
+  const collections = useSelector(state => selectCollectionByStatus(state, 'pening'))
 
   useEffect(() => {
-    dispatch(fetchBags())
+    dispatch(fetchBags({}))
     dispatch(fetchCollections())
   }, [dispatch])
 
@@ -72,7 +72,7 @@ const Index = () => {
   }
 
   const handleOpenCollectionModal = () => {
-    dispatch(openModal('newCollection'))
+    dispatch(openModal('addEditCollection'))
   }
 
   const lanes = [

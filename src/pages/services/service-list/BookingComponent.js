@@ -48,6 +48,7 @@ const BookingComponent = ({ appointment, onClose }) => {
   const [snackbarOpen, setSnackbarOpen] = useState(false)
   const [openConfirmDialog, setOpenConfirmDialog] = useState(false)
   const [objectToSubmit, setObjectToSubmit] = useState(null)
+  const [editingAppointment, setEditingAppointment] = useState(false)
   const { submitAppointment, updateExistingAppointment, loading } = useAppointmentSubmission()
 
   const showMessage = (severity, message) => {
@@ -99,11 +100,13 @@ const BookingComponent = ({ appointment, onClose }) => {
     handleGPSearch,
     handleGPSelect,
     handleRemoveGP
-  } = useGPSearch(selectedPatient)
+  } = useGPSearch(patientData)
 
   const handleNhsPatientFetch = () => {
     setNhsPatientDialog(true)
   }
+
+  console.log('SELECTED GP', selectedGP)
 
   const [formData, setFormData] = useState({
     pharmacy_id: organisationId,
@@ -141,12 +144,16 @@ const BookingComponent = ({ appointment, onClose }) => {
         overall_status,
         current_stage_id,
         scheduled_time: scheduled_time ? parseISO(scheduled_time) : null,
-        details: {
-          ...details,
-          triage: details.triage ? { ...details.triage } : {}
-        }
+        details
+        // details: {
+        //   ...details,
+        //   triage: details.triage ? { ...details.triage } : {}
+        // }
+        // patient_object,
+        // gp_object
       })
 
+      setEditingAppointment(true)
       setSelectedPatient(patient_object)
       setSelectedGP(gp_object)
       setSelectedService(service_id)
@@ -359,6 +366,7 @@ const BookingComponent = ({ appointment, onClose }) => {
             setSelectedPatient={setSelectedPatient}
             setPatientInputValue={setPatientInputValue}
             selectedGP={selectedGP}
+            setSelectedGP={setSelectedGP}
             gpSearchTerm={gpSearchTerm}
             gpSearchResults={gpSearchResults}
             isLoading={isLoading}
@@ -370,6 +378,7 @@ const BookingComponent = ({ appointment, onClose }) => {
             setGpDialogOpen={setGpDialogOpen}
             gpDialogOpen={gpDialogOpen}
             handleCheckboxChange={handleCheckboxChange}
+            editingAppointment={editingAppointment}
           />
         </Box>
 

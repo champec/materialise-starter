@@ -19,8 +19,12 @@ import {
   handleSelectEvent,
   handleAllCalendars,
   updateViewDates
-} from 'src/store/apps/calendar/pharmacyfirst/bookingsCalendarSlice'
-import { fetchSelectedBooking } from 'src/store/apps/calendar/pharmacyfirst/appointmentListSlice'
+} from '../../../store/apps/calendar/pharmacyfirst/bookingsCalendarSlice' //'src/store/apps/calendar/pharmacyfirst/bookingsCalendarSlice'
+
+import {
+  fetchAppointments,
+  fetchServicesWithStages
+} from '../../../store/apps/pharmacy-services/pharmacyServicesThunks'
 
 //MUI
 import { Dialog, DialogContent, Drawer } from '@mui/material'
@@ -29,26 +33,15 @@ import { Dialog, DialogContent, Drawer } from '@mui/material'
 import { useSettings } from 'src/@core/hooks/useSettings'
 import withReducer from 'src/@core/HOC/withReducer'
 import bookingsCalendarSlice from 'src/store/apps/calendar/pharmacyfirst/bookingsCalendarSlice'
-import calendar from 'src/store/apps/calendar'
-import appointmentListSlice from 'src/store/apps/calendar/pharmacyfirst/appointmentListSlice'
-import services from 'src/store/apps/services'
 import pharmacyServicesSlice, {
-  setServiceFilter,
-  setStatusFilter,
-  selectFilteredAppointments,
-  selectServices,
-  selectServiceFilter,
-  selectStatusFilter
-} from 'src/store/apps/pharmacy-services/pharmacyServicesSlice'
+  setSelectedAppointment,
+  setSelectedAppointmentById
+} from '../../../store/apps/pharmacy-services/pharmacyServicesSlice'
 
 // ** FullCalendar & App Components Imports
-import Calendar from 'src/views/apps/Calendar/Calendar'
+import Calendar from '../../../views/apps/Calendar/Calendar'
 import SidebarLeft from 'src/views/apps/Calendar/SidebarLeft'
 import CalendarWrapper from 'src/@core/styles/libs/fullcalendar'
-import AddEventSidebar from 'src/views/apps/Calendar/AddEventSidebar'
-import AddCalendarSidebar from 'src/views/apps/Calendar/AddCalendarSidebar'
-import BookCalendarSidebar from 'src/views/apps/Calendar/BookCalendarSidebar'
-import ServiceSelectorModal from 'src/views/apps/services/ServiceSelectorModal'
 import ServiceDeliveryComponent from '../service-list/components/ServiceDeliveryComponent'
 import BookingComponent from '../service-list/BookingComponent'
 
@@ -80,14 +73,15 @@ const AppCalendar = ({ addCalendarType, updateCalendarType, deleteCalendarType }
   const [bookCalendarSidebarOpen, setBookCalendarSidebarOpen] = useState(false)
   const [openServiceSelectorModal, setOpenServiceSelectorModal] = useState(false)
   const [isDeliveryModalOpen, setIsDeliveryModalOpen] = useState(false)
-  const [selectedAppointment, setSelectedAppointment] = useState(null)
   const [isDrawerOpen, setIsDrawerOpen] = useState(false)
+  const selectedAppointment = useSelector(state => state.services.selectedAppointment)
 
   // ** Hooks
   const { settings } = useSettings()
   const dispatch = useDispatch()
   const store = useSelector(state => state.bookingsCalendar)
   const orgId = useSelector(state => state.organisation.organisation.id)
+  const events = useSelector(state => state.services.appointments)
 
   console.log('store', store)
 
@@ -99,11 +93,10 @@ const AppCalendar = ({ addCalendarType, updateCalendarType, deleteCalendarType }
   useEffect(() => {
     if (orgId) {
       console.log('USE EFFECT EVENT FETCH ON LOAD', orgId)
-      dispatch(fetchEvents(orgId))
+      // dispatch(fetchEvents(orgId))
+      dispatch(fetchAppointments(orgId))
+      dispatch(fetchServicesWithStages())
     }
-    // removed the following dependencies  store.selectedCalendars, store.viewStart, store.viewEnd,
-    // felt like all calendar events are fetched for the view anyway not point refetch when calendar changed
-    //also view state should trigger fetch event not just autotomatically by useEffect
   }, [dispatch, orgId])
 
   useEffect(() => {
@@ -125,8 +118,13 @@ const AppCalendar = ({ addCalendarType, updateCalendarType, deleteCalendarType }
 
   const openDelivery = eventId => {
     console.log('OPEN DELIVER FOR APPOINTMENT', eventId)
-    setSelectedAppointment({ id: eventId })
+    dispatch(setSelectedAppointmentById(eventId))
     setIsDeliveryModalOpen(true)
+  }
+
+  const handleEditBooking = appointment => {
+    setSelectedAppointment(appointment)
+    setIsDrawerOpen(true)
   }
 
   const handleCloseDrawer = () => {
@@ -135,7 +133,7 @@ const AppCalendar = ({ addCalendarType, updateCalendarType, deleteCalendarType }
   }
 
   const handleCloseDeliveryModal = () => {
-    setSelectedAppointment(null)
+    dispatch(setSelectedAppointment(null))
     setIsDeliveryModalOpen(false)
   }
 
@@ -178,6 +176,7 @@ const AppCalendar = ({ addCalendarType, updateCalendarType, deleteCalendarType }
         }}
       >
         <Calendar
+          events={events}
           orgId={orgId}
           store={store}
           dispatch={dispatch}
@@ -193,61 +192,29 @@ const AppCalendar = ({ addCalendarType, updateCalendarType, deleteCalendarType }
           // handleAddCalendarSidebarToggle={handleAddCalendarSidebarToggle}
           // handleAddBookingSidebarToggle={handleAddBookingSidebarToggle}
           openDelivery={openDelivery}
-          fetchSelectedBooking={fetchSelectedBooking}
+          // fetchSelectedBooking={fetchSelectedBooking}
           appointment
         />
       </Box>
-      {/* <AddEventSidebar
-        store={store}
-        dispatch={dispatch}
-        addEvent={addEvent}
-        updateEvent={updateEvent}
-        deleteEvent={deleteEvent}
-        calendarApi={calendarApi}
-        drawerWidth={addEventSidebarWidth}
-        handleSelectEvent={handleSelectEvent}
-        // addEventSidebarOpen={addEventSidebarOpen}
-        addEventSidebarOpen={false}
-        handleAddEventSidebarToggle={handleAddEventSidebarToggle}
-        appointment
-      /> */}
-      {/* <AddCalendarSidebar
-        store={store}
-        dispatch={dispatch}
-        calendarApi={calendarApi}
-        updateCalendarType={updateCalendarType}
-        addCalendarType={addCalendarType}
-        deleteCalendarType={deleteCalendarType}
-        handleSelectCalendar={handleSelectCalendar}
-        drawerWidth={addEventSidebarWidth}
-        addCalendarSidebarOpen={addCalendarSidebarOpen}
-        handleAddCalendarSidebarToggle={handleAddCalendarSidebarToggle}
-      /> */}
-      {/* <BookCalendarSidebar
-        store={store}
-        dispatch={dispatch}
-        calendarApi={calendarApi}
-        updateCalendarType={updateCalendarType}
-        addCalendarType={addCalendarType}
-        deleteCalendarType={deleteCalendarType}
-        handleSelectCalendar={handleSelectCalendar}
-        drawerWidth={addEventSidebarWidth}
-        addCalendarSidebarOpen={addCalendarSidebarOpen}
-        handleAddCalendarSidebarToggle={handleAddCalendarSidebarToggle}
-        bookCalendarSidebarOpen={bookCalendarSidebarOpen}
-        handleAddBookingSidebarToggle={handleAddBookingSidebarToggle}
-        addBookingSidebarOpen={addBookingSidebarOpen}
-        handleSelectEvent={handleSelectEvent}
-        selectedService={selectedService}
-      /> */}
+
       {selectedAppointment && (
-        <Dialog open={isDeliveryModalOpen} onClose={handleCloseDeliveryModal} maxWidth='lg' fullWidth>
+        <Dialog
+          open={isDeliveryModalOpen}
+          onClose={handleCloseDeliveryModal}
+          maxWidth='lg'
+          fullWidth
+          sx={{ zIndex: 1200 }}
+        >
           <DialogContent sx={{ minWidth: '800px', minHeight: '600px' }}>
-            <ServiceDeliveryComponent appointment={selectedAppointment} onClose={handleCloseDeliveryModal} />
+            <ServiceDeliveryComponent
+              appointment={selectedAppointment}
+              onClose={handleCloseDeliveryModal}
+              onEdit={handleEditBooking}
+            />
           </DialogContent>
         </Dialog>
       )}
-      <Drawer anchor='left' open={isDrawerOpen} onClose={handleCloseDrawer}>
+      <Drawer anchor='left' open={isDrawerOpen} onClose={handleCloseDrawer} sx={{ zIndex: 1201 }}>
         <BookingComponent appointment={selectedAppointment} onClose={handleCloseDrawer} />
       </Drawer>
     </CalendarWrapper>

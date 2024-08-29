@@ -78,6 +78,43 @@ const navigation = (role, plan) => {
       ]
     },
     {
+      title: 'Shifts',
+      path: '/second-page',
+      icon: 'openmoji:rescue-workers-helmet',
+      children: [
+        {
+          title: 'Shift Manager',
+          path: '/pharmacy/locum/pharmacy-shift-manager',
+          icon: 'fluent-mdl2:work-item',
+          disabled: false
+        },
+        {
+          title: 'My Locum Shifts',
+          path: '/pharmacy/locum/locum-shift-manager',
+          icon: 'fluent-emoji-high-contrast:office-worker',
+          disabled: false
+        },
+        {
+          title: 'Quick Service',
+          path: '/services/invoices',
+          icon: 'bi:file-medical-fill',
+          disabled: true
+        },
+        {
+          title: 'Service Stats',
+          path: '/services/locum-invoices',
+          icon: 'bi:file-medical-fill',
+          disabled: true
+        },
+        {
+          title: 'Claims',
+          path: '/services/claims',
+          icon: 'bi:file-medical-fill',
+          disabled: true
+        }
+      ]
+    },
+    {
       sectionTitle: 'Communication'
     },
     {

@@ -17,22 +17,33 @@ import {
   CardContent,
   Grid,
   Snackbar,
-  Alert
+  Alert,
+  FormControlLabel,
+  Switch
 } from '@mui/material'
 import debounce from 'lodash/debounce'
 import { supabaseOrg as supabase } from 'src/configs/supabase'
-import { addPatientMedication, updatePatientMedication } from 'src/store/apps/drugdash/' // Assuming you have these actions
-import { selectSelectedPatient } from 'src/store/apps/drugdash' // Assuming you have this selector
 import { Icon } from '@iconify/react'
+import { selectSelectedPatient } from '../../../store/apps/drugdash'
+import { addPatientMedication, fetchPatientMedications } from '../../../store/apps/drugdash/ddThunks'
+import { closeModal, openModal } from 'src/store/apps/drugdash/ddModals'
 
 const AddEditDrugModal = () => {
+  const dispatch = useDispatch()
   const [medications, setMedications] = useState({})
   const [genericDrugs, setGenericDrugs] = useState([])
+  const selectedPatient = useSelector(selectSelectedPatient)
   const [genericDrugOptions, setGenericDrugOptions] = useState([])
   const [packOptions, setPackOptions] = useState([])
   const [loading, setLoading] = useState(false)
   const [selectedDrugCode, setSelectedDrugCode] = useState('')
   const [showDuplicateWarning, setShowDuplicateWarning] = useState(false)
+  const [savingDrugs, setSavingDrugs] = useState(false)
+  const userId = useSelector(state => state?.user?.user?.id)
+
+  useEffect(() => {
+    console.log('MEDICAITON INSIDE', medications)
+  }, [medications])
 
   const debouncedSearch = debounce(async searchTerm => {
     if (!supabase) return
@@ -163,7 +174,8 @@ const AddEditDrugModal = () => {
         drugDescription: '',
         pack: '',
         quantitySupplied: '',
-        drugDose: ''
+        drugDose: '',
+        is_acute: false
       }
     }))
     setSelectedDrugCode('temp')
@@ -177,6 +189,13 @@ const AddEditDrugModal = () => {
     return 'complete'
   }
 
+  const isFormValid = () => {
+    return Object.entries(medications).some(
+      ([drugCode, drug]) =>
+        drugCode !== 'temp' && drug.drugDescription && drug.pack && drug.quantitySupplied && drug.drugDose
+    )
+  }
+
   const getStatusColor = status => {
     switch (status) {
       case 'error':
@@ -187,6 +206,38 @@ const AddEditDrugModal = () => {
         return 'orange'
       default:
         return 'transparent'
+    }
+  }
+
+  const handleSaveDrugs = async () => {
+    if (!selectedPatient) {
+      console.error('No patient selected')
+      return
+    }
+
+    setSavingDrugs(true)
+    try {
+      const medicationsToAdd = Object.entries(medications)
+        .filter(([drugCode, _]) => drugCode !== 'temp')
+        .map(([_, med]) => ({
+          patient_id: selectedPatient.id,
+          medication_id: med.drugCode,
+          description: med.drugDescription,
+          pack: med.pack,
+          quantity: med.quantitySupplied,
+          dosage: med.drugDose,
+          created_by: userId ? userId : null,
+          is_acute: med.is_acute || false
+        }))
+
+      await dispatch(addPatientMedication(medicationsToAdd)).unwrap()
+      await dispatch(fetchPatientMedications(selectedPatient.id)).unwrap()
+      dispatch(closeModal())
+    } catch (error) {
+      console.error('Failed to save medications:', error)
+      // Handle error (e.g., show an error message to the user)
+    } finally {
+      setSavingDrugs(false)
     }
   }
 
@@ -292,6 +343,15 @@ const AddEditDrugModal = () => {
           fullWidth
           margin='normal'
         />
+        <FormControlLabel
+          control={
+            <Switch
+              checked={selectedMedication.is_acute || false}
+              onChange={e => handleDrugChange(selectedMedication.drugCode, 'is_acute', e.target.checked)}
+            />
+          }
+          label='Is Acute'
+        />
       </Box>
     )
   }
@@ -301,6 +361,10 @@ const AddEditDrugModal = () => {
       <Typography variant='h6' gutterBottom>
         Medicines Supplied
       </Typography>
+
+      <Button variant='contained' color='primary' onClick={handleSaveDrugs} disabled={!isFormValid() || savingDrugs}>
+        {savingDrugs ? <CircularProgress size={24} /> : 'Save Medications'}
+      </Button>
 
       <Box sx={{ mb: 4, p: 2, border: '1px solid #ccc', borderRadius: '4px' }}>
         {/* Horizontal scroll and add new buttons */}

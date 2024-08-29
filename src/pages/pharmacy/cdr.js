@@ -1,24 +1,36 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, Suspense } from 'react'
 
 import CdrTable from './EntryTableMain'
 import { fetchDrugs } from 'src/store/apps/cdr'
 import { fetchDrugsFromDb } from '../../@core/utils/mypharmacyutils/supabase'
 
 import Grid from '@mui/material/Grid'
-import Box from '@mui/material/Box'
-import Button from '@mui/material/Button'
+
 import Icon from 'src/@core/components/icon'
-import List from '@mui/material/List'
-import ListItem from '@mui/material/ListItem'
-import CardHeader from '@mui/material/CardHeader'
+
 import DrugClassSection from './DrugClassSection'
-import TextField from '@mui/material/TextField'
+
 import Divider from '@mui/material/Divider'
 
-import { CircularProgress, Typography } from '@mui/material'
+import {
+  Card,
+  CardHeader,
+  Box,
+  Button,
+  TextField,
+  CircularProgress,
+  Typography,
+  Modal,
+  Paper,
+  List,
+  ListItem,
+  ListItemText,
+  Alert,
+  AlertTitle
+} from '@mui/material'
+
 import { supabaseOrg } from 'src/configs/supabase'
 import { useOrgAuth } from 'src/hooks/useOrgAuth'
-import Card from '@mui/material/Card'
 
 import { styled } from '@mui/system'
 import MuiAccordion from '@mui/material/Accordion'
@@ -26,6 +38,8 @@ import MuiAccordionSummary from '@mui/material/AccordionSummary'
 import MuiAccordionDetails from '@mui/material/AccordionDetails'
 import withReducer from 'src/@core/HOC/withReducer'
 import { cdrSlice } from 'src/store/apps/cdr'
+import ImageCaptureModal from './ImageCaptureModal'
+import ImageProcessingResults from './ImageProcessingResult'
 
 //modla
 import NewRegisterModal from './NewRegisterModal'
@@ -33,6 +47,9 @@ import NewRegisterModal from './NewRegisterModal'
 //rtk
 import { fetchExistingRegisters } from 'src/store/apps/cdr'
 import { useSelector, useDispatch } from 'react-redux'
+
+import systemMessage from '../../@core/utils/cdr/systemMessage'
+import ControlledDrugImageProcessor from './ControlledDrugsImageProcessorComponent'
 
 const Accordion = styled(MuiAccordion)(({ theme }) => ({
   boxShadow: 'none',
@@ -71,6 +88,9 @@ function Cdr() {
   const [expandAll, setExpandAll] = useState(false)
   const [selectedDrug, setSelectedDrug] = useState(null)
   const [isNewRegisterModalOpen, setIsNewRegisterModalOpen] = useState(false)
+  const [isImageModalOpen, setIsImageModalOpen] = useState(false)
+  const [isConfirmModalOpen, setIsConfirmModalOpen] = useState(false)
+  const [isImageProcessorOpen, setIsImageProcessorOpen] = useState(false)
 
   const organisationId = useOrgAuth()?.organisation?.id
 
@@ -101,6 +121,36 @@ function Cdr() {
   const handleBackClick = () => {
     setSelectedDrug(null)
     setActiveComponent('drugList')
+  }
+
+  const handleConfirmEntry = entry => {
+    // Logic to add confirmed entry to the register
+    console.log('Confirmed entry:', entry)
+    // Update your state or make an API call to save the entry
+    setIsConfirmModalOpen(false)
+  }
+
+  const processImage = async image => {
+    console.log({ image, systemMessage, existingRegisters, organisationId })
+    try {
+      const response = await supabaseOrg.functions.invoke('processCDRImage', {
+        body: {
+          image,
+          systemMessage,
+          pharmacyRegisters: existingRegisters,
+          organisationId
+        }
+      })
+
+      if (response.error) {
+        throw new Error(response.error.message || 'An error occurred while processing the image')
+      }
+
+      return response.data
+    } catch (error) {
+      console.error('Error processing image:', error)
+      return [{ type: 'error', reason: error.message }]
+    }
   }
 
   // Filter registers based on global search
@@ -145,6 +195,7 @@ function Cdr() {
             <Typography variant='h6'>Search All registers</Typography>
             <Button onClick={() => setExpandAll(prev => !prev)}>{expandAll ? 'Collapse All' : 'Expand All'}</Button>
             <Button onClick={() => setIsNewRegisterModalOpen(true)}>Create New Register</Button>
+            <Button onClick={() => setIsImageProcessorOpen(true)}>Capture Image</Button>
             <TextField
               id='outlined-basic'
               label='Search'
@@ -184,6 +235,13 @@ function Cdr() {
         open={isNewRegisterModalOpen}
         handleClose={() => setIsNewRegisterModalOpen(false)}
         handleSubmit={handleNewRegisterSubmit}
+      />
+      <ControlledDrugImageProcessor
+        open={isImageProcessorOpen}
+        handleClose={() => setIsImageProcessorOpen(false)}
+        processImage={processImage}
+        registers={existingRegisters}
+        onConfirm={handleConfirmEntry}
       />
     </Card>
   )

@@ -12,12 +12,13 @@ import {
   InputAdornment,
   Paper
 } from '@mui/material'
-import { addBag, setSelectedPatient } from 'src/store/apps/drugdash/'
-import { fetchPatients, fetchPatientMedications } from '../../../store/apps/drugdash/ddThunks'
+import { setSelectedPatient } from 'src/store/apps/drugdash/'
+import { addBag } from '../../../store/apps/drugdash/ddThunks'
+import { fetchPatients, fetchPatientMedications, fetchBagById } from '../../../store/apps/drugdash/ddThunks'
 import { closeModal, openModal } from 'src/store/apps/drugdash/ddModals'
 import { selectAllPatients, selectSelectedPatient } from 'src/store/apps/drugdash'
 
-const NewBagModal = () => {
+const NewBagModal = ({ bagId, onClose }) => {
   const dispatch = useDispatch()
   const patients = useSelector(selectAllPatients)
   const selectedPatient = useSelector(selectSelectedPatient)
@@ -25,13 +26,31 @@ const NewBagModal = () => {
 
   const [patientSearchInput, setPatientSearchInput] = useState('')
   const [selectedMedications, setSelectedMedications] = useState([])
+  const [selectedBag, setSelectedBag] = useState(null)
 
   useEffect(() => {
     dispatch(fetchPatients())
   }, [dispatch])
 
   useEffect(() => {
-    if (selectedPatient) {
+    dispatch(fetchPatients())
+    if (bagId) {
+      dispatch(fetchBagById(bagId)).then(action => {
+        if (action.payload) {
+          const bag = action.payload
+          setSelectedBag(bag)
+          dispatch(setSelectedPatient(bag.patient))
+          dispatch(fetchPatientMedications(bag.patient_id))
+          setPatientSearchInput('')
+          setSelectedMedications(bag.selected_medicines || [])
+          // setBagStatus(bag.status)
+        }
+      })
+    }
+  }, [dispatch, bagId])
+
+  useEffect(() => {
+    if (selectedPatient && !bagId) {
       dispatch(fetchPatientMedications(selectedPatient.id))
       setPatientSearchInput('') // Clear search input when a patient is selected
     }
@@ -63,12 +82,14 @@ const NewBagModal = () => {
     if (selectedPatient && selectedMedications.length > 0) {
       dispatch(
         addBag({
+          ...selectedBag,
           patientId: selectedPatient.id,
           medications: selectedMedications,
-          status: 'in_pharmacy'
+          status: 'in_pharmacy',
+          patient: selectedPatient
         })
       ).then(() => {
-        dispatch(closeModal())
+        onClose()
       })
     }
   }
@@ -83,7 +104,7 @@ const NewBagModal = () => {
   return (
     <Box sx={{ p: 2 }}>
       <Typography variant='h6' component='h2' gutterBottom>
-        Create New Bag
+        {bagId ? 'Edit Bag' : 'Create New Bag'}
       </Typography>
       <Box sx={{ mt: 2 }}>
         <Autocomplete
@@ -151,7 +172,7 @@ const NewBagModal = () => {
                           onChange={() => handleMedicationToggle(med.id)}
                         />
                       }
-                      label={med.name}
+                      label={med?.vmp?.nm}
                     />
                   ))}
               </Grid>
@@ -168,7 +189,7 @@ const NewBagModal = () => {
                           onChange={() => handleMedicationToggle(med.id)}
                         />
                       }
-                      label={med.name}
+                      label={med?.vmp?.nm}
                     />
                   ))}
               </Grid>
@@ -177,7 +198,7 @@ const NewBagModal = () => {
         </Box>
       )}
       <Box sx={{ mt: 2, display: 'flex', justifyContent: 'flex-end' }}>
-        <Button onClick={() => dispatch(closeModal())} sx={{ mr: 1 }}>
+        <Button onClick={() => onClose()} sx={{ mr: 1 }}>
           Cancel
         </Button>
         <Button

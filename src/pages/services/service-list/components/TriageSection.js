@@ -5,7 +5,12 @@ import { alpha } from '@mui/material'
 const StyledPaper = styled(Paper)(({ theme }) => ({
   padding: theme.spacing(2),
   marginBottom: theme.spacing(2),
-  backgroundColor: theme.palette.primary.dark
+  backgroundColor: theme.palette.secondary.light
+}))
+
+const StyledTypography = styled(Typography)(({ theme }) => ({
+  fontWeight: 'bold',
+  color: theme.palette.primary.contrastText
 }))
 
 const serviceNames = [
@@ -134,19 +139,27 @@ const TriageSection = ({ stageId, formData, onFieldChange }) => {
 
   return (
     <StyledPaper elevation={3}>
-      <Typography variant='h6' gutterBottom>
-        Triage Questions
-      </Typography>
+      <StyledTypography>Triage Questions</StyledTypography>
       {questions[stageId].map(question => (
         <Box key={question} mb={2}>
-          <Typography>{question}</Typography>
+          <StyledTypography>{question}</StyledTypography>
           <RadioGroup
             row
             value={formData.details.triage[question] || ''}
             onChange={event => handleQuestionChange(event, question)}
           >
-            <FormControlLabel value='yes' control={<Radio />} label='Yes' />
-            <FormControlLabel value='no' control={<Radio />} label='No' />
+            <FormControlLabel
+              value='yes'
+              control={<Radio sx={{ color: 'white', '&.Mui-checked': { color: 'white' } }} />}
+              label='Yes'
+              sx={{ color: 'white', '& .MuiFormControlLabel-label': { color: 'white' } }}
+            />
+            <FormControlLabel
+              value='no'
+              control={<Radio sx={{ color: 'white', '&.Mui-checked': { color: 'white' } }} />}
+              label='No'
+              sx={{ color: 'white', '& .MuiFormControlLabel-label': { color: 'white' } }}
+            />
           </RadioGroup>
         </Box>
       ))}

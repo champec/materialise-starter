@@ -18,7 +18,7 @@ import { addPatient, updatePatient } from 'src/store/apps/drugdash/ddThunks'
 import { closeModal } from 'src/store/apps/drugdash/ddModals'
 import { selectAllPatients, selectSelectedPatient, setSelectedPatient } from 'src/store/apps/drugdash'
 
-const AddEditPatientModal = () => {
+const AddEditPatientModal = ({ patientId }) => {
   const dispatch = useDispatch()
   const patients = useSelector(selectAllPatients)
   const selectedPatient = useSelector(selectSelectedPatient)
@@ -36,11 +36,21 @@ const AddEditPatientModal = () => {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
 
+  // useEffect(() => {
+  //   if (selectedPatient) {
+  //     setFormData(selectedPatient)
+  //   }
+  // }, [selectedPatient])
+
   useEffect(() => {
-    if (selectedPatient) {
-      setFormData(selectedPatient)
+    if (patientId) {
+      dispatch(fetchPatientById(patientId)).then(action => {
+        if (action.payload) {
+          setFormData(action.payload)
+        }
+      })
     }
-  }, [selectedPatient])
+  }, [dispatch, patientId])
 
   const handleChange = e => {
     const { name, value } = e.target
