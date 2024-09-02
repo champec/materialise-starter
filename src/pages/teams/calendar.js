@@ -19,7 +19,7 @@ import CalendarWrapper from 'src/@core/styles/libs/fullcalendar'
 import AddEventSidebar from 'src/views/apps/Calendar/AddEventSidebar'
 import AddCalendarSidebar from 'src/views/apps/Calendar/AddCalendarSidebar'
 import withReducer from 'src/@core/HOC/withReducer'
-// import { appCalendarSlice } from 'src/store/apps/calendar'
+import appCalendarSlice from '../../store/apps/calendar/index'
 
 // ** Actions
 import {

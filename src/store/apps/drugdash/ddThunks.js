@@ -477,3 +477,15 @@ export const updateBags = createAsyncThunk('drugDash/updateBags', async (bagsDat
     return rejectWithValue(error.message)
   }
 })
+
+export const updatePatient = createAsyncThunk('drugDash/updatePatient', async (patientData, { rejectWithValue }) => {
+  try {
+    const { data, error } = await supabase.from('dd_patients').upsert(patientData, { onConflict: 'id' }).select()
+
+    if (error) throw error
+
+    return data
+  } catch (error) {
+    return rejectWithValue(error.message)
+  }
+})
