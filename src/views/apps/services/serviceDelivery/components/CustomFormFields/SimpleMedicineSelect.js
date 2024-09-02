@@ -3,10 +3,6 @@ import {
   Box,
   TextField,
   Typography,
-  Select,
-  MenuItem,
-  FormControl,
-  InputLabel,
   FormHelperText,
   Button,
   CircularProgress,
@@ -14,7 +10,6 @@ import {
   IconButton,
   Card,
   CardContent,
-  Grid,
   Snackbar,
   Alert
 } from '@mui/material'
@@ -22,55 +17,8 @@ import { supabaseOrg as supabase } from 'src/configs/supabase'
 import debounce from 'lodash/debounce'
 import { Icon } from '@iconify/react'
 
-const medicationSupplyTypes = [
-  { value: 'OTC', label: 'Over the counter medication' },
-  { value: 'PGD', label: 'Patient Group Direction' },
-  { value: 'RX', label: 'Independent Prescriber' },
-  { value: 'ES', label: 'Emergency Supply' }
-]
-
-const patientExemptCodes = [
-  { value: 'A', label: 'A - 60 years of age or over or is under 16 years of age' },
-  { value: 'B', label: 'B - 16, 17 or 18 and in full time education' },
-  { value: 'C', label: 'C - Has a maternity exemption certificate' },
-  { value: 'D', label: 'D - Has a medical exemption certificate' },
-  { value: 'E', label: 'E - Has a prescription prepayment certificate' },
-  { value: 'F', label: 'F - Has a war pension exemption certificate' },
-  { value: 'G', label: 'G - HC2 certificate' },
-  { value: 'H', label: 'H - Income Support' },
-  { value: 'I', label: "I - Income-based Jobseeker's Allowance" },
-  { value: 'J', label: 'J - Income-related Employment and Support Allowance' },
-  { value: 'K', label: 'K - Pension Credit Guarantee Credit' },
-  { value: 'L', label: 'L - Tax Credit Exemption Certificate' },
-  { value: 'M', label: 'M - Universal Credit' },
-  { value: 'N', label: 'N - Named on a valid HC3 certificate' },
-  { value: 'X', label: 'X - Applies to patients who are pregnant' }
-]
-
-const supplyRequestReasons = [
-  { value: 'PRESCRIPTION_NOT_ORDERED', label: 'Patient had not ordered their prescription' },
-  { value: 'PRESCRIPTION_ORDERED_NOT_READY', label: 'Patient had ordered their prescription but it was not ready' },
-  { value: 'PRESCRIPTION_FORM_LOST', label: 'Patient had lost prescription form' },
-  { value: 'LOST_OR_MISPLACED_MEDICINES', label: 'Patient had lost or misplaced the medicine(s) or appliance(s)' },
-  { value: 'UNABLE_TO_COLLECT_MEDICINES', label: 'Patient was not able to collect the medicine(s) or appliance(s)' },
-  { value: 'AWAY_FROM_HOME', label: 'Patient is away from home' },
-  { value: 'OTHER', label: 'Other (please specify)' }
-]
-
-const prescriptionInterceptedOptions = [
-  { value: 'Yes', label: 'Prescription(s) intercepted' },
-  { value: 'No', label: 'Prescription(s) not intercepted' }
-]
-
 const MedicinesSupplied = ({ id, value, onChange, error, predefinedOptions = [] }) => {
   const [medications, setMedications] = useState(value?.medications || {})
-  const [commonFields, setCommonFields] = useState({
-    medicationSupplyType: value?.commonFields?.medicationSupplyType || medicationSupplyTypes[0].value,
-    provisionDate: value?.commonFields?.provisionDate || '',
-    patientExemptCode: value?.commonFields?.patientExemptCode || patientExemptCodes[0].value,
-    supplyRequestReason: value?.commonFields?.supplyRequestReason || '',
-    prescriptionIntercepted: value?.commonFields?.prescriptionIntercepted || ''
-  })
   const [genericDrug, setGenericDrug] = useState(null)
   const [genericDrugs, setGenericDrugs] = useState([])
   const [genericDrugOptions, setGenericDrugOptions] = useState([])
@@ -88,13 +36,6 @@ const MedicinesSupplied = ({ id, value, onChange, error, predefinedOptions = [] 
         if (medicationCodes.length > 0) {
           setSelectedDrugCode(medicationCodes[0])
         }
-      }
-      if (value.commonFields) {
-        setCommonFields(prevFields => ({
-          ...prevFields,
-          ...value.commonFields,
-          provisionDate: value.commonFields.provisionDate || new Date().toISOString().split('T')[0]
-        }))
       }
     }
   }, [])
@@ -118,18 +59,13 @@ const MedicinesSupplied = ({ id, value, onChange, error, predefinedOptions = [] 
     }, {})
 
     onChange({
-      medications: filteredMedications,
-      commonFields
+      medications: filteredMedications
     })
   }
 
   useEffect(() => {
     updateParent()
-  }, [medications, commonFields])
-
-  const handleCommonFieldChange = (field, value) => {
-    setCommonFields(prev => ({ ...prev, [field]: value }))
-  }
+  }, [medications])
 
   const debouncedSearch = debounce(async searchTerm => {
     if (!supabase) return
@@ -315,6 +251,7 @@ const MedicinesSupplied = ({ id, value, onChange, error, predefinedOptions = [] 
     // const selectedGenericDrug = genericDrugs[selectedDrugIndex]
     // const selectedPackOptions = packOptions[selectedDrugIndex] || []
 
+    console.log('PREDEFINED OPTIONS', predefinedOptions)
     return (
       <Box sx={{ mb: 4, p: 2, border: '1px solid #ccc', borderRadius: '4px' }}>
         <Typography variant='subtitle1'>Selected Medication</Typography>
@@ -421,85 +358,6 @@ const MedicinesSupplied = ({ id, value, onChange, error, predefinedOptions = [] 
       </Typography>
 
       <Box sx={{ mb: 4, p: 2, border: '1px solid #ccc', borderRadius: '4px' }}>
-        <Typography variant='subtitle1'>Common Prescription Details</Typography>
-        <FormControl fullWidth margin='normal'>
-          <InputLabel>Medication Supply Type</InputLabel>
-          <Select
-            value={commonFields.medicationSupplyType}
-            onChange={e => handleCommonFieldChange('medicationSupplyType', e.target.value)}
-            label='Medication Supply Type'
-          >
-            {medicationSupplyTypes.map(option => (
-              <MenuItem key={option.value} value={option.value}>
-                {option.label}
-              </MenuItem>
-            ))}
-          </Select>
-        </FormControl>
-        <TextField
-          label='Provision Date'
-          type='date'
-          value={commonFields.provisionDate}
-          onChange={e => handleCommonFieldChange('provisionDate', e.target.value)}
-          fullWidth
-          margin='normal'
-          InputLabelProps={{ shrink: true }}
-        />
-        {commonFields.medicationSupplyType !== 'OTC' && (
-          <FormControl fullWidth margin='normal'>
-            <InputLabel>Patient Exempt Code</InputLabel>
-            <Select
-              value={commonFields.patientExemptCode}
-              onChange={e => handleCommonFieldChange('patientExemptCode', e.target.value)}
-            >
-              {patientExemptCodes.map(option => (
-                <MenuItem key={option.value} value={option.value}>
-                  {option.label}
-                </MenuItem>
-              ))}
-            </Select>
-          </FormControl>
-        )}
-        {commonFields.medicationSupplyType === 'ES' && (
-          <>
-            <FormControl fullWidth margin='normal'>
-              <InputLabel>Supply Request Reason</InputLabel>
-              <Select
-                value={commonFields.supplyRequestReason}
-                onChange={e => handleCommonFieldChange('supplyRequestReason', e.target.value)}
-              >
-                {supplyRequestReasons.map(option => (
-                  <MenuItem key={option.value} value={option.value}>
-                    {option.label}
-                  </MenuItem>
-                ))}
-              </Select>
-            </FormControl>
-            {commonFields.supplyRequestReason === 'OTHER' && (
-              <TextField
-                label='Please specify'
-                value={commonFields.supplyRequestReasonOther || ''}
-                onChange={e => handleCommonFieldChange('supplyRequestReasonOther', e.target.value)}
-                fullWidth
-                margin='normal'
-              />
-            )}
-            <FormControl fullWidth margin='normal'>
-              <InputLabel>Prescription Intercepted</InputLabel>
-              <Select
-                value={commonFields.prescriptionIntercepted}
-                onChange={e => handleCommonFieldChange('prescriptionIntercepted', e.target.value)}
-              >
-                {prescriptionInterceptedOptions.map(option => (
-                  <MenuItem key={option.value} value={option.value}>
-                    {option.label}
-                  </MenuItem>
-                ))}
-              </Select>
-            </FormControl>
-          </>
-        )}
-
         {/* Horizontal scroll and add new buttons */}
         <Box sx={{ mb: 5 }}>
           <Box sx={{ display: 'flex', overflowX: 'auto', mb: 2 }}>
@@ -544,15 +402,6 @@ const MedicinesSupplied = ({ id, value, onChange, error, predefinedOptions = [] 
               Add New Drug
             </Button>
           </Box>
-          {/* <Button
-            variant='contained'
-            color='primary'
-            startIcon={<Icon icon='gala:add' />}
-            onClick={addMedication}
-            sx={{ mt: 2 }}
-          >
-            Add Medication
-          </Button> */}
           {error && <FormHelperText error>{error}</FormHelperText>}
         </Box>
 

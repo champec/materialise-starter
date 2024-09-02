@@ -123,6 +123,7 @@ const VideoCallPage = ({
           setIsLocked={setIsLocked}
           errors={errors}
           setErrors={setErrors}
+          sharedData={serviceDelivery.shared_data}
         />
       </Drawer>
 

@@ -31,7 +31,7 @@ import ServiceDeliverySummary from './ServiceDeliverySummary'
 import ServiceDeliveryChat from './ServiceDeliveryChat'
 import Icon from 'src/@core/components/icon'
 
-function ServiceDeliveryComponent({ appointment, onClose, onEdit }) {
+function ServiceDeliveryComponent({ appointment: appointmentObject, onClose, onEdit }) {
   const dispatch = useDispatch()
   const router = useRouter()
   const [loading, setLoading] = useState(true)
@@ -41,10 +41,11 @@ function ServiceDeliveryComponent({ appointment, onClose, onEdit }) {
   const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'info' })
   const [showChat, setShowChat] = useState(false)
   const serviceDeliveries = useSelector(state => state.services.serviceDeliveries)
+  const appointment = useSelector(state => state.services.appointments.find(a => a.id === appointmentObject?.id))
 
   useEffect(() => {
     if (appointment) {
-      dispatch(fetchServiceDeliveries(appointment?.id)).then(() => {
+      dispatch(fetchServiceDeliveries(appointmentObject?.id)).then(() => {
         console.log('serviceDeliveries', serviceDeliveries)
         setLoading(false)
       })

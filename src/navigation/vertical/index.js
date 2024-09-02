@@ -48,32 +48,37 @@ const navigation = (role, plan) => {
         {
           title: 'Service Calendar',
           path: '/services/calendar',
-          icon: 'streamline:waiting-appointments-calendar',
+          icon: 'mdi:calendar-clock',
           disabled: false
         },
         {
           title: 'Service List',
           path: '/services/service-list',
-          icon: 'bi:file-medical-fill',
+          icon: 'mdi:clipboard-list',
           disabled: false
         },
         {
           title: 'Quick Service',
           path: '/services/quick-service',
-          icon: 'bi:file-medical-fill',
+          icon: 'mdi:flash',
           disabled: false
         },
         {
           title: 'Service Stats',
           path: '/services/service-stats',
-          icon: 'bi:file-medical-fill',
+          icon: 'mdi:chart-bar',
           disabled: false
         },
         {
           title: 'Claims',
           path: '/services/claims',
-          icon: 'bi:file-medical-fill',
+          icon: 'mdi:file-document-check',
           disabled: false
+        },
+        {
+          title: 'Service Management',
+          path: '/services/service-management',
+          icon: 'mdi:cog'
         }
       ]
     },
@@ -93,24 +98,6 @@ const navigation = (role, plan) => {
           path: '/pharmacy/locum/locum-shift-manager',
           icon: 'fluent-emoji-high-contrast:office-worker',
           disabled: false
-        },
-        {
-          title: 'Quick Service',
-          path: '/services/invoices',
-          icon: 'bi:file-medical-fill',
-          disabled: true
-        },
-        {
-          title: 'Service Stats',
-          path: '/services/locum-invoices',
-          icon: 'bi:file-medical-fill',
-          disabled: true
-        },
-        {
-          title: 'Claims',
-          path: '/services/claims',
-          icon: 'bi:file-medical-fill',
-          disabled: true
         }
       ]
     },

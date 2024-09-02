@@ -33,7 +33,14 @@ import SafetyNettingChecklist from './CustomFormFields/SafetyNettingChecklist'
 import FeverPainCalculator from './CustomFormFields/FeverPainCalculator'
 import TargetRTI from './CustomFormFields/TargetRTI'
 import AdviceForm from './CustomFormFields/AdviceForm'
-
+import BloodPressureInput from './CustomFormFields/BloodPressureInput'
+import CustomDatePicker from './CustomFormFields/CustomDatePicker'
+import ABPMInput from './CustomFormFields/ABPMInput'
+import CustomNMSIntervention from './CustomFormFields/CustomNMSIntervention'
+import CustomNMSEngagement from './CustomFormFields/CustomNMSEngagement'
+import CustomNMSFollowUp from './CustomFormFields/CustomNMSFollowUp'
+import SimpleMedicineSelect from './CustomFormFields/SimpleMedicineSelect'
+import BiometricMeasurements from './CustomFormFields/BiometricMeasurements'
 // Add these interfaces
 interface ProgressionCriteria {
   type: 'allYes' | 'allNo' | 'someYes' | 'any'
@@ -124,7 +131,8 @@ const AdvancedFormEngine: React.FC<AdvancedFormEngineProps> = ({
   isLocked,
   setIsLocked,
   errors,
-  setErrors
+  setErrors,
+  sharedData
 }) => {
   console.log('FORM DEFINITION', { formDefinition, currentNodeId })
   // const [currentNodeId, setCurrentNodeId] = useState(formDefinition.startNode)
@@ -164,7 +172,7 @@ const AdvancedFormEngine: React.FC<AdvancedFormEngineProps> = ({
     }
 
     // Determine the new path
-    const result = currentNode.next(answer)
+    const result = typeof currentNode.next === 'function' ? currentNode.next(answer) : currentNode.next
     let newNextNode: string | null = null
     let data: any = undefined
 
@@ -175,7 +183,12 @@ const AdvancedFormEngine: React.FC<AdvancedFormEngineProps> = ({
       newNextNode = result
     }
 
-    const oldResult = oldAnswer !== undefined ? currentNode.next(oldAnswer) : null
+    const oldResult =
+      oldAnswer !== undefined
+        ? typeof currentNode.next === 'function'
+          ? currentNode.next(oldAnswer)
+          : currentNode.next
+        : null
     let oldNextNode: string | null = null
 
     if (typeof oldResult === 'object' && oldResult !== null) {
@@ -245,7 +258,7 @@ const AdvancedFormEngine: React.FC<AdvancedFormEngineProps> = ({
       return
     }
 
-    const result = currentNode.next(answer)
+    const result = typeof currentNode.next === 'function' ? currentNode.next(answer) : currentNode.next
     let nextId: string | null = null
     let data: any = undefined
 
@@ -278,7 +291,7 @@ const AdvancedFormEngine: React.FC<AdvancedFormEngineProps> = ({
       return
     }
 
-    const result = currentNode.next(formData[currentNodeId])
+    const result = typeof currentNode.next === 'function' ? currentNode.next(formData[currentNodeId]) : currentNode.next
     let nextId: string | null = null
 
     if (typeof result === 'string' || result === null) {
@@ -501,6 +514,20 @@ const AdvancedFormEngine: React.FC<AdvancedFormEngineProps> = ({
             {error && <FormHelperText error>{error}</FormHelperText>}
           </Box>
         )
+      case 'number':
+        return (
+          <TextField
+            fullWidth
+            id={currentNodeId}
+            label={field.question}
+            value={formData[currentNodeId] || ''}
+            onChange={e => handleAnswer(e.target.value)}
+            error={!!error}
+            helperText={error}
+            required={field.required}
+            type='number'
+          />
+        )
       case 'radio':
         return (
           <Box>
@@ -541,7 +568,68 @@ const AdvancedFormEngine: React.FC<AdvancedFormEngineProps> = ({
             />
           )
         }
-        if (field.component === 'AdviceForm') {
+        if (field.component === 'NMSInterventionDetails') {
+          return (
+            <CustomNMSIntervention
+              value={formData[currentNodeId] || {}}
+              onChange={(value: any) => handleAnswer(value)}
+              error={error}
+              question={field.question}
+              sharedData={sharedData}
+            />
+          )
+        }
+        if (field.component === 'NMSEngagementDetails') {
+          return (
+            <CustomNMSEngagement
+              value={formData[currentNodeId] || {}}
+              onChange={(value: any) => handleAnswer(value)}
+              error={error}
+              question={field.question}
+              __contextData={field.__contextData}
+            />
+          )
+        }
+        if (field.component === 'NMSFollowUpDetails') {
+          return (
+            <CustomNMSFollowUp
+              value={formData[currentNodeId] || {}}
+              onChange={(value: any) => handleAnswer(value)}
+              error={error}
+              question={field.question}
+              sharedData={sharedData}
+            />
+          )
+        }
+        if (field.component === 'BloodPressureInput') {
+          return (
+            <BloodPressureInput
+              id={currentNodeId}
+              value={formData[currentNodeId] || {}}
+              onChange={(value: any) => handleAnswer(value)}
+              error={error}
+            />
+          )
+        } else if (field.component === 'ABPMInput') {
+          return (
+            <ABPMInput
+              id={currentNodeId}
+              value={formData[currentNodeId] || {}}
+              onChange={(value: any) => handleAnswer(value)}
+              error={error}
+              question={field.question}
+            />
+          )
+        } else if (field.component === 'DatePicker') {
+          return (
+            <CustomDatePicker
+              id={currentNodeId}
+              value={formData[currentNodeId] || new Date()}
+              onChange={(value: any) => handleAnswer(value)}
+              error={error}
+            />
+          )
+        } else if (field.component === 'AdviceForm') {
           return (
             <AdviceForm
               id={currentNodeId}
@@ -553,8 +641,7 @@ const AdvancedFormEngine: React.FC<AdvancedFormEngineProps> = ({
               progressionCriteria={field.progressionCriteria}
             />
           )
-        }
-        if (field.component === 'TargetRTI') {
+        } else if (field.component === 'TargetRTI') {
           return (
             <TargetRTI
               id={currentNodeId}
@@ -587,13 +674,24 @@ const AdvancedFormEngine: React.FC<AdvancedFormEngineProps> = ({
               predefinedOptions={field.predefinedOptions || []}
             />
           )
-        } else if (field.component === 'FeverPainCalculator') {
+        } else if (field.component === 'SimpleMedicineSelect') {
           return (
-            <FeverPainCalculator
+            <SimpleMedicineSelect
               id={currentNodeId}
               value={formData[currentNodeId] || {}}
               onChange={(value: any) => handleAnswer(value)}
               error={error}
+              predefinedOptions={field?.predefinedOptions || []}
+            />
+          )
+        } else if (field.component === 'BiometricMeasurements') {
+          return (
+            <BiometricMeasurements
+              id={currentNodeId}
+              value={formData[currentNodeId] || {}}
+              onChange={(value: any) => handleAnswer(value)}
+              error={error}
+              question={field.question}
             />
           )
         } else if (field.component === 'CodeSelect') {
@@ -780,7 +878,7 @@ const reconstructHistory = (formDefinition: FormDefinition, initialData: Record<
     }
 
     try {
-      const nextResult = currentNode.next(answer)
+      const nextResult = typeof currentNode.next === 'function' ? currentNode.next(answer) : currentNode.next
       console.log(`Next result:`, nextResult)
 
       if (!nextResult) {

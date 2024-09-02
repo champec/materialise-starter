@@ -35,7 +35,7 @@ const Transition = forwardRef(function Transition(props, ref) {
   return <Fade ref={ref} {...props} />
 })
 
-const BookingComponent = ({ appointment, onClose }) => {
+const BookingComponent = ({ appointment: appointmentObject, onClose }) => {
   const dispatch = useDispatch()
   const services = useSelector(selectServices)
   const organisationId = useSelector(state => state.organisation.organisation.id)
@@ -50,6 +50,7 @@ const BookingComponent = ({ appointment, onClose }) => {
   const [objectToSubmit, setObjectToSubmit] = useState(null)
   const [editingAppointment, setEditingAppointment] = useState(false)
   const { submitAppointment, updateExistingAppointment, loading } = useAppointmentSubmission()
+  const appointment = useSelector(state => state.services.appointments.find(a => a.id === appointmentObject?.id))
 
   const showMessage = (severity, message) => {
     setSnackbarSeverity(severity)
@@ -134,7 +135,7 @@ const BookingComponent = ({ appointment, onClose }) => {
         gp_object
       } = appointment
 
-      console.log('DETAILS SENDING TO FORM DATA', { details })
+      console.log('DETAILS SENDING TO FORM DATA', { appointment })
 
       setFormData({
         pharmacy_id,

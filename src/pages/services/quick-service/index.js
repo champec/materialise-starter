@@ -91,7 +91,7 @@ const QuickServiceDeliveryComponent = () => {
   const userId = useSelector(state => state.user.user.id)
   const services = useSelector(selectServices)
   const [activeStep, setActiveStep] = useState(0)
-  const [config, setConfig] = useState({ appointmentType: '', service: '', stage: '' })
+  const [config, setConfig] = useState({ appointmentType: '', service: '', stage: '', shared_data: {} })
   const [formDef, setFormDef] = useState({})
   const [loadingRemote, setLoadingRemote] = useState(false)
   const [appointmentDetails, setAppointmentDetails] = useState({
@@ -411,7 +411,7 @@ const QuickServiceDeliveryComponent = () => {
         service_id: config.service,
         appointment_type: config.appointmentType,
         overall_status: 'Scheduled',
-        current_stage_id: config.stage,
+        current_stage_id: config.stage.id,
         scheduled_time: appointmentDetails.scheduledTime,
         last_updated: new Date().toISOString(),
         details: {
@@ -447,10 +447,11 @@ const QuickServiceDeliveryComponent = () => {
           status: 'Completed',
           completed_at: new Date().toISOString(),
           details: formData,
-          outcome: formData.outcome || 'completed'
+          outcome: formData.outcome || 'completed',
+          shared_data: formData?.medicationDetails?.medications ? formData?.medicationDetails?.medications : null
         })
         .eq('appointment_id', appointmentId)
-        .eq('service_stage_id', config.stage)
+        .eq('service_stage_id', config.stage.id)
         .select('id')
 
       if (updateError) {
@@ -569,6 +570,7 @@ const QuickServiceDeliveryComponent = () => {
               <Select
                 value={config.appointmentType || 'in-person'}
                 onChange={e => handleConfigChange('appointmentType', e.target.value)}
+                label='Appointment Type'
               >
                 <MenuItem value='in-person'>In-Person</MenuItem>
                 <MenuItem value='remote-video'>Remote Video</MenuItem>
@@ -597,6 +599,7 @@ const QuickServiceDeliveryComponent = () => {
               <Select
                 value={config.service || services[1]}
                 onChange={e => handleConfigChange('service', e.target.value)}
+                label='Service'
               >
                 {services.map(service => (
                   <MenuItem key={service.id} value={service.id}>
@@ -608,9 +611,13 @@ const QuickServiceDeliveryComponent = () => {
             {config.service && (
               <FormControl fullWidth>
                 <InputLabel>Stage</InputLabel>
-                <Select value={config.stage} onChange={e => handleConfigChange('stage', e.target.value)}>
+                <Select
+                  value={config.stage}
+                  onChange={e => handleConfigChange('stage', e.target.value)}
+                  label='Stage / Type'
+                >
                   {serviceStages.map(stage => (
-                    <MenuItem key={stage.id} value={stage.id}>
+                    <MenuItem key={stage.id} value={stage}>
                       {stage.name}
                     </MenuItem>
                   ))}
@@ -680,6 +687,7 @@ const QuickServiceDeliveryComponent = () => {
                     setIsLocked={setIsLocked}
                     errors={errors}
                     setErrors={setErrors}
+                    sharedData={config.shared_data}
                   />
                 </Drawer>
               </>
@@ -704,6 +712,7 @@ const QuickServiceDeliveryComponent = () => {
                     setIsLocked={setIsLocked}
                     errors={errors}
                     setErrors={setErrors}
+                    sharedData={config.shared_data}
                   />
                 )}
               </Box>
@@ -794,7 +803,7 @@ const QuickServiceDeliveryComponent = () => {
                 </Typography>
                 <Typography>Appointment Type: {config.appointmentType}</Typography>
                 <Typography>Service: {services.find(s => s.id === config.service)?.name}</Typography>
-                <Typography>Stage: {serviceStages.find(s => s.id === config.stage)?.name}</Typography>
+                <Typography>Stage: {serviceStages.find(s => s.id === config.stage.id)?.name}</Typography>
                 <Typography>
                   Patient: {appointmentDetails.patient?.full_name || appointmentDetails.patientName}
                 </Typography>
@@ -811,7 +820,7 @@ const QuickServiceDeliveryComponent = () => {
                 </Typography>
                 <Typography>Appointment Type: {config.appointmentType}</Typography>
                 <Typography>Service: {services.find(s => s.id === config.service)?.name}</Typography>
-                <Typography>Stage: {serviceStages.find(s => s.id === config.stage)?.name}</Typography>
+                <Typography>Stage: {serviceStages.find(s => s.id === config.stage?.id)?.name}</Typography>
                 <Typography>
                   Patient: {appointmentDetails.patient?.full_name || appointmentDetails.patientName}
                 </Typography>

@@ -64,8 +64,15 @@ function ServiceDeliveryPage() {
       setServiceDelivery(deliveryData)
       setAppointment(appointmentData)
 
-      const formDef = getFormDefinitionForService(appointmentData.ps_service_stages?.id)
-      console.log('FORM DEFINTIION', formDef, 'delivery data', deliveryData)
+      const formDef = getFormDefinitionForService(deliveryData.ps_service_stages)
+      console.log(
+        'FORM DEFINTIION',
+        formDef,
+        'delivery data',
+        deliveryData,
+        'appointment data',
+        appointmentData.ps_service_stages.id
+      )
       setCurrentNodeId(formDef?.startNode)
       setHistory([formDef?.startNode])
       setFormDefinition(formDef)
@@ -88,7 +95,13 @@ function ServiceDeliveryPage() {
     try {
       const { error } = await supabase
         .from('ps_service_delivery')
-        .update({ status: 'completed', details: formDataToSubmit })
+        .update({
+          status: 'completed',
+          details: formDataToSubmit,
+          shared_data: formDataToSubmit?.medicationDetails?.medications
+            ? formDataToSubmit?.medicationDetails?.medications
+            : null
+        })
         .eq('id', id)
 
       if (error) throw error
@@ -107,7 +120,11 @@ function ServiceDeliveryPage() {
     try {
       const { error } = await supabase
         .from('ps_service_delivery')
-        .update({ details: formData, status: 'in_progress' })
+        .update({
+          details: formData,
+          status: 'in_progress',
+          shared_data: formData?.medicationDetails?.medications ? formData?.medicationDetails?.medications : null
+        })
         .eq('id', id)
 
       if (error) throw error
@@ -192,6 +209,7 @@ function ServiceDeliveryPage() {
           setIsLocked={setIsLocked}
           errors={errors}
           setErrors={setErrors}
+          sharedData={serviceDelivery.shared_data}
         />
       )}
 

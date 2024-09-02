@@ -426,7 +426,7 @@ function PharmacyServicesPage() {
         </Grid>
       </Container>
       <Footer />
-      <Drawer anchor='left' open={isDrawerOpen} onClose={handleCloseDrawer} sx={{ zIndex: 10000 }}>
+      <Drawer anchor='left' open={isDrawerOpen} onClose={handleCloseDrawer} sx={{ zIndex: 1201 }}>
         <BookingComponent appointment={editingAppointment} onClose={handleCloseDrawer} />
       </Drawer>
 
@@ -440,6 +440,7 @@ function PharmacyServicesPage() {
           }}
           maxWidth='lg'
           fullWidth
+          sx={{ zIndex: 1200 }}
         >
           <DialogContent sx={{ minWidth: '800px', minHeight: '600px' }}>
             <ServiceDeliveryComponent

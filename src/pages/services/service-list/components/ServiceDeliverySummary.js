@@ -106,7 +106,7 @@ const ServiceDeliverySummary = ({ deliveryId, onClose }) => {
       setPrescriptionId(data?.ps_prescriptions?.[0]?.id)
 
       // Get form definition using the utility function
-      const formDef = getFormDefinitionForService(data.ps_appointments.ps_services.id)
+      const formDef = getFormDefinitionForService(data.ps_service_stages)
       setFormDefinition(formDef)
     } catch (err) {
       console.error('Error fetching delivery data:', err)

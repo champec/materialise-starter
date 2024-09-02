@@ -44,7 +44,7 @@ function ServiceDeliveryPage() {
       setAppointment(appointmentData)
 
       // Get form definition based on the service
-      const formDef = getFormDefinitionForService(appointmentData.ps_services.id)
+      const formDef = getFormDefinitionForService(appointmentData.ps_services)
       setFormDefinition(formDef)
     } catch (error) {
       console.error('Error fetching data:', error)
@@ -116,6 +116,7 @@ function ServiceDeliveryPage() {
         initialData={serviceDelivery.details || {}}
         onSubmit={handleFormSubmit}
         onSaveProgress={handleSaveProgress}
+        sharedData={serviceDelivery.shared_data}
       />
 
       <Box sx={{ mt: 3, display: 'flex', justifyContent: 'space-between' }}>

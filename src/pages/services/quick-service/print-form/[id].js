@@ -105,7 +105,7 @@ const PrintServiceDelivery = () => {
 
           setDeliveryData(data)
 
-          const formDef = getFormDefinitionForService(data.ps_appointments.ps_services.id)
+          const formDef = getFormDefinitionForService(data.ps_service_stages)
           setFormDefinition(formDef)
         } catch (err) {
           console.error('Error fetching delivery data:', err)
