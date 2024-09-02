@@ -38,7 +38,7 @@ import CustomDatePicker from './CustomFormFields/CustomDatePicker'
 import ABPMInput from './CustomFormFields/ABPMInput'
 import CustomNMSIntervention from './CustomFormFields/CustomNMSIntervention'
 import CustomNMSEngagement from './CustomFormFields/CustomNMSEngagement'
-import CustomNMSFollowUp from './CustomFormFields/CustomNMSFollowUp'
+import CustomNMSFollowUp from './CustomFormFields/CustomNMSFollowup'
 import SimpleMedicineSelect from './CustomFormFields/SimpleMedicineSelect'
 import BiometricMeasurements from './CustomFormFields/BiometricMeasurements'
 // Add these interfaces
