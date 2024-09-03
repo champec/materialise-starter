@@ -35,7 +35,7 @@ import {
   DialogTitle,
   DialogActions
 } from '@mui/material'
-import { DataGrid } from '@mui/x-data-grid'
+import { DataGrid, GridToolbar } from '@mui/x-data-grid'
 import BatchActionsModal from './components/BatchActionsModal'
 import Icon from 'src/@core/components/icon'
 import BookingComponent from './BookingComponent'
@@ -420,7 +420,11 @@ function PharmacyServicesPage() {
               onSelectionModelChange={newSelectionModel => {
                 setSelectedAppointments(newSelectionModel)
               }}
+              components={{
+                Toolbar: GridToolbar
+              }}
               autoHeight
+              exp
             />
           </Grid>
         </Grid>
