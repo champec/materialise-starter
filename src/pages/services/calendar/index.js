@@ -112,7 +112,7 @@ const AppCalendar = ({ addCalendarType, updateCalendarType, deleteCalendarType }
 
   const handleBookCalendarSidebar = event => {
     // setOpenServiceSelectorModal(true)
-    // console.log('NEW BOOKING TO BE MADE')
+    console.log('NEW BOOKING TO BE MADE')
     setIsDrawerOpen(true)
   }
 
@@ -191,6 +191,7 @@ const AppCalendar = ({ addCalendarType, updateCalendarType, deleteCalendarType }
           // handleAddEventSidebarToggle={handleBookCalendarSidebar}
           // handleAddCalendarSidebarToggle={handleAddCalendarSidebarToggle}
           // handleAddBookingSidebarToggle={handleAddBookingSidebarToggle}
+          handleBookCalendarSidebar={handleBookCalendarSidebar}
           openDelivery={openDelivery}
           // fetchSelectedBooking={fetchSelectedBooking}
           appointment

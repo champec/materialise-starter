@@ -17,7 +17,11 @@ import {
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns'
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider'
 import { createAppointment, updateAppointment } from 'src/store/apps/pharmacy-services/pharmacyServicesThunks'
-import { selectServices, selectServiceStages } from 'src/store/apps/pharmacy-services/pharmacyServicesSlice'
+import {
+  selectServices,
+  selectServiceStages,
+  setSelectedAppointmentStartDate
+} from 'src/store/apps/pharmacy-services/pharmacyServicesSlice'
 
 import AddEditPatientForm from './components/AddEditPatientForm'
 import { Stack, Fade } from '@mui/material'
@@ -68,6 +72,7 @@ const BookingComponent = ({ appointment: appointmentObject, onClose }) => {
   const [editingAppointment, setEditingAppointment] = useState(false)
   const { submitAppointment, updateExistingAppointment, loading } = useAppointmentSubmission()
   const appointment = useSelector(state => state.services.appointments.find(a => a.id === appointmentObject?.id))
+  const selectedStartDate = useSelector(state => state.services.selectedAppointmentStartDate)
 
   const showMessage = (severity, message) => {
     setSnackbarSeverity(severity)
@@ -176,14 +181,25 @@ const BookingComponent = ({ appointment: appointmentObject, onClose }) => {
       setSelectedPatient(patient_object)
       setSelectedGP(gp_object)
       setSelectedService(service_id)
+    } else if (selectedStartDate) {
+      console.log('SELECTED START DATE', selectedStartDate)
+      setFormData(prevData => ({
+        ...prevData,
+        scheduled_time: selectedStartDate
+      }))
     }
   }, [appointment])
+
+  console.log('selectedStartDate', selectedStartDate)
 
   useEffect(() => {
     if (appointment) {
       // ... (setting formData as shown above)
 
       console.log('Form data after initialization:', { appointment, formData })
+    }
+    return () => {
+      dispatch(setSelectedAppointmentStartDate(null))
     }
   }, [appointment])
 

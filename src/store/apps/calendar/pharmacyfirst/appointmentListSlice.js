@@ -100,12 +100,17 @@ export const createThreadAndSendSMS = createAsyncThunk(
 
     const { data, error } = await supabase
       .from('sms_threads')
-      .insert({
-        patientId,
-        appointment_id: appointmentId,
-        organisation_id: orgId,
-        patient_phone_number: phoneNumber
-      })
+      .upsert(
+        {
+          patientId,
+          appointment_id: appointmentId,
+          organisation_id: orgId,
+          patient_phone_number: phoneNumber
+        },
+        {
+          onConflict: 'appointment_id'
+        }
+      )
       .select('id')
       .single()
 

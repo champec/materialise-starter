@@ -126,13 +126,39 @@ export const createAppointment = createAsyncThunk(
 
 export const updateAppointment = createAsyncThunk(
   'pharmacyServices/updateAppointment',
-  async (appointmentData, { getState, dispatch }) => {
-    const { id, ps_services, ...updateData } = appointmentData
+  async ({ appointmentData, sendText }, { getState, dispatch }) => {
+    const { id, ps_services, start, end, p_service_id, title, ...updateData } = appointmentData
     console.log('APPOINTMENT DATA', updateData)
     const { data, error } = await supabase.from('ps_appointments').update(updateData).eq('id', id).select().single()
 
+    if (sendText) {
+      const threadId = await supabase.from('sms_threads').select('*').eq('appointment_id', id).single()
+      console.log('THREAD ID', threadId)
+      const message = `Your appointment has been updated: ${data.scheduled_time}`
+      await dispatch(appendMessageToThread({ threadId: threadId.id, message: message }))
+    }
+
     if (error) throw error
     dispatch(fetchAppointments())
+    return data
+  }
+)
+
+export const appendMessageToThread = createAsyncThunk(
+  'appointmentList/appendMessageToThread',
+  async ({ threadId, message }, { getState }) => {
+    const orgId = getState().organisation.organisation.id
+
+    const { data, error } = await supabase
+      .from('sms_messages')
+      .insert({ thread_id: threadId, message: message, sender_id: orgId })
+      .select('*')
+
+    if (error) {
+      console.error(error)
+      throw error // Consider throwing the error to be handled by Redux Toolkit
+    }
+
     return data
   }
 )

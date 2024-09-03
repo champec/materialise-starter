@@ -1,5 +1,5 @@
 // ** React Import
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
 
 // ** Full Calendar & it's Plugins
 import FullCalendar from '@fullcalendar/react'
@@ -10,7 +10,16 @@ import interactionPlugin from '@fullcalendar/interaction'
 import { Tooltip } from '@mui/material'
 // ** Icon Imports
 import Icon from 'src/@core/components/icon'
-
+import { Dialog, DialogTitle, DialogContent, DialogActions, Button } from '@mui/material'
+import {
+  setSelectedAppointmentStartDate,
+  tempUpdateAppointment,
+  revertAppointmentUpdate,
+  clearTempOriginalAppointment
+} from '../../../store/apps/pharmacy-services/pharmacyServicesSlice'
+import { updateAppointment } from '../../../store/apps/pharmacy-services/pharmacyServicesThunks'
+import { useSelector } from 'react-redux'
+import { format } from 'date-fns'
 const blankEvent = {
   title: '',
   start: '',
@@ -52,6 +61,12 @@ const Calendar = props => {
 
   // ** Refs
   const calendarRef = useRef()
+  const [isConfirmDialogOpen, setIsConfirmDialogOpen] = useState(false)
+  const [draggedEventId, setDraggedEventId] = useState(null)
+  const tempUpdatedAppointment = useSelector(state =>
+    state.services.appointments.find(app => app.id === state.services.tempOriginalAppointment?.id)
+  )
+
   useEffect(() => {
     if (calendarApi === null) {
       // @ts-ignore
@@ -83,6 +98,46 @@ const Calendar = props => {
     )
   }
 
+  const handleEventDrop = info => {
+    const { event, oldEvent } = info
+    const updatedAppointment = {
+      ...event.extendedProps,
+      id: event.id,
+      start: event.start,
+      end: event.end,
+      title: event.title,
+      scheduled_time: event.start // Make sure to update the scheduled_time
+    }
+
+    dispatch(
+      tempUpdateAppointment({
+        id: event.id,
+        updatedAppointment
+      })
+    )
+    setDraggedEventId(event.id)
+    setIsConfirmDialogOpen(true)
+  }
+
+  const handleConfirmMove = sendText => {
+    if (tempUpdatedAppointment) {
+      dispatch(updateAppointment({ appointmentData: tempUpdatedAppointment, sendText }))
+      dispatch(clearTempOriginalAppointment())
+      setIsConfirmDialogOpen(false)
+    }
+  }
+
+  const handleCancelMove = () => {
+    dispatch(revertAppointmentUpdate())
+    setIsConfirmDialogOpen(false)
+  }
+
+  const handleDateClick = info => {
+    console.log('selected start date INFO', info)
+    dispatch(setSelectedAppointmentStartDate(info.date))
+    handleBookCalendarSidebar()
+  }
+
   if (store) {
     // ** calendarOptions(Props)
     const selectedCalendars = store.selectedCalendars
@@ -97,6 +152,9 @@ const Calendar = props => {
         start: 'sidebarToggle, prev, next, title',
         end: 'dayGridMonth,timeGridWeek,timeGridDay,listMonth'
       },
+      editable: true,
+      eventDrop: handleEventDrop,
+      dateClick: handleDateClick,
       views: {
         week: {
           titleFormat: { year: 'numeric', month: 'long', day: 'numeric' }
@@ -178,27 +236,27 @@ const Calendar = props => {
           }
         }
       },
-      dateClick(info) {
-        const ev = { ...blankEvent }
-        ev.start = info.date
-        ev.end = info.date
-        ev.allDay = info.allDay
+      // dateClick(info) {
+      //   const ev = { ...blankEvent }
+      //   ev.start = info.date
+      //   ev.end = info.date
+      //   ev.allDay = info.allDay
 
-        // @ts-ignore
-        dispatch(handleSelectEvent(ev))
-        console.log('DATE CLICKED ')
-        appointment ? handleBookCalendarSidebar() : handleAddEventSidebarToggle()
-      },
+      //   // @ts-ignore
+      //   dispatch(handleSelectEvent(ev))
+      //   console.log('DATE CLICKED ')
+      //   appointment ? handleBookCalendarSidebar() : handleAddEventSidebarToggle()
+      // },
 
       /*
             Handle event drop (Also include dragged event)
             ? Docs: https://fullcalendar.io/docs/eventDrop
             ? We can use `eventDragStop` but it doesn't return updated event so we have to use `eventDrop` which returns updated event
           */
-      eventDrop({ event: droppedEvent }) {
-        const bookingId = droppedEvent._def.extendedProps.booking_id
-        dispatch(updateEvent({ event: droppedEvent, orgId: orgId, bookingId: bookingId }))
-      },
+      // eventDrop({ event: droppedEvent }) {
+      //   const bookingId = droppedEvent._def.extendedProps.booking_id
+      //   dispatch(updateEvent({ event: droppedEvent, orgId: orgId, bookingId: bookingId }))
+      // },
 
       /*
             Handle event resize
@@ -228,12 +286,36 @@ const Calendar = props => {
 
     // @ts-ignore
     return (
-      <FullCalendar
-        {...calendarOptions}
-        datesSet={({ start, end }) => {
-          dispatch(updateViewDates({ viewStart: start, viewEnd: end }))
-        }}
-      />
+      <>
+        <FullCalendar
+          {...calendarOptions}
+          datesSet={({ start, end }) => {
+            dispatch(updateViewDates({ viewStart: start, viewEnd: end }))
+          }}
+        />
+        <Dialog open={isConfirmDialogOpen} onClose={handleCancelMove}>
+          <DialogTitle>Confirm Appointment Change</DialogTitle>
+          <DialogContent>
+            {tempUpdatedAppointment && (
+              <>
+                You are about to change the appointment for {tempUpdatedAppointment.title}.<br />
+                {/* Old time: {format(new Date(tempUpdatedAppointment.scheduled_time), 'PPpp')}
+                <br /> */}
+                New time: {format(new Date(tempUpdatedAppointment.start), 'PPpp')}
+                <br />
+                Do you want to send a text message to the patient about this appointment change?
+              </>
+            )}
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={handleCancelMove}>Cancel</Button>
+            <Button onClick={() => handleConfirmMove(false)}>Don't Send Text</Button>
+            <Button onClick={() => handleConfirmMove(true)} color='primary'>
+              Send Text
+            </Button>
+          </DialogActions>
+        </Dialog>
+      </>
     )
   } else {
     return null
