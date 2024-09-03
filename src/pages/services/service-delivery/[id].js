@@ -12,12 +12,15 @@ import {
   DialogContentText,
   DialogTitle,
   Snackbar,
-  Alert
+  Alert,
+  Drawer
 } from '@mui/material'
 import { supabaseOrg as supabase } from 'src/configs/supabase'
 import AdvancedFormEngine from '../../../views/apps/services/serviceDelivery/components/AdvancedFormEngine'
 import { getFormDefinitionForService } from '../../../views/apps/services/serviceDelivery/components/utils/getFormDefinitionForService'
 import VideoCallPage from './remote-video'
+import ConsultationNotesComponent from '../service-stats/AIConsult'
+import Icon from 'src/@core/components/icon'
 
 function ServiceDeliveryPage() {
   const router = useRouter()
@@ -35,6 +38,15 @@ function ServiceDeliveryPage() {
   const [history, setHistory] = useState([formDefinition?.startNode])
   const [errors, setErrors] = useState({})
   const [isLocked, setIsLocked] = useState(false)
+
+  // AI CHAT BOT STATES
+  const [notes, setNotes] = useState('')
+  const [recommendation, setRecommendation] = useState(null)
+  const [conversationHistory, setConversationHistory] = useState([])
+  const [chatBotMessages, setChatBotMessages] = useState([])
+  const [aiDrawerOpen, setAiDrawerOpen] = useState(false)
+
+  // END AI CHAT BOT STATES
 
   useEffect(() => {
     if (id) {
@@ -158,21 +170,53 @@ function ServiceDeliveryPage() {
 
   if (appointment.appointment_type === 'remote-video' && appointment.remote_details) {
     return (
-      <VideoCallPage
-        appointment={appointment}
-        serviceDelivery={serviceDelivery}
-        formDefinition={formDefinition}
-        onSubmit={handleFormSubmit}
-        onSaveProgress={handleSaveProgress}
-        setCurrentNodeId={setCurrentNodeId}
-        currentNodeId={currentNodeId}
-        history={history}
-        setHistory={setHistory}
-        setErrors={setErrors}
-        errors={errors}
-        formData={formData}
-        setFormData={setFormData}
-      />
+      <>
+        <Button startIcon={<Icon icon='mdi:robot' />} onClick={() => setAiDrawerOpen(true)}>
+          AI Assistance
+        </Button>
+        <VideoCallPage
+          appointment={appointment}
+          serviceDelivery={serviceDelivery}
+          formDefinition={formDefinition}
+          onSubmit={handleFormSubmit}
+          onSaveProgress={handleSaveProgress}
+          setCurrentNodeId={setCurrentNodeId}
+          currentNodeId={currentNodeId}
+          history={history}
+          setHistory={setHistory}
+          setErrors={setErrors}
+          errors={errors}
+          formData={formData}
+          setFormData={setFormData}
+        />
+        <Drawer
+          anchor='right'
+          open={aiDrawerOpen}
+          onClose={() => setAiDrawerOpen(false)}
+          sx={{
+            '& .MuiDrawer-paper': {
+              width: '40%',
+              maxWidth: '600px',
+              padding: 2
+            }
+          }}
+        >
+          <Box>
+            <Typography variant='h6'>AI Assistance</Typography>
+          </Box>
+          <ConsultationNotesComponent
+            patientInfo={appointment?.patient_object}
+            notes={notes}
+            setNotes={setNotes}
+            recommendation={recommendation}
+            setRecommendation={setRecommendation}
+            conversationHistory={conversationHistory}
+            setConversationHistory={setConversationHistory}
+            chatBotMessages={chatBotMessages}
+            setChatBotMessages={setChatBotMessages}
+          />
+        </Drawer>
+      </>
     )
   }
 
@@ -188,6 +232,9 @@ function ServiceDeliveryPage() {
         <Typography variant='subtitle1' gutterBottom>
           Stage: {serviceDelivery.ps_service_stages.name}
         </Typography>
+        <Button startIcon={<Icon icon='mdi:robot' />} onClick={() => setAiDrawerOpen(true)}>
+          AI Assistance
+        </Button>
       </Paper>
 
       {formDefinition && (
@@ -218,6 +265,33 @@ function ServiceDeliveryPage() {
           Back to Appointments
         </Button>
       </Box>
+      <Drawer
+        anchor='right'
+        open={aiDrawerOpen}
+        onClose={() => setAiDrawerOpen(false)}
+        sx={{
+          '& .MuiDrawer-paper': {
+            width: '40%',
+            maxWidth: '600px',
+            padding: 2
+          }
+        }}
+      >
+        <Box>
+          <Typography variant='h6'>AI Assistance</Typography>
+        </Box>
+        <ConsultationNotesComponent
+          patientInfo={patientInfo}
+          notes={notes}
+          setNotes={setNotes}
+          recommendation={recommendation}
+          setRecommendation={setRecommendation}
+          conversationHistory={conversationHistory}
+          setConversationHistory={setConversationHistory}
+          chatBotMessages={chatBotMessages}
+          setChatBotMessages={setChatBotMessages}
+        />
+      </Drawer>
 
       <Dialog open={confirmDialogOpen} onClose={() => setConfirmDialogOpen(false)}>
         <DialogTitle>Confirm Submission</DialogTitle>

@@ -75,13 +75,24 @@ function RecommendationSection({ title, data }) {
   )
 }
 
-export default function ClinicalNotesComponent({ patientInfo }) {
-  const [notes, setNotes] = useState('')
-  const [recommendation, setRecommendation] = useState(null)
-  const [conversationHistory, setConversationHistory] = useState([])
+export default function ClinicalNotesComponent({
+  patientInfo,
+  notes,
+  setNotes,
+  recommendation,
+  setRecommendation,
+  conversationHistory,
+  setConversationHistory,
+  chatBotMessages,
+  setChatBotMessages
+}) {
+  // const [notes, setNotes] = useState('')
+  // const [recommendation, setRecommendation] = useState(null)
+  // const [conversationHistory, setConversationHistory] = useState([])
+  // const [chatBotMessages, setChatBotMessages] = useState([])
+
   const [isLoading, setIsLoading] = useState(false)
   const [isChatbotMode, setIsChatbotMode] = useState(false)
-  const [chatBotMessages, setChatBotMessages] = useState([])
   const fetchTimeoutRef = useRef(null)
 
   const fetchRecommendation = async (notes, history) => {
@@ -128,6 +139,8 @@ export default function ClinicalNotesComponent({ patientInfo }) {
     [conversationHistory, debouncedFetchRecommendation]
   )
 
+  console.log('CHATBOT MESSAGES', chatBotMessages)
+
   return (
     <Box sx={{ display: 'flex', height: '100vh', p: 2 }}>
       <Paper elevation={3} sx={{ flex: 1, mr: 1, p: 2, overflowY: 'auto' }}>
@@ -150,7 +163,16 @@ export default function ClinicalNotesComponent({ patientInfo }) {
           <TextField
             fullWidth
             multiline
-            rows={20}
+            sx={{
+              height: '90%',
+              '& .MuiInputBase-root': {
+                height: '100%'
+              },
+              '& .MuiInputBase-input': {
+                height: '100% !important',
+                overflowY: 'auto'
+              }
+            }}
             variant='outlined'
             value={notes}
             onChange={handleNotesChange}

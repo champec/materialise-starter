@@ -60,7 +60,7 @@ export default function ChatbotInterface({ systemMessage, patientInfo, messages,
   }
 
   return (
-    <Paper elevation={3} sx={{ height: '400px', display: 'flex', flexDirection: 'column' }}>
+    <Paper elevation={3} sx={{ height: '90%', display: 'flex', flexDirection: 'column' }}>
       <Box
         ref={messagesContainerRef}
         sx={{

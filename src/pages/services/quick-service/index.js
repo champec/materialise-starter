@@ -53,6 +53,7 @@ import usePatient from '../service-list/hooks/usePatient'
 import PDSPatientSearch from '../service-list/components/PDSPatientSearch'
 import CustomSnackbar from 'src/views/apps/Calendar/services/pharmacy-first/CustomSnackBar'
 import { createServiceDeliveries } from '../service-list/hooks/useAppointmentSubmission'
+import ConsultationNotesComponent from '../service-stats/AIConsult'
 
 const steps = ['Initial Configuration', 'Service Form', 'Appointment Details', 'Review & Submit']
 
@@ -136,6 +137,7 @@ const QuickServiceDeliveryComponent = () => {
   const [prescriptionId, setPrescriptionId] = useState(null)
   const [serviceDeliveryId, setServiceDeliveryId] = useState(null)
   const [submissionComplete, setSubmissionComplete] = useState(false)
+  const [aiDrawerOpen, setAiDrawerOpen] = useState(false)
   const {
     selectedPatient,
     patientInputValue,
@@ -167,6 +169,13 @@ const QuickServiceDeliveryComponent = () => {
     handleSearch,
     handleSearchAgain
   } = usePatient()
+
+  // AI CHAT BOT STATES
+  const [notes, setNotes] = useState('')
+  const [recommendation, setRecommendation] = useState(null)
+  const [conversationHistory, setConversationHistory] = useState([])
+  const [chatBotMessages, setChatBotMessages] = useState([])
+  // END AI CHAT BOT STATES
 
   const handleNhsPatientFetch = () => {
     setNhsPatientDialog(true)
@@ -846,6 +855,45 @@ const QuickServiceDeliveryComponent = () => {
   return (
     <LocalizationProvider dateAdapter={AdapterDateFns}>
       <Box sx={{ width: '100%' }}>
+        {/* create a tray menu above the stopper with one button to open ai assistance, use iconify icon, it will open a drawer component which must fiarly wide */}
+
+        <Box sx={{ display: 'flex', justifyContent: 'flex-end', mb: 2 }}>
+          <Button variant='contained' startIcon={<Icon icon='mdi:robot' />} onClick={() => setAiDrawerOpen(true)}>
+            AI Assistance
+          </Button>
+        </Box>
+
+        {/* AI Assistance Drawer */}
+        <Drawer
+          anchor='right'
+          open={aiDrawerOpen}
+          onClose={() => setAiDrawerOpen(false)}
+          sx={{
+            '& .MuiDrawer-paper': {
+              width: '40%',
+              maxWidth: '600px',
+              padding: 2
+            }
+          }}
+        >
+          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+            <Typography variant='h6'>AI Assistance</Typography>
+            <Icon icon='mdi:close' onClick={() => setAiDrawerOpen(false)} style={{ cursor: 'pointer' }} />
+          </Box>
+          {/* Add AI assistance content here */}
+          <ConsultationNotesComponent
+            patientInfo={selectedPatient}
+            notes={notes}
+            setNotes={setNotes}
+            recommendation={recommendation}
+            setRecommendation={setRecommendation}
+            conversationHistory={conversationHistory}
+            setConversationHistory={setConversationHistory}
+            chatBotMessages={chatBotMessages}
+            setChatBotMessages={setChatBotMessages}
+          />
+        </Drawer>
+
         <Stepper activeStep={activeStep}>
           {steps.map((label, index) => (
             <Step key={label}>
