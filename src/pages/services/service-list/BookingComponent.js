@@ -9,7 +9,9 @@ import {
   AlertTitle,
   DialogContentText,
   DialogActions,
-  Button
+  Button,
+  CircularProgress,
+  styled
 } from '@mui/material'
 
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns'
@@ -34,6 +36,21 @@ import useAppointmentSubmission from './hooks/useAppointmentSubmission'
 const Transition = forwardRef(function Transition(props, ref) {
   return <Fade ref={ref} {...props} />
 })
+
+const LoadingOverlay = styled(Box)(({ theme }) => ({
+  position: 'absolute',
+  top: 0,
+  left: 0,
+  right: 0,
+  bottom: 0,
+  backgroundColor: 'rgba(255, 255, 255, 0.7)', // semi-transparent white
+  display: 'flex',
+  justifyContent: 'center',
+  alignItems: 'center',
+  height: '100%',
+  width: '100%',
+  zIndex: 5000 // Ensure it's above other content
+}))
 
 const BookingComponent = ({ appointment: appointmentObject, onClose }) => {
   const dispatch = useDispatch()
@@ -119,6 +136,7 @@ const BookingComponent = ({ appointment: appointmentObject, onClose }) => {
     scheduled_time: null,
     details: {}
   })
+  const [generateLink, setGenerateLink] = useState(true)
 
   useEffect(() => {
     if (appointment) {
@@ -320,7 +338,10 @@ const BookingComponent = ({ appointment: appointmentObject, onClose }) => {
     console.log('Submitting data:', dataToSubmit)
     try {
       if (appointment) {
-        const updatedAppointment = await updateExistingAppointment({ id: appointment.id, ...dataToSubmit })
+        const updatedAppointment = await updateExistingAppointment(
+          { id: appointment.id, ...dataToSubmit },
+          generateLink
+        )
         console.log('Appointment updated:', updatedAppointment)
       } else {
         const newAppointment = await submitAppointment(dataToSubmit)
@@ -342,12 +363,24 @@ const BookingComponent = ({ appointment: appointmentObject, onClose }) => {
     setOpenConfirmDialog(false)
   }
 
+  const loadingComponent = () => {
+    return (
+      <Box display='flex' justifyContent='center' alignItems='center' minHeight='100vh' width='400px'>
+        <CircularProgress />
+      </Box>
+    )
+  }
+
   console.log('FORM DATA BEFORE GOING TO APPOINTMENT FORM', formData)
   return (
     <LocalizationProvider dateAdapter={AdapterDateFns}>
       <PerfectScrollbar>
-        <Box>
-          {loading && <h1>LOADING</h1>}
+        <Box position='relative'>
+          {loading && (
+            <LoadingOverlay>
+              <CircularProgress />
+            </LoadingOverlay>
+          )}
           <AppointmentForm
             appointment={appointment}
             formData={formData}
@@ -380,6 +413,8 @@ const BookingComponent = ({ appointment: appointmentObject, onClose }) => {
             gpDialogOpen={gpDialogOpen}
             handleCheckboxChange={handleCheckboxChange}
             editingAppointment={editingAppointment}
+            generateLink={generateLink}
+            setGenerateLink={setGenerateLink}
           />
         </Box>
 

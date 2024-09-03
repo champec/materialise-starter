@@ -172,7 +172,7 @@ const useAppointmentSubmission = () => {
   const orgId = useSelector(state => state.organisation.organisation.id)
   const notifyApiKey = useSelector(state => state.organisation.organisation.notifyApiKey)
 
-  const handleAppointment = async (appointmentData, isUpdate = false) => {
+  const handleAppointment = async (appointmentData, isUpdate = false, generateLink = true) => {
     console.log('Starting handleAppointment', { appointmentData, isUpdate })
     setLoading(true)
     let dailyData = null
@@ -180,7 +180,7 @@ const useAppointmentSubmission = () => {
 
     try {
       // Generate a scheduled meeting if it's a new remote video appointment
-      if (appointmentData.appointment_type === 'remote-video' && !isUpdate) {
+      if (appointmentData.appointment_type === 'remote-video' && (!isUpdate || (isUpdate && generateLink))) {
         console.log('Generating video link for remote appointment')
         const unixTimeStamp = dayjs(appointmentData.scheduled_time).unix()
         const { data: dailyResponse, error: dailyError } = await supabase.functions.invoke('daily-scheduler', {
@@ -199,13 +199,16 @@ const useAppointmentSubmission = () => {
       const appointmentPayload = {
         ...appointmentData,
         pharmacy_id: orgId,
-        remote_details: isUpdate
-          ? appointmentData.remote_details
-          : {
-              url: dailyData?.room?.url,
-              hcp_token: dailyData?.hcpToken,
-              patient_token: dailyData?.patientToken
-            }
+        remote_details:
+          appointmentData.appointment_type === 'remote-video'
+            ? isUpdate && !generateLink
+              ? appointmentData.remote_details
+              : {
+                  url: dailyData?.room?.url,
+                  hcp_token: dailyData?.hcpToken,
+                  patient_token: dailyData?.patientToken
+                }
+            : null
       }
       console.log('Prepared appointment payload', appointmentPayload)
 
@@ -322,7 +325,8 @@ const useAppointmentSubmission = () => {
   }
 
   const submitAppointment = appointmentData => handleAppointment(appointmentData, false)
-  const updateExistingAppointment = appointmentData => handleAppointment(appointmentData, true)
+  const updateExistingAppointment = (appointmentData, generateLink) =>
+    handleAppointment(appointmentData, true, generateLink)
 
   return { submitAppointment, updateExistingAppointment, loading }
 }

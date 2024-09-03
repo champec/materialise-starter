@@ -1,9 +1,8 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useRef } from 'react'
 import { Box, Typography, Drawer, Button, IconButton, Snackbar, Alert } from '@mui/material'
-// import CloseIcon from '@mui/icons-material/Close'
-import DailyIframe from '@daily-co/daily-js'
-import AdvancedFormEngine from '../../../../views/apps/services/serviceDelivery/components/AdvancedFormEngine'
 import { Icon } from '@iconify/react'
+import { useCallFrame } from '@daily-co/daily-react'
+import AdvancedFormEngine from '../../../../views/apps/services/serviceDelivery/components/AdvancedFormEngine'
 
 const VideoCallPage = ({
   appointment,
@@ -22,43 +21,46 @@ const VideoCallPage = ({
   currentNodeId,
   setCurrentNodeId
 }) => {
-  const [callFrame, setCallFrame] = useState(null)
   const [isDrawerOpen, setIsDrawerOpen] = useState(false)
   const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'info' })
+  const callRef = useRef(null)
 
-  useEffect(() => {
-    if (appointment.remote_details && appointment.remote_details.url) {
-      const dailyFrame = DailyIframe.createFrame({
-        url: appointment.remote_details.url,
-        showLeaveButton: true,
-        iframeStyle: {
-          position: 'fixed',
-          top: 0,
-          left: 0,
-          width: '100%',
-          height: '100%'
+  const callFrame = useCallFrame({
+    parentElRef: callRef,
+    options: {
+      url: appointment.remote_details?.url,
+      token: appointment.remote_details?.hcp_token,
+      showLeaveButton: true,
+      // iframeStyle: {
+      //   position: 'fixed',
+      //   top: 0,
+      //   left: 0,
+      //   width: '100%',
+      //   height: '80%'
+      // },
+      theme: {
+        colors: {
+          accent: '#1AA1FB',
+          background: '#282A42',
+          mainAreaBg: '#282A42',
+          backgroundAccent: '#282A42',
+          baseText: '#FFFFFF'
         }
-      })
-
-      dailyFrame.join({
-        token: appointment.remote_details.hcp_token,
-        theme: {
-          colors: {
-            accent: '#1AA1FB',
-            background: '#282A42',
-            mainAreaBg: '#282A42',
-            backgroundAccent: '#282A42',
-            baseText: '#FFFFFF'
-          }
-        }
-      })
-      setCallFrame(dailyFrame)
-
-      return () => {
-        dailyFrame.destroy()
       }
     }
-  }, [appointment])
+  })
+
+  useEffect(() => {
+    if (appointment.remote_details?.url && callFrame) {
+      callFrame.join()
+    }
+
+    return () => {
+      if (callFrame) {
+        callFrame.destroy()
+      }
+    }
+  }, [appointment, callFrame])
 
   const toggleDrawer = () => {
     setIsDrawerOpen(!isDrawerOpen)
@@ -79,7 +81,7 @@ const VideoCallPage = ({
   }
 
   return (
-    <Box sx={{ height: '100vh', position: 'relative' }}>
+    <Box sx={{ height: '100%', position: 'relative' }} ref={callRef}>
       <Box sx={{ position: 'absolute', top: 16, right: 16, zIndex: 1000 }}>
         <Button variant='contained' onClick={toggleDrawer}>
           {isDrawerOpen ? 'Close Form' : 'Open Form'}
@@ -110,9 +112,6 @@ const VideoCallPage = ({
           initialData={serviceDelivery.details || {}}
           onSubmit={handleFormSubmit}
           onSaveProgress={handleSaveProgress}
-          // new states
-
-          // initialData={}
           formData={formData}
           setFormData={setFormData}
           currentNodeId={currentNodeId}

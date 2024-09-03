@@ -16,7 +16,9 @@ import {
   ListItemIcon,
   ListItemText,
   Checkbox,
-  FormControlLabel
+  FormControlLabel,
+  Dialog,
+  Stack
 } from '@mui/material'
 import { DateTimePicker } from '@mui/x-date-pickers/DateTimePicker'
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns'
@@ -28,7 +30,9 @@ import useGPSearch from '../hooks/useGPSearch'
 import GPSearchDialog from './GPSearchDialog'
 import GPPreview from './GPPreview'
 import TriageSection from './TriageSection' // Import the new TriageSection component
-
+import { StaticDateTimePicker } from '@mui/x-date-pickers'
+import dayjs from 'dayjs'
+import { Controller } from 'react-hook-form'
 // Styled FormControl to adjust label positioning
 const StyledFormControl = styled(FormControl)(({ theme }) => ({
   '& .MuiInputLabel-outlined': {
@@ -77,10 +81,13 @@ const AppointmentForm = ({
   setSelectedGP,
   handleCheckboxChange,
   quickService = false,
-  editingAppointment = false
+  editingAppointment = false,
+  generateLink,
+  setGenerateLink
 }) => {
   const prevServiceIdRef = useRef(appointment?.service_id)
   const prevStageIdRef = useRef(appointment?.current_stage_id)
+  const [datePickerOpen, setDatePickerOpen] = useState(false)
 
   useEffect(() => {
     // Only run this effect if we're not in quickService mode
@@ -166,7 +173,7 @@ const AppointmentForm = ({
             </Grid>
 
             {!quickService && (
-              <div>
+              <>
                 <Grid item xs={12}>
                   <StyledFormControl fullWidth variant='outlined'>
                     <InputLabel id='service-label'>Service</InputLabel>
@@ -262,16 +269,42 @@ const AppointmentForm = ({
                   </Grid>
                 )}
 
-                <Grid item xs={12}>
+                {/* <Grid item xs={12}>
                   <StyledDateTimePicker
                     label='Scheduled Time'
                     value={formData.scheduled_time}
                     onChange={onDateChange}
                     renderInput={params => <TextField {...params} fullWidth required />}
                   />
-                </Grid>
-              </div>
+                </Grid> */}
+              </>
             )}
+
+            <Grid item xs={12}>
+              <StyledFormControl fullWidth variant='outlined'>
+                <TextField
+                  label='Appointment Date'
+                  value={formData.scheduled_time ? dayjs(formData.scheduled_time).format('DD/MMM/YYYY h:mm A') : ''}
+                  name='startDate'
+                  onChange={onDateChange}
+                  onClick={() => setDatePickerOpen(true)}
+                  autoComplete='off'
+                  aria-readonly
+                />
+                <Dialog open={datePickerOpen} onClose={() => setDatePickerOpen(false)}>
+                  <StaticDateTimePicker
+                    showTimeSelect
+                    timeFormat='HH:mm'
+                    timeIntervals={15}
+                    selected={formData.scheduled_time}
+                    id='date-time-picker'
+                    defaultValue={formData.scheduled_time}
+                    onChange={onDateChange}
+                    onClose={() => setDatePickerOpen(false)}
+                  />
+                </Dialog>
+              </StyledFormControl>
+            </Grid>
 
             <Grid item xs={12}>
               <TextField
@@ -284,6 +317,15 @@ const AppointmentForm = ({
                 onChange={onFieldChange}
               />
             </Grid>
+
+            {appointment && (
+              <Grid item xs={12}>
+                <FormControlLabel
+                  control={<Checkbox checked={generateLink} onChange={() => setGenerateLink(!generateLink)} />}
+                  label='Generate new remote video link'
+                />
+              </Grid>
+            )}
 
             <Grid item xs={12}>
               <FormControlLabel

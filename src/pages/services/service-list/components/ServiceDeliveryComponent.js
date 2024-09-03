@@ -30,6 +30,7 @@ import { useDispatch, useSelector } from 'react-redux'
 import ServiceDeliverySummary from './ServiceDeliverySummary'
 import ServiceDeliveryChat from './ServiceDeliveryChat'
 import Icon from 'src/@core/components/icon'
+import format from 'date-fns/format'
 
 function ServiceDeliveryComponent({ appointment: appointmentObject, onClose, onEdit }) {
   const dispatch = useDispatch()
@@ -99,6 +100,8 @@ function ServiceDeliveryComponent({ appointment: appointmentObject, onClose, onE
 
   const toggleChat = () => setShowChat(!showChat)
 
+  const formatDate = date => format(new Date(date), 'dd/MM/yyyy HH:mm')
+
   if (!appointment) {
     return <Typography>No appointment selected</Typography>
   }
@@ -109,7 +112,9 @@ function ServiceDeliveryComponent({ appointment: appointmentObject, onClose, onE
         <Box sx={{ mb: 4 }}>
           <Typography variant='h5'>Service Delivery for {appointment.patient_object?.full_name}</Typography>
           <Typography>Service: {appointment?.ps_services?.name}</Typography>
-          <Typography>Scheduled Time: {appointment.scheduled_time}</Typography>
+          <Typography>
+            Scheduled Time: {appointment.scheduled_time ? formatDate(appointment.scheduled_time) : ''}
+          </Typography>
           <Typography>Appointment Type: {appointment.appointment_type}</Typography>
 
           <Button variant='outlined' onClick={() => handleEditAppointment(appointment)}>
