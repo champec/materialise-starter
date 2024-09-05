@@ -117,10 +117,11 @@ export const createAppointment = createAsyncThunk(
       .from('ps_appointments')
       .insert({ ...appointmentData, pharmacy_id: organisationId })
       .select()
+      .single()
 
     if (error) throw error
     dispatch(fetchAppointments())
-    return
+    return { data, error }
   }
 )
 
