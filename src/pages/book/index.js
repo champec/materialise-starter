@@ -1,112 +1,99 @@
 import React, { useState, useEffect } from 'react'
-import { supabaseOrg as supabase } from 'src/configs/supabase'
-import { Box, Typography, FormControl, InputLabel, Select, MenuItem, Button, Grid } from '@mui/material'
+import {
+  Box,
+  Typography,
+  Button,
+  Stepper,
+  Step,
+  StepLabel,
+  FormControl,
+  InputLabel,
+  Select,
+  MenuItem,
+  TextField,
+  RadioGroup,
+  FormControlLabel,
+  Radio,
+  List,
+  ListItem,
+  ListItemText,
+  Checkbox,
+  FormLabel,
+  IconButton,
+  Tooltip,
+  Paper,
+  Container
+} from '@mui/material'
 import { DatePicker } from '@mui/x-date-pickers/DatePicker'
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns'
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider'
 import BookingModal from './BookingModal'
+import {
+  fetchServices,
+  fetchServiceStages,
+  fetchPharmaciesByLocation,
+  fetchAvailableSlots,
+  handleBooking,
+  getTriageQuestions,
+  fetchPharmaciesByPostcode,
+  fetchPharmacyByODS
+} from '../../views/apps/book/utils'
+import AssistedBooking from './AssistedBooking'
+import Icon from 'src/@core/components/icon'
+
+const steps = ['Select Service', 'Answer Triage Questions', 'Find a Pharmacy', 'Select a Slot']
 
 const PatientBooking = () => {
+  const [activeStep, setActiveStep] = useState(0)
+  const [bookingType, setBookingType] = useState('')
   const [services, setServices] = useState([])
   const [pharmacies, setPharmacies] = useState([])
-  const [selectedService, setSelectedService] = useState('')
-  const [selectedPharmacy, setSelectedPharmacy] = useState('')
+  const [selectedServiceStage, setSelectedServiceStage] = useState('')
+  const [serviceStages, setServiceStages] = useState([])
+  const [triageQuestions, setTriageQuestions] = useState([])
+  const [triageAnswers, setTriageAnswers] = useState({})
   const [selectedDate, setSelectedDate] = useState(null)
   const [availableSlots, setAvailableSlots] = useState([])
   const [openModal, setOpenModal] = useState(false)
   const [selectedSlot, setSelectedSlot] = useState(null)
-  const [bookedSlots, setBookedSlots] = useState([])
+  const [selectedPharmacies, setSelectedPharmacies] = useState([])
+  const [searchType, setSearchType] = useState('postcode')
+  const [searchValue, setSearchValue] = useState('')
 
   useEffect(() => {
-    fetchServices()
-    fetchPharmacies()
+    const loadInitialData = async () => {
+      setServiceStages(await fetchServiceStages())
+      setServices(await fetchServices())
+    }
+    loadInitialData()
   }, [])
 
-  const fetchServices = async () => {
-    const { data, error } = await supabase.from('ps_services').select('*')
-    if (data) setServices(data)
+  const handleNext = () => {
+    setActiveStep(prevActiveStep => prevActiveStep + 1)
   }
 
-  const fetchPharmacies = async () => {
-    const { data, error } = await supabase.from('profiles').select('id, organisation_name').eq('type', 'organisation')
-    if (data) setPharmacies(data)
+  const handleBack = () => {
+    setActiveStep(prevActiveStep => prevActiveStep - 1)
   }
 
-  const fetchAvailableSlots = async () => {
-    if (!selectedService || !selectedPharmacy || !selectedDate) return
+  const handleBookingTypeChange = type => {
+    setBookingType(type)
+    setActiveStep(1) // Move to the next step after selecting booking type
+  }
 
-    // Define the start and end of the selected date
-    const startOfDay = new Date(selectedDate)
-    startOfDay.setHours(0, 0, 0, 0)
-    const endOfDay = new Date(startOfDay)
-    endOfDay.setHours(23, 59, 59, 999)
+  const handleTriageAnswer = (question, answer) => {
+    setTriageAnswers(prev => ({ ...prev, [question]: answer }))
+  }
 
-    // Format the range correctly for Supabase
-    const formattedRange = `[${startOfDay.toISOString()},${endOfDay.toISOString()}]`
-
-    // Fetch availabilities
-    const { data: availabilities, error: availabilityError } = await supabase
-      .from('ps_service_availability')
-      .select('*')
-      .eq('pharmacy_id', selectedPharmacy)
-      .eq('service_id', selectedService)
-      .overlaps('duration', formattedRange)
-
-    console.log('Availabilities:', availabilities)
-
-    // Fetch existing bookings
-    const { data: bookings, error: bookingError } = await supabase
-      .from('ps_appointments')
-      .select('*')
-      .eq('pharmacy_id', selectedPharmacy)
-      .eq('service_id', selectedService)
-      .gte('scheduled_time', startOfDay.toISOString())
-      .lt('scheduled_time', endOfDay.toISOString())
-
-    console.log('Bookings:', bookings)
-
-    if (availabilityError || bookingError) {
-      console.error('Error fetching data:', availabilityError || bookingError)
-      return
+  const handleTriageSubmit = () => {
+    const allQuestionsAnswered = triageQuestions.every(q => triageAnswers[q] === 'Yes')
+    if (allQuestionsAnswered) {
+      handleNext()
+    } else {
+      alert(
+        'Based on your answers, this service may not be appropriate. Please consult with your GP or call NHS 111 for further advice.'
+      )
     }
-
-    // Generate all possible slots based on availabilities
-    const allSlots = availabilities.flatMap(availability => {
-      const duration = availability.duration.replace(/[\[\]()]/g, '')
-      const [start, end] = duration.split(',').map(time => new Date(time.trim().replace(/"/g, '')))
-
-      const slots = []
-      const slotDuration = 30 * 60 * 1000 // 30 minutes in milliseconds
-
-      for (let time = start; time < end; time = new Date(time.getTime() + slotDuration)) {
-        // Only include slots that fall within the selected day
-        if (time >= startOfDay && time < endOfDay) {
-          slots.push({
-            time: new Date(time),
-            isBooked: false
-          })
-        }
-      }
-
-      return slots
-    })
-
-    // Create a Set of booked slot times for efficient lookup
-    const bookedSlotTimes = new Set(bookings.map(booking => new Date(booking.scheduled_time).getTime()))
-
-    // Mark booked slots
-    allSlots.forEach(slot => {
-      if (bookedSlotTimes.has(slot.time.getTime())) {
-        slot.isBooked = true
-      }
-    })
-
-    // Sort slots by time
-    allSlots.sort((a, b) => a.time.getTime() - b.time.getTime())
-
-    console.log('All slots:', allSlots)
-
-    setAvailableSlots(allSlots)
   }
 
   const handleBookSlot = slot => {
@@ -114,106 +101,350 @@ const PatientBooking = () => {
     setOpenModal(true)
   }
 
-  const handleBooking = async bookingDetails => {
-    const { data, error } = await supabase.from('ps_appointments').insert(bookingDetails)
+  const handleBookingSuccess = data => {
+    console.log('Booking successful:', data)
+    setOpenModal(false)
+    fetchAvailableSlots(selectedDate, selectedPharmacies, selectedServiceStage, serviceStages).then(setAvailableSlots)
+  }
 
-    if (error) {
-      console.error('Booking failed:', error)
-    } else {
-      console.log('Booking successful:', data)
-      setOpenModal(false)
-      fetchAvailableSlots()
+  const handleBookingError = error => {
+    console.error('Booking failed:', error)
+  }
+
+  const handleSearchPharmacies = () => {
+    if (searchType === 'postcode') {
+      setPharmacies([])
+      setSelectedPharmacies([])
+      fetchPharmaciesByPostcode(searchValue).then(data => {
+        if (data?.length === 0 || !data) {
+          alert('No pharmacies found for your location. Please try a different search.')
+        } else {
+          setPharmacies(data)
+          setSelectedPharmacies(data)
+        }
+      })
+    } else if (searchType === 'current') {
+      setPharmacies([])
+      setSelectedPharmacies([])
+      fetchPharmaciesByLocation().then(data => {
+        if (data?.length === 0 || !data) {
+          console.log('No pharmacies found for your location. Please try a different search.', data)
+          alert('No pharmacies found for your location. Please try a different search.')
+        } else {
+          console.log('Pharmacies found:', data)
+          setPharmacies(data)
+          setSelectedPharmacies(data)
+        }
+      })
+    } else if (searchType === 'ods') {
+      setPharmacies([])
+      fetchPharmacyByODS(searchValue).then(data => {
+        if (data?.length === 0 || !data) {
+          alert('No pharmacies found for your location. Please try a different search.')
+        } else {
+          setPharmacies(data)
+          setSelectedPharmacies(data)
+        }
+      })
     }
   }
 
-  return (
-    <LocalizationProvider dateAdapter={AdapterDateFns}>
-      <Box>
-        <Typography variant='h4' gutterBottom>
-          Book an Appointment
-        </Typography>
-        <Grid container spacing={2}>
-          <Grid item xs={12}>
-            <FormControl fullWidth>
-              <InputLabel>Service</InputLabel>
-              <Select value={selectedService} onChange={e => setSelectedService(e.target.value)}>
-                {services.map(service => (
-                  <MenuItem key={service.id} value={service.id}>
-                    {service.name}
-                  </MenuItem>
-                ))}
-              </Select>
+  const renderBookingTypeSelection = () => (
+    <Box display='flex' justifyContent='center' mt={4}>
+      <Button
+        variant='contained'
+        color='primary'
+        startIcon={<Icon icon='mdi:calendar-clock' />}
+        onClick={() => setBookingType('manual')}
+        sx={{ mr: 2 }}
+      >
+        Manual Booking
+      </Button>
+      <Button
+        variant='contained'
+        color='secondary'
+        startIcon={<Icon icon='mdi:robot' />}
+        onClick={() => setBookingType('assistant')}
+      >
+        AI-Assisted Booking
+      </Button>
+    </Box>
+  )
+
+  const renderAssistedBookingPlaceholder = () => (
+    <Box>
+      <Typography variant='h6'>Assisted Booking</Typography>
+      <AssistedBooking
+        serviceStages={serviceStages}
+        setSelectedServiceStage={setSelectedServiceStage}
+        pharmacies={pharmacies}
+        triageAnswers={triageAnswers}
+        setTriageAnswers={setTriageAnswers}
+        setTriageQuestions={setTriageQuestions}
+        triageQuestions={triageQuestions}
+        getTriageQuestions={getTriageQuestions}
+      />
+    </Box>
+  )
+
+  const renderManualBookingStep = step => {
+    switch (step) {
+      case 0:
+        return (
+          <FormControl fullWidth>
+            <InputLabel>Select Service</InputLabel>
+            <Select
+              value={selectedServiceStage}
+              label='Select Service'
+              onChange={e => {
+                setSelectedServiceStage(e.target.value)
+                setTriageQuestions(getTriageQuestions(e.target.value))
+              }}
+            >
+              {serviceStages.map(stage => (
+                <MenuItem key={stage.id} value={stage.id}>
+                  {stage.ps_services.name} - {stage.name}
+                </MenuItem>
+              ))}
+            </Select>
+            <Button onClick={handleNext} disabled={!selectedServiceStage}>
+              Next
+            </Button>
+          </FormControl>
+        )
+      case 1:
+        return (
+          <Box>
+            <Typography variant='h6' gutterBottom>
+              Triage Questions
+            </Typography>
+            {triageQuestions.map((question, index) => (
+              <FormControl component='fieldset' key={index} fullWidth margin='normal'>
+                <FormLabel component='legend'>{question}</FormLabel>
+                <RadioGroup
+                  row
+                  value={triageAnswers[question] || ''}
+                  onChange={e => handleTriageAnswer(question, e.target.value)}
+                >
+                  <FormControlLabel value='Yes' control={<Radio />} label='Yes' />
+                  <FormControlLabel value='No' control={<Radio />} label='No' />
+                </RadioGroup>
+              </FormControl>
+            ))}
+            <Button
+              variant='contained'
+              color='primary'
+              onClick={handleTriageSubmit}
+              disabled={triageQuestions.length !== Object.keys(triageAnswers).length}
+            >
+              Submit Triage
+            </Button>
+            <Button onClick={handleBack}>Back</Button>
+          </Box>
+        )
+      case 2:
+        return (
+          <Box>
+            <Typography variant='h6' gutterBottom>
+              Find a Pharmacy
+            </Typography>
+            <FormControl component='fieldset'>
+              <RadioGroup row value={searchType} onChange={e => setSearchType(e.target.value)}>
+                <FormControlLabel value='postcode' control={<Radio />} label='Search by Postcode' />
+                <FormControlLabel value='current' control={<Radio />} label='Use Current Location' />
+                <FormControlLabel value='ods' control={<Radio />} label='Search by ODS Code' />
+              </RadioGroup>
             </FormControl>
-          </Grid>
-          <Grid item xs={12}>
-            <FormControl fullWidth>
-              <InputLabel>Pharmacy</InputLabel>
-              <Select value={selectedPharmacy} onChange={e => setSelectedPharmacy(e.target.value)}>
-                {pharmacies.map(pharmacy => (
-                  <MenuItem key={pharmacy.id} value={pharmacy.id}>
-                    {pharmacy.organisation_name}
-                  </MenuItem>
-                ))}
-              </Select>
-            </FormControl>
-          </Grid>
-          <Grid item xs={12}>
+            <TextField
+              fullWidth
+              label={`Enter ${searchType === 'ods' ? 'ODS Code' : 'Postcode'}`}
+              value={searchValue}
+              onChange={e => setSearchValue(e.target.value)}
+              margin='normal'
+            />
+            <Button
+              variant='contained'
+              color='primary'
+              onClick={() => handleSearchPharmacies()} // Example coordinates for search
+              disabled={searchType !== 'current' && !searchValue}
+            >
+              Search Pharmacies
+            </Button>
+            <List>
+              {pharmacies.map(pharmacy => (
+                <ListItem
+                  key={pharmacy.id}
+                  button
+                  onClick={() =>
+                    setSelectedPharmacies(prev =>
+                      prev.some(p => p.id === pharmacy.id)
+                        ? prev.filter(p => p.id !== pharmacy.id)
+                        : [...prev, pharmacy]
+                    )
+                  }
+                  selected={selectedPharmacies.some(p => p.id === pharmacy.id)}
+                >
+                  <Checkbox
+                    checked={selectedPharmacies.some(p => p.id === pharmacy.id)}
+                    onChange={() =>
+                      setSelectedPharmacies(prev =>
+                        prev.some(p => p.id === pharmacy.id)
+                          ? prev.filter(p => p.id !== pharmacy.id)
+                          : [...prev, pharmacy]
+                      )
+                    }
+                  />
+                  <ListItemText
+                    primary={pharmacy.organisation_name}
+                    secondary={`${pharmacy.address1}, ${pharmacy.postcode} - ${
+                      pharmacy.distance ? `${pharmacy.distance.toFixed(2)} miles` : 'N/A'
+                    }`}
+                  />
+                </ListItem>
+              ))}
+            </List>
+            {selectedPharmacies.length > 0 && (
+              <Button variant='contained' color='primary' onClick={handleNext}>
+                View Available Slots
+              </Button>
+            )}
+            <Button onClick={handleBack}>Back</Button>
+          </Box>
+        )
+      case 3:
+        return (
+          <Box>
+            <Typography variant='h6' gutterBottom>
+              Select a Slot
+            </Typography>
             <DatePicker
               label='Select Date'
               value={selectedDate}
               onChange={setSelectedDate}
               renderInput={params => <TextField {...params} fullWidth />}
             />
-          </Grid>
-          <Grid item xs={12}>
-            <Button onClick={fetchAvailableSlots} variant='contained' color='primary'>
+            <Button
+              variant='contained'
+              color='primary'
+              onClick={() =>
+                fetchAvailableSlots(
+                  selectedDate,
+                  selectedPharmacies,
+                  selectedServiceStage,
+                  serviceStages,
+                  setAvailableSlots
+                )
+              }
+              disabled={!selectedDate}
+            >
               Find Available Slots
             </Button>
-          </Grid>
-          <Grid item xs={12}>
-            {/* {availableSlots.map((slot, index) => (
-              <Button key={index} onClick={() => handleBookSlot(slot)} variant='outlined'>
-                {slot.time.toLocaleTimeString()}
-              </Button>
-            ))} */}
-            <SlotRendering availableSlots={availableSlots} handleSlotClick={handleBookSlot} />
-          </Grid>
-        </Grid>
-      </Box>
+            <Box>
+              {availableSlots.map(pharmacySlots => (
+                <Box key={pharmacySlots.pharmacyId} mb={4}>
+                  <Typography variant='h6'>{pharmacySlots?.pharmacyName}</Typography>
+                  {pharmacySlots.slots.length > 0 ? (
+                    <Box display='flex' flexWrap='wrap'>
+                      {pharmacySlots.slots.map((slot, slotIndex) => (
+                        <Button
+                          key={slotIndex}
+                          variant='outlined'
+                          disabled={slot.isBooked}
+                          onClick={() => handleBookSlot(slot)}
+                          sx={{ m: 0.5 }}
+                        >
+                          {slot.time.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                        </Button>
+                      ))}
+                    </Box>
+                  ) : (
+                    <Typography color='textSecondary'>
+                      No available slots for this pharmacy on the selected date.
+                    </Typography>
+                  )}
+                </Box>
+              ))}
+            </Box>
+            <Button onClick={handleBack}>Back</Button>
+          </Box>
+        )
+      default:
+        return null
+    }
+  }
+
+  console.log('bookingType', bookingType)
+
+  return (
+    <LocalizationProvider dateAdapter={AdapterDateFns}>
+      <Container maxWidth='md'>
+        <Paper elevation={3} sx={{ p: 4, mt: 4 }}>
+          <Box display='flex' alignItems='center' justifyContent='space-between' mb={4}>
+            <Typography variant='h4' component='h1'>
+              <Icon
+                icon='mdi:hospital'
+                width='32'
+                height='32'
+                style={{ marginRight: '8px', verticalAlign: 'bottom' }}
+              />
+              Book an Appointment
+            </Typography>
+            {bookingType !== '' && (
+              <Tooltip title='Change Booking Type'>
+                <IconButton onClick={() => setBookingType('')} color='primary'>
+                  <Icon icon='mdi:refresh' width='24' height='24' />
+                </IconButton>
+              </Tooltip>
+            )}
+          </Box>
+
+          {bookingType === '' ? (
+            renderBookingTypeSelection()
+          ) : bookingType === 'assistant' ? (
+            renderAssistedBookingPlaceholder()
+          ) : (
+            <Box mt={4}>
+              <Stepper activeStep={activeStep} alternativeLabel>
+                {steps.map((label, index) => (
+                  <Step key={label}>
+                    <StepLabel
+                      StepIconComponent={() => (
+                        <Icon
+                          icon={
+                            index === 0
+                              ? 'mdi:clipboard-list'
+                              : index === 1
+                              ? 'mdi:comment-question'
+                              : index === 2
+                              ? 'mdi:map-marker'
+                              : 'mdi:clock'
+                          }
+                          width='24'
+                          height='24'
+                          color={index <= activeStep ? '#1976d2' : '#bdbdbd'}
+                        />
+                      )}
+                    >
+                      {label}
+                    </StepLabel>
+                  </Step>
+                ))}
+              </Stepper>
+              <Box mt={4}>{renderManualBookingStep(activeStep)}</Box>
+            </Box>
+          )}
+        </Paper>
+      </Container>
       <BookingModal
         open={openModal}
         onClose={() => setOpenModal(false)}
-        onSave={handleBooking}
+        onSave={bookingDetails => handleBooking(bookingDetails, handleBookingSuccess, handleBookingError)}
         slot={selectedSlot}
-        serviceId={selectedService}
-        pharmacyId={selectedPharmacy}
+        serviceId={selectedServiceStage}
+        pharmacyId={selectedPharmacies[0]?.id}
       />
     </LocalizationProvider>
   )
 }
 
 export default PatientBooking
-
-const SlotRendering = ({ availableSlots, handleSlotClick }) => (
-  <Grid item xs={12}>
-    <Typography variant='h6'>Available Slots:</Typography>
-    {availableSlots.map((slot, index) => (
-      <Button
-        key={index}
-        onClick={() => handleSlotClick(slot)}
-        variant='outlined'
-        disabled={slot.isBooked}
-        sx={{
-          m: 1,
-          opacity: slot.isBooked ? 0.5 : 1,
-          '&.Mui-disabled': {
-            color: 'text.secondary',
-            borderColor: 'text.secondary'
-          }
-        }}
-      >
-        {slot.time.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })}
-      </Button>
-    ))}
-  </Grid>
-)
