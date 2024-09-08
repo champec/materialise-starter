@@ -56,7 +56,7 @@ const LoadingOverlay = styled(Box)(({ theme }) => ({
   zIndex: 5000 // Ensure it's above other content
 }))
 
-const BookingComponent = ({ appointment: appointmentObject, onClose }) => {
+const BookingComponent = ({ appointment: appointmentObject, onClose, source }) => {
   const dispatch = useDispatch()
   const services = useSelector(selectServices)
   const organisationId = useSelector(state => state.organisation.organisation.id)
@@ -139,7 +139,8 @@ const BookingComponent = ({ appointment: appointmentObject, onClose }) => {
     overall_status: 'Scheduled',
     current_stage_id: '',
     scheduled_time: null,
-    details: {}
+    details: {},
+    ...source
   })
   const [generateLink, setGenerateLink] = useState(true)
 
@@ -168,13 +169,14 @@ const BookingComponent = ({ appointment: appointmentObject, onClose }) => {
         overall_status,
         current_stage_id,
         scheduled_time: scheduled_time ? parseISO(scheduled_time) : null,
-        details
+        details,
         // details: {
         //   ...details,
         //   triage: details.triage ? { ...details.triage } : {}
         // }
         // patient_object,
         // gp_object
+        ...source
       })
 
       setEditingAppointment(true)
@@ -341,7 +343,7 @@ const BookingComponent = ({ appointment: appointmentObject, onClose }) => {
       return
     }
 
-    // Check if text message is not being sent
+    // // Check if text message is not being sent
     if (!newObjectToSubmit.details.sendTextUpdate) {
       setObjectToSubmit(newObjectToSubmit)
       setOpenConfirmDialog(true)

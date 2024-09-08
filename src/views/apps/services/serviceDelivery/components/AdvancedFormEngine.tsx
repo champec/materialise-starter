@@ -132,9 +132,10 @@ const AdvancedFormEngine: React.FC<AdvancedFormEngineProps> = ({
   setIsLocked,
   errors,
   setErrors,
-  sharedData
+  sharedData,
+  isQuickService
 }) => {
-  console.log('FORM DEFINITION', { formDefinition, currentNodeId })
+  console.log('FORM DEFINITION', { isQuickService, formDefinition, currentNodeId })
   // const [currentNodeId, setCurrentNodeId] = useState(formDefinition.startNode)
   //const [formData, setFormData] = useState<Record<string, any>>(initialData) //! make sure to add external formdata state in service delivery aswel
   // const [history, setHistory] = useState<string[]>([formDefinition.startNode])
@@ -838,18 +839,20 @@ const AdvancedFormEngine: React.FC<AdvancedFormEngineProps> = ({
             </Button>
           </StickyFooter>
         </FixedHeightContainer>
-        <Box sx={{ display: 'flex', justifyContent: 'flex-end', mt: 2 }}>
-          <Button onClick={handleSaveProgress} variant='outlined' sx={{ mr: 1 }}>
-            Save Progress
-          </Button>
-          <Button
-            onClick={handleSubmit}
-            variant='contained'
-            disabled={!canSubmitFromCurrentNode() && !isFormComplete()}
-          >
-            Submit
-          </Button>
-        </Box>
+        {!isQuickService && (
+          <Box sx={{ display: 'flex', justifyContent: 'flex-end', mt: 2 }}>
+            <Button onClick={handleSaveProgress} variant='outlined' sx={{ mr: 1 }}>
+              Save Progress
+            </Button>
+            <Button
+              onClick={handleSubmit}
+              variant='contained'
+              disabled={!canSubmitFromCurrentNode() && !isFormComplete()}
+            >
+              Submit
+            </Button>
+          </Box>
+        )}
       </Grid>
     </Grid>
   )

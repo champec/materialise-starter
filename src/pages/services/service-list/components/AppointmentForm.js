@@ -18,7 +18,7 @@ import {
   Checkbox,
   FormControlLabel,
   Dialog,
-  Stack
+  InputAdornment
 } from '@mui/material'
 import { DateTimePicker } from '@mui/x-date-pickers/DateTimePicker'
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns'
@@ -88,6 +88,7 @@ const AppointmentForm = ({
   const prevServiceIdRef = useRef(appointment?.service_id)
   const prevStageIdRef = useRef(appointment?.current_stage_id)
   const [datePickerOpen, setDatePickerOpen] = useState(false)
+  const [inputDate, setInputDate] = useState('')
 
   useEffect(() => {
     // Only run this effect if we're not in quickService mode
@@ -114,6 +115,31 @@ const AppointmentForm = ({
       prevStageIdRef.current = formData.current_stage_id
     }
   }, [formData.service_id, formData.current_stage_id, quickService, onFieldChange])
+
+  useEffect(() => {
+    if (formData.scheduled_time) {
+      setInputDate(dayjs(formData.scheduled_time).format('DD/MM/YYYY HH:mm'))
+    }
+  }, [formData.scheduled_time])
+
+  const handleInputChange = event => {
+    setInputDate(event.target.value)
+  }
+
+  const handleInputBlur = () => {
+    const parsedDate = dayjs(inputDate, 'DD/MM/YYYY HH:mm', true)
+    if (parsedDate.isValid()) {
+      onDateChange(parsedDate.toDate())
+    } else {
+      setInputDate(formData.scheduled_time ? dayjs(formData.scheduled_time).format('DD/MM/YYYY HH:mm') : '')
+    }
+  }
+
+  const handleDatePickerChange = newDate => {
+    onDateChange(newDate)
+    setInputDate(dayjs(newDate).format('DD/MM/YYYY HH:mm'))
+    setDatePickerOpen(false)
+  }
 
   return (
     <LocalizationProvider dateAdapter={AdapterDateFns}>
@@ -279,17 +305,25 @@ const AppointmentForm = ({
                 </Grid> */}
               </>
             )}
-
+            {console.log('FORM DATA SCHEDULED TIME', formData.scheduled_time, formData)}
             <Grid item xs={12}>
               <StyledFormControl fullWidth variant='outlined'>
                 <TextField
                   label='Appointment Date'
-                  value={formData.scheduled_time ? dayjs(formData.scheduled_time).format('DD/MMM/YYYY h:mm A') : ''}
-                  name='startDate'
-                  onChange={onDateChange}
-                  onClick={() => setDatePickerOpen(true)}
-                  autoComplete='off'
-                  aria-readonly
+                  value={inputDate}
+                  onChange={handleInputChange}
+                  onBlur={handleInputBlur}
+                  placeholder='DD/MM/YYYY HH:mm'
+                  fullWidth
+                  InputProps={{
+                    endAdornment: (
+                      <InputAdornment position='end'>
+                        <IconButton onClick={() => setDatePickerOpen(true)} edge='end'>
+                          <IconifyIcon icon='mdi:calendar' />
+                        </IconButton>
+                      </InputAdornment>
+                    )
+                  }}
                 />
                 <Dialog open={datePickerOpen} onClose={() => setDatePickerOpen(false)}>
                   <StaticDateTimePicker

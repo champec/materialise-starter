@@ -431,7 +431,9 @@ const QuickServiceDeliveryComponent = () => {
         gp_object: appointmentDetails.gp,
         remote_details: appointmentDetails.remote_details,
         status_details: { currentStatus: 'Scheduled' },
-        referral: null // Add referral data if available
+        referral: null, // Add referral data if available
+        appointment_source: 'quick-service',
+        source_details: 'Booked with Quick Service'
       }
 
       console.log('SUBMIT', appointmentData, 'FORM DATA', formData)
@@ -446,8 +448,10 @@ const QuickServiceDeliveryComponent = () => {
 
       const appointmentId = appointmentResult.id
 
+      console.log('APPOINTMENT ID', appointmentId, 'APPOINTMENT DATA', appointmentResult)
+
       // 4. Create service deliveries
-      await createServiceDeliveries(appointmentId, config.service, config.stage)
+      await createServiceDeliveries(appointmentId, config.service, config.stage.id)
 
       // 5. Update the current stage's service delivery with form data
       const { data: currentDelivery, error: updateError } = await supabase
@@ -462,6 +466,8 @@ const QuickServiceDeliveryComponent = () => {
         .eq('appointment_id', appointmentId)
         .eq('service_stage_id', config.stage.id)
         .select('id')
+
+      console.log('CURRENT DELIVERY', currentDelivery, 'UPDATE ERROR', updateError)
 
       if (updateError) {
         console.log('UPDATE APPOINTMENT ERROR', updateError)
@@ -536,6 +542,10 @@ const QuickServiceDeliveryComponent = () => {
     } finally {
       setSubmitLoading(false)
     }
+  }
+
+  const handleDateChange = date => {
+    setAppointmentDetails(prev => ({ ...prev, scheduled_time: date }))
   }
 
   // Helper function to send SMS reminder
@@ -697,6 +707,7 @@ const QuickServiceDeliveryComponent = () => {
                     errors={errors}
                     setErrors={setErrors}
                     sharedData={config.shared_data}
+                    isQuickService={true}
                   />
                 </Drawer>
               </>
@@ -722,6 +733,7 @@ const QuickServiceDeliveryComponent = () => {
                     errors={errors}
                     setErrors={setErrors}
                     sharedData={config.shared_data}
+                    isQuickService={true}
                   />
                 )}
               </Box>
@@ -757,6 +769,7 @@ const QuickServiceDeliveryComponent = () => {
               gpDialogOpen={gpDialogOpen}
               handleCheckboxChange={handleCheckboxChange}
               onFieldChange={handleAdditionalDetails}
+              onDateChange={handleDateChange}
             />
             {/* <AddEditPatientForm
               onSelect={patient => handleAppointmentDetailsChange('patient', patient)}

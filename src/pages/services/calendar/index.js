@@ -137,6 +137,11 @@ const AppCalendar = ({ addCalendarType, updateCalendarType, deleteCalendarType }
     setIsDeliveryModalOpen(false)
   }
 
+  const sourceInfo = {
+    appointment_source: 'pharmex',
+    source_details: 'Booked with Service Calendar'
+  }
+
   return (
     <CalendarWrapper
       className='app-calendar'
@@ -216,7 +221,7 @@ const AppCalendar = ({ addCalendarType, updateCalendarType, deleteCalendarType }
         </Dialog>
       )}
       <Drawer anchor='left' open={isDrawerOpen} onClose={handleCloseDrawer} sx={{ zIndex: 1201 }}>
-        <BookingComponent appointment={selectedAppointment} onClose={handleCloseDrawer} />
+        <BookingComponent appointment={selectedAppointment} onClose={handleCloseDrawer} source={sourceInfo} />
       </Drawer>
     </CalendarWrapper>
   )

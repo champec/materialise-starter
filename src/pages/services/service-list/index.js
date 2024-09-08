@@ -40,6 +40,8 @@ import BatchActionsModal from './components/BatchActionsModal'
 import Icon from 'src/@core/components/icon'
 import BookingComponent from './BookingComponent'
 import ServiceDeliveryComponent from './components/ServiceDeliveryComponent'
+// import pharmExLogo from '/images/pharmEx-logo-light.png'
+// import nhs111logo from '/images/nhs/NHS.svg'
 
 const Header = ({ onNewBooking }) => (
   <AppBar position='static'>
@@ -91,6 +93,8 @@ function PharmacyServicesPage() {
   const [isBatchActionsModalOpen, setIsBatchActionsModalOpen] = useState(false)
   const [selectedAppointments, setSelectedAppointments] = useState([])
   const [currentBatchAction, setCurrentBatchAction] = useState('')
+  const [openSourceDetails, setOpenSourceDetails] = useState(false)
+  const [sourceDetails, setSourceDetails] = useState(null)
 
   const statuses = ['Scheduled', 'In Progress', 'Completed', 'Cancelled']
 
@@ -179,6 +183,10 @@ function PharmacyServicesPage() {
     dispatch(setServiceFilter(newSelectedServices))
   }
 
+  const renderSourceDetails = source => {
+    return JSON.stringify(source)
+  }
+
   const renderStatusDetails = (service, statusDetails) => {
     // This function will render status details based on the service type
     // You can customize this further based on your specific requirements
@@ -211,8 +219,44 @@ function PharmacyServicesPage() {
     setOpenStatusDetails(true)
   }
 
+  const handleSourceDetailsClick = appointment => {
+    const sourceDetailsContent = renderSourceDetails(appointment.source_details)
+    setSourceDetails(sourceDetailsContent)
+    setOpenSourceDetails(true)
+  }
+
   const handleCloseStatusDetails = () => {
     setOpenStatusDetails(false)
+  }
+
+  const handleCloseSourceDetails = () => {
+    setOpenSourceDetails(false)
+  }
+
+  const renderSourceTextIcon = source => {
+    switch (source) {
+      case 'pharmex':
+        return <img src={'/images/pharmEx-logo-light.png'} alt='NHS 111 logo' width={20} height={20} />
+      case 'booked':
+        return (
+          <>
+            <Icon icon='healthicons:i-schedule-school-date-time-outline' style={{ fontSize: '1.5rem' }} />
+            <span>Booked</span>
+          </>
+        )
+      case '111Referral':
+        return <img src={'/images/nhs/NHS.svg'} alt='NHS 111 logo' width={20} height={20} />
+      case 'quickService':
+        return (
+          <>
+            <img src={'/images/pharmEx-logo-light.png'} alt='NHS 111 logo' width={20} height={20} />
+            <Icon icon='emojione-v1:lightning-mood' style={{ fontSize: '1.5rem' }} />
+          </>
+        )
+      default:
+        // return an iconify icon that best represent quick booking
+        return null
+    }
   }
 
   const handleStatusChange = (event, child) => {
@@ -234,6 +278,11 @@ function PharmacyServicesPage() {
     }
 
     dispatch(setStatusFilter(newSelectedStatuses))
+  }
+
+  const sourceInfo = {
+    appointment_source: 'pharmex',
+    source_details: 'Booked with Service List'
   }
 
   const renderServiceValue = selected => {
@@ -299,6 +348,25 @@ function PharmacyServicesPage() {
               <Icon icon='icon-park:info' fontSize='small' />
             </IconButton>
           </Tooltip>
+        </div>
+      )
+    },
+    {
+      field: 'source',
+      headerName: 'Source',
+      width: 180,
+      renderCell: params => (
+        <div style={{ display: 'flex', alignItems: 'center' }}>
+          {renderSourceTextIcon(params.row.appointment_source)}
+          {params.row.source_details ? (
+            <Tooltip title={params.row.source_details}>
+              <IconButton size='small' onClick={() => handleSourceDetailsClick(params.row)}>
+                <Icon icon='icon-park:info' fontSize='small' />
+              </IconButton>
+            </Tooltip>
+          ) : (
+            <Icon icon='mdi:information-outline' fontSize='small' />
+          )}
         </div>
       )
     },
@@ -431,7 +499,7 @@ function PharmacyServicesPage() {
       </Container>
       <Footer />
       <Drawer anchor='left' open={isDrawerOpen} onClose={handleCloseDrawer} sx={{ zIndex: 1201 }}>
-        <BookingComponent appointment={editingAppointment} onClose={handleCloseDrawer} />
+        <BookingComponent appointment={editingAppointment} source={sourceInfo} onClose={handleCloseDrawer} />
       </Drawer>
 
       {selectedAppointment && (
@@ -463,6 +531,15 @@ function PharmacyServicesPage() {
           <Button onClick={handleCloseStatusDetails}>Close</Button>
         </DialogActions>
       </Dialog>
+
+      <Dialog open={openSourceDetails} onClose={handleCloseSourceDetails} aria-labelledby='source-details-dialog-title'>
+        <DialogTitle id='source-details-dialog-title'>Source Details for</DialogTitle>
+        <DialogContent>{sourceDetails}</DialogContent>
+        <DialogActions>
+          <Button onClick={handleCloseSourceDetails}>Close</Button>
+        </DialogActions>
+      </Dialog>
+
       <BatchActionsModal
         open={isBatchActionsModalOpen}
         onClose={() => setIsBatchActionsModalOpen(false)}

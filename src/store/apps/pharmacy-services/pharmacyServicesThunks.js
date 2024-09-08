@@ -17,7 +17,7 @@ export const fetchAppointments = createAsyncThunk('pharmacyServices/fetchAppoint
       `
     )
     .eq('pharmacy_id', organisationId)
-    .order('scheduled_time', { ascending: true })
+    .order('scheduled_time', { ascending: false })
 
   //format the data for full calendar by making scheduled_time into start and the rest into event data
   const formattedData = data.map(appointment => {
@@ -128,8 +128,9 @@ export const createAppointment = createAsyncThunk(
 export const updateAppointment = createAsyncThunk(
   'pharmacyServices/updateAppointment',
   async ({ appointmentData, sendText }, { getState, dispatch }) => {
+    console.log('APPOINTMENT DATA', appointmentData)
     const { id, ps_services, start, end, p_service_id, title, ...updateData } = appointmentData
-    console.log('APPOINTMENT DATA', updateData)
+
     const { data, error } = await supabase.from('ps_appointments').update(updateData).eq('id', id).select().single()
 
     if (sendText) {
@@ -140,6 +141,7 @@ export const updateAppointment = createAsyncThunk(
     }
 
     if (error) throw error
+    console.log('UPDATED APPOINTMENT RETURNED DATA', data)
     dispatch(fetchAppointments())
     return data
   }
