@@ -1,46 +1,120 @@
 import { createAsyncThunk } from '@reduxjs/toolkit'
 import { supabaseOrg as supabase } from 'src/configs/supabase'
 import { prepareClaimData } from './utils/mysPrep'
+import { createThreadAndSendSMS } from '../calendar/pharmacyfirst/appointmentListSlice'
+import { startOfDay, endOfDay, addDays, subDays } from 'date-fns'
 
 // Fetch appointments for the current organisation
-export const fetchAppointments = createAsyncThunk('pharmacyServices/fetchAppointments', async (_, { getState }) => {
-  const organisationId = getState().organisation.organisation.id
-  const { data, error } = await supabase
-    .from('ps_appointments')
-    .select(
-      `
-        *,
-       ps_services (
-        *,
-        ps_pharmacy_services (id, color)
-      )
-      `
-    )
-    .eq('pharmacy_id', organisationId)
-    .order('scheduled_time', { ascending: false })
+// export const fetchAppointments = createAsyncThunk(
+//   'pharmacyServices/fetchAppointments',
+//   async (params, { getState }) => {
+//     const organisationId = getState().organisation.organisation.id
 
-  //format the data for full calendar by making scheduled_time into start and the rest into event data
-  const formattedData = data.map(appointment => {
-    return {
+//     let query = supabase
+//       .from('ps_appointments')
+//       .select(
+//         `
+//         *,
+//         ps_services (
+//           *,
+//           ps_pharmacy_services (id, color)
+//         )
+//       `
+//       )
+//       .eq('pharmacy_id', organisationId)
+
+//     // Check if params is an object with startDate and endDate
+//     if (params && typeof params === 'object' && 'startDate' in params && 'endDate' in params) {
+//       const { startDate, endDate } = params
+//       if (startDate && endDate) {
+//         query = query
+//           .gte('scheduled_time', startOfDay(startDate).toISOString())
+//           .lte('scheduled_time', endOfDay(endDate).toISOString())
+//       }
+//     } else {
+//       // If no date range is provided, fetch all appointments
+//       // You can optionally add a default date range here if you want to limit the data
+//       // For example, to fetch appointments for the next 30 days by default:
+//       //
+//       const defaultStartDate = subDays(new Date(), 30)
+//       const defaultEndDate = addDays(new Date(), 30)
+//       query = query
+//         .gte('scheduled_time', startOfDay(defaultStartDate).toISOString())
+//         .lte('scheduled_time', endOfDay(defaultEndDate).toISOString())
+//     }
+
+//     const { data, error } = await query.order('scheduled_time', { ascending: false })
+
+//     if (error) throw error
+
+//     const formattedData = data.map(appointment => ({
+//       ...appointment,
+//       start: appointment.scheduled_time,
+//       color: appointment.ps_services?.ps_pharmacy_services?.[0]?.color,
+//       p_service_id: appointment.ps_services?.ps_pharmacy_services?.[0]?.id,
+//       title: appointment.patient_object?.full_name || 'Full Name'
+//     }))
+
+//     console.log('formattedData', formattedData)
+
+//     return formattedData
+//   }
+// )
+export const fetchAppointments = createAsyncThunk(
+  'pharmacyServices/fetchAppointments',
+  async (params, { getState }) => {
+    const organisationId = getState().organisation.organisation.id
+
+    let query = supabase
+      .from('ps_appointments')
+      .select(
+        `
+        *,
+        ps_services (
+          *,
+          ps_pharmacy_services (id, color)
+        )
+      `
+      )
+      .eq('pharmacy_id', organisationId)
+
+    if (params && typeof params === 'object') {
+      if ('startDate' in params && 'endDate' in params) {
+        // Date range query
+        query = query
+          .gte('scheduled_time', startOfDay(params.startDate).toISOString())
+          .lte('scheduled_time', endOfDay(params.endDate).toISOString())
+      } else if (params.fetchType === 'recent') {
+        // Recent 50 query
+        query = query.order('created_at', { ascending: false }).limit(params.limit || 50)
+      } else if (params.fetchType === 'recentUpdates') {
+        // Recent updates query
+        query = query.order('last_updated', { ascending: false }).limit(params.limit || 50)
+      }
+    } else {
+      // Default behavior: fetch appointments for the last 30 days to next 30 days
+      const defaultStartDate = subDays(new Date(), 30)
+      const defaultEndDate = addDays(new Date(), 30)
+      query = query
+        .gte('scheduled_time', startOfDay(defaultStartDate).toISOString())
+        .lte('scheduled_time', endOfDay(defaultEndDate).toISOString())
+    }
+
+    const { data, error } = await query.order('scheduled_time', { ascending: false })
+
+    if (error) throw error
+
+    const formattedData = data.map(appointment => ({
       ...appointment,
       start: appointment.scheduled_time,
       color: appointment.ps_services?.ps_pharmacy_services?.[0]?.color,
       p_service_id: appointment.ps_services?.ps_pharmacy_services?.[0]?.id,
       title: appointment.patient_object?.full_name || 'Full Name'
-      // eventData: {
-      //   id: appointment.id,
-      //   status_details: appointment.status_details,
-      //   scheduled_time: appointment.scheduled_time,
-      //   ps_services: appointment.ps_services
-      // }
-    }
-  })
+    }))
 
-  console.log('formattedData', formattedData)
-
-  if (error) throw error
-  return formattedData
-})
+    return formattedData
+  }
+)
 
 export const fetchServiceDeliveries = createAsyncThunk(
   'pharmacyServices/fetchServiceDeliveries',
@@ -131,13 +205,36 @@ export const updateAppointment = createAsyncThunk(
     console.log('APPOINTMENT DATA', appointmentData)
     const { id, ps_services, start, end, p_service_id, title, ...updateData } = appointmentData
 
+    // take the scheduled_time from the updateData and add an appointment_end_time 30 minutes after
+    const appointmentEndTime = new Date(updateData.scheduled_time)
+    appointmentEndTime.setMinutes(appointmentEndTime.getMinutes() + 30)
+    updateData.appointment_end_time = appointmentEndTime.toISOString()
+
     const { data, error } = await supabase.from('ps_appointments').update(updateData).eq('id', id).select().single()
 
     if (sendText) {
-      const threadId = await supabase.from('sms_threads').select('*').eq('appointment_id', id).single()
-      console.log('THREAD ID', threadId)
-      const message = `Your appointment has been updated: ${data.scheduled_time}`
-      await dispatch(appendMessageToThread({ threadId: threadId.id, message: message }))
+      const { data: threadId, error } = await supabase
+        .from('sms_threads')
+        .select('*')
+        .eq('appointment_id', id)
+        .maybeSingle()
+      console.log('THREAD ID', threadId, error)
+      if (threadId) {
+        const message = `Your appointment has been updated: ${data.scheduled_time}`
+        await dispatch(appendMessageToThread({ threadId: threadId.id, message: message }))
+      } else {
+        console.log('NO THREAD ID FOUND')
+        await dispatch(
+          createThreadAndSendSMS({
+            patientId: data.patient_id,
+            patientName: data.patient_object.full_name,
+            message: `Your appointment has been updated: ${data.scheduled_time}`,
+            phoneNumber: data.patient_object.mobile_number,
+            time: data.scheduled_time,
+            appointmentId: data.id
+          })
+        )
+      }
     }
 
     if (error) throw error
@@ -214,6 +311,25 @@ export const submitClaim = createAsyncThunk(
 
     dispatch(fetchAppointments())
     return
+  }
+)
+
+export const cancelAppointment = createAsyncThunk(
+  'pharmacyServices/cancelAppointment',
+  async (appointmentId, { dispatch }) => {
+    try {
+      const { data, error } = await supabase
+        .from('ps_appointments')
+        .update({ overall_status: 'Cancelled' })
+        .eq('id', appointmentId)
+        .single()
+
+      if (error) throw new Error(`Failed to cancel appointment: ${error.message}`)
+
+      return { id: appointmentId, status: 'success', message: 'Appointment cancelled successfully' }
+    } catch (error) {
+      return { id: appointmentId, status: 'error', message: error.message }
+    }
   }
 )
 

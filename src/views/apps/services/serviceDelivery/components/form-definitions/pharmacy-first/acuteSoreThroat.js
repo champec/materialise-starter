@@ -1,253 +1,276 @@
 import SymptomChecklist from '../../CustomFormFields/SymptomChecklist'
 import { universalCPCSFormDefinition } from './universalCpcsform'
 
-const acuteSoreThroatDefinition = {
-  name: 'Acute Sore Throat',
-  startNode: 'inclusionCriteria',
+const acuteSoreThroatServiceDefinition = {
+  name: 'Acute Sore Throat Service',
+  startNode: 'eligibilityCheck',
   nodes: {
-    ...universalCPCSFormDefinition.nodes,
-    inclusionCriteria: {
-      id: 'inclusionCriteria',
+    eligibilityCheck: {
+      id: 'eligibilityCheck',
       field: {
-        type: 'custom',
-        component: SymptomChecklist,
-        question: 'Does the patient meet the following inclusion criteria?',
-        options: ['Adults and children aged 5 years and over', 'Not pregnant', 'Not under 16 years old'],
+        type: 'radio',
+        question: 'Is the patient at least 5 years old and not a pregnant individual under 16 years?',
+        options: ['Yes', 'No'],
         required: true,
-        progressionCriteria: { type: 'allYes' }
+        autoProgress: true
       },
-      next: answer => (Object.values(answer).every(v => v) ? 'riskOfDeterioration' : 'exclusionStop')
+      next: answer => (answer === 'Yes' ? 'riskOfDeterioration' : 'exclusionStop')
     },
     exclusionStop: {
       id: 'exclusionStop',
       field: {
         type: 'text',
-        question: 'Patient does not meet inclusion criteria. Please refer to appropriate care.',
+        question: 'Patient is not eligible for this service. Please refer to appropriate care.',
         required: false
       },
       next: () => null,
       isStopNode: true,
-      returnTo: 'inclusionCriteria'
+      returnTo: 'eligibilityCheck'
     },
     riskOfDeterioration: {
       id: 'riskOfDeterioration',
       field: {
         type: 'custom',
-        component: SymptomChecklist,
-        question: 'Consider the risk of deterioration or serious illness:',
+        component: 'SymptomChecklist',
+        question: 'Check for risk of deterioration or serious illness:',
         options: [
-          'Suspected Epiglottitis (4Ds: dysphagia, dysphonia, drooling, distress)',
-          'Severe complications suspected (such as clinical dehydration, signs of pharyngeal abscess)',
+          'Suspected Epiglottitis',
+          '4Ds: dysphagia, dysphonia, drooling, distress',
+          'Severe complications (e.g., clinical dehydration, signs of pharyngeal abscess)',
           'Stridor (noisy or high pitched sound with breathing)'
         ],
         required: true,
-        progressionCriteria: { type: 'allNo' }
+        progressionCriteria: { type: 'any' }
       },
-      next: answer => (Object.values(answer).some(v => v) ? 'urgentReferralStop' : 'otherComplications')
+      next: answer => (Object.values(answer).some(v => v) ? 'news2Calculator' : 'otherConditions')
     },
-    urgentReferralStop: {
-      id: 'urgentReferralStop',
-      field: {
-        type: 'text',
-        question:
-          'Urgent referral required. Consider calculating NEWS2 Score ahead of signposting patient to A&E or calling 999 in a life-threatening emergency.',
-        required: false
-      },
-      next: () => null,
-      isStopNode: true,
-      returnTo: 'riskOfDeterioration'
-    },
-    otherComplications: {
-      id: 'otherComplications',
+    news2Calculator: {
+      id: 'news2Calculator',
       field: {
         type: 'custom',
-        component: SymptomChecklist,
-        question: 'Does the patient have any of the following:',
+        component: 'NEWS2Calculator',
+        question: 'Calculate NEWS2 Score',
+        required: true
+      },
+      next: () => 'referralComponent'
+    },
+    otherConditions: {
+      id: 'otherConditions',
+      field: {
+        type: 'custom',
+        component: 'SymptomChecklist',
+        question: 'Check for other conditions:',
         options: [
-          'Signs or symptoms indicating possible scarlet fever, quinsy or glandular fever (refer to NICE CKS for list of symptoms)',
+          'Signs or symptoms indicating possible scarlet fever, quinsy or glandular fever',
           'Signs and symptoms of suspected cancer',
-          'Immunosuppression'
+          'Patient is immunosuppressed'
         ],
         required: true,
-        progressionCriteria: { type: 'allNo' }
+        progressionCriteria: { type: 'any' }
       },
-      next: answer => (Object.values(answer).some(v => v) ? 'onwardReferral' : 'feverPAINScore')
+      next: answer => (Object.values(answer).some(v => v) ? 'referralComponent' : 'feverPainScore')
     },
-    onwardReferral: {
-      id: 'onwardReferral',
-      field: {
-        type: 'text',
-        question: 'Onward referral to General Practice or other provider as appropriate.',
-        required: false
-      },
-      next: () => null,
-      isStopNode: true,
-      returnTo: 'otherComplications'
-    },
-    feverPAINScore: {
-      id: 'feverPAINScore',
+    feverPainScore: {
+      id: 'feverPainScore',
       field: {
         type: 'custom',
-        component: SymptomChecklist,
-        question: 'Use FeverPAIN Score to assess (1 point for each):',
-        options: [
-          'Fever (over 38°C)',
-          'Purulence',
-          'First Attendance within 3 days after onset of symptoms',
-          'Severely Inflamed tonsils',
-          'No cough or coryza (cold symptoms)'
-        ],
+        component: 'FeverPainCalculator',
+        question: 'Calculate FeverPAIN score:',
         required: true
       },
       next: answer => {
-        const score = Object.values(answer).filter(v => v).length
-        if (score <= 1) return 'feverPAIN01'
-        if (score <= 3) return 'feverPAIN23'
-        return 'feverPAIN45'
+        if (answer.feverPainScore <= 1) {
+          return 'lowFeverPainScore'
+        } else if (answer.feverPainScore <= 3) {
+          return 'mediumFeverPainScore'
+        } else {
+          return 'highFeverPainScore'
+        }
       }
     },
-    feverPAIN01: {
-      id: 'feverPAIN01',
+    lowFeverPainScore: {
+      id: 'lowFeverPainScore',
       field: {
-        type: 'checkbox',
-        question: 'Self-care and pain relief:',
+        type: 'custom',
+        component: 'AdviceForm',
+        question: 'Provide the following advice to the patient:',
         options: [
           'Antibiotic is not needed',
           'Offer over the counter treatment for symptomatic relief',
           'Drink adequate fluids',
           'Ask patient to return to Community Pharmacy after 1 week if no improvement for pharmacist reassessment'
         ],
-        required: true
+        required: true,
+        progressionCriteria: { type: 'allYes' }
       },
-      next: () => 'completion'
+      next: () => 'safetyNetting'
     },
-    feverPAIN23: {
-      id: 'feverPAIN23',
+    mediumFeverPainScore: {
+      id: 'mediumFeverPainScore',
       field: {
-        type: 'checkbox',
-        question: 'Self-care and pain relief:',
+        type: 'custom',
+        component: 'AdviceForm',
+        question: 'Provide the following advice to the patient:',
         options: [
+          'Self-care and pain relief',
           'Antibiotics make little difference to how long symptoms last',
           'Withholding antibiotics is unlikely to lead to complications',
-          'Ask patient to return to Community Pharmacy if no improvement within 3-5 days for pharmacist reassessment',
-          'After pharmacist reassessment, patient can be offered antibiotics if appropriate based on clinician global impression'
+          'Ask patient to return to Community Pharmacy if no improvement within 3-5 days for pharmacist reassessment'
         ],
-        required: true
+        required: true,
+        progressionCriteria: { type: 'allYes' }
       },
-      next: () => 'completion'
+      next: () => 'safetyNetting'
     },
-    feverPAIN45: {
-      id: 'feverPAIN45',
+    highFeverPainScore: {
+      id: 'highFeverPainScore',
       field: {
-        type: 'radio',
-        question: 'Shared decision making approach using TARGET RTI resources and clinician global impression:',
-        options: [
-          'Mild symptoms: consider pain relief and self care as first line treatment',
-          'Severe symptoms: consider offering an immediate antibiotic'
-        ],
+        type: 'custom',
+        component: 'TargetRTI',
+        question: 'Use TARGET RTI resources for shared decision making:',
         required: true
       },
-      next: answer =>
-        answer === 'Mild symptoms: consider pain relief and self care as first line treatment'
-          ? 'mildSymptoms'
-          : 'severeSymptoms'
+      next: answer => {
+        if (answer.outcome === 'mild_symptoms') {
+          return 'mildSymptoms'
+        } else if (answer.outcome === 'severe_symptoms') {
+          return 'severeSymptoms'
+        }
+        return 'safetyNetting'
+      }
     },
     mildSymptoms: {
       id: 'mildSymptoms',
       field: {
-        type: 'checkbox',
-        question: 'Self-care and pain relief:',
+        type: 'custom',
+        component: 'AdviceForm',
+        question: 'Provide the following advice to the patient:',
         options: [
-          'Ask patient to return to Community Pharmacy if no improvement within 3-5 days for pharmacist reassessment',
-          'After pharmacist reassessment, patient can be offered antibiotics if appropriate based on clinician global impression'
+          'Consider pain relief and self care as first line treatment',
+          'Ask patient to return to Community Pharmacy if no improvement within 3-5 days for pharmacist reassessment'
         ],
-        required: true
+        required: true,
+        progressionCriteria: { type: 'allYes' }
       },
-      next: () => 'completion'
+      next: () => 'safetyNetting'
     },
     severeSymptoms: {
       id: 'severeSymptoms',
       field: {
         type: 'radio',
-        question: 'Is the patient allergic to penicillin?',
+        question: 'Does the patient have a penicillin allergy?',
         options: ['Yes', 'No'],
-        required: true
+        required: true,
+        autoProgress: true
       },
-      next: answer => (answer === 'Yes' ? 'clarithromycinTreatment' : 'phenoxymethylpenicillinTreatment')
+      next: answer => (answer === 'Yes' ? 'penicillinAllergy' : 'prescribePhenoxymethylpenicillin')
     },
-    phenoxymethylpenicillinTreatment: {
-      id: 'phenoxymethylpenicillinTreatment',
-      field: {
-        type: 'text',
-        question:
-          'Offer phenoxymethylpenicillin for 5 days (subject to inclusion/exclusion criteria in PGD) plus self care.',
-        required: false
-      },
-      next: () => 'treatmentFailure'
-    },
-    clarithromycinTreatment: {
-      id: 'clarithromycinTreatment',
+    penicillinAllergy: {
+      id: 'penicillinAllergy',
       field: {
         type: 'radio',
         question: 'Is the patient pregnant?',
         options: ['Yes', 'No'],
-        required: true
+        required: true,
+        autoProgress: true
       },
-      next: answer => (answer === 'Yes' ? 'erythromycinTreatment' : 'clarithromycinNonPregnant')
+      next: answer => (answer === 'Yes' ? 'prescribeErythromycin' : 'prescribeClarithromycin')
     },
-    clarithromycinNonPregnant: {
-      id: 'clarithromycinNonPregnant',
+    prescribePhenoxymethylpenicillin: {
+      id: 'prescribePhenoxymethylpenicillin',
       field: {
-        type: 'text',
-        question: 'Offer clarithromycin for 5 days (subject to inclusion/exclusion criteria in PGD) plus self care.',
-        required: false
+        type: 'custom',
+        component: 'MedicineSupplied',
+        question: 'Prescribe phenoxymethylpenicillin for 5 days:',
+        required: true,
+        predefinedOptions: [
+          {
+            drugCode: '325286007',
+            drugDescription: 'Phenoxymethylpenicillin 250mg tablets',
+            drugDose: 'Take two tablets four times a day',
+            quantitySupplied: 40,
+            medicationSupplyType: 'PGD'
+          }
+        ]
       },
-      next: () => 'treatmentFailure'
+      next: () => 'safetyNetting'
     },
-    erythromycinTreatment: {
-      id: 'erythromycinTreatment',
+    prescribeClarithromycin: {
+      id: 'prescribeClarithromycin',
       field: {
-        type: 'text',
-        question: 'Offer erythromycin for 5 days (subject to inclusion/exclusion criteria in PGD) plus self care.',
-        required: false
+        type: 'custom',
+        component: 'MedicineSupplied',
+        question: 'Prescribe clarithromycin for 5 days:',
+        required: true,
+        predefinedOptions: [
+          {
+            drugCode: '323924009',
+            drugDescription: 'Clarithromycin 250mg tablets',
+            drugDose: 'Take one tablet twice a day',
+            quantitySupplied: 10,
+            medicationSupplyType: 'PGD'
+          }
+        ]
       },
-      next: () => 'treatmentFailure'
+      next: () => 'safetyNetting'
     },
-    treatmentFailure: {
-      id: 'treatmentFailure',
+    prescribeErythromycin: {
+      id: 'prescribeErythromycin',
       field: {
-        type: 'text',
-        question:
-          'If symptoms do not improve after completion of treatment course, refer to General Practice or other provider as appropriate.',
-        required: false
-      },
-      next: () => 'rapidDeterioration'
-    },
-    rapidDeterioration: {
-      id: 'rapidDeterioration',
-      field: {
-        type: 'text',
-        question:
-          'If symptoms worsen rapidly or significantly at any time, refer to General Practice or other provider as appropriate.',
-        required: false
+        type: 'custom',
+        component: 'MedicineSupplied',
+        question: 'Prescribe erythromycin for 5 days:',
+        required: true,
+        predefinedOptions: [
+          {
+            drugCode: '329606002',
+            drugDescription: 'Erythromycin 250mg tablets',
+            drugDose: 'Take two tablets four times a day',
+            quantitySupplied: 40,
+            medicationSupplyType: 'PGD'
+          }
+        ]
       },
       next: () => 'safetyNetting'
     },
     safetyNetting: {
       id: 'safetyNetting',
       field: {
-        type: 'text',
-        question: 'Share self-care and safety-netting advice using TARGET Respiratory Tract Infection leaflets.',
+        type: 'checkbox',
+        question: 'Safety netting advice provided:',
+        options: [
+          'Shared self-care and safety-netting advice using TARGET Respiratory Tract Infection leaflets',
+          'Advised to return if symptoms worsen rapidly or significantly at any time',
+          'Advised to seek help if symptoms do not improve after completion of treatment course (if applicable)'
+        ],
+        required: true
+      },
+      next: () => 'reviewComponent'
+    },
+    referralComponent: {
+      id: 'referralComponent',
+      field: {
+        type: 'custom',
+        component: 'ReferralComponent',
+        question: 'Complete Referral',
+        options: [''],
+        required: true,
+        progressionCriteria: { type: 'any' }
+      },
+      next: () => 'reviewComponent'
+    },
+    reviewComponent: {
+      id: 'reviewComponent',
+      field: {
+        type: 'custom',
+        component: 'ReviewComponent',
+        question: 'Review your answers:',
         required: false
       },
-      next: () => 'completion'
-    },
-    completion: {
-      ...universalCPCSFormDefinition.nodes.completion,
-      field: {
-        ...universalCPCSFormDefinition.nodes.completion.field,
-        question: 'Acute sore throat assessment and treatment completed. Any additional notes or observations?'
-      }
+      next: () => null,
+      isEndNode: true
     }
   }
 }
+
+export default acuteSoreThroatServiceDefinition

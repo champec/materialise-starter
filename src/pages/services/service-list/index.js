@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useState, forwardRef } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
 import withReducer from 'src/@core/HOC/withReducer'
 import pharmacyServicesSlice, {
@@ -10,7 +10,12 @@ import pharmacyServicesSlice, {
   selectStatusFilter
 } from 'src/store/apps/pharmacy-services/pharmacyServicesSlice'
 import format from 'date-fns/format'
-import { fetchAppointments, fetchServicesWithStages } from 'src/store/apps/pharmacy-services/pharmacyServicesThunks'
+// import addDays from 'date-fns/addDays'
+import { addDays, subDays, parse } from 'date-fns'
+import {
+  fetchAppointments,
+  fetchServicesWithStages
+} from '../../../store/apps/pharmacy-services/pharmacyServicesThunks'
 import {
   Grid,
   Typography,
@@ -33,13 +38,23 @@ import {
   Tooltip,
   IconButton,
   DialogTitle,
-  DialogActions
+  DialogActions,
+  TextField,
+  InputAdornment,
+  Collapse
 } from '@mui/material'
 import { DataGrid, GridToolbar } from '@mui/x-data-grid'
 import BatchActionsModal from './components/BatchActionsModal'
+import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns'
+import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider'
 import Icon from 'src/@core/components/icon'
 import BookingComponent from './BookingComponent'
 import ServiceDeliveryComponent from './components/ServiceDeliveryComponent'
+import DatePicker from 'react-datepicker'
+import { useTheme } from '@mui/material/styles'
+
+// ** Styled Component
+import DatePickerWrapper from 'src/@core/styles/libs/react-datepicker'
 // import pharmExLogo from '/images/pharmEx-logo-light.png'
 // import nhs111logo from '/images/nhs/NHS.svg'
 
@@ -75,6 +90,76 @@ const MenuProps = {
   }
 }
 
+const CustomInput = forwardRef((props, ref) => {
+  const { label, start, end, onChange, ...rest } = props
+  const [inputValue, setInputValue] = useState(
+    `${format(start, 'dd/MM/yyyy')}${end ? ` - ${format(end, 'dd/MM/yyyy')}` : ''}`
+  )
+  const [isPickerOpen, setIsPickerOpen] = useState(false)
+
+  const handleInputChange = event => {
+    setInputValue(event.target.value)
+  }
+
+  const handleInputBlur = () => {
+    const [startStr, endStr] = inputValue.split(' - ')
+    try {
+      const startDate = parse(startStr, 'dd/MM/yyyy', new Date())
+      const endDate = endStr ? parse(endStr, 'dd/MM/yyyy', new Date()) : null
+      if (!isNaN(startDate.getTime()) && (endDate === null || !isNaN(endDate.getTime()))) {
+        onChange([startDate, endDate])
+      } else {
+        // If parsing fails, revert to the original dates
+        setInputValue(`${format(start, 'dd/MM/yyyy')}${end ? ` - ${format(end, 'dd/MM/yyyy')}` : ''}`)
+      }
+    } catch (error) {
+      // If parsing fails, revert to the original dates
+      setInputValue(`${format(start, 'dd/MM/yyyy')}${end ? ` - ${format(end, 'dd/MM/yyyy')}` : ''}`)
+    }
+  }
+
+  const handleDateChange = dates => {
+    const [newStart, newEnd] = dates
+    setInputValue(`${format(newStart, 'dd/MM/yyyy')}${newEnd ? ` - ${format(newEnd, 'dd/MM/yyyy')}` : ''}`)
+    onChange(dates)
+  }
+
+  return (
+    <FormControl>
+      <TextField
+        {...rest}
+        ref={ref}
+        label={label}
+        value={inputValue}
+        onChange={handleInputChange}
+        onBlur={handleInputBlur}
+        InputProps={{
+          endAdornment: (
+            <InputAdornment position='end'>
+              <IconButton onClick={() => setIsPickerOpen(true)}>
+                <Icon icon='mdi:calendar' />
+              </IconButton>
+            </InputAdornment>
+          )
+        }}
+      />
+      <DatePicker
+        selectsRange
+        monthsShown={2}
+        startDate={start}
+        endDate={end}
+        // selected={endDate}
+        selectedDates={[start, end]}
+        onChange={handleDateChange}
+        onClickOutside={() => setIsPickerOpen(false)}
+        open={isPickerOpen}
+        customInput={<div style={{ display: 'none' }} />} // Hidden input
+      />
+    </FormControl>
+  )
+})
+
+//! fix the assymetrical filters for date range picker
 function PharmacyServicesPage() {
   const dispatch = useDispatch()
   const appointments = useSelector(selectFilteredAppointments)
@@ -91,14 +176,54 @@ function PharmacyServicesPage() {
   const [openStatusDetails, setOpenStatusDetails] = useState(false)
   const [statusDetails, setStatusDetails] = useState(null)
   const [isBatchActionsModalOpen, setIsBatchActionsModalOpen] = useState(false)
-  const [selectedAppointments, setSelectedAppointments] = useState([])
+  const [selectedAppointmentIds, setSelectedAppointmentIds] = useState([])
   const [currentBatchAction, setCurrentBatchAction] = useState('')
   const [openSourceDetails, setOpenSourceDetails] = useState(false)
   const [sourceDetails, setSourceDetails] = useState(null)
+  const [startDate, setStartDate] = useState(subDays(new Date(), 30))
+  const [endDate, setEndDate] = useState(addDays(new Date(), 30))
+  const [fetchOption, setFetchOption] = useState('dateRange')
+  const [showFilters, setShowFilters] = useState(false)
+
+  const toggleFilters = () => {
+    setShowFilters(!showFilters)
+  }
 
   const statuses = ['Scheduled', 'In Progress', 'Completed', 'Cancelled']
 
   console.log('APPOINTMENTS', { appointments })
+
+  const theme = useTheme()
+  const { direction } = theme
+  const popperPlacement = direction === 'ltr' ? 'bottom-start' : 'bottom-end'
+
+  const handleDateRangeChange = dates => {
+    const [start, end] = dates
+    setStartDate(start)
+    setEndDate(end)
+    // Dispatch fetchAppointments with the new date range
+    dispatch(fetchAppointments({ startDate: start, endDate: end }))
+  }
+
+  useEffect(() => {
+    let fetchParams = {}
+    switch (fetchOption) {
+      case 'dateRange':
+        fetchParams = { startDate, endDate }
+        break
+      case 'recent50':
+        fetchParams = { fetchType: 'recent', limit: 50 }
+        break
+      case 'recentUpdates':
+        fetchParams = { fetchType: 'recentUpdates', limit: 50 }
+        break
+    }
+    dispatch(fetchAppointments(fetchParams))
+  }, [dispatch, fetchOption, startDate, endDate])
+
+  const handleFetchOptionChange = event => {
+    setFetchOption(event.target.value)
+  }
 
   const handleViewClick = appointment => {
     setSelectedAppointment(appointment)
@@ -116,28 +241,28 @@ function PharmacyServicesPage() {
     // setSelectedAppointment(null)
   }
 
-  const handleActionSelect = action => {
-    handleActionClose()
-    switch (action) {
-      case 'edit':
-        setEditingAppointment(selectedAppointment)
-        setIsDrawerOpen(true)
-        break
-      case 'deliver':
-        setIsDeliveryModalOpen(true)
-        break
-      // Add more cases for other actions as needed
-    }
-  }
+  // const handleActionSelect = action => {
+  //   handleActionClose()
+  //   switch (action) {
+  //     case 'edit':
+  //       setEditingAppointment(selectedAppointment)
+  //       setIsDrawerOpen(true)
+  //       break
+  //     case 'deliver':
+  //       setIsDeliveryModalOpen(true)
+  //       break
+  //     // Add more cases for other actions as needed
+  //   }
+  // }
 
   const handleBatchActionsClick = event => {
     setBatchActionAnchorEl(event.currentTarget)
   }
 
   useEffect(() => {
-    dispatch(fetchAppointments())
+    dispatch(fetchAppointments({ startDate, endDate }))
     dispatch(fetchServicesWithStages())
-  }, [dispatch])
+  }, [dispatch, startDate, endDate])
 
   useEffect(() => {
     dispatch(setServiceFilter(selectedServices))
@@ -146,6 +271,12 @@ function PharmacyServicesPage() {
   useEffect(() => {
     dispatch(setStatusFilter(selectedStatuses))
   }, [selectedStatuses, dispatch])
+
+  useEffect(() => {
+    if (selectedAppointmentIds.length > 0 && !showFilters) {
+      setShowFilters(true)
+    }
+  }, [selectedAppointmentIds])
 
   const handleNewBooking = () => {
     setEditingAppointment(null)
@@ -384,170 +515,217 @@ function PharmacyServicesPage() {
   ]
 
   return (
-    <Box sx={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
-      <Header onNewBooking={handleNewBooking} />
-      <Container maxWidth='lg' sx={{ mt: 4, mb: 4, flexGrow: 1 }}>
-        <Grid container spacing={3}>
-          <Grid item xs={12}>
-            <Typography variant='h4' gutterBottom>
-              Appointments
-            </Typography>
-          </Grid>
-          <Grid item xs={4}>
-            <FormControl sx={{ m: 1, width: 300 }}>
-              <InputLabel id='service-multiple-checkbox-label'>Services</InputLabel>
-              <Select
-                labelId='service-multiple-checkbox-label'
-                id='service-multiple-checkbox'
-                multiple
-                value={selectedServices}
-                onChange={handleServiceChange}
-                input={<OutlinedInput label='Services' />}
-                renderValue={renderServiceValue}
-                MenuProps={{
-                  PaperProps: {
-                    style: {
-                      maxHeight: ITEM_HEIGHT * 4.5 + ITEM_PADDING_TOP,
-                      width: 300 // Increase width to prevent text cutoff
-                    }
-                  }
+    <DatePickerWrapper>
+      <Box sx={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
+        <Header onNewBooking={handleNewBooking} />
+        <Container maxWidth='lg' sx={{ mt: 4, mb: 4, flexGrow: 1 }}>
+          <Grid container spacing={3}>
+            <Grid item xs={12} sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+              <Typography variant='h4'>Appointments</Typography>
+              <Button
+                variant='outlined'
+                startIcon={<Icon icon={showFilters ? 'mdi:chevron-up' : 'mdi:chevron-down'} />}
+                onClick={toggleFilters}
+              >
+                {showFilters ? 'Hide Filters' : 'Show Filters'}
+              </Button>
+            </Grid>
+
+            <Grid item xs={12}>
+              <Collapse in={showFilters}>
+                <Grid container spacing={2}>
+                  <Grid item xs={4}>
+                    <FormControl fullWidth>
+                      <InputLabel id='service-multiple-checkbox-label'>Services</InputLabel>
+                      <Select
+                        labelId='service-multiple-checkbox-label'
+                        id='service-multiple-checkbox'
+                        multiple
+                        value={selectedServices}
+                        onChange={handleServiceChange}
+                        input={<OutlinedInput label='Services' />}
+                        renderValue={renderServiceValue}
+                        MenuProps={MenuProps}
+                      >
+                        <MenuItem value='all'>
+                          <Checkbox checked={selectedServices.length === services.length + 1} />
+                          <ListItemText
+                            primary={selectedServices.length === services.length + 1 ? 'Deselect All' : 'Select All'}
+                          />
+                        </MenuItem>
+                        {services.map(service => (
+                          <MenuItem key={service.id} value={service.id} style={{ whiteSpace: 'normal' }}>
+                            <Checkbox
+                              checked={selectedServices.includes(service.id) || selectedServices.includes('all')}
+                            />
+                            <ListItemText
+                              primary={service.name}
+                              secondary={service.abbreviation}
+                              primaryTypographyProps={{ style: { whiteSpace: 'normal' } }}
+                            />
+                          </MenuItem>
+                        ))}
+                      </Select>
+                    </FormControl>
+                  </Grid>
+                  <Grid item xs={4}>
+                    <FormControl fullWidth>
+                      <InputLabel id='status-multiple-checkbox-label'>Statuses</InputLabel>
+                      <Select
+                        labelId='status-multiple-checkbox-label'
+                        id='status-multiple-checkbox'
+                        multiple
+                        value={selectedStatuses}
+                        onChange={handleStatusChange}
+                        input={<OutlinedInput label='Statuses' />}
+                        renderValue={renderStatusValue}
+                        MenuProps={MenuProps}
+                      >
+                        <MenuItem value='all'>
+                          <Checkbox checked={selectedStatuses.length === statuses.length + 1} />
+                          <ListItemText
+                            primary={selectedStatuses.length === statuses.length + 1 ? 'Deselect All' : 'Select All'}
+                          />
+                        </MenuItem>
+                        {statuses.map(status => (
+                          <MenuItem key={status} value={status}>
+                            <Checkbox checked={selectedStatuses.includes(status) || selectedStatuses.includes('all')} />
+                            <ListItemText primary={status} />
+                          </MenuItem>
+                        ))}
+                      </Select>
+                    </FormControl>
+                  </Grid>
+                  <Grid item xs={4}>
+                    <Button
+                      variant='contained'
+                      color='primary'
+                      onClick={handleBatchActionsClick}
+                      disabled={selectedAppointmentIds.length === 0}
+                      endIcon={<Icon icon='mdi:chevron-down' />}
+                      fullWidth
+                    >
+                      Batch Actions
+                    </Button>
+                  </Grid>
+                  <Grid item xs={12}>
+                    <Grid container spacing={2} alignItems='center'>
+                      <Grid item xs={4}>
+                        <FormControl fullWidth>
+                          <InputLabel id='fetch-option-label'>Fetch Option</InputLabel>
+                          <Select
+                            labelId='fetch-option-label'
+                            id='fetch-option-select'
+                            value={fetchOption}
+                            onChange={handleFetchOptionChange}
+                            input={<OutlinedInput label='Fetch Option' />}
+                            MenuProps={MenuProps}
+                          >
+                            <MenuItem value='dateRange'>Date Range</MenuItem>
+                            <MenuItem value='recent50'>Recent 50</MenuItem>
+                            <MenuItem value='recentUpdates'>Recent Updates</MenuItem>
+                          </Select>
+                        </FormControl>
+                      </Grid>
+                      <Grid item xs={4}>
+                        {fetchOption === 'dateRange' && (
+                          <CustomInput
+                            label='Date Range'
+                            start={startDate}
+                            end={endDate}
+                            onChange={handleDateRangeChange}
+                          />
+                        )}
+                      </Grid>
+                      <Grid item xs={4}>
+                        <Button variant='outlined' fullWidth>
+                          Save Settings
+                        </Button>
+                      </Grid>
+                    </Grid>
+                  </Grid>
+                </Grid>
+              </Collapse>
+            </Grid>
+
+            <Grid item xs={12}>
+              <DataGrid
+                rows={appointments}
+                columns={columns}
+                pageSize={pageSize}
+                onPageSizeChange={newPageSize => setPageSize(newPageSize)}
+                rowsPerPageOptions={[5, 10, 20]}
+                checkboxSelection
+                disableSelectionOnClick
+                onSelectionModelChange={newSelectionModel => {
+                  setSelectedAppointmentIds(newSelectionModel)
                 }}
-              >
-                <MenuItem value='all'>
-                  <Checkbox checked={selectedServices.length === services.length + 1} />
-                  <ListItemText
-                    primary={selectedServices.length === services.length + 1 ? 'Deselect All' : 'Select All'}
-                  />
-                </MenuItem>
-                {services.map(service => (
-                  <MenuItem key={service.id} value={service.id} style={{ whiteSpace: 'normal' }}>
-                    <Checkbox checked={selectedServices.includes(service.id) || selectedServices.includes('all')} />
-                    <ListItemText
-                      primary={service.name}
-                      secondary={service.abbreviation}
-                      primaryTypographyProps={{ style: { whiteSpace: 'normal' } }}
-                    />
-                  </MenuItem>
-                ))}
-              </Select>
-            </FormControl>
+                components={{
+                  Toolbar: GridToolbar
+                }}
+                autoHeight
+              />
+            </Grid>
           </Grid>
-          <Grid item xs={4}>
-            <FormControl sx={{ m: 1, width: 300 }}>
-              <InputLabel id='status-multiple-checkbox-label'>Statuses</InputLabel>
-              <Select
-                labelId='status-multiple-checkbox-label'
-                id='status-multiple-checkbox'
-                multiple
-                value={selectedStatuses}
-                onChange={handleStatusChange}
-                input={<OutlinedInput label='Statuses' />}
-                renderValue={renderStatusValue}
-                MenuProps={MenuProps}
-              >
-                <MenuItem value='all'>
-                  <Checkbox checked={selectedStatuses.length === statuses.length + 1} />
-                  <ListItemText
-                    primary={selectedStatuses.length === statuses.length + 1 ? 'Deselect All' : 'Select All'}
-                  />
-                </MenuItem>
-                {statuses.map(status => (
-                  <MenuItem key={status} value={status}>
-                    <Checkbox checked={selectedStatuses.includes(status) || selectedStatuses.includes('all')} />
-                    <ListItemText primary={status} />
-                  </MenuItem>
-                ))}
-              </Select>
-            </FormControl>
-          </Grid>
-          <Grid item xs={4}>
-            <Button
-              variant='contained'
-              color='primary'
-              onClick={handleBatchActionsClick}
-              disabled={selectedAppointments.length === 0}
-              endIcon={<Icon icon='mdi:chevron-down' />}
-              fullWidth
-            >
-              Batch Actions
-            </Button>
-            <Menu anchorEl={batchActionAnchorEl} open={Boolean(batchActionAnchorEl)} onClose={handleBatchActionClose}>
-              <MenuItem onClick={() => handleBatchActionSelect('submitClaim')}>Submit Claim</MenuItem>
-              {/* Add more menu items for other batch actions here */}
-            </Menu>
-          </Grid>
-          <Grid item xs={12}>
-            <DataGrid
-              rows={appointments}
-              columns={columns}
-              pageSize={pageSize}
-              onPageSizeChange={newPageSize => setPageSize(newPageSize)}
-              rowsPerPageOptions={[5, 10, 20]}
-              checkboxSelection
-              disableSelectionOnClick
-              onSelectionModelChange={newSelectionModel => {
-                setSelectedAppointments(newSelectionModel)
-              }}
-              components={{
-                Toolbar: GridToolbar
-              }}
-              autoHeight
-              exp
-            />
-          </Grid>
-        </Grid>
-      </Container>
-      <Footer />
-      <Drawer anchor='left' open={isDrawerOpen} onClose={handleCloseDrawer} sx={{ zIndex: 1201 }}>
-        <BookingComponent appointment={editingAppointment} source={sourceInfo} onClose={handleCloseDrawer} />
-      </Drawer>
-
-      {selectedAppointment && (
+        </Container>
+        <Footer />
+        <Drawer anchor='left' open={isDrawerOpen} onClose={handleCloseDrawer} sx={{ zIndex: 1201 }}>
+          <BookingComponent appointment={editingAppointment} source={sourceInfo} onClose={handleCloseDrawer} />
+        </Drawer>
+        {selectedAppointment && (
+          <Dialog
+            open={isDeliveryModalOpen}
+            onClose={() => {
+              setIsDeliveryModalOpen(false)
+            }}
+            maxWidth='lg'
+            fullWidth
+            sx={{ zIndex: 1200 }}
+          >
+            <DialogContent sx={{ minWidth: '800px', minHeight: '600px' }}>
+              <ServiceDeliveryComponent
+                appointment={selectedAppointment}
+                onClose={() => setIsDeliveryModalOpen(false)}
+                onEdit={handleEditBooking}
+              />
+            </DialogContent>
+          </Dialog>
+        )}
         <Dialog
-          open={isDeliveryModalOpen}
-          onClose={() => {
-            setIsDeliveryModalOpen(false)
-            // Optionally reset selectedAppointment here if needed
-            // setSelectedAppointment(null)
-          }}
-          maxWidth='lg'
-          fullWidth
-          sx={{ zIndex: 1200 }}
+          open={openStatusDetails}
+          onClose={handleCloseStatusDetails}
+          aria-labelledby='status-details-dialog-title'
         >
-          <DialogContent sx={{ minWidth: '800px', minHeight: '600px' }}>
-            <ServiceDeliveryComponent
-              appointment={selectedAppointment}
-              onClose={() => setIsDeliveryModalOpen(false)}
-              onEdit={handleEditBooking}
-            />
-          </DialogContent>
+          <DialogTitle id='status-details-dialog-title'>Status Details for</DialogTitle>
+          <DialogContent>{statusDetails}</DialogContent>
+          <DialogActions>
+            <Button onClick={handleCloseStatusDetails}>Close</Button>
+          </DialogActions>
         </Dialog>
-      )}
-
-      <Dialog open={openStatusDetails} onClose={handleCloseStatusDetails} aria-labelledby='status-details-dialog-title'>
-        <DialogTitle id='status-details-dialog-title'>Status Details for</DialogTitle>
-        <DialogContent>{statusDetails}</DialogContent>
-        <DialogActions>
-          <Button onClick={handleCloseStatusDetails}>Close</Button>
-        </DialogActions>
-      </Dialog>
-
-      <Dialog open={openSourceDetails} onClose={handleCloseSourceDetails} aria-labelledby='source-details-dialog-title'>
-        <DialogTitle id='source-details-dialog-title'>Source Details for</DialogTitle>
-        <DialogContent>{sourceDetails}</DialogContent>
-        <DialogActions>
-          <Button onClick={handleCloseSourceDetails}>Close</Button>
-        </DialogActions>
-      </Dialog>
-
-      <BatchActionsModal
-        open={isBatchActionsModalOpen}
-        onClose={() => setIsBatchActionsModalOpen(false)}
-        selectedAppointments={selectedAppointments}
-        appointments={appointments}
-        action={currentBatchAction} // Add this state to track the current batch action
-      />
-    </Box>
+        <Dialog
+          open={openSourceDetails}
+          onClose={handleCloseSourceDetails}
+          aria-labelledby='source-details-dialog-title'
+        >
+          <DialogTitle id='source-details-dialog-title'>Source Details for</DialogTitle>
+          <DialogContent>{sourceDetails}</DialogContent>
+          <DialogActions>
+            <Button onClick={handleCloseSourceDetails}>Close</Button>
+          </DialogActions>
+        </Dialog>
+        <BatchActionsModal
+          open={isBatchActionsModalOpen}
+          onClose={() => setIsBatchActionsModalOpen(false)}
+          selectedAppointmentIds={selectedAppointmentIds}
+          appointments={appointments}
+          action={currentBatchAction}
+        />
+        <Menu anchorEl={batchActionAnchorEl} open={Boolean(batchActionAnchorEl)} onClose={handleBatchActionClose}>
+          <MenuItem onClick={() => handleBatchActionSelect('submitClaim')}>Submit Claim</MenuItem>
+          <MenuItem onClick={() => handleBatchActionSelect('cancelAppointments')}>Cancel Appointments</MenuItem>
+        </Menu>
+      </Box>
+    </DatePickerWrapper>
   )
 }
 

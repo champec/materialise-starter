@@ -99,6 +99,8 @@ function Stats() {
 
     const { data, error } = await query
 
+    console.log('service stats data', data)
+
     if (error) console.error('Error fetching top providers:', error)
     else {
       const providersMap = data.reduce((acc, curr) => {

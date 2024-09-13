@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react'
+import React, { useState, useEffect, useRef, useCallback } from 'react'
 import {
   Box,
   Typography,
@@ -32,7 +32,7 @@ import GPPreview from './GPPreview'
 import TriageSection from './TriageSection' // Import the new TriageSection component
 import { StaticDateTimePicker } from '@mui/x-date-pickers'
 import dayjs from 'dayjs'
-import { Controller } from 'react-hook-form'
+import { isSameDay, isSameHour, isSameMinute, parseISO, startOfDay, addMinutes } from 'date-fns'
 // Styled FormControl to adjust label positioning
 const StyledFormControl = styled(FormControl)(({ theme }) => ({
   '& .MuiInputLabel-outlined': {
@@ -89,6 +89,51 @@ const AppointmentForm = ({
   const prevStageIdRef = useRef(appointment?.current_stage_id)
   const [datePickerOpen, setDatePickerOpen] = useState(false)
   const [inputDate, setInputDate] = useState('')
+  const [bookedSlots, setBookedSlots] = useState([])
+  //!diable booked times, might have to seperate date and time
+
+  // Simulated API call to fetch booked slots
+  const fetchBookedSlots = useCallback(async date => {
+    // This would be your actual API call
+    // For this example, we'll use mock data
+    const mockBookedSlots = [
+      '2024-09-12T09:00:00Z',
+      '2024-09-12T09:15:00Z',
+      '2024-09-12T09:30:00Z',
+      '2024-09-12T11:00:00Z',
+      '2024-09-12T11:15:00Z',
+      '2024-09-12T14:00:00Z',
+      '2024-09-12T14:15:00Z',
+      '2024-09-12T14:30:00Z',
+      '2024-09-12T14:45:00Z',
+      '2024-09-12T15:00:00Z'
+    ]
+
+    // Simulate API delay
+    await new Promise(resolve => setTimeout(resolve, 300))
+
+    // Filter slots for the selected date and parse them
+    const filteredSlots = mockBookedSlots.filter(slot => isSameDay(parseISO(slot), date)).map(slot => parseISO(slot))
+
+    setBookedSlots(filteredSlots)
+  }, [])
+
+  const handleDateChange = newDate => {
+    onDateChange(newDate)
+    fetchBookedSlots(newDate)
+  }
+
+  const shouldDisableTime = dateTime => {
+    // Ensure time is on a 15-minute interval
+    if (dateTime.getMinutes() % 15 !== 0) return true
+
+    // Check if the time slot is booked
+    return bookedSlots.some(bookedSlot => {
+      const slotStart = startOfDay(bookedSlot)
+      const slotEnd = addMinutes(slotStart, 15)
+      return dateTime >= slotStart && dateTime < slotEnd
+    })
+  }
 
   useEffect(() => {
     // Only run this effect if we're not in quickService mode
@@ -330,10 +375,12 @@ const AppointmentForm = ({
                     showTimeSelect
                     timeFormat='HH:mm'
                     timeIntervals={15}
+                    minutesStep={15}
                     selected={formData.scheduled_time}
                     id='date-time-picker'
                     defaultValue={formData.scheduled_time}
-                    onChange={onDateChange}
+                    onChange={handleDateChange}
+                    shouldDisableTime={shouldDisableTime}
                     onClose={() => setDatePickerOpen(false)}
                   />
                 </Dialog>

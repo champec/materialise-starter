@@ -507,8 +507,11 @@ const AdvancedFormEngine: React.FC<AdvancedFormEngineProps> = ({
               required={field.required}
             >
               {field.options?.map(option => (
-                <MenuItem key={option} value={option}>
-                  {option}
+                <MenuItem
+                  key={typeof option === 'object' ? option.value : option}
+                  value={typeof option === 'object' ? option.value : option}
+                >
+                  {typeof option === 'object' ? option.label : option}
                 </MenuItem>
               ))}
             </Select>
@@ -645,6 +648,18 @@ const AdvancedFormEngine: React.FC<AdvancedFormEngineProps> = ({
         } else if (field.component === 'TargetRTI') {
           return (
             <TargetRTI
+              id={currentNodeId}
+              value={formData[currentNodeId] || {}}
+              onChange={(value: any) => handleAnswer(value)}
+              error={error}
+              options={field.options || []}
+              question={field.question}
+              progressionCriteria={field.progressionCriteria}
+            />
+          )
+        } else if (field.component === 'FeverPainCalculator') {
+          return (
+            <FeverPainCalculator
               id={currentNodeId}
               value={formData[currentNodeId] || {}}
               onChange={(value: any) => handleAnswer(value)}
