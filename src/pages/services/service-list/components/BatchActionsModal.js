@@ -23,7 +23,7 @@ import {
   cancelAppointment,
   fetchAppointments,
   appendMessageToThread
-} from 'src/store/apps/pharmacy-services/pharmacyServicesThunks'
+} from '../../../../store/apps/pharmacy-services/pharmacyServicesThunks'
 import { supabaseOrg as supabase } from 'src/configs/supabase'
 
 const BatchActionsModal = ({ open, onClose, selectedAppointmentIds, appointments, action }) => {

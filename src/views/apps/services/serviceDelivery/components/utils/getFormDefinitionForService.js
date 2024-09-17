@@ -30,7 +30,7 @@ export const getFormDefinitionForService = stage => {
     case '5a499835-7a49-43b6-9de5-6b492baf12d9':
       return pharmacyFirstForm
     case 'hypertension-service-id': // Replace with actual ID
-      return hypertensionServiceForm
+      return null
     case '6b1611ef-134c-421f-a736-b7b8c0841515':
       return shinglesServiceDefinition
     case '5957b831-163e-428e-9386-34b093bf0e2b':

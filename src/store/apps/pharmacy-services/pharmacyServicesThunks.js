@@ -413,7 +413,7 @@ const storeClaimResult = async (appointmentId, mysResponse) => {
   return data
 }
 
-const updateAppointmentStatus = async ({ appointmentId, newStatus }, { dispatch }) => {
+export const updateAppointmentStatus = async ({ appointmentId, newStatus }, { dispatch }) => {
   const { data, error } = await supabase
     .from('ps_appointments')
     .update({ overall_status: newStatus })

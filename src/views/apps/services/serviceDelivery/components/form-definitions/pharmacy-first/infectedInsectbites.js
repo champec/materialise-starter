@@ -267,3 +267,5 @@ const infectedInsectBitesDefinition = {
     }
   }
 }
+
+export default infectedInsectBitesDefinition

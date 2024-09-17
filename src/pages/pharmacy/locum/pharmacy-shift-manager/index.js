@@ -39,7 +39,7 @@ function PharmacyShiftManagement() {
   }
 
   const handleCancelShift = id => {
-    dispatch(thunks.updateShiftStatus({ id, newStatus: 'CANCELLED', actor: 'pharmacy' }))
+    dispatch(thunks.updateShift({ id, status: 'CANCELLED', actor: 'pharmacy' }))
   }
 
   const columns = [
