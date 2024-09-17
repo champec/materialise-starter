@@ -34,7 +34,7 @@ import DatePickerWrapper from 'src/@core/styles/libs/react-datepicker'
 
 // ** RTK Imports
 import { useDispatch } from 'react-redux'
-import { createItem, editItem, fetchInventory } from 'src/store/apps/shop/inventorySlice'
+import { createItem, editItem, fetchInventory } from 'src/store/apps/marketplace/inventorySlice'
 
 const Transition = forwardRef(function Transition(props, ref) {
   return <Fade ref={ref} {...props} />

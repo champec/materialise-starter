@@ -5,7 +5,7 @@ import Icon from 'src/@core/components/icon'
 
 // RTK imports
 import { useDispatch, useSelector } from 'react-redux'
-import cartSlice, { updateCartItemQuantity } from 'src/store/apps/shop/cartSlice'
+import cartSlice, { updateCartItemQuantity } from 'src/store/apps/marketplace/cartSlice'
 
 function QuantityControl({ item, cart }) {
   // Retrieve the current quantity of the item in the cart.

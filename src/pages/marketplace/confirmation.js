@@ -1,9 +1,9 @@
 import { useState, useEffect } from 'react' // Corrected 'use' to 'useState'
 import { useDispatch, useSelector } from 'react-redux'
 import { useRouter } from 'next/router'
-import { fetchFullOrderDetails } from 'src/store/apps/shop/checkoutSlice'
+import { fetchFullOrderDetails } from 'src/store/apps/marketplace/checkoutSlice'
 import { supabaseOrg as supabase } from 'src/configs/supabase'
-import checkoutSlice from 'src/store/apps/shop/checkoutSlice'
+import checkoutSlice from 'src/store/apps/marketplace/checkoutSlice'
 import withReducer from 'src/@core/HOC/withReducer'
 
 function Confirmation() {

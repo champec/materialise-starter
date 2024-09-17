@@ -28,8 +28,8 @@ import dayjs from 'dayjs'
 // ** RTK imports
 
 import { useSelector, useDispatch } from 'react-redux'
-import { fetchProducts, setSearchTerm } from 'src/store/apps/shop/productsSlice'
-import { fetchInventory } from 'src/store/apps/shop/inventorySlice'
+import { fetchProducts, setSearchTerm } from 'src/store/apps/marketplace/productsSlice'
+import { fetchInventory } from 'src/store/apps/marketplace/inventorySlice'
 
 // ** renders client column
 const renderClient = params => {

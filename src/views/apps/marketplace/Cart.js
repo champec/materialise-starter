@@ -5,8 +5,8 @@ import { useRouter } from 'next/router'
 // ** RTK imports
 
 import { useSelector, useDispatch } from 'react-redux'
-import { fetchCart, removeCartItem, updateCartItemQuantity } from 'src/store/apps/shop/cartSlice'
-import { handleCheckout } from 'src/store/apps/shop/checkoutSlice'
+import { fetchCart, removeCartItem, updateCartItemQuantity } from 'src/store/apps/marketplace/cartSlice'
+import { handleCheckout } from 'src/store/apps/marketplace/checkoutSlice'
 
 // ** MUI Imports
 import Paper from '@mui/material/Paper'

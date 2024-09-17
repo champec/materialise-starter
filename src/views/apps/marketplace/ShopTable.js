@@ -32,11 +32,11 @@ import debounce from 'lodash/debounce'
 
 // ** RTK imports
 import { useSelector, useDispatch } from 'react-redux'
-import { setFilters, setSearchTerm, setSort, fetchProducts } from 'src/store/apps/shop/productsSlice'
+import { setFilters, setSearchTerm, setSort, fetchProducts } from 'src/store/apps/marketplace/productsSlice'
 import { set } from 'nprogress'
-import { addCartItem } from 'src/store/apps/shop/cartSlice'
-import cartSlice from 'src/store/apps/shop/cartSlice'
-import productsSlice from 'src/store/apps/shop/productsSlice'
+import { addCartItem } from 'src/store/apps/marketplace/cartSlice'
+import cartSlice from 'src/store/apps/marketplace/cartSlice'
+import productsSlice from 'src/store/apps/marketplace/productsSlice'
 
 // ** renders client column
 const renderClient = params => {
