@@ -26,7 +26,8 @@ import {
   DialogTitle
 } from '@mui/material'
 import { DateTimePicker } from '@mui/x-date-pickers/DateTimePicker'
-import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns'
+import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs'
+import 'dayjs/locale/de'
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider'
 import DailyIframe from '@daily-co/daily-js'
 import { createThreadAndSendSMS } from '../../../store/apps/calendar/pharmacyfirst/appointmentListSlice'
@@ -771,27 +772,6 @@ const QuickServiceDeliveryComponent = () => {
               onFieldChange={handleAdditionalDetails}
               onDateChange={handleDateChange}
             />
-            {/* <AddEditPatientForm
-              onSelect={patient => handleAppointmentDetailsChange('patient', patient)}
-              selectedPatient={appointmentDetails.patient}
-            />
-            <GPSearchDialog
-              gpSearchTerm={gpSearchTerm}
-              setGpSearchTerm={setGpSearchTerm}
-              handleGPSearch={handleGPSearch}
-              handleGPSelect={gp => handleAppointmentDetailsChange('gp', gp)}
-              gpSearchResults={gpSearchResults}
-              isLoading={gpLoading}
-              error={gpError}
-            />
-            <LocalizationProvider dateAdapter={AdapterDateFns}>
-              <DateTimePicker
-                label='Scheduled Time'
-                value={appointmentDetails.scheduledTime}
-                onChange={date => handleAppointmentDetailsChange('scheduledTime', date)}
-                renderInput={params => <TextField {...params} fullWidth sx={{ mt: 2 }} />}
-              />
-            </LocalizationProvider> */}
           </FormContainer>
         )
       case 3:
@@ -866,7 +846,7 @@ const QuickServiceDeliveryComponent = () => {
   }
 
   return (
-    <LocalizationProvider dateAdapter={AdapterDateFns}>
+    <LocalizationProvider dateAdapter={AdapterDayjs}>
       <Box sx={{ width: '100%' }}>
         {/* create a tray menu above the stopper with one button to open ai assistance, use iconify icon, it will open a drawer component which must fiarly wide */}
 

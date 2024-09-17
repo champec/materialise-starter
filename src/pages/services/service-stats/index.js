@@ -25,7 +25,8 @@ import {
 } from '@mui/material'
 import { DatePicker } from '@mui/x-date-pickers/DatePicker'
 import { LocalizationProvider } from '@mui/x-date-pickers'
-import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns'
+import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs'
+import 'dayjs/locale/de'
 
 function Stats() {
   const [selectedService, setSelectedService] = useState('all')
@@ -133,7 +134,7 @@ function Stats() {
   const totalEstimatedEarning = stats.reduce((sum, stat) => sum + (stat.ps_service_stages.reimbursement || 0), 0)
 
   return (
-    <LocalizationProvider dateAdapter={AdapterDateFns}>
+    <LocalizationProvider dateAdapter={AdapterDayjs}>
       <Box sx={{ p: 3 }}>
         <Typography variant='h4' gutterBottom>
           Service Statistics

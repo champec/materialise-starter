@@ -26,7 +26,8 @@ import {
 } from '@mui/material'
 import { DateTimePicker } from '@mui/x-date-pickers/DateTimePicker'
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider'
-import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns'
+import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs'
+import 'dayjs/locale/de'
 import { useSelector } from 'react-redux'
 import RecurringEventDialog from './RecurringEventDialog'
 
@@ -232,7 +233,7 @@ function Availability() {
   }
 
   return (
-    <LocalizationProvider dateAdapter={AdapterDateFns}>
+    <LocalizationProvider dateAdapter={AdapterDayjs}>
       <Box>
         <Typography variant='h4' gutterBottom>
           Service Availability

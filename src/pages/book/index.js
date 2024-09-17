@@ -27,7 +27,8 @@ import {
   Alert
 } from '@mui/material'
 import { DatePicker } from '@mui/x-date-pickers/DatePicker'
-import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns'
+import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs'
+import 'dayjs/locale/de'
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider'
 import BookingModal from './BookingModal'
 import {
@@ -404,7 +405,7 @@ const PatientBooking = () => {
   console.log('bookingType', bookingType)
 
   return (
-    <LocalizationProvider dateAdapter={AdapterDateFns}>
+    <LocalizationProvider dateAdapter={AdapterDayjs}>
       <Container maxWidth='md'>
         <Paper elevation={3} sx={{ p: 4, mt: 4 }}>
           <Box display='flex' alignItems='center' justifyContent='space-between' mb={4}>

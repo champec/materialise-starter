@@ -14,7 +14,8 @@ import {
   styled
 } from '@mui/material'
 
-import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns'
+import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs'
+import 'dayjs/locale/de'
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider'
 import { createAppointment, updateAppointment } from 'src/store/apps/pharmacy-services/pharmacyServicesThunks'
 import {
@@ -355,7 +356,7 @@ const BookingComponent = ({ appointment: appointmentObject, onClose, source }) =
 
   console.log('FORM DATA BEFORE GOING TO APPOINTMENT FORM', formData)
   return (
-    <LocalizationProvider dateAdapter={AdapterDateFns}>
+    <LocalizationProvider dateAdapter={AdapterDayjs}>
       <PerfectScrollbar>
         <Box position='relative'>
           {loading && (

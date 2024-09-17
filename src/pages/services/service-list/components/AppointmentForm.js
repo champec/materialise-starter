@@ -25,7 +25,8 @@ import {
 } from '@mui/material'
 // import { styled } from '@mui/material/styles'
 import { DateTimePicker } from '@mui/x-date-pickers/DateTimePicker'
-import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns'
+import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs'
+import 'dayjs/locale/de'
 // import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider'
 import { DatePicker, TimePicker, LocalizationProvider, DigitalClock } from '@mui/x-date-pickers'
 import CustomAutoCompleteInput from 'src/views/apps/Calendar/services/pharmacy-first/CustomAutoComplete'
@@ -353,7 +354,7 @@ const AppointmentForm = ({
   }, [formData.service_id, formData.current_stage_id, quickService, onFieldChange])
 
   return (
-    <LocalizationProvider dateAdapter={AdapterDateFns}>
+    <LocalizationProvider dateAdapter={AdapterDayjs}>
       <Box sx={{ width: 400, p: 3 }}>
         <Typography variant='h6' gutterBottom>
           {appointment ? 'Edit Appointment' : 'New Appointment'}

@@ -45,7 +45,7 @@ import {
 } from '@mui/material'
 import { DataGrid, GridToolbar } from '@mui/x-data-grid'
 import BatchActionsModal from './components/BatchActionsModal'
-import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns'
+
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider'
 import Icon from 'src/@core/components/icon'
 import BookingComponent from './BookingComponent'

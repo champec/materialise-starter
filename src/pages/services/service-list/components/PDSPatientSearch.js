@@ -16,7 +16,8 @@ import {
   InputLabel
 } from '@mui/material'
 import { DatePicker } from '@mui/x-date-pickers/DatePicker'
-import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns'
+import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs'
+import 'dayjs/locale/de'
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider'
 import { v4 as uuidv4 } from 'uuid'
 import axios from 'axios'
@@ -52,7 +53,7 @@ function PDSPatientSearch({
   }
 
   return (
-    <LocalizationProvider dateAdapter={AdapterDateFns}>
+    <LocalizationProvider dateAdapter={AdapterDayjs}>
       <Box sx={{ mt: 2 }}>
         <Alert severity='warning' sx={{ mb: 2 }}>
           <Typography variant='body1'>
