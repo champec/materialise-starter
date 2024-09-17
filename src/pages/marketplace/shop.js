@@ -4,22 +4,22 @@ import { useOrgAuth } from 'src/hooks/useOrgAuth'
 import { useRouter } from 'next/router'
 
 // Import your components here
-import ShopTable from 'src/views/apps/store/ShopTable'
-import ProductDetails from 'src/views/apps/store/ProductDetails'
-import Checkout from 'src/views/apps/store/Checkout'
-import Confirmation from 'src/views/apps/store/Confirmation'
-import Cart from 'src/views/apps/store/Cart'
+import ShopTable from 'src/views/apps/marketplace/ShopTable'
+import ProductDetails from 'src/views/apps/marketplace/ProductDetails'
+import Checkout from 'src/views/apps/marketplace/Checkout'
+import Confirmation from 'src/views/apps/marketplace/Confirmation'
+import Cart from 'src/views/apps/marketplace/Cart'
 import { useDispatch, useSelector } from 'react-redux'
-import productsSlice from 'src/store/apps/shop/productsSlice'
-import { setProducts } from 'src/store/apps/shop/productsSlice'
+import productsSlice from 'src/store/apps/marketplace/productsSlice'
+import { setProducts } from 'src/store/apps/marketplace/productsSlice'
 import withReducer from 'src/@core/HOC/withReducer'
-import cartSlice from 'src/store/apps/shop/cartSlice'
-import checkoutSlice from 'src/store/apps/shop/checkoutSlice'
+import cartSlice from 'src/store/apps/marketplace/cartSlice'
+import checkoutSlice from 'src/store/apps/marketplace/checkoutSlice'
 
 // RTK imports
 import ChangeNotifier from 'src/@core/components/ChangeNotifier'
-import { fetchProducts } from 'src/store/apps/shop/productsSlice'
-import { fetchCart } from 'src/store/apps/shop/cartSlice'
+import { fetchProducts } from 'src/store/apps/marketplace/productsSlice'
+import { fetchCart } from 'src/store/apps/marketplace/cartSlice'
 
 import { set } from 'nprogress'
 

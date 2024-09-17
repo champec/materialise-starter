@@ -35,7 +35,7 @@ import QuickSearchToolbar from './QuickSearchToolbar'
 import { getInitials } from 'src/@core/utils/get-initials'
 
 // ** Data Import
-import { dummyData } from 'src/views/apps/store/dummyData'
+import { dummyData } from 'src/views/apps/marketplace/dummyData'
 
 const rows = dummyData
 
