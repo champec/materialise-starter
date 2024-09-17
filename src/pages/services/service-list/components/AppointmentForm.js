@@ -79,32 +79,6 @@ const SelectedValue = ({ value }) => (
   </Box>
 )
 
-// const StyledClockBase = styled(TimeClock)(({ theme }) => ({
-//   '& .MuiClockNumber-root': {
-//     '&.booked': {}
-//   }
-// }))
-
-// const StyledClock = React.forwardRef(({ bookedTimes, ...other }, ref) => {
-//   const bookedHours = bookedTimes.map(time => new Date(time).getHours())
-
-//   const StyledClockWithBookedTimes = styled(StyledClockBase)(({ theme }) => ({
-//     ...bookedHours
-//       .map(hour => ({
-//         [`& .MuiClockNumber-root[aria-label="${hour} hours"]`]: {
-//           color: theme.palette.error.main,
-//           textDecoration: 'line-through',
-//           '&:hover': {
-//             backgroundColor: theme.palette.error.light
-//           }
-//         }
-//       }))
-//       .reduce((acc, style) => ({ ...acc, ...style }), {})
-//   }))
-
-//   return <StyledClockWithBookedTimes ref={ref} {...other} />
-// })
-
 const AppointmentForm = ({
   appointment,
   formData,

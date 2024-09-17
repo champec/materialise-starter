@@ -9,7 +9,7 @@ import pharmacyServicesSlice, {
   selectServiceFilter,
   selectStatusFilter
 } from 'src/store/apps/pharmacy-services/pharmacyServicesSlice'
-import format from 'date-fns/format'
+import { format } from 'date-fns'
 // import addDays from 'date-fns/addDays'
 import { addDays, subDays, parse } from 'date-fns'
 import {

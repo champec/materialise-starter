@@ -11,7 +11,7 @@ import ClaimDetailsModal from './ClaimDetailsModal'
 import { fetchClaims, sendClaim, amendClaim } from '../../../store/apps/claims/claimsSlice'
 import withReducer from 'src/@core/HOC/withReducer'
 import claimsSlice from '../../../store/apps/claims/claimsSlice'
-import format from 'date-fns/format'
+import { format } from 'date-fns'
 
 const ClaimsManagement = () => {
   const dispatch = useDispatch()

@@ -26,7 +26,7 @@ import { useDispatch, useSelector } from 'react-redux'
 import ServiceDeliverySummary from './ServiceDeliverySummary'
 import ServiceDeliveryChat from './ServiceDeliveryChat'
 import Icon from 'src/@core/components/icon'
-import format from 'date-fns/format'
+import { format } from 'date-fns'
 
 function ServiceDeliveryComponent({ appointment: appointmentObject, onClose, onEdit }) {
   const dispatch = useDispatch()
