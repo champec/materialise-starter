@@ -270,43 +270,6 @@ const BookingComponent = ({ appointment: appointmentObject, onClose, source }) =
     })
   }
 
-  // const handleFieldChange = event => {
-  //   const { name, value } = event.target
-
-  //   // Split the name to handle nested fields
-  //   const keys = name.split('.')
-
-  //   console.log('Current formData:', formData)
-  //   console.log('Attempting to change:', name, 'to', value)
-
-  //   setFormData(prevData => {
-  //     console.log('Previous data:', prevData)
-
-  //     let updatedData = { ...prevData }
-  //     let nestedData = updatedData
-
-  //     for (let i = 0; i < keys.length - 1; i++) {
-  //       if (!nestedData[keys[i]]) {
-  //         nestedData[keys[i]] = {}
-  //       }
-  //       nestedData = nestedData[keys[i]]
-  //       console.log(`Nested level ${i}:`, nestedData)
-  //     }
-
-  //     console.log('Final nested data before update:', nestedData)
-  //     console.log('Is triage frozen?', Object.isFrozen(nestedData.triage))
-
-  //     try {
-  //       nestedData[keys[keys.length - 1]] = value
-  //     } catch (error) {
-  //       console.error('Error updating nested data:', error)
-  //     }
-
-  //     console.log('Updated data:', updatedData)
-  //     return updatedData
-  //   })
-  // }
-
   const handleCheckboxChange = event => {
     const { name, checked } = event.target
     handleFieldChange({

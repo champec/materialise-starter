@@ -222,11 +222,11 @@ const AppointmentForm = ({
     }
   })
 
-  const isTimeBooked = time => {
-    if (!selectedDate) return false
-    const currentDateTime = setMinutes(setHours(new Date(selectedDate), time.getHours()), time.getMinutes())
-    return bookedSlots.some(slot => isSameMinute(slot, currentDateTime))
-  }
+  // const isTimeBooked = time => {
+  //   if (!selectedDate) return false
+  //   const currentDateTime = setMinutes(setHours(new Date(selectedDate), time.getHours()), time.getMinutes())
+  //   return bookedSlots.some(slot => isSameMinute(slot, currentDateTime))
+  // }
 
   const handleDateInputChange = event => {
     setDateInputValue(event.target.value)
@@ -326,22 +326,31 @@ const AppointmentForm = ({
   }, [])
 
   useEffect(() => {
-    if (appointment?.scheduled_time) {
-      const appointmentDate = new Date(appointment.scheduled_time)
-      setSelectedDate(appointmentDate)
-      setSelectedTime(appointmentDate)
-      setDateInputValue(format(appointmentDate, 'dd/MM/yyyy'))
-      setTimeInputValue(format(appointmentDate, 'HH:mm'))
-      handleDateChange(appointmentDate)
-    }
-  }, [appointment])
+    // Check if the scheduled time exists in appointment or formData
+    const scheduledTime = appointment?.scheduled_time || formData?.scheduled_time
+    console.log('SKEDULE', scheduledTime, formData.scheduledTime)
+    // Only set date and time if scheduledTime exists and hasn't been set yet
+    if (scheduledTime) {
+      const appointmentDate = new Date(scheduledTime)
 
-  const handleTimeChange = newTime => {
-    setSelectedTime(newTime)
-    setTimeInputValue(format(newTime, 'HH:mm'))
-    updateScheduledTime(selectedDate, newTime)
-    setSelectedHour(newTime.getHours())
-  }
+      // Ensure the date is valid and hasn't already been set
+      if (!isNaN(appointmentDate) && appointmentDate.toString() !== selectedDate?.toString()) {
+        console.log('Setting Appointment Date:', appointmentDate)
+        setSelectedDate(appointmentDate)
+        setSelectedTime(appointmentDate)
+        setDateInputValue(format(appointmentDate, 'dd/MM/yyyy'))
+        setTimeInputValue(format(appointmentDate, 'HH:mm'))
+        handleDateChange(appointmentDate)
+      }
+    }
+  }, [appointment?.scheduled_time, formData?.scheduled_time]) // Use more specific dependencies
+
+  // const handleTimeChange = newTime => {
+  //   setSelectedTime(newTime)
+  //   setTimeInputValue(format(newTime, 'HH:mm'))
+  //   updateScheduledTime(selectedDate, newTime)
+  //   setSelectedHour(newTime.getHours())
+  // }
 
   useEffect(() => {
     // Only run this effect if we're not in quickService mode

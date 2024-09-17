@@ -133,9 +133,14 @@ const Calendar = props => {
   }
 
   const handleDateClick = info => {
-    console.log('selected start date INFO', info)
-    dispatch(setSelectedAppointmentStartDate(info.date))
-    handleBookCalendarSidebar()
+    const calendarApi = calendarRef.current.getApi()
+    if (calendarApi.view.type === 'dayGridMonth') {
+      calendarApi.changeView('timeGridDay', info.date)
+    } else {
+      console.log('selected start date INFO', info)
+      dispatch(setSelectedAppointmentStartDate(info.date))
+      handleBookCalendarSidebar()
+    }
   }
 
   if (store) {
