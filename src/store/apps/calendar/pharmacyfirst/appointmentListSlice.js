@@ -146,7 +146,7 @@ export const createThreadAndSendSMS = createAsyncThunk(
       }
     }
 
-    return response
+    return { success: true, messageData }
   }
 )
 

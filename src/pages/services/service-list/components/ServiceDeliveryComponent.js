@@ -10,22 +10,18 @@ import {
   TableCell,
   TableHead,
   TableRow,
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
   Snackbar,
   Alert,
   Grid,
   Card,
-  CardContent
+  CardContent,
+  Paper
 } from '@mui/material'
 import { createServiceDeliveries } from '../hooks/useAppointmentSubmission'
 import {
   fetchAppointments,
   fetchServiceDeliveries
-} from '../../../../store/apps/pharmacy-services/pharmacyServicesThunks' //'src/store/apps/pharmacy-services/pharmacyServicesThunks'
-import { supabaseOrg as supabase } from 'src/configs/supabase'
+} from '../../../../store/apps/pharmacy-services/pharmacyServicesThunks'
 import { useDispatch, useSelector } from 'react-redux'
 import ServiceDeliverySummary from './ServiceDeliverySummary'
 import ServiceDeliveryChat from './ServiceDeliveryChat'
@@ -41,42 +37,34 @@ function ServiceDeliveryComponent({ appointment: appointmentObject, onClose, onE
   const [selectedDelivery, setSelectedDelivery] = useState(null)
   const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'info' })
   const [showChat, setShowChat] = useState(false)
+  const [canDeliverService, setCanDeliverService] = useState(null)
   const serviceDeliveries = useSelector(state => state.services.serviceDeliveries)
   const appointment = useSelector(state => state.services.appointments.find(a => a.id === appointmentObject?.id))
 
   useEffect(() => {
     if (appointment) {
       dispatch(fetchServiceDeliveries(appointmentObject?.id)).then(() => {
-        console.log('serviceDeliveries', serviceDeliveries)
         setLoading(false)
       })
     }
   }, [appointment])
 
-  // const fetchServiceDeliveries = async () => {
-  //   setLoading(true)
-  //   try {
-  //     const data = await dispatch(fetchServiceDeliveries(appointment)).unwrap()
-  //   } catch (error) {
-  //     console.error('Error fetching service deliveries:', error)
-  //     showSnackbar('Error fetching service deliveries', 'error')
-  //   } finally {
-  //     setLoading(false)
-  //   }
-  // }
-
   const handleConfigureService = async () => {
-    setConfiguring(true)
-    try {
-      await createServiceDeliveries(appointment.id, appointment.service_id, appointment.current_stage_id)
-      await fetchServiceDeliveries()
-      dispatch(fetchAppointments())
-      showSnackbar('Service configured successfully', 'success')
-    } catch (error) {
-      console.error('Error configuring service deliveries:', error)
-      showSnackbar('Error configuring service', 'error')
-    } finally {
-      setConfiguring(false)
+    if (appointment.appointment_source !== 'pharmex' && serviceDeliveries.length === 0) {
+      handleEditAppointment(appointment)
+    } else {
+      setConfiguring(true)
+      try {
+        await createServiceDeliveries(appointment.id, appointment.service_id, appointment.current_stage_id)
+        await dispatch(fetchServiceDeliveries(appointment.id))
+        dispatch(fetchAppointments())
+        showSnackbar('Service configured successfully', 'success')
+      } catch (error) {
+        console.error('Error configuring service deliveries:', error)
+        showSnackbar('Error configuring service', 'error')
+      } finally {
+        setConfiguring(false)
+      }
     }
   }
 
@@ -106,22 +94,63 @@ function ServiceDeliveryComponent({ appointment: appointmentObject, onClose, onE
     return <Typography>No appointment selected</Typography>
   }
 
+  const showEditButton = serviceDeliveries.length > 0 || appointment.appointment_source === 'pharmex'
+  const showConfigureButton = !showEditButton || appointment.appointment_source === 'pharmex'
+
+  const renderAppointmentDetails = () => (
+    <Paper elevation={3} sx={{ p: 3, mb: 3 }}>
+      <Typography variant='h6' gutterBottom>
+        Appointment Details
+      </Typography>
+      <Typography>
+        <strong>Patient:</strong> {appointment.patient_object?.full_name}
+      </Typography>
+      <Typography>
+        <strong>NHS Number:</strong> {appointment.nhs_number}
+      </Typography>
+      <Typography>
+        <strong>Mobile:</strong> {appointment?.patient_object?.mobile_number}
+      </Typography>
+      <Typography>
+        <strong>Presenting Complaint:</strong> {appointment.presenting_complaint}
+      </Typography>
+      <Typography>
+        <strong>Service:</strong> {appointment?.ps_services?.name}
+      </Typography>
+      <Typography>
+        <strong>Current Stage:</strong>{' '}
+        {appointment?.current_stage_id ? `${appointment?.ps_service_stages?.name}` : 'Not set'}
+      </Typography>
+      <Typography>
+        <strong>Appointment Type:</strong> {appointment.appointment_type === 'remote' ? 'Remote' : 'In-person'}{' '}
+        appointment
+      </Typography>
+      <Typography>
+        <strong>Scheduled Time:</strong>{' '}
+        {appointment.scheduled_time ? formatDate(appointment.scheduled_time) : 'Not scheduled'}
+      </Typography>
+      <Typography>
+        <strong>Source:</strong> {appointment.appointment_source}
+      </Typography>
+      {appointment.gp_object && (
+        <Box mt={2}>
+          <Typography variant='subtitle1'>GP Information</Typography>
+          <Typography>{appointment.gp_object.name}</Typography>
+          <Typography>{appointment.gp_object.address}</Typography>
+        </Box>
+      )}
+      {appointment.referral && (
+        <Box mt={2}>
+          <Typography variant='subtitle1'>Referral Details</Typography>
+          <Typography>{JSON.stringify(appointment.referral)}</Typography>
+        </Box>
+      )}
+    </Paper>
+  )
+
   return (
     <Grid container spacing={6}>
       <Grid item xs={12}>
-        <Box sx={{ mb: 4 }}>
-          <Typography variant='h5'>Service Delivery for {appointment.patient_object?.full_name}</Typography>
-          <Typography>Service: {appointment?.ps_services?.name}</Typography>
-          <Typography>
-            Scheduled Time: {appointment.scheduled_time ? formatDate(appointment.scheduled_time) : ''}
-          </Typography>
-          <Typography>Appointment Type: {appointment.appointment_type}</Typography>
-
-          <Button variant='outlined' onClick={() => handleEditAppointment(appointment)}>
-            Edit Appointment
-          </Button>
-        </Box>
-
         <Card>
           <CardContent>
             <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 2 }}>
@@ -166,10 +195,40 @@ function ServiceDeliveryComponent({ appointment: appointmentObject, onClose, onE
               </Table>
             ) : (
               <Box>
-                <Typography>No service deliveries configured</Typography>
-                <Button onClick={handleConfigureService} disabled={configuring}>
-                  {configuring ? <CircularProgress size={24} /> : 'Configure Service'}
-                </Button>
+                {renderAppointmentDetails()}
+                {appointment.appointment_source !== 'pharmex' && (
+                  <Box mb={2}>
+                    <Typography>Can you deliver this service?</Typography>
+                    <Button
+                      variant={canDeliverService === true ? 'contained' : 'outlined'}
+                      onClick={() => setCanDeliverService(true)}
+                      sx={{ mr: 1 }}
+                    >
+                      Yes
+                    </Button>
+                    <Button
+                      variant={canDeliverService === false ? 'contained' : 'outlined'}
+                      onClick={() => setCanDeliverService(false)}
+                    >
+                      No
+                    </Button>
+                  </Box>
+                )}
+                {showEditButton && (
+                  <Button variant='outlined' onClick={() => handleEditAppointment(appointment)} sx={{ mr: 1 }}>
+                    Edit Appointment
+                  </Button>
+                )}
+                {showConfigureButton && (
+                  <Button
+                    onClick={handleConfigureService}
+                    disabled={
+                      configuring || (appointment.appointment_source !== 'pharmex' && canDeliverService === null)
+                    }
+                  >
+                    {configuring ? <CircularProgress size={24} /> : 'Configure Service'}
+                  </Button>
+                )}
               </Box>
             )}
           </CardContent>

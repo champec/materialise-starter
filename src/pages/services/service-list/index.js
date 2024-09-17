@@ -125,7 +125,7 @@ const CustomInput = forwardRef((props, ref) => {
   }
 
   return (
-    <FormControl>
+    <FormControl fullWidth>
       <TextField
         {...rest}
         ref={ref}
@@ -143,18 +143,36 @@ const CustomInput = forwardRef((props, ref) => {
           )
         }}
       />
-      <DatePicker
-        selectsRange
-        monthsShown={2}
-        startDate={start}
-        endDate={end}
-        // selected={endDate}
-        selectedDates={[start, end]}
-        onChange={handleDateChange}
-        onClickOutside={() => setIsPickerOpen(false)}
+      <Dialog
         open={isPickerOpen}
-        customInput={<div style={{ display: 'none' }} />} // Hidden input
-      />
+        onClose={() => setIsPickerOpen(false)}
+        fullWidth
+        sx={{ zIndex: 1300 }}
+        PaperProps={{
+          sx: {
+            backgroundColor: 'transparent',
+            boxShadow: 'none'
+          }
+        }}
+      >
+        <Box sx={{ padding: 2, backgroundColor: 'transparent' }}>
+          <DatePickerWrapper>
+            <DatePicker
+              selectsRange
+              monthsShown={2}
+              startDate={start}
+              endDate={end}
+              // selected={endDate}
+              selectedDates={[start, end]}
+              onChange={handleDateChange}
+              onClickOutside={() => setIsPickerOpen(false)}
+              open={isPickerOpen}
+              customInput={<div style={{ display: 'none' }} />} // Hidden input
+              inline
+            />
+          </DatePickerWrapper>
+        </Box>
+      </Dialog>
     </FormControl>
   )
 })

@@ -14,10 +14,11 @@ import {
   Switch
 } from '@mui/material'
 import { debounce } from 'lodash'
-import { supabaseOrg as supabase } from 'src/configs/supabase'
+import { supabaseOrg as supabase, supabaseKey } from '../../../configs/supabase'
 import ShinglesPGD from '../../../views/apps/Calendar/services/pgds/ShinglesPGD'
 import systemPrompt from '../../../views/apps/Calendar/services/pgds/SystemMessage'
 import ChatbotInterface from './ConsultChatBot'
+// import { createSimulationThread, addMessageToThread, runSimulationAssistantStream } from '../../../configs/openai'
 
 const systemMessage = `
 ${systemPrompt}
@@ -75,6 +76,8 @@ function RecommendationSection({ title, data }) {
   )
 }
 
+const assistant_id = 'asst_02ZLMhafb3fq0El8oEFXHFsA'
+
 export default function ClinicalNotesComponent({
   patientInfo,
   notes,
@@ -84,7 +87,9 @@ export default function ClinicalNotesComponent({
   conversationHistory,
   setConversationHistory,
   chatBotMessages,
-  setChatBotMessages
+  setChatBotMessages,
+  currentThread,
+  setCurrentThread
 }) {
   // const [notes, setNotes] = useState('')
   // const [recommendation, setRecommendation] = useState(null)
@@ -93,7 +98,30 @@ export default function ClinicalNotesComponent({
 
   const [isLoading, setIsLoading] = useState(false)
   const [isChatbotMode, setIsChatbotMode] = useState(false)
+  const [partialResponse, setPartialResponse] = useState('')
+  const [streamingResponse, setStreamingResponse] = useState([])
   const fetchTimeoutRef = useRef(null)
+
+  const createAndSetThread = async () => {
+    setIsLoading(true)
+    try {
+      const { data, error } = await supabase.functions.invoke('assistants', {
+        body: { action: 'createSimulationThread', params: {} }
+      })
+      if (error) throw error
+      setCurrentThread(data.result)
+      console.log('ai consult thread creation', data.result)
+    } catch (error) {
+      console.error('Error creating thread:', error)
+    }
+    setIsLoading(false)
+  }
+  console.log('CURENT THREA', currentThread?.id)
+  useEffect(() => {
+    if (!currentThread) {
+      createAndSetThread()
+    }
+  }, [currentThread])
 
   const fetchRecommendation = async (notes, history) => {
     setIsLoading(true)
@@ -129,16 +157,87 @@ export default function ClinicalNotesComponent({
   }, [])
 
   const handleNotesChange = useCallback(
-    event => {
+    async event => {
       const newValue = event.target.value
       setNotes(newValue)
       if (event.nativeEvent.inputType === 'insertLineBreak') {
-        debouncedFetchRecommendation(newValue, conversationHistory)
+        console.log('[Client] Enter key pressed, currentThread:', currentThread)
+
+        try {
+          console.log('[Client] Adding message to thread')
+          await supabase.functions.invoke('assistants', {
+            body: {
+              action: 'addMessageToThread',
+              params: { threadId: currentThread.id, message: notes }
+            }
+          })
+          console.log('[Client] Message added to thread')
+
+          setStreamingResponse([]) // Reset streaming response
+          console.log('[Client] Invoking runSimulationAssistantStream')
+
+          const response = await fetch('https://xsqwpmqfbirqdncoephf.supabase.co/functions/v1/assistants', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              Authorization: `Bearer ${supabaseKey}`
+            },
+            body: JSON.stringify({
+              action: 'runSimulationAssistantStream',
+              params: { threadId: currentThread.id, assistantId: assistant_id }
+            })
+          })
+
+          if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`)
+          }
+
+          const reader = response.body.getReader()
+          const decoder = new TextDecoder()
+
+          try {
+            console.log('[Client] Starting to read stream')
+            while (true) {
+              const { done, value } = await reader.read()
+              if (done) {
+                console.log('[Client] Stream reading complete')
+                break
+              }
+
+              const chunk = decoder.decode(value)
+              console.log('[Client] Decoded chunk:', chunk)
+              const lines = chunk.split('\n\n')
+              for (const line of lines) {
+                if (line.startsWith('data: ')) {
+                  try {
+                    const eventData = JSON.parse(line.slice(5))
+                    console.log('[Client] Parsed data:', eventData)
+                    if (eventData.content) {
+                      console.log('[Client] Updating streaming response with:', eventData.content)
+                      setStreamingResponse(prev => [...prev, eventData.content])
+                    } else if (eventData.event === 'completed' || eventData.event === 'done') {
+                      console.log('[Client] Stream event:', eventData.event)
+                      // Handle completion if needed
+                    }
+                  } catch (e) {
+                    console.error('[Client] Error parsing JSON:', e)
+                  }
+                }
+              }
+            }
+          } catch (error) {
+            console.error('[Client] Error reading stream:', error)
+          } finally {
+            console.log('[Client] Releasing reader lock')
+            reader.releaseLock()
+          }
+        } catch (error) {
+          console.error('[Client] Uncaught error:', error)
+        }
       }
     },
-    [conversationHistory, debouncedFetchRecommendation]
+    [currentThread, notes]
   )
-
   console.log('CHATBOT MESSAGES', chatBotMessages)
 
   return (
@@ -200,9 +299,11 @@ export default function ClinicalNotesComponent({
           </Fade>
         ) : (
           <Typography>
-            No recommendations available. Start typing clinical notes and press Enter for AI assistance.
+            {/* No recommendations available. Start typing clinical notes and press Enter for AI assistance. */}
+            {streamingResponse.join('')}
           </Typography>
         )}
+        {partialResponse ? <Typography>partialResponse</Typography> : null}
       </Paper>
     </Box>
   )

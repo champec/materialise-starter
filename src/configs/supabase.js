@@ -11,4 +11,4 @@ const supabaseUser = createClient(supabaseUrl, supabaseKey, { auth: { storageKey
 const supabase = createClient(supabaseUrl, supabaseKey)
 
 //named export for the client
-export { supabaseOrg, supabaseUser, supabase }
+export { supabaseOrg, supabaseUser, supabase, supabaseKey }

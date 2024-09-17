@@ -14,7 +14,7 @@ import {
   Typography
 } from '@mui/material'
 
-const BookingModal = ({ open, onClose, onSave, slot, serviceId, pharmacyId }) => {
+const BookingModal = ({ open, onClose, onSave, slot, serviceId, pharmacyId, presentingComplaint }) => {
   const [bookingDetails, setBookingDetails] = useState({
     patientName: '',
     patientEmail: '',
@@ -28,22 +28,29 @@ const BookingModal = ({ open, onClose, onSave, slot, serviceId, pharmacyId }) =>
     setBookingDetails({ ...bookingDetails, [e.target.name]: e.target.value })
   }
 
+  console.log('SELECTED SERVICE ID', serviceId)
   const handleSave = () => {
     onSave({
       scheduled_time: slot.time,
-      service_id: serviceId,
+      service_id: serviceId?.ps_services?.id,
       pharmacy_id: pharmacyId,
       appointment_end_time: new Date(new Date(slot.time).getTime() + 30 * 60000), // Assuming 30-minute appointments
-      overall_status: 'Scheduled',
+      overall_status: 'Pending Config',
       patient_object: {
-        name: bookingDetails.patientName,
+        full_name: bookingDetails.patientName,
         email: bookingDetails.patientEmail,
-        phone: bookingDetails.patientPhone
+        mobile_number: bookingDetails.patientPhone
+      },
+      status_details: {
+        info: 'Self booked using manual booking'
       },
       gp_object: {
         name: bookingDetails.gpName,
         surgery: bookingDetails.gpSurgery
-      }
+      },
+      appointment_source: 'booked',
+      current_stage_id: serviceId?.id,
+      presenting_complaint: presentingComplaint
     })
   }
 

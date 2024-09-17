@@ -169,11 +169,12 @@ const BookingComponent = ({ appointment: appointmentObject, onClose, source }) =
         overall_status,
         current_stage_id,
         scheduled_time: scheduled_time ? parseISO(scheduled_time) : null,
-        details,
-        // details: {
-        //   ...details,
-        //   triage: details.triage ? { ...details.triage } : {}
-        // }
+        // details,
+        details: {
+          ...details,
+          triage: details?.triage ? { ...details.triage } : {},
+          additional_details: details?.additional_details ? additional_details : ''
+        },
         // patient_object,
         // gp_object
         ...source

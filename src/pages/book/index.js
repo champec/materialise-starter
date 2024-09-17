@@ -22,7 +22,9 @@ import {
   IconButton,
   Tooltip,
   Paper,
-  Container
+  Container,
+  Snackbar,
+  Alert
 } from '@mui/material'
 import { DatePicker } from '@mui/x-date-pickers/DatePicker'
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns'
@@ -59,6 +61,10 @@ const PatientBooking = () => {
   const [selectedPharmacies, setSelectedPharmacies] = useState([])
   const [searchType, setSearchType] = useState('postcode')
   const [searchValue, setSearchValue] = useState('')
+  const [snackbarOpen, setSnackbarOpen] = useState(false)
+  const [snackbarMessage, setSnackbarMessage] = useState('')
+  const [snackbarSeverity, setSnackbarSeverity] = useState('warning')
+  const [presentingComplaint, setPresentingComplaint] = useState('')
 
   useEffect(() => {
     const loadInitialData = async () => {
@@ -70,6 +76,13 @@ const PatientBooking = () => {
 
   const handleNext = () => {
     setActiveStep(prevActiveStep => prevActiveStep + 1)
+  }
+
+  // Function to show the Snackbar
+  const showSnackbar = (message, severity = 'error') => {
+    setSnackbarMessage(message)
+    setSnackbarSeverity(severity)
+    setSnackbarOpen(true)
   }
 
   const handleBack = () => {
@@ -87,10 +100,18 @@ const PatientBooking = () => {
 
   const handleTriageSubmit = () => {
     const allQuestionsAnswered = triageQuestions.every(q => triageAnswers[q] === 'Yes')
+    if (presentingComplaint.length < 5) {
+      showSnackbar(
+        `Please add the presenting complaint, all you wrote was ${
+          presentingComplaint ? "'" + presentingComplaint + "'" : 'nothing'
+        }`
+      )
+      return
+    }
     if (allQuestionsAnswered) {
       handleNext()
     } else {
-      alert(
+      showSnackbar(
         'Based on your answers, this service may not be appropriate. Please consult with your GP or call NHS 111 for further advice.'
       )
     }
@@ -104,7 +125,7 @@ const PatientBooking = () => {
   const handleBookingSuccess = data => {
     console.log('Booking successful:', data)
     setOpenModal(false)
-    fetchAvailableSlots(selectedDate, selectedPharmacies, selectedServiceStage, serviceStages).then(setAvailableSlots)
+    fetchAvailableSlots(selectedDate, selectedPharmacies, selectedServiceStage.id, serviceStages, setAvailableSlots)
   }
 
   const handleBookingError = error => {
@@ -117,7 +138,7 @@ const PatientBooking = () => {
       setSelectedPharmacies([])
       fetchPharmaciesByPostcode(searchValue).then(data => {
         if (data?.length === 0 || !data) {
-          alert('No pharmacies found for your location. Please try a different search.')
+          showSnackbar('No pharmacies found for your location. Please try a different search.')
         } else {
           setPharmacies(data)
           setSelectedPharmacies(data)
@@ -129,7 +150,7 @@ const PatientBooking = () => {
       fetchPharmaciesByLocation().then(data => {
         if (data?.length === 0 || !data) {
           console.log('No pharmacies found for your location. Please try a different search.', data)
-          alert('No pharmacies found for your location. Please try a different search.')
+          showSnackbar('No pharmacies found for your location. Please try a different search.')
         } else {
           console.log('Pharmacies found:', data)
           setPharmacies(data)
@@ -140,7 +161,7 @@ const PatientBooking = () => {
       setPharmacies([])
       fetchPharmacyByODS(searchValue).then(data => {
         if (data?.length === 0 || !data) {
-          alert('No pharmacies found for your location. Please try a different search.')
+          showSnackbar('No pharmacies found for your location. Please try a different search.')
         } else {
           setPharmacies(data)
           setSelectedPharmacies(data)
@@ -198,11 +219,11 @@ const PatientBooking = () => {
               label='Select Service'
               onChange={e => {
                 setSelectedServiceStage(e.target.value)
-                setTriageQuestions(getTriageQuestions(e.target.value))
+                setTriageQuestions(getTriageQuestions(e.target.value.id))
               }}
             >
               {serviceStages.map(stage => (
-                <MenuItem key={stage.id} value={stage.id}>
+                <MenuItem key={stage.id} value={stage}>
                   {stage.ps_services.name} - {stage.name}
                 </MenuItem>
               ))}
@@ -218,6 +239,13 @@ const PatientBooking = () => {
             <Typography variant='h6' gutterBottom>
               Triage Questions
             </Typography>
+            <TextField
+              value={presentingComplaint}
+              onChange={e => setPresentingComplaint(e.target.value)}
+              fullWidth
+              label='please describe the issue'
+              multiline
+            ></TextField>
             {triageQuestions.map((question, index) => (
               <FormControl component='fieldset' key={index} fullWidth margin='normal'>
                 <FormLabel component='legend'>{question}</FormLabel>
@@ -330,7 +358,7 @@ const PatientBooking = () => {
                 fetchAvailableSlots(
                   selectedDate,
                   selectedPharmacies,
-                  selectedServiceStage,
+                  selectedServiceStage.id,
                   serviceStages,
                   setAvailableSlots
                 )
@@ -442,7 +470,18 @@ const PatientBooking = () => {
         slot={selectedSlot}
         serviceId={selectedServiceStage}
         pharmacyId={selectedPharmacies[0]?.id}
+        presentingComplaint={presentingComplaint}
       />
+      <Snackbar
+        open={snackbarOpen}
+        // autoHideDuration={6000}
+        onClose={() => setSnackbarOpen(false)}
+        anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
+      >
+        <Alert onClose={() => setSnackbarOpen(false)} severity={snackbarSeverity} sx={{ width: '100%' }}>
+          {snackbarMessage}
+        </Alert>
+      </Snackbar>
     </LocalizationProvider>
   )
 }

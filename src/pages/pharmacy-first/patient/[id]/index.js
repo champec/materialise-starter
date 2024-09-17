@@ -17,13 +17,12 @@ function PatientCall() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState(null)
   const [consultation, setConsultation] = useState(null)
-  const [consultationState, setConsultationState] = useState(null)
+
   const [patientName, setPatientName] = useState('')
   const [nameVerified, setNameVerified] = useState(false)
   const [openSnack, setOpenSnack] = useState(false)
   const [snackMessage, setSnackMessage] = useState('')
   const [snackSeverity, setSnackSeverity] = useState('success')
-  const [consultationStateCount, setConsultationStateCount] = useState(0)
 
   const showMessages = (message, severity) => {
     setSnackMessage(message)
@@ -31,72 +30,27 @@ function PatientCall() {
     setOpenSnack(true)
   }
 
-  const setupConsultationListener = async consultationId => {
-    // filter: `or.organisation_id=eq${orgId}, user_id=eq${userId} `
-    const response = await supabase
-      .channel('consultation')
-      .on(
-        'postgres_changes',
-        {
-          event: 'UPDATE',
-          schema: 'public',
-          table: 'consultations',
-          filter: `id=eq.${consultationId}`
-        },
-        payload => {
-          console.log('New status update:', payload)
-          setConsultationState(payload.new.clinician_status)
-        }
-      )
-      .subscribe()
-
-    console.log('RESPONSE', response)
-  }
-
   const fetchConsultation = async () => {
-    const { data, error } = await supabase
-      .from('consultations')
-      .select('*, calendar_events!calendar_events_booking_id_fkey(*)')
-      .eq('id', id)
-      .maybeSingle()
+    const { data, error } = await supabase.from('ps_appointments').select('*').eq('id', id).maybeSingle()
 
     if (error) {
-      setError({ message: `consultation table: ${error.message}` })
+      setError({
+        message: `'The link provided doesn't matched with any consultation, please contact the booking pharmacy in your text alert',
+        'error'`
+      })
       console.log(error)
-      showMessages(error.message, 'error')
+      showMessages(
+        'The link provided isnt matched with any consultation, please contact the booking pharmacy in your text alert',
+        'error'
+      )
       setLoading(false)
     }
     if (data) {
       // console.log('patient call initial fetch data', data)
       console.log('patient call initial fetch data', data.clinician_status)
       setConsultation(data)
-      setConsultationState(data.clinician_status)
       setLoading(false)
     }
-    if (!data && !error) {
-      setLoading(false)
-      setError(new Error('No consultation found with provided link'))
-    }
-  }
-
-  const updateStatus = async status => {
-    // setLoading(true)
-    const { data, error } = await supabase.from('consultations').update({ patient_status: status }).eq('id', id)
-    //   .single()
-
-    // if (error) {
-    //   setError(error)
-    //   console.log(error)
-    //   showMessages(error.message, 'error')
-    //   setLoading(false)
-    //   return
-    // }
-    // if (data) {
-    //   setConsultation(...consultation, data)
-    //   setLoading(false)
-    //   return
-    // }
-    // setLoading(false)
   }
 
   React.useEffect(() => {
@@ -104,11 +58,6 @@ function PatientCall() {
       console.log('No id', id)
     } else {
       fetchConsultation()
-      setupConsultationListener(id)
-    }
-    return () => {
-      // supabase.removeChannel('consultation')
-      updateStatus(null)
     }
   }, [id])
 
@@ -121,34 +70,18 @@ function PatientCall() {
 
     if (enteredName === expectedName) {
       // update the consultation patient status to 'ready'
-      updateStatus('patientInRoom')
+
       setNameVerified(true)
 
       console.log('Consultation State', consultation?.status)
       // check if the current consultation state is 3 update to 5 else update to 4
-      if (consultation?.status == 3) {
-        updateConsultationState(5)
-      } else {
-        updateConsultationState(4)
-      }
     } else {
       showMessages("That's not the name we are expecting here in this meeting.", 'error')
     }
   }
 
-  const updateConsultationState = async state => {
-    console.log('Updating consultation state to', state)
-    const { data, error } = await supabase.from('consultations').update({ status: state }).eq('id', id)
-    if (error) {
-      console.log(error)
-      showMessages(error.message, 'error')
-      return
-    }
-  }
-
   const joinedMeeting = () => {
     console.log('Patient joined meeting')
-    updateStatus('patientJoined')
   }
 
   if (loading) {
@@ -188,31 +121,33 @@ function PatientCall() {
   }
 
   console.log({ consultation })
-  let url = consultation?.url
-  if (consultation?.patient_token) {
+  let url = consultation?.remote_details?.url
+  if (consultation?.remote_details?.patient_token) {
     url = `${url}?token=${consultation?.patient_token}`
   }
 
   console.log({ url })
-  console.log('Clinician Status', { consultationState })
+  //! appointment is toda
+  const appointmentIsToday = true
   let content
-  if (consultationState === 'patientAllowedIn' || consultationState === 'patientJoined') {
+
+  if (!consultation) {
+    content = <Typography>No consultation found with given link please contact booking pharmacy.</Typography>
+  } else if (appointmentIsToday) {
     // Directly render PatientCallScreen when conditions are met
     content = (
-      <Box ref={containerRef} sx={{ height: '100vh' }}>
-        <Typography variant='h4'>Video Call</Typography>
+      <div ref={containerRef} sx={{ height: '600px' }}>
+        {/* <Typography variant='h4'>Video Call O</Typography> */}
         <PatientCallScreen joinedMeeting={joinedMeeting} url={url} containerRef={containerRef} />
-      </Box>
+      </div>
     )
-  } else if (!consultationState) {
+  } else if (!appointmentIsToday) {
     content = (
       <Typography>
         Your meeting is on {dayjs(consultation?.calendar_events?.start).format('Do MMM YYYY hh:mm A')} - No clinician in
         the room yet.
       </Typography>
     )
-  } else if (consultationState === 'clinicianInRoom') {
-    content = <Typography>Your clinician knows you are here and will let you in soon.</Typography>
   }
 
   console.log('CONTENT', content)

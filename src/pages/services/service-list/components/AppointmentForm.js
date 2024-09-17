@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react'
+import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react'
 import {
   Box,
   Typography,
@@ -18,11 +18,16 @@ import {
   Checkbox,
   FormControlLabel,
   Dialog,
-  InputAdornment
+  InputAdornment,
+  Alert,
+  Snackbar,
+  colors
 } from '@mui/material'
+// import { styled } from '@mui/material/styles'
 import { DateTimePicker } from '@mui/x-date-pickers/DateTimePicker'
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns'
-import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider'
+// import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider'
+import { DatePicker, TimePicker, LocalizationProvider, DigitalClock } from '@mui/x-date-pickers'
 import CustomAutoCompleteInput from 'src/views/apps/Calendar/services/pharmacy-first/CustomAutoComplete'
 import IconifyIcon from 'src/@core/components/icon'
 import PatientPreview from './PatientPreview'
@@ -30,9 +35,28 @@ import useGPSearch from '../hooks/useGPSearch'
 import GPSearchDialog from './GPSearchDialog'
 import GPPreview from './GPPreview'
 import TriageSection from './TriageSection' // Import the new TriageSection component
-import { StaticDateTimePicker } from '@mui/x-date-pickers'
+import { StaticDateTimePicker, StaticDatePicker, StaticTimePicker } from '@mui/x-date-pickers'
+import { TimeClock } from '@mui/x-date-pickers/TimeClock'
 import dayjs from 'dayjs'
-import { isSameDay, isSameHour, isSameMinute, parseISO, startOfDay, addMinutes } from 'date-fns'
+import {
+  isSameDay,
+  isSameHour,
+  isSameMinute,
+  parseISO,
+  startOfDay,
+  addMinutes,
+  format,
+  isEqual,
+  parse,
+  isValid,
+  endOfDay,
+  setMinutes,
+  setHours
+} from 'date-fns'
+import { useDispatch, useSelector } from 'react-redux'
+import { supabaseOrg as supabase } from 'src/configs/supabase'
+import { toZonedTime } from 'date-fns-tz'
+
 // Styled FormControl to adjust label positioning
 const StyledFormControl = styled(FormControl)(({ theme }) => ({
   '& .MuiInputLabel-outlined': {
@@ -54,6 +78,32 @@ const SelectedValue = ({ value }) => (
     <Typography sx={{ ml: 1 }}>{value === 'remote-video' ? 'Remote Video' : 'In-Person'}</Typography>
   </Box>
 )
+
+// const StyledClockBase = styled(TimeClock)(({ theme }) => ({
+//   '& .MuiClockNumber-root': {
+//     '&.booked': {}
+//   }
+// }))
+
+// const StyledClock = React.forwardRef(({ bookedTimes, ...other }, ref) => {
+//   const bookedHours = bookedTimes.map(time => new Date(time).getHours())
+
+//   const StyledClockWithBookedTimes = styled(StyledClockBase)(({ theme }) => ({
+//     ...bookedHours
+//       .map(hour => ({
+//         [`& .MuiClockNumber-root[aria-label="${hour} hours"]`]: {
+//           color: theme.palette.error.main,
+//           textDecoration: 'line-through',
+//           '&:hover': {
+//             backgroundColor: theme.palette.error.light
+//           }
+//         }
+//       }))
+//       .reduce((acc, style) => ({ ...acc, ...style }), {})
+//   }))
+
+//   return <StyledClockWithBookedTimes ref={ref} {...other} />
+// })
 
 const AppointmentForm = ({
   appointment,
@@ -87,52 +137,210 @@ const AppointmentForm = ({
 }) => {
   const prevServiceIdRef = useRef(appointment?.service_id)
   const prevStageIdRef = useRef(appointment?.current_stage_id)
-  const [datePickerOpen, setDatePickerOpen] = useState(false)
-  const [inputDate, setInputDate] = useState('')
+  const [selectedDate, setSelectedDate] = useState(
+    appointment?.scheduled_time ? new Date(appointment.scheduled_time) : null
+  )
+  const [selectedTime, setSelectedTime] = useState(
+    appointment?.scheduled_time ? new Date(appointment.scheduled_time) : null
+  )
+  const [dateInputValue, setDateInputValue] = useState(
+    appointment?.scheduled_time ? format(new Date(appointment.scheduled_time), 'dd/MM/yyyy') : ''
+  )
+  const [timeInputValue, setTimeInputValue] = useState(
+    appointment?.scheduled_time ? format(new Date(appointment.scheduled_time), 'HH:mm') : ''
+  )
   const [bookedSlots, setBookedSlots] = useState([])
+  const [availableTimes, setAvailableTimes] = useState([])
+  const [datePickerOpen, setDatePickerOpen] = useState(false)
+  const [timePickerOpen, setTimePickerOpen] = useState(false)
+  const [alertOpen, setAlertOpen] = useState(false)
+  const [alertMessage, setAlertMessage] = useState('')
+  const [selectedHour, setSelectedHour] = useState(null)
   //!diable booked times, might have to seperate date and time
+  const orgId = useSelector(state => state.organisation.organisation.id)
+  const timeZone = Intl.DateTimeFormat().resolvedOptions().timeZone
 
-  // Simulated API call to fetch booked slots
-  const fetchBookedSlots = useCallback(async date => {
-    // This would be your actual API call
-    // For this example, we'll use mock data
-    const mockBookedSlots = [
-      '2024-09-12T09:00:00Z',
-      '2024-09-12T09:15:00Z',
-      '2024-09-12T09:30:00Z',
-      '2024-09-12T11:00:00Z',
-      '2024-09-12T11:15:00Z',
-      '2024-09-12T14:00:00Z',
-      '2024-09-12T14:15:00Z',
-      '2024-09-12T14:30:00Z',
-      '2024-09-12T14:45:00Z',
-      '2024-09-12T15:00:00Z'
-    ]
+  const handleTimeAccept = newTime => {
+    console.log('handle time accept clicked')
+    const selectedDateTime = setMinutes(setHours(selectedDate, newTime.getHours()), newTime.getMinutes())
+    const isBooked = bookedSlots.some(slot => isSameMinute(slot, selectedDateTime))
 
-    // Simulate API delay
-    await new Promise(resolve => setTimeout(resolve, 300))
-
-    // Filter slots for the selected date and parse them
-    const filteredSlots = mockBookedSlots.filter(slot => isSameDay(parseISO(slot), date)).map(slot => parseISO(slot))
-
-    setBookedSlots(filteredSlots)
-  }, [])
-
-  const handleDateChange = newDate => {
-    onDateChange(newDate)
-    fetchBookedSlots(newDate)
+    console.log('HANDLE TIME ACCEPT', selectedDateTime, isBooked, newTime)
+    if (isBooked) {
+      setAlertMessage('This time slot is already booked. Please select a different time.')
+      setAlertOpen(true)
+    } else {
+      setSelectedTime(newTime)
+      setTimeInputValue(format(newTime, 'HH:mm'))
+      updateScheduledTime(selectedDate, newTime)
+      setTimePickerOpen(false)
+    }
   }
 
-  const shouldDisableTime = dateTime => {
-    // Ensure time is on a 15-minute interval
-    if (dateTime.getMinutes() % 15 !== 0) return true
+  const handleAlertClose = (event, reason) => {
+    if (reason === 'clickaway') {
+      return
+    }
+    setAlertOpen(false)
+  }
 
-    // Check if the time slot is booked
-    return bookedSlots.some(bookedSlot => {
-      const slotStart = startOfDay(bookedSlot)
-      const slotEnd = addMinutes(slotStart, 15)
-      return dateTime >= slotStart && dateTime < slotEnd
-    })
+  const bookedTimes = useMemo(
+    () =>
+      bookedSlots.map(time => {
+        const date = new Date(time)
+        return {
+          hours: date.getHours(),
+          minutes: date.getMinutes()
+        }
+      }),
+    [bookedSlots]
+  )
+
+  const StyledClock = styled('div')(({ theme }) => {
+    const generateStyles = () => {
+      const styles = {}
+      bookedTimes.forEach(({ hours, minutes }) => {
+        styles[`& .MuiClockNumber-root[aria-label="${hours.toString().padStart(2, '0')} hours"]`] = {
+          color: theme.palette.error.main,
+          fontWeight: 'bold'
+        }
+        if (selectedHour === hours) {
+          styles[`& .MuiClockNumber-root[aria-label="${minutes.toString().padStart(2, '0')} minutes"]`] = {
+            color: theme.palette.error.main,
+            fontWeight: 'bold'
+          }
+        }
+      })
+      return styles
+    }
+
+    return {
+      '& .MuiClockNumber-root': {
+        // Base styles for all numbers
+      },
+      ...generateStyles()
+    }
+  })
+
+  const isTimeBooked = time => {
+    if (!selectedDate) return false
+    const currentDateTime = setMinutes(setHours(new Date(selectedDate), time.getHours()), time.getMinutes())
+    return bookedSlots.some(slot => isSameMinute(slot, currentDateTime))
+  }
+
+  const handleDateInputChange = event => {
+    setDateInputValue(event.target.value)
+  }
+
+  const handleTimeInputChange = event => {
+    setTimeInputValue(event.target.value)
+  }
+
+  const handleDateInputBlur = () => {
+    const parsedDate = parse(dateInputValue, 'dd/MM/yyyy', new Date())
+    if (isValid(parsedDate)) {
+      setSelectedDate(parsedDate)
+      handleDateChange(parsedDate)
+    } else {
+      setDateInputValue(selectedDate ? format(selectedDate, 'dd/MM/yyyy') : '')
+    }
+  }
+
+  const handleTimeInputBlur = () => {
+    const parsedTime = parse(timeInputValue, 'HH:mm', new Date())
+    if (isValid(parsedTime)) {
+      setSelectedTime(parsedTime)
+      updateScheduledTime(selectedDate, parsedTime)
+    } else {
+      setTimeInputValue(selectedTime ? format(selectedTime, 'HH:mm') : '')
+    }
+  }
+
+  const updateScheduledTime = (date, time) => {
+    if (date && time) {
+      const combinedDateTime = new Date(
+        date.getFullYear(),
+        date.getMonth(),
+        date.getDate(),
+        time.getHours(),
+        time.getMinutes()
+      )
+      onDateChange(combinedDateTime)
+    }
+  }
+
+  // Simulated API call to fetch booked slots
+  const fetchBookedSlots = useCallback(
+    async date => {
+      const startTime = startOfDay(date)
+      const endTime = endOfDay(date)
+
+      const { data, error } = await supabase
+        .from('ps_appointments')
+        .select('scheduled_time')
+        .eq('pharmacy_id', orgId)
+        .gte('scheduled_time', startTime.toISOString())
+        .lte('scheduled_time', endTime.toISOString())
+        .order('scheduled_time', { ascending: true })
+
+      if (error) {
+        console.error('Error fetching booked slots:', error)
+        return []
+      }
+
+      const timeZonedDates = data.map(appointment => toZonedTime(parseISO(appointment.scheduled_time), timeZone))
+      console.log('FETCHED TIME, ', data, timeZonedDates)
+      return timeZonedDates
+    },
+    [orgId]
+  )
+
+  const handleDateChange = async newDate => {
+    setSelectedDate(newDate)
+    setDateInputValue(newDate ? format(newDate, 'dd/MM/yyyy') : '')
+    if (newDate) {
+      const slots = await fetchBookedSlots(newDate)
+      setBookedSlots(slots)
+      generateAvailableTimes(newDate, slots)
+    }
+  }
+
+  const generateAvailableTimes = useCallback((date, bookedSlots) => {
+    const times = []
+    const dayStart = setMinutes(setHours(date, 0), 0)
+    const dayEnd = setMinutes(setHours(date, 23), 59)
+
+    for (let time = dayStart; time <= dayEnd; time = addMinutes(time, 15)) {
+      const isBooked = bookedSlots.some(bookedSlot => {
+        const slotStart = new Date(bookedSlot)
+        const slotEnd = addMinutes(slotStart, 15)
+        return time >= slotStart && time < slotEnd
+      })
+
+      if (!isBooked) {
+        times.push(time)
+      }
+    }
+
+    setAvailableTimes(times)
+  }, [])
+
+  useEffect(() => {
+    if (appointment?.scheduled_time) {
+      const appointmentDate = new Date(appointment.scheduled_time)
+      setSelectedDate(appointmentDate)
+      setSelectedTime(appointmentDate)
+      setDateInputValue(format(appointmentDate, 'dd/MM/yyyy'))
+      setTimeInputValue(format(appointmentDate, 'HH:mm'))
+      handleDateChange(appointmentDate)
+    }
+  }, [appointment])
+
+  const handleTimeChange = newTime => {
+    setSelectedTime(newTime)
+    setTimeInputValue(format(newTime, 'HH:mm'))
+    updateScheduledTime(selectedDate, newTime)
+    setSelectedHour(newTime.getHours())
   }
 
   useEffect(() => {
@@ -160,31 +368,6 @@ const AppointmentForm = ({
       prevStageIdRef.current = formData.current_stage_id
     }
   }, [formData.service_id, formData.current_stage_id, quickService, onFieldChange])
-
-  useEffect(() => {
-    if (formData.scheduled_time) {
-      setInputDate(dayjs(formData.scheduled_time).format('DD/MM/YYYY HH:mm'))
-    }
-  }, [formData.scheduled_time])
-
-  const handleInputChange = event => {
-    setInputDate(event.target.value)
-  }
-
-  const handleInputBlur = () => {
-    const parsedDate = dayjs(inputDate, 'DD/MM/YYYY HH:mm', true)
-    if (parsedDate.isValid()) {
-      onDateChange(parsedDate.toDate())
-    } else {
-      setInputDate(formData.scheduled_time ? dayjs(formData.scheduled_time).format('DD/MM/YYYY HH:mm') : '')
-    }
-  }
-
-  const handleDatePickerChange = newDate => {
-    onDateChange(newDate)
-    setInputDate(dayjs(newDate).format('DD/MM/YYYY HH:mm'))
-    setDatePickerOpen(false)
-  }
 
   return (
     <LocalizationProvider dateAdapter={AdapterDateFns}>
@@ -352,39 +535,71 @@ const AppointmentForm = ({
             )}
             {console.log('FORM DATA SCHEDULED TIME', formData.scheduled_time, formData)}
             <Grid item xs={12}>
-              <StyledFormControl fullWidth variant='outlined'>
-                <TextField
-                  label='Appointment Date'
-                  value={inputDate}
-                  onChange={handleInputChange}
-                  onBlur={handleInputBlur}
-                  placeholder='DD/MM/YYYY HH:mm'
-                  fullWidth
-                  InputProps={{
-                    endAdornment: (
-                      <InputAdornment position='end'>
-                        <IconButton onClick={() => setDatePickerOpen(true)} edge='end'>
-                          <IconifyIcon icon='mdi:calendar' />
-                        </IconButton>
-                      </InputAdornment>
-                    )
+              <TextField
+                label='Appointment Date'
+                value={dateInputValue}
+                onChange={handleDateInputChange}
+                onBlur={handleDateInputBlur}
+                placeholder='DD/MM/YYYY'
+                fullWidth
+                InputProps={{
+                  endAdornment: (
+                    <InputAdornment position='end'>
+                      <IconButton onClick={() => setDatePickerOpen(true)} edge='end'>
+                        <IconifyIcon icon='mdi:calendar' />
+                      </IconButton>
+                    </InputAdornment>
+                  )
+                }}
+              />
+              <Dialog open={datePickerOpen} onClose={() => setDatePickerOpen(false)}>
+                <StaticDatePicker
+                  value={selectedDate}
+                  onChange={newDate => {
+                    // handleDateChange(newDate)
+                    // setDatePickerOpen(false)
                   }}
+                  onAccept={newDate => {
+                    handleDateChange(newDate)
+                    setDatePickerOpen(false)
+                  }}
+                  onClose={() => setDatePickerOpen(false)}
                 />
-                <Dialog open={datePickerOpen} onClose={() => setDatePickerOpen(false)}>
-                  <StaticDateTimePicker
-                    showTimeSelect
-                    timeFormat='HH:mm'
-                    timeIntervals={15}
+              </Dialog>
+            </Grid>
+
+            <Grid item xs={12}>
+              <TextField
+                label='Appointment Time'
+                value={timeInputValue}
+                onChange={handleTimeInputChange}
+                onBlur={handleTimeInputBlur}
+                placeholder='HH:mm'
+                fullWidth
+                disabled={!selectedDate}
+                InputProps={{
+                  endAdornment: (
+                    <InputAdornment position='end'>
+                      <IconButton onClick={() => setTimePickerOpen(true)} edge='end'>
+                        <IconifyIcon icon='mdi:clock-outline' />
+                      </IconButton>
+                    </InputAdornment>
+                  )
+                }}
+              />
+              <Dialog open={timePickerOpen} onClose={() => setTimePickerOpen(false)}>
+                <StyledClock>
+                  <StaticTimePicker
+                    value={selectedTime}
+                    // onChange={handleTimeChange}
+                    onAccept={handleTimeAccept}
+                    // onClose={() => setTimePickerOpen(false)}
+                    ampm={false}
                     minutesStep={15}
-                    selected={formData.scheduled_time}
-                    id='date-time-picker'
-                    defaultValue={formData.scheduled_time}
-                    onChange={handleDateChange}
-                    shouldDisableTime={shouldDisableTime}
-                    onClose={() => setDatePickerOpen(false)}
+                    views={['hours', 'minutes']}
                   />
-                </Dialog>
-              </StyledFormControl>
+                </StyledClock>
+              </Dialog>
             </Grid>
 
             <Grid item xs={12}>
@@ -446,6 +661,25 @@ const AppointmentForm = ({
           </Grid>
         </form>
       </Box>
+      <Snackbar
+        open={alertOpen}
+        autoHideDuration={6000}
+        onClose={handleAlertClose}
+        anchorOrigin={{
+          vertical: 'top',
+          horizontal: 'center'
+        }}
+        sx={{ zIndex: 1400 }}
+      >
+        <Alert
+          onClose={handleAlertClose}
+          severity='warning'
+          sx={{ width: '100%', zIndex: 10000 }}
+          style={{ background: 'red', color: 'white' }}
+        >
+          {alertMessage}
+        </Alert>
+      </Snackbar>
     </LocalizationProvider>
   )
 }

@@ -4,7 +4,7 @@ import { supabaseOrg as supabase } from 'src/configs/supabase'
 import {
   appendMessageToThread,
   createThreadAndSendSMS
-} from 'src/store/apps/calendar/pharmacyfirst/appointmentListSlice'
+} from '../../../../store/apps/calendar/pharmacyfirst/appointmentListSlice'
 import { List, ListItem, Divider, TextField, Button, Typography, Box, CircularProgress } from '@mui/material'
 import Swal from 'sweetalert2'
 

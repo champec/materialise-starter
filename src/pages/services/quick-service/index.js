@@ -123,7 +123,7 @@ const QuickServiceDeliveryComponent = () => {
   const [gpDialogOpen, setGpDialogOpen] = useState(false)
   const [snackbarMessage, setSnackbarMessage] = useState('')
   const [snackSeverity, setSnackbarSeverity] = useState(null)
-
+  const [currentThread, setCurrentThread] = useState(null)
   const [openConfirmDialog, setOpenConfirmDialog] = useState(false)
   const [objectToSubmit, setObjectToSubmit] = useState(null)
   const [submitLoading, setSubmitLoading] = useState(false)
@@ -904,6 +904,8 @@ const QuickServiceDeliveryComponent = () => {
             setConversationHistory={setConversationHistory}
             chatBotMessages={chatBotMessages}
             setChatBotMessages={setChatBotMessages}
+            currentThread={currentThread}
+            setCurrentThread={setCurrentThread}
           />
         </Drawer>
 
