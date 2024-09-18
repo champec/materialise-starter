@@ -472,16 +472,16 @@ const QuickServiceDeliveryComponent = () => {
         appointment_type: config.appointmentType,
         overall_status: 'Scheduled',
         current_stage_id: config.stage.id,
-        scheduled_time: appointmentDetails.scheduledTime,
+        scheduled_time: appointmentDetails.scheduled_time,
         last_updated: new Date().toISOString(),
         details: {
           ...formData,
           sendTextUpdate: config.appointmentType === 'remote-video'
         },
         patient_object: selectedPatient,
-        gp_object: appointmentDetails.gp,
+        gp_object: selectedGP,
         remote_details: appointmentDetails.remote_details,
-        status_details: { currentStatus: 'Scheduled' },
+        status_details: { currentStatus: 'Completed' },
         referral: null, // Add referral data if available
         appointment_source: 'quick-service',
         source_details: 'Booked with Quick Service'
