@@ -168,31 +168,34 @@ function ServiceDeliveryComponent({ appointment: appointmentObject, onClose, onE
             ) : loading ? (
               <CircularProgress />
             ) : serviceDeliveries.length > 0 ? (
-              <Table>
-                <TableHead>
-                  <TableRow>
-                    <TableCell>Stage</TableCell>
-                    <TableCell>Status</TableCell>
-                    <TableCell>Actions</TableCell>
-                  </TableRow>
-                </TableHead>
-                <TableBody>
-                  {serviceDeliveries.map(delivery => (
-                    <TableRow key={delivery.id}>
-                      <TableCell>{delivery.ps_service_stages.name}</TableCell>
-                      <TableCell>{delivery.status}</TableCell>
-                      <TableCell>
-                        <Button variant='contained' size='small' onClick={() => handleGoToDelivery(delivery)}>
-                          Go to Delivery
-                        </Button>
-                        <Button variant='outlined' size='small' onClick={() => handleView(delivery)} sx={{ ml: 1 }}>
-                          View
-                        </Button>
-                      </TableCell>
+              <Box>
+                {renderAppointmentDetails()}
+                <Table>
+                  <TableHead>
+                    <TableRow>
+                      <TableCell>Stage</TableCell>
+                      <TableCell>Status</TableCell>
+                      <TableCell>Actions</TableCell>
                     </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
+                  </TableHead>
+                  <TableBody>
+                    {serviceDeliveries.map(delivery => (
+                      <TableRow key={delivery.id}>
+                        <TableCell>{delivery.ps_service_stages.name}</TableCell>
+                        <TableCell>{delivery.status}</TableCell>
+                        <TableCell>
+                          <Button variant='contained' size='small' onClick={() => handleGoToDelivery(delivery)}>
+                            Go to Delivery
+                          </Button>
+                          <Button variant='outlined' size='small' onClick={() => handleView(delivery)} sx={{ ml: 1 }}>
+                            View
+                          </Button>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </Box>
             ) : (
               <Box>
                 {renderAppointmentDetails()}
