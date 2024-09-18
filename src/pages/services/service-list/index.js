@@ -457,13 +457,13 @@ function PharmacyServicesPage() {
     {
       field: 'patientName',
       headerName: 'Patient Name',
-      width: 130,
+      minWidth: 130,
       valueGetter: params => params.row.patient_object?.full_name || 'N/A'
     },
     {
       field: 'serviceName',
       headerName: 'Service',
-      width: 130,
+      minWidth: 130,
       valueGetter: params => {
         const service = services.find(s => s.id === params.row.service_id)
         return service ? `${service.abbreviation} - ${service.name}` : ''
@@ -675,6 +675,7 @@ function PharmacyServicesPage() {
                 rowsPerPageOptions={[5, 10, 20]}
                 checkboxSelection
                 disableSelectionOnClick
+                disableColumnResize={false}
                 onSelectionModelChange={newSelectionModel => {
                   setSelectedAppointmentIds(newSelectionModel)
                 }}

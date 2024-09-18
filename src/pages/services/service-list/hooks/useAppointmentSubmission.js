@@ -221,7 +221,13 @@ const useAppointmentSubmission = () => {
 
       // Handle event creation or update
       console.log('Handling event creation/update')
-      const startTime = parse(appointmentData.scheduled_time, 'EEE MMM dd yyyy HH:mm:ss xx', new Date())
+      let startTime
+      if (appointmentData.scheduled_time instanceof Date) {
+        startTime = appointmentData.scheduled_time
+      } else {
+        startTime = parse(appointmentData.scheduled_time, 'EEE MMM dd yyyy HH:mm:ss xx', new Date())
+      }
+
       const duration = appointmentData?.duration || 30
       const endTime = addMinutes(startTime, duration)
 
