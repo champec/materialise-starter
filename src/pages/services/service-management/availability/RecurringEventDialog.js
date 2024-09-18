@@ -18,6 +18,7 @@ import {
 } from '@mui/material'
 import { DateTimePicker } from '@mui/x-date-pickers/DateTimePicker'
 import { RRule } from 'rrule'
+import dayjs from 'dayjs' // Import dayjs
 
 const RecurringEventDialog = ({ open, onClose, onSave, services, eventData }) => {
   const [localEventData, setLocalEventData] = useState({
@@ -38,13 +39,13 @@ const RecurringEventDialog = ({ open, onClose, onSave, services, eventData }) =>
       let updatedEventData = {
         id: eventData.id || null,
         serviceId: eventData.serviceId || '',
-        start: eventData.start || null,
-        end: eventData.end || null,
+        start: eventData.start ? dayjs(eventData.start) : null, // Ensure dayjs object
+        end: eventData.end ? dayjs(eventData.end) : null, // Ensure dayjs object
         isRecurring: !!eventData.recurrenceRule,
         frequency: RRule.WEEKLY, // Default value
         interval: 1,
         byweekday: [],
-        until: null
+        until: eventData.until ? dayjs(eventData.until) : null // Ensure dayjs object
       }
 
       // Parse the recurrence rule if it exists
@@ -55,7 +56,7 @@ const RecurringEventDialog = ({ open, onClose, onSave, services, eventData }) =>
           updatedEventData.frequency = ruleOptions.freq || RRule.WEEKLY
           updatedEventData.interval = ruleOptions.interval || 1
           updatedEventData.byweekday = ruleOptions.byweekday || []
-          updatedEventData.until = ruleOptions.until || null
+          updatedEventData.until = ruleOptions.until ? dayjs(ruleOptions.until) : null
         } catch (error) {
           console.error('Failed to parse RRule:', error)
         }
@@ -83,8 +84,8 @@ const RecurringEventDialog = ({ open, onClose, onSave, services, eventData }) =>
         freq: localEventData.frequency,
         interval: localEventData.interval,
         byweekday: localEventData.byweekday,
-        dtstart: localEventData.start,
-        until: localEventData.until
+        dtstart: localEventData.start.toDate(), // Convert dayjs to native Date
+        until: localEventData.until ? localEventData.until.toDate() : null // Convert dayjs to native Date
       })
       saveData.rrule = rrule.toString()
     }
@@ -117,7 +118,7 @@ const RecurringEventDialog = ({ open, onClose, onSave, services, eventData }) =>
             <DateTimePicker
               label='Start Time'
               value={localEventData.start}
-              onChange={date => handleChange('start', date)}
+              onChange={date => handleChange('start', dayjs(date))} // Convert to dayjs
               renderInput={params => <TextField {...params} fullWidth margin='normal' />}
             />
           </Grid>
@@ -125,7 +126,7 @@ const RecurringEventDialog = ({ open, onClose, onSave, services, eventData }) =>
             <DateTimePicker
               label='End Time'
               value={localEventData.end}
-              onChange={date => handleChange('end', date)}
+              onChange={date => handleChange('end', dayjs(date))} // Convert to dayjs
               renderInput={params => <TextField {...params} fullWidth margin='normal' />}
             />
           </Grid>
@@ -166,7 +167,7 @@ const RecurringEventDialog = ({ open, onClose, onSave, services, eventData }) =>
                   margin='normal'
                 />
               </Grid>
-              {eventData.frequency === RRule.WEEKLY && (
+              {localEventData.frequency === RRule.WEEKLY && (
                 <Grid item xs={12}>
                   <FormGroup row>
                     <Typography variant='subtitle1' style={{ width: '100%', marginTop: '16px' }}>
@@ -177,7 +178,7 @@ const RecurringEventDialog = ({ open, onClose, onSave, services, eventData }) =>
                         key={day}
                         control={
                           <Checkbox
-                            checked={eventData.byweekday.includes(RRule[day])}
+                            checked={localEventData.byweekday.includes(RRule[day])}
                             onChange={() => handleWeekdayChange(RRule[day])}
                           />
                         }
@@ -191,7 +192,7 @@ const RecurringEventDialog = ({ open, onClose, onSave, services, eventData }) =>
                 <DateTimePicker
                   label='End Date'
                   value={localEventData.until}
-                  onChange={date => handleChange('until', date)}
+                  onChange={date => handleChange('until', dayjs(date))} // Convert to dayjs
                   renderInput={params => <TextField {...params} fullWidth margin='normal' />}
                 />
               </Grid>
