@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import { supabaseOrg as supabase } from 'src/configs/supabase'
 import Icon from 'src/@core/components/icon'
-import { format, startOfMonth, endOfMonth } from 'date-fns'
+import dayjs from 'dayjs'
 import {
   Box,
   Card,
@@ -28,9 +28,26 @@ import { LocalizationProvider } from '@mui/x-date-pickers'
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs'
 import 'dayjs/locale/de'
 
+// Import dayjs plugins for date manipulation
+import localizedFormat from 'dayjs/plugin/localizedFormat'
+import customParseFormat from 'dayjs/plugin/customParseFormat'
+import isBetween from 'dayjs/plugin/isBetween'
+import isSameOrBefore from 'dayjs/plugin/isSameOrBefore'
+import isSameOrAfter from 'dayjs/plugin/isSameOrAfter'
+// import startOfMonth from 'dayjs/plugin/startOfMonth'
+// import endOfMonth from 'dayjs/plugin/endOfMonth'
+
+dayjs.extend(localizedFormat)
+dayjs.extend(customParseFormat)
+dayjs.extend(isBetween)
+dayjs.extend(isSameOrBefore)
+dayjs.extend(isSameOrAfter)
+// dayjs.extend(startOfMonth)
+// dayjs.extend(endOfMonth)
+
 function Stats() {
   const [selectedService, setSelectedService] = useState('all')
-  const [selectedDate, setSelectedDate] = useState(new Date())
+  const [selectedDate, setSelectedDate] = useState(dayjs()) // Use dayjs for initial value
   const [services, setServices] = useState([])
   const [stats, setStats] = useState([])
   const [topProviders, setTopProviders] = useState([])
@@ -49,8 +66,8 @@ function Stats() {
   }
 
   const fetchStats = async () => {
-    const startDate = startOfMonth(selectedDate)
-    const endDate = endOfMonth(selectedDate)
+    const startDate = dayjs(selectedDate).startOf('month') // Use dayjs
+    const endDate = dayjs(selectedDate).endOf('month') // Use dayjs
 
     let query = supabase
       .from('ps_service_delivery')
@@ -79,8 +96,8 @@ function Stats() {
   }
 
   const fetchTopProviders = async () => {
-    const startDate = startOfMonth(selectedDate)
-    const endDate = endOfMonth(selectedDate)
+    const startDate = dayjs(selectedDate).startOf('month') // Use dayjs
+    const endDate = dayjs(selectedDate).endOf('month') // Use dayjs
 
     let query = supabase
       .from('ps_service_delivery')
@@ -163,7 +180,7 @@ function Stats() {
 
         <Card sx={{ mb: 3 }}>
           <CardContent>
-            <Typography variant='h6'>Estimated Income for {format(selectedDate, 'MMMM yyyy')}</Typography>
+            <Typography variant='h6'>Estimated Income for {selectedDate.format('MMMM YYYY')}</Typography>
             <Typography variant='h4'>£{totalEstimatedEarning.toFixed(2)}</Typography>
           </CardContent>
         </Card>
@@ -191,7 +208,7 @@ function Stats() {
                   {stats.map(stat => (
                     <TableRow key={stat.id}>
                       <TableCell>{stat.ps_services.name}</TableCell>
-                      <TableCell>{format(new Date(stat.completed_at), 'dd/MM/yyyy')}</TableCell>
+                      <TableCell>{dayjs(stat.completed_at).format('DD/MM/YYYY')}</TableCell>
                       <TableCell>
                         <Box sx={{ display: 'flex', alignItems: 'center' }}>
                           <Avatar src={stat.profiles?.avatar_url} sx={{ mr: 2 }} />
