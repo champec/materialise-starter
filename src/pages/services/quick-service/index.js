@@ -605,7 +605,7 @@ const QuickServiceDeliveryComponent = () => {
     // This could be a call to your backend API or a third-party service
     console.log(`Sending SMS to ${phoneNumber} with meeting URL: ${meetingUrl}`)
   }
-
+  console.log('APP DEETS', appointmentDetails, selectedPatient, selectedGP)
   // Helper function to reset the form
   const resetForm = () => {
     setConfig({ appointmentType: '', service: '', stage: '' })
@@ -872,10 +872,12 @@ const QuickServiceDeliveryComponent = () => {
                 <Typography>Service: {services.find(s => s.id === config.service)?.name}</Typography>
                 <Typography>Stage: {serviceStages.find(s => s.id === config.stage.id)?.name}</Typography>
                 <Typography>
-                  Patient: {appointmentDetails.patient?.full_name || appointmentDetails.patientName}
+                  Patient: {appointmentDetails.patient_object?.full_name || selectedPatient.full_name}
                 </Typography>
-                <Typography>GP: {appointmentDetails.gp?.OrganisationName}</Typography>
-                <Typography>Scheduled Time: {appointmentDetails.scheduledTime?.toString()}</Typography>
+                <Typography>
+                  GP: {appointmentDetails.gp_object?.OrganisationName || selectedGP?.OrganisationName}
+                </Typography>
+                <Typography>Scheduled Time: {appointmentDetails?.scheduled_time?.toISOString()}</Typography>
                 {config.appointmentType === 'remote-video' && (
                   <Typography>Phone Number: {appointmentDetails.phoneNumber}</Typography>
                 )}
@@ -888,11 +890,9 @@ const QuickServiceDeliveryComponent = () => {
                 <Typography>Appointment Type: {config.appointmentType}</Typography>
                 <Typography>Service: {services.find(s => s.id === config.service)?.name}</Typography>
                 <Typography>Stage: {serviceStages.find(s => s.id === config.stage?.id)?.name}</Typography>
-                <Typography>
-                  Patient: {appointmentDetails.patient?.full_name || appointmentDetails.patientName}
-                </Typography>
-                <Typography>GP: {appointmentDetails.gp?.OrganisationName}</Typography>
-                <Typography>Scheduled Time: {appointmentDetails.scheduledTime?.toString()}</Typography>
+                <Typography>Patient: {appointmentDetails.patient?.full_name || selectedPatient?.full_name}</Typography>
+                <Typography>GP: {appointmentDetails.gp?.OrganisationName || selectedGP?.OrganisationName}</Typography>
+                <Typography>Scheduled Time: {appointmentDetails?.scheduled_time?.toString()}</Typography>
                 {config.appointmentType === 'remote-video' && (
                   <Typography>Phone Number: {appointmentDetails.phoneNumber}</Typography>
                 )}

@@ -113,6 +113,8 @@ const BookingComponent = ({ appointment: appointmentObject, onClose, source }) =
     handleSearchAgain
   } = usePatient()
 
+  console.log('PATient data 2', patientData)
+
   const {
     selectedGP,
     gpSearchTerm,
@@ -193,6 +195,15 @@ const BookingComponent = ({ appointment: appointmentObject, onClose, source }) =
       }))
     }
   }, [appointment])
+
+  // useEffect(() => {
+  //   if (selectedPatient && selectedPatient.gp_ods) {
+  //     setSelectedGP({
+  //       id: selectedPatient.gp_ods,
+  //       name: 'GP from PDS' // You might want to fetch the actual GP name if available
+  //     })
+  //   }
+  // }, [selectedPatient])
 
   console.log('selectedStartDate', selectedStartDate)
 

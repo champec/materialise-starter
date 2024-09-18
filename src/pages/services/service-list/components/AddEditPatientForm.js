@@ -114,7 +114,7 @@ const AddEditPatientForm = ({ patient, onClose, onSelect, selectedPatient, setSe
   const handleDateChange = newDate => {
     setEditingPatient(prev => ({
       ...prev,
-      dob: newDate ? format(newDate, 'yyyy-MM-dd') : null
+      dob: newDate ? dayjs(newDate).format('YYYY-MM-DD') : null // Ensure newDate is Day.js instance
     }))
   }
 
@@ -275,7 +275,7 @@ const AddEditPatientForm = ({ patient, onClose, onSelect, selectedPatient, setSe
             <Grid item xs={12} sm={6}>
               <DatePicker
                 label='Date of Birth'
-                value={editingPatient?.dob ? parseISO(editingPatient.dob) : null}
+                value={editingPatient?.dob ? dayjs(editingPatient.dob) : null}
                 onChange={handleDateChange}
                 renderInput={params => <TextField {...params} fullWidth />}
                 inputFormat='dd/MM/yyyy'

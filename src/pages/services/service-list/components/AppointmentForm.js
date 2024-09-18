@@ -495,15 +495,6 @@ const AppointmentForm = ({
                     />
                   </Grid>
                 )}
-
-                {/* <Grid item xs={12}>
-                  <StyledDateTimePicker
-                    label='Scheduled Time'
-                    value={formData.scheduled_time}
-                    onChange={onDateChange}
-                    renderInput={params => <TextField {...params} fullWidth required />}
-                  />
-                </Grid> */}
               </>
             )}
             {console.log('FORM DATA SCHEDULED TIME', formData.scheduled_time, formData)}
