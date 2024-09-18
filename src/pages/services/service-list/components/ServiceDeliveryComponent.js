@@ -95,7 +95,7 @@ function ServiceDeliveryComponent({ appointment: appointmentObject, onClose, onE
   }
 
   const showEditButton = serviceDeliveries.length > 0 || appointment.appointment_source === 'pharmex'
-  const showConfigureButton = !showEditButton || appointment.appointment_source === 'pharmex'
+  const showConfigureButton = serviceDeliveries.length < 1
 
   const renderAppointmentDetails = () => (
     <Paper elevation={3} sx={{ p: 3, mb: 3 }}>
@@ -170,6 +170,21 @@ function ServiceDeliveryComponent({ appointment: appointmentObject, onClose, onE
             ) : serviceDeliveries.length > 0 ? (
               <Box>
                 {renderAppointmentDetails()}
+                {showEditButton && (
+                  <Button variant='outlined' onClick={() => handleEditAppointment(appointment)} sx={{ mr: 1 }}>
+                    Edit Appointment
+                  </Button>
+                )}
+                {showConfigureButton && (
+                  <Button
+                    onClick={handleConfigureService}
+                    disabled={
+                      configuring || (appointment.appointment_source !== 'pharmex' && canDeliverService === null)
+                    }
+                  >
+                    {configuring ? <CircularProgress size={24} /> : 'Configure Service'}
+                  </Button>
+                )}
                 <Table>
                   <TableHead>
                     <TableRow>
