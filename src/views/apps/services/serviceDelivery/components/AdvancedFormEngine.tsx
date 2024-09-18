@@ -628,7 +628,7 @@ const AdvancedFormEngine: React.FC<AdvancedFormEngineProps> = ({
           return (
             <CustomDatePicker
               id={currentNodeId}
-              value={formData[currentNodeId] || new Date()}
+              value={formData[currentNodeId]}
               onChange={(value: any) => handleAnswer(value)}
               error={error}
             />
@@ -849,7 +849,7 @@ const AdvancedFormEngine: React.FC<AdvancedFormEngineProps> = ({
             <Button onClick={handleBack} disabled={visibleHistory.indexOf(currentNodeId) === 0}>
               Back
             </Button>
-            <Button onClick={handleNext} disabled={isLocked || currentNode.isStopNode}>
+            <Button onClick={handleNext} disabled={isLocked || currentNode.isEndNode}>
               {currentNode.isStopNode ? 'Continue' : 'Next'}
             </Button>
           </StickyFooter>

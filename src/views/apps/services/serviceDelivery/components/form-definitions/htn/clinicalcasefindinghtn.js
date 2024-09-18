@@ -6,7 +6,8 @@ const clinicalBloodPressureCheckForm = {
       id: 'eligibilityCheck',
       field: {
         type: 'radio',
-        question: 'Is the patient at least 18 years old?',
+        question:
+          'Confirm the patient is not blood pressure mediciaton or already being monitored for blood presure by another service provider?',
         options: ['Yes', 'No'],
         required: true,
         autoProgress: true

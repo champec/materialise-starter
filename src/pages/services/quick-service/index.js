@@ -93,7 +93,7 @@ const QuickServiceDeliveryComponent = () => {
   const userId = useSelector(state => state.user.user.id)
   const services = useSelector(selectServices)
   const [activeStep, setActiveStep] = useState(0)
-  const [config, setConfig] = useState({ appointmentType: '', service: '', stage: '', shared_data: {} })
+  const [config, setConfig] = useState({ appointmentType: 'in-person', service: '', stage: '', shared_data: {} })
   const [formDef, setFormDef] = useState({})
   const [loadingRemote, setLoadingRemote] = useState(false)
   const [appointmentDetails, setAppointmentDetails] = useState({
@@ -176,6 +176,38 @@ const QuickServiceDeliveryComponent = () => {
   const [recommendation, setRecommendation] = useState(null)
   const [conversationHistory, setConversationHistory] = useState([])
   const [chatBotMessages, setChatBotMessages] = useState([])
+  const [isStep1Valid, setIsStep1Valid] = useState(false)
+  const [step1errors, setStep1Errors] = useState({
+    appointmentType: false,
+    service: false,
+    stage: false
+  })
+  const [globalError, setGlobalError] = useState('')
+
+  useEffect(() => {
+    const newErrors = {}
+    let isValid = true
+
+    console.log('VALIDAE STEP !', config.appointmentType, config.service, config.stage)
+
+    if (!config.appointmentType) {
+      newErrors.appointmentType = 'Please select an appointment type'
+      isValid = false
+    }
+    if (!config.service) {
+      newErrors.service = 'Please select a service'
+      isValid = false
+    }
+    if (!config.stage) {
+      newErrors.stage = 'Please select a stage'
+      isValid = false
+    }
+
+    setGlobalError('') // Clear global error when going back
+    setStep1Errors(newErrors)
+    setIsStep1Valid(isValid)
+  }, [config])
+
   // END AI CHAT BOT STATES
 
   const handleNhsPatientFetch = () => {
@@ -271,11 +303,23 @@ const QuickServiceDeliveryComponent = () => {
     setSnackbar({ open: true, message, severity })
   }
 
-  const handleStep = step => () => {
-    setActiveStep(step)
+  const handleStep = step => index => {
+    if (isStep1Valid) {
+      // Allow navigation only if step 1 is valid
+      setGlobalError('') // Clear global error when going back
+      setActiveStep(step)
+    } else {
+      setGlobalError('Please complete the required fields before moving forward.')
+    }
   }
 
   const handleNext = async () => {
+    setGlobalError('') // Clear global error when going back
+
+    if (!isStep1Valid) {
+      setGlobalError('Please complete all required fields before proceeding.')
+      return
+    }
     if (activeStep === 0 && config.appointmentType === 'remote-video' && !videoLinkCreated) {
       if (!appointmentDetails.phoneNumber || !appointmentDetails.patientName) {
         showSnackbar('Please enter both phone number and patient name for remote appointments.', 'error')
@@ -348,6 +392,12 @@ const QuickServiceDeliveryComponent = () => {
 
   const handleConfigChange = (field, value) => {
     setConfig(prev => ({ ...prev, [field]: value }))
+
+    // Clear the error for this field if a valid value is provided
+    setStep1Errors(prevErrors => ({
+      ...prevErrors,
+      [field]: value ? false : prevErrors[field]
+    }))
   }
 
   const handleAppointmentDetailsChange = (field, value) => {
@@ -595,6 +645,11 @@ const QuickServiceDeliveryComponent = () => {
                 <MenuItem value='in-person'>In-Person</MenuItem>
                 <MenuItem value='remote-video'>Remote Video</MenuItem>
               </Select>
+              {step1errors.appointmentType && (
+                <Typography color='error' variant='body2'>
+                  {step1errors.appointmentType}
+                </Typography>
+              )}
             </FormControl>
             {config.appointmentType === 'remote-video' && (
               <>
@@ -627,6 +682,11 @@ const QuickServiceDeliveryComponent = () => {
                   </MenuItem>
                 ))}
               </Select>
+              {step1errors.appointmentType && (
+                <Typography color='error' variant='body2'>
+                  {step1errors.service}
+                </Typography>
+              )}
             </FormControl>
             {config.service && (
               <FormControl fullWidth>
@@ -642,6 +702,11 @@ const QuickServiceDeliveryComponent = () => {
                     </MenuItem>
                   ))}
                 </Select>
+                {step1errors.appointmentType && (
+                  <Typography color='error' variant='body2'>
+                    {step1errors.stage}
+                  </Typography>
+                )}
               </FormControl>
             )}
           </FormContainer>
@@ -851,10 +916,20 @@ const QuickServiceDeliveryComponent = () => {
         {/* create a tray menu above the stopper with one button to open ai assistance, use iconify icon, it will open a drawer component which must fiarly wide */}
 
         <Box sx={{ display: 'flex', justifyContent: 'flex-end', mb: 2 }}>
-          <Button variant='contained' startIcon={<Icon icon='mdi:robot' />} onClick={() => setAiDrawerOpen(true)}>
+          <Button
+            variant='contained'
+            startIcon={<Icon icon='mdi:robot' />}
+            onClick={() => setAiDrawerOpen(true)}
+            disabled={!isStep1Valid}
+          >
             AI Assistance
           </Button>
         </Box>
+        {globalError && (
+          <Alert severity='error' onClose={() => setGlobalError('')}>
+            {globalError}
+          </Alert>
+        )}
 
         {/* AI Assistance Drawer */}
         <Drawer

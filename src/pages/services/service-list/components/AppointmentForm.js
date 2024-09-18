@@ -27,6 +27,7 @@ import {
 import { DateTimePicker } from '@mui/x-date-pickers/DateTimePicker'
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs'
 import 'dayjs/locale/de'
+import dayjs from 'dayjs'
 // import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider'
 import { DatePicker, TimePicker, LocalizationProvider, DigitalClock } from '@mui/x-date-pickers'
 import CustomAutoCompleteInput from 'src/views/apps/Calendar/services/pharmacy-first/CustomAutoComplete'
@@ -38,7 +39,6 @@ import GPPreview from './GPPreview'
 import TriageSection from './TriageSection' // Import the new TriageSection component
 import { StaticDateTimePicker, StaticDatePicker, StaticTimePicker } from '@mui/x-date-pickers'
 import { TimeClock } from '@mui/x-date-pickers/TimeClock'
-import dayjs from 'dayjs'
 import {
   isSameDay,
   isSameHour,
@@ -113,11 +113,13 @@ const AppointmentForm = ({
   const prevServiceIdRef = useRef(appointment?.service_id)
   const prevStageIdRef = useRef(appointment?.current_stage_id)
   const [selectedDate, setSelectedDate] = useState(
-    appointment?.scheduled_time ? new Date(appointment.scheduled_time) : null
+    appointment?.scheduled_time ? dayjs(appointment.scheduled_time) : null
   )
+
   const [selectedTime, setSelectedTime] = useState(
-    appointment?.scheduled_time ? new Date(appointment.scheduled_time) : null
+    appointment?.scheduled_time ? dayjs(appointment.scheduled_time) : null
   )
+
   const [dateInputValue, setDateInputValue] = useState(
     appointment?.scheduled_time ? format(new Date(appointment.scheduled_time), 'dd/MM/yyyy') : ''
   )
@@ -136,20 +138,24 @@ const AppointmentForm = ({
   const timeZone = Intl.DateTimeFormat().resolvedOptions().timeZone
 
   const handleTimeAccept = newTime => {
-    console.log('handle time accept clicked')
-    const selectedDateTime = setMinutes(setHours(selectedDate, newTime.getHours()), newTime.getMinutes())
-    const isBooked = bookedSlots.some(slot => isSameMinute(slot, selectedDateTime))
+    const jsTime = newTime ? newTime.toDate() : null
+    // Ensure selectedDate is a Day.js object before calling .toDate()
+    const jsDate = dayjs.isDayjs(selectedDate) ? selectedDate.toDate() : selectedDate
 
-    console.log('HANDLE TIME ACCEPT', selectedDateTime, isBooked, newTime)
-    if (isBooked) {
-      setAlertMessage('This time slot is already booked. Please select a different time.')
-      setAlertOpen(true)
-    } else {
-      setSelectedTime(newTime)
-      setTimeInputValue(format(newTime, 'HH:mm'))
-      updateScheduledTime(selectedDate, newTime)
-      setTimePickerOpen(false)
-    }
+    // if (jsDate && jsTime) {
+    //   const selectedDateTime = setMinutes(setHours(jsDate, jsTime.getHours()), jsTime.getMinutes())
+    //   const isBooked = bookedSlots.some(slot => isSameMinute(slot, selectedDateTime))
+
+    //   if (isBooked) {
+    //     setAlertMessage('This time slot is already booked. Please select a different time.')
+    //     setAlertOpen(true)
+    //   } else {
+    setSelectedTime(newTime)
+    setTimeInputValue(jsTime ? format(jsTime, 'HH:mm') : '')
+    updateScheduledTime(dayjs(jsDate), dayjs(newTime)) // Pass Day.js objects here
+    setTimePickerOpen(false)
+    //   }
+    // }
   }
 
   const handleAlertClose = (event, reason) => {
@@ -197,12 +203,6 @@ const AppointmentForm = ({
     }
   })
 
-  // const isTimeBooked = time => {
-  //   if (!selectedDate) return false
-  //   const currentDateTime = setMinutes(setHours(new Date(selectedDate), time.getHours()), time.getMinutes())
-  //   return bookedSlots.some(slot => isSameMinute(slot, currentDateTime))
-  // }
-
   const handleDateInputChange = event => {
     setDateInputValue(event.target.value)
   }
@@ -215,32 +215,26 @@ const AppointmentForm = ({
     const parsedDate = parse(dateInputValue, 'dd/MM/yyyy', new Date())
     if (isValid(parsedDate)) {
       setSelectedDate(parsedDate)
-      handleDateChange(parsedDate)
+      handleDateChange(dayjs(parsedDate))
     } else {
       setDateInputValue(selectedDate ? format(selectedDate, 'dd/MM/yyyy') : '')
     }
   }
 
   const handleTimeInputBlur = () => {
-    const parsedTime = parse(timeInputValue, 'HH:mm', new Date())
-    if (isValid(parsedTime)) {
+    const parsedTime = dayjs(timeInputValue, 'HH:mm')
+    if (parsedTime.isValid()) {
       setSelectedTime(parsedTime)
       updateScheduledTime(selectedDate, parsedTime)
     } else {
-      setTimeInputValue(selectedTime ? format(selectedTime, 'HH:mm') : '')
+      setTimeInputValue(selectedTime ? selectedTime.format('HH:mm') : '')
     }
   }
 
   const updateScheduledTime = (date, time) => {
     if (date && time) {
-      const combinedDateTime = new Date(
-        date.getFullYear(),
-        date.getMonth(),
-        date.getDate(),
-        time.getHours(),
-        time.getMinutes()
-      )
-      onDateChange(combinedDateTime)
+      const combinedDateTime = date.hour(time.hour()).minute(time.minute())
+      onDateChange(combinedDateTime.toDate()) // Convert to JavaScript Date if needed
     }
   }
 
@@ -271,12 +265,13 @@ const AppointmentForm = ({
   )
 
   const handleDateChange = async newDate => {
-    setSelectedDate(newDate)
-    setDateInputValue(newDate ? format(newDate, 'dd/MM/yyyy') : '')
-    if (newDate) {
-      const slots = await fetchBookedSlots(newDate)
+    const jsDate = newDate ? newDate.toDate() : null
+    setSelectedDate(jsDate)
+    setDateInputValue(jsDate ? format(jsDate, 'dd/MM/yyyy') : '')
+    if (jsDate) {
+      const slots = await fetchBookedSlots(jsDate)
       setBookedSlots(slots)
-      generateAvailableTimes(newDate, slots)
+      generateAvailableTimes(jsDate, slots)
     }
   }
 
@@ -301,24 +296,18 @@ const AppointmentForm = ({
   }, [])
 
   useEffect(() => {
-    // Check if the scheduled time exists in appointment or formData
     const scheduledTime = appointment?.scheduled_time || formData?.scheduled_time
-    console.log('SKEDULE', scheduledTime, formData.scheduledTime)
-    // Only set date and time if scheduledTime exists and hasn't been set yet
     if (scheduledTime) {
       const appointmentDate = new Date(scheduledTime)
-
-      // Ensure the date is valid and hasn't already been set
       if (!isNaN(appointmentDate) && appointmentDate.toString() !== selectedDate?.toString()) {
-        console.log('Setting Appointment Date:', appointmentDate)
         setSelectedDate(appointmentDate)
         setSelectedTime(appointmentDate)
         setDateInputValue(format(appointmentDate, 'dd/MM/yyyy'))
         setTimeInputValue(format(appointmentDate, 'HH:mm'))
-        handleDateChange(appointmentDate)
+        handleDateChange(dayjs(appointmentDate)) // Pass Day.js object to handleDateChange
       }
     }
-  }, [appointment?.scheduled_time, formData?.scheduled_time]) // Use more specific dependencies
+  }, [appointment?.scheduled_time, formData?.scheduled_time])
 
   // const handleTimeChange = newTime => {
   //   setSelectedTime(newTime)
@@ -538,7 +527,7 @@ const AppointmentForm = ({
               />
               <Dialog open={datePickerOpen} onClose={() => setDatePickerOpen(false)}>
                 <StaticDatePicker
-                  value={selectedDate}
+                  value={dayjs.isDayjs(selectedDate) ? selectedDate : dayjs(selectedDate)}
                   onChange={newDate => {
                     // handleDateChange(newDate)
                     // setDatePickerOpen(false)
@@ -564,7 +553,7 @@ const AppointmentForm = ({
                 InputProps={{
                   endAdornment: (
                     <InputAdornment position='end'>
-                      <IconButton onClick={() => setTimePickerOpen(true)} edge='end'>
+                      <IconButton onClick={() => setTimePickerOpen(true)} edge='end' disabled={!selectedDate}>
                         <IconifyIcon icon='mdi:clock-outline' />
                       </IconButton>
                     </InputAdornment>
@@ -574,10 +563,10 @@ const AppointmentForm = ({
               <Dialog open={timePickerOpen} onClose={() => setTimePickerOpen(false)}>
                 <StyledClock>
                   <StaticTimePicker
-                    value={selectedTime}
+                    value={dayjs.isDayjs(selectedTime) ? selectedTime : dayjs(selectedTime)} // Ensure value is a Day.js object
                     // onChange={handleTimeChange}
                     onAccept={handleTimeAccept}
-                    // onClose={() => setTimePickerOpen(false)}
+                    onClose={() => setTimePickerOpen(false)}
                     ampm={false}
                     minutesStep={15}
                     views={['hours', 'minutes']}
