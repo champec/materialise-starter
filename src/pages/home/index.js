@@ -139,7 +139,7 @@ const Home = () => {
     <Grid container spacing={6}>
       <Grid item xs={12}>
         <Card>
-          <CardHeader title='Kick start your project 🚀'></CardHeader>
+          <CardHeader title='Welcome to the Pharmacy Co-Pilot 🚀'></CardHeader>
           <CardHeader title={process}></CardHeader>
           {/* <CardContent>
             <Button variant='contained' color='primary' onClick={updatePharmacies}>
@@ -159,7 +159,7 @@ const Home = () => {
       </Grid>
       <Grid item xs={12}>
         <Card>
-          <CardHeader title='ACL and JWT 🔒'></CardHeader>
+          <CardHeader title='Dashboard 🔒'></CardHeader>
           {/* <CardContent>
             <Typography sx={{ mb: 2 }}>
               Access Control (ACL) and Authentication (JWT) are the two main security features of our template and are
